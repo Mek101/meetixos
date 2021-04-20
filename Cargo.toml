@@ -1,0 +1,20 @@
+[workspace]
+members = [
+    # Kernel Crates
+    "src/kernel",
+    "src/kernel/hal",
+    "src/kernel/hh_loader",
+    # Library Crates
+    "src/lib/api",
+    "src/lib/heap",
+    "src/lib/macros",
+    "src/lib/os",
+    "src/lib/sync"
+    # Binary Crates
+]
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"

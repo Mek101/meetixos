@@ -1,0 +1,16 @@
+[package]
+name = "sync"
+version = "0.1.0"
+authors = ["Marco <marco.cicognani@btstore.com>"]
+edition = "2018"
+
+##
+# External Crates
+##
+
+[dependencies.lock_api]
+version = "0.4.2"
+features = ["nightly"]
+
+[dependencies.spinning_top]
+version = "0.2.2"

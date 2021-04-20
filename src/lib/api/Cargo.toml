@@ -1,0 +1,29 @@
+[package]
+name = "api"
+version = "0.1.0"
+authors = ["marco <marco.cicognani@btstore.com>"]
+edition = "2018"
+
+##
+# External Crates
+##
+
+[dependencies.bit_field]
+version = "0.10.1"
+
+##
+# MeetiX Libraries Crates
+##
+
+[dependencies.os]
+path = "../os"
+
+[dependencies.macros]
+path = "../macros"
+
+[dependencies.sync]
+path = "../sync"
+
+[features]
+enable_kernel_methods = []
+default = []
