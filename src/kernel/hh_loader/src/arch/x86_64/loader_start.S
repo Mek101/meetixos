@@ -1,6 +1,6 @@
 .att_syntax
 
-.extern loader_rust_entry
+.extern hhl_rust_entry
 
 /* ----------------------------------- .multiboot section ---------------------------------- */
 
@@ -40,6 +40,7 @@ hhl_stack_bottom:
 
 /* reserve into the .data section an RW area to use as initial L4 page table */
 .align      0x1000
+hhl_page_tables_begin:
 hhl_l4_page_table:
 .rept       0x1000
     .byte   0
@@ -147,8 +148,8 @@ hhl_start:
     mov         %ax,  %ss
 
     /* clears the area reserved for the page tables */
-    mov         $hhl_l4_page_table,   %edi
-    mov         $hhl_page_tables_end, %ecx
+    mov         $hhl_page_tables_begin, %edi
+    mov         $hhl_page_tables_end,   %ecx
     sub         %ecx, %edi    /* calculate the size of the area to clear */
     xor         %eax, %eax    /* eax is used as source value, set it to zero */
     rep         stosb
@@ -163,7 +164,7 @@ hhl_start:
     or          $(1 | 1 << 1 | 1 << 8), %eax
     mov         %eax,                   (hhl_l3_page_table)
 
-    /* identity map the first 16MiB of physical memory */
+    /* identity map the first 16MiB of memory with PTE_PRESENT, PTE_WRITEABLE, PTE_HUGE and PTE_GLOBAL */
     movl        $(0x00000000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),   (%eax)
     movl        $(0x00200000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  8(%eax)
     movl        $(0x00400000 | 1 | 1 << 1 | 1 << 7 | 1 << 8), 16(%eax)
@@ -177,7 +178,7 @@ hhl_enable_paging:
     /* setup the long mode GDT now */
     lgdt        (hhl_long_mode_gdt_table)
 
-    /* setup as current the page directory */
+    /* setup as current the static page directory */
     mov         $hhl_l4_page_table, %eax
     mov         %eax,               %cr3
 
@@ -186,16 +187,16 @@ hhl_enable_paging:
     or          $(1 << 4 | 1 << 5 | 1 << 7), %eax
     mov         %eax,                        %cr4
 
-    /* enable long mode in EFER MSR (model specific register) */
+    /* enable LONG_MODE and NO_EXECUTE in EFER model specific register */
     mov         $0xC0000080, %ecx
     rdmsr
-    or          $(1 << 8), %eax
+    or          $(1 << 8 | 1 << 11), %eax
     wrmsr
 
-    /* finally enable the paging */
-    mov         %cr0,       %eax
-    or          $(1 << 31), %eax
-    mov         %eax,       %cr0
+    /* finally enable the Ring0 WRITE_PROTECT and PAGING */
+    mov         %cr0,                 %eax
+    or          $(1 << 16 | 1 << 31), %eax
+    mov         %eax,                 %cr0
 
     /* jump to the protected mapped area */
     ljmp        $0x08, $hhl_identity_mapped_text
@@ -214,7 +215,7 @@ hhl_identity_mapped_text:
      * rust code
      */
     mov         %rbx, %rdi
-    call        loader_rust_entry
+    call        hhl_rust_entry
 
 hhl_halt:
     jmp hhl_halt

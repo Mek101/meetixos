@@ -3,7 +3,6 @@ name = "kernel"
 version = "0.1.0"
 authors = ["Marco Cicognani <marco.cicognani@btstore.com>"]
 edition = "2018"
-build = "build.rs"
 
 ##
 # Kernel Crates

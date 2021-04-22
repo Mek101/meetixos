@@ -6,8 +6,11 @@ use core::panic::PanicInfo;
 
 mod arch;
 
-pub extern "C" fn loader_rust_entry(_raw_info_ptr: *const u8) -> ! {
-    loop {}
+//include!(concat!(env!("OUT_DIR"), "/kernel.rs"));
+
+#[no_mangle]
+pub unsafe extern "C" fn hhl_rust_entry(_raw_info_ptr: *const u8) -> ! {
+    loop { /* loop forever here */ }
 }
 
 #[panic_handler]
