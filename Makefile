@@ -27,6 +27,7 @@ BUILD_DIR    ?= $(REPO_ROOT)/target/$(ARCH)
 KERNEL        ?= $(SRC_DIR)/kernel
 KERNEL_HHL    ?= $(KERNEL)/hh_loader
 USERLAND      ?= $(SRC_DIR)/userland
+USERLAND_APPS ?= $(USERLAND)/apps
 USERLAND_BINS ?= $(USERLAND)/bins
 
 ARCH_CONF_PATH ?= targets/$(ARCH)
@@ -85,6 +86,13 @@ image: build
 	$(V) echo "- Installing Kernel..."
 	$(V) cp -f $(BUILD_DIR)/hh_loader/$(BUILD_MODE)/mx_kernel $(BUILD_DIR)/sysroot/$(BUILD_MODE)/MeetiX
 
+	$(V) echo "- Installing Userland Apps..."
+	$(V) for BIN in $(BUILD_DIR)/userland/$(BUILD_MODE)/*; do           \
+             if [[ -f $${BIN} && -x $${BIN} ]]; then                    \
+                 cp -f $${BIN} $(BUILD_DIR)/sysroot/$(BUILD_MODE)/Bins; \
+             fi                                                         \
+         done
+
 	$(V) echo "- Installing Userland Binaries..."
 	$(V) for BIN in $(BUILD_DIR)/userland/$(BUILD_MODE)/*; do           \
              if [[ -f $${BIN} && -x $${BIN} ]]; then                    \
@@ -112,6 +120,14 @@ build:
                  --manifest-path $(KERNEL_HHL)/Cargo.toml \
                  --target $(KERNEL_HHL)/$(ARCH_CONF_PATH)/hh_loader.json
 
+	$(V) echo "- Building Userland Apps..."
+	$(V) for APP_PRJ in $(USERLAND_APPS)/*/Cargo.toml; do                   \
+              CARGO_TARGET_DIR="$(BUILD_DIR)"                               \
+                  $(CARGO) build $(CARGO_FLAGS)                             \
+                      --manifest-path $${APP_PRJ}                           \
+                      --target $(USERLAND)/$(ARCH_CONF_PATH)/userland.json; \
+         done
+
 	$(V) echo "- Building Userland Binaries..."
 	$(V) for BIN_PRJ in $(USERLAND_BINS)/*/Cargo.toml; do                   \
               CARGO_TARGET_DIR="$(BUILD_DIR)"                               \
@@ -127,7 +143,7 @@ ifeq ($(BUILD_MODE), release)
              $(BUILD_DIR)/hh_loader/$(BUILD_MODE)/hh_loader
 endif
 
-	$(V) echo "Linking Kernel Core and Kernel Loader..."
+	$(V) echo "- Linking Kernel Core and Kernel Loader..."
 	$(V) touch $(BUILD_DIR)/hh_loader/$(BUILD_MODE)/mx_kernel
 
 ifeq ($(ARCH), x86_64)

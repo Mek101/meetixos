@@ -11,6 +11,7 @@
       <sourceFolder url="file://$MODULE_DIR$/src/lib/os/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/lib/sync/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/userland/bins/example/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/userland/apps/example_app/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/src/userland/target" />
     </content>

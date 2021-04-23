@@ -10,6 +10,9 @@ members = [
     "src/lib/macros",
     "src/lib/os",
     "src/lib/sync",
+    # App Crates
+    "src/userland/apps/example_app",
     # Binary Crates
     "src/userland/bins/example"
+
 ]
