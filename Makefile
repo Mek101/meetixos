@@ -13,6 +13,7 @@ BUILD_MODE ?= debug
 VIRT_ACCEL ?= -enable-kvm
 SMP_CORES  ?= 1 # TODO support SMP in the kernel
 V          ?= @ # disable print of executed command, remove to print commands
+OFFLINE    ?= false
 
 #
 # -- -- -- -- -- -- -- -- -- -- -- Project Variables -- -- -- -- -- -- -- -- -- -- --
@@ -50,6 +51,10 @@ ifeq ($(BUILD_MODE),release)
     CARGO_FLAGS += --release
 endif
 
+ifeq ($(OFFLINE),true)
+    CARGO_FLAGS += --offline
+endif
+
 #
 # -- -- -- -- -- -- -- -- -- -- -- -- LLVM Tools -- -- -- -- -- -- -- -- -- -- -- -- --
 #
@@ -71,16 +76,25 @@ ifeq ($(BUILD_MODE),release)
 endif
 
 #
-# -- -- -- -- -- -- -- -- -- -- -- -- Make Targets -- -- -- -- -- -- -- -- -- -- -- --
+# -- -- -- -- -- -- -- -- -- -- -- QEMU Variables -- -- -- -- -- -- -- -- -- -- -- -- --
+#
+
+QEMU ?= qemu-system-$(ARCH)
+
+#
+# -- -- -- -- -- -- -- -- -- -- -- -- -- Make Targets -- -- -- -- -- -- -- -- -- -- -- --
 #
 
 run: image
 	$(V) echo "- Running QEMU $(VIRT_ACCEL)"
+	$(V) $(QEMU) $(VIRT_ACCEL) -m 64M -serial stdio -cdrom $(BUILD_DIR)/$(BUILD_MODE)/meetixos.iso
 
 image: install
 ifeq ($(ARCH),x86_64)
 	$(V) echo "- Building GRUB bootable image..."
-	$(V) grub-mkrescue -d /usr/lib/grub/i386-pc/ -o $(BUILD_DIR)/$(BUILD_MODE)/meetixos.iso $(BUILD_DIR)/sysroot
+	$(V) grub-mkrescue -d /usr/lib/grub/i386-pc/        \
+	         -o $(BUILD_DIR)/$(BUILD_MODE)/meetixos.iso \
+	         $(BUILD_DIR)/sysroot/$(BUILD_MODE)
 endif
 
 install: build

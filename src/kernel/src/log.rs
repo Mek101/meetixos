@@ -50,7 +50,11 @@ pub fn init_logger() -> Result<(), SetLoggerError> {
         infos.cmdline_args()
              .find_key("-loglvl")
              .map_or(DEFAULT_LOGGING_LEVEL, |arg| {
-                 LevelFilter::from_str(arg.value()).unwrap_or(DEFAULT_LOGGING_LEVEL)
+                 if let Ok(level) = LevelFilter::from_str(arg.value()) {
+                     level
+                 } else {
+                     DEFAULT_LOGGING_LEVEL
+                 }
              })
     };
 

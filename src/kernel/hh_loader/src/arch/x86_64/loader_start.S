@@ -1,6 +1,7 @@
 .att_syntax
 
 .extern hhl_rust_entry
+.global hhl_l4_page_table
 
 /* ----------------------------------- .multiboot section ---------------------------------- */
 
@@ -74,7 +75,7 @@ hhl_prot_mode_gdt_table:
 
 hhl_prot_mode_gdt:
     /* null-pointer GDT gate */
-    .quad       0
+    .long       0, 0
 
     /* protected kernel code selector:
      * value:   0x08
@@ -106,7 +107,7 @@ hhl_long_mode_gdt_table:
 
 hhl_long_mode_gdt:
     /* null-pointer GDT gate */
-    .quad       0
+    .long       0, 0
 
     /* 64bit kernel code selector:
      * value:   0x08
@@ -140,19 +141,12 @@ hhl_start:
     lgdt        (hhl_prot_mode_gdt_table)
 
     /* reload segmentation registers to switch into protected mode */
-    mov         0x10, %ax
-    mov         %ax,  %ds
-    mov         %ax,  %es
-    mov         %ax,  %fs
-    mov         %ax,  %gs
-    mov         %ax,  %ss
-
-    /* clears the area reserved for the page tables */
-    mov         $hhl_page_tables_begin, %edi
-    mov         $hhl_page_tables_end,   %ecx
-    sub         %ecx, %edi    /* calculate the size of the area to clear */
-    xor         %eax, %eax    /* eax is used as source value, set it to zero */
-    rep         stosb
+    mov         $0x10, %ax
+    mov         %ax,   %ds
+    mov         %ax,   %es
+    mov         %ax,   %fs
+    mov         %ax,   %gs
+    mov         %ax,   %ss
 
     /* put into the first L4's slot the L3 page table with PTE_PRESENT, PTE_WRITEABLE and PTE_GLOBAL */
     mov         $hhl_l3_page_table,     %eax
@@ -165,6 +159,7 @@ hhl_start:
     mov         %eax,                   (hhl_l3_page_table)
 
     /* identity map the first 16MiB of memory with PTE_PRESENT, PTE_WRITEABLE, PTE_HUGE and PTE_GLOBAL */
+    mov         $hhl_l2_page_table,     %eax
     movl        $(0x00000000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),   (%eax)
     movl        $(0x00200000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  8(%eax)
     movl        $(0x00400000 | 1 | 1 << 1 | 1 << 7 | 1 << 8), 16(%eax)
@@ -190,7 +185,7 @@ hhl_enable_paging:
     /* enable LONG_MODE and NO_EXECUTE in EFER model specific register */
     mov         $0xC0000080, %ecx
     rdmsr
-    or          $(1 << 8 | 1 << 11), %eax
+    or          $(1 | 1 << 8 | 1 << 11), %eax
     wrmsr
 
     /* finally enable the Ring0 WRITE_PROTECT and PAGING */

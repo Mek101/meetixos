@@ -16,3 +16,10 @@ path = "../hal"
 
 [dependencies.log]
 version = "0.4.14"
+
+##
+# MeetiX Libraries Crates
+##
+
+[dependencies.sync]
+path = "../../lib/sync"
