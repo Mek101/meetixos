@@ -18,9 +18,11 @@ V          ?= @ # disable print of executed command, remove to print commands
 # -- -- -- -- -- -- -- -- -- -- -- Project Variables -- -- -- -- -- -- -- -- -- -- --
 #
 
-REPO_ROOT  ?= $(shell pwd)
-SRC_DIR    ?= $(REPO_ROOT)/src
-BUILD_DIR  ?= $(REPO_ROOT)/target/$(ARCH)
+REPO_ROOT    ?= $(shell pwd)
+SRC_DIR      ?= $(REPO_ROOT)/src
+BOOT_CFG_DIR ?= $(SRC_DIR)/boot/$(ARCH)
+SYSROOT_DIR  ?= $(SRC_DIR)/sysroot
+BUILD_DIR    ?= $(REPO_ROOT)/target/$(ARCH)
 
 KERNEL        ?= $(SRC_DIR)/kernel
 KERNEL_HHL    ?= $(KERNEL)/hh_loader
@@ -71,25 +73,46 @@ endif
 # -- -- -- -- -- -- -- -- -- -- -- -- Make Targets -- -- -- -- -- -- -- -- -- -- -- --
 #
 
-run: build
-	$(V) echo "Running QEMU $(VIRT_ACCEL)"
+run: image
+	$(V) echo "- Running QEMU $(VIRT_ACCEL)"
+
+image: build
+	$(V) echo "- Copying sysroot to build dir..."
+	$(V) mkdir -p $(BUILD_DIR)/sysroot/$(BUILD_MODE)
+	$(V) cp -Rf $(SYSROOT_DIR)/* $(BUILD_DIR)/sysroot/$(BUILD_MODE)
+	$(V) cp -Rf $(BOOT_CFG_DIR)/* $(BUILD_DIR)/sysroot/$(BUILD_MODE)
+
+	$(V) echo "- Installing Kernel..."
+	$(V) cp -f $(BUILD_DIR)/hh_loader/$(BUILD_MODE)/mx_kernel $(BUILD_DIR)/sysroot/$(BUILD_MODE)/MeetiX
+
+	$(V) echo "- Installing Userland Binaries..."
+	$(V) for BIN in $(BUILD_DIR)/userland/$(BUILD_MODE)/*; do           \
+             if [[ -f $${BIN} && -x $${BIN} ]]; then                    \
+                 cp -f $${BIN} $(BUILD_DIR)/sysroot/$(BUILD_MODE)/Bins; \
+             fi                                                         \
+         done
+
+ifeq ($(ARCH),x86_64)
+	$(V) echo "- Building GRUB bootable image..."
+	$(V) grub-mkrescue -d /usr/lib/grub/i386-pc/ -o $(BUILD_DIR)/$(BUILD_MODE)/meetixos.iso $(BUILD_DIR)/sysroot
+endif
 
 build:
-	$(V) echo "Building for $(ARCH) in $(BUILD_MODE) mode"
+	$(V) echo "- Building for $(ARCH) in $(BUILD_MODE) mode"
 
-	$(V) echo "Building Kernel Core..."
+	$(V) echo "- Building Kernel Core..."
 	$(V) CARGO_TARGET_DIR="$(BUILD_DIR)"              \
              $(CARGO) build $(CARGO_FLAGS)            \
                  --manifest-path $(KERNEL)/Cargo.toml \
                  --target $(KERNEL)/$(ARCH_CONF_PATH)/kernel.json
 
-	$(V) echo "Building Kernel Loader..."
+	$(V) echo "- Building Kernel Loader..."
 	$(V) CARGO_TARGET_DIR="$(BUILD_DIR)"                  \
              $(CARGO) build $(CARGO_FLAGS)                \
                  --manifest-path $(KERNEL_HHL)/Cargo.toml \
                  --target $(KERNEL_HHL)/$(ARCH_CONF_PATH)/hh_loader.json
 
-	$(V) echo "Building Userland Binaries..."
+	$(V) echo "- Building Userland Binaries..."
 	$(V) for BIN_PRJ in $(USERLAND_BINS)/*/Cargo.toml; do                   \
               CARGO_TARGET_DIR="$(BUILD_DIR)"                               \
                   $(CARGO) build $(CARGO_FLAGS)                             \
@@ -98,22 +121,26 @@ build:
          done
 
 ifeq ($(BUILD_MODE), release)
-	$(V) echo "Stripping kernel core and kernel loader..."
+	$(V) echo "- Stripping Kernel Core and Kernel Loader..."
 	$(V) $(LLVM_STRIP) --strip-debug                  \
              $(BUILD_DIR)/kernel/$(BUILD_MODE)/kernel \
              $(BUILD_DIR)/hh_loader/$(BUILD_MODE)/hh_loader
 endif
 
+	$(V) echo "Linking Kernel Core and Kernel Loader..."
+	$(V) touch $(BUILD_DIR)/hh_loader/$(BUILD_MODE)/mx_kernel
+
 ifeq ($(ARCH), x86_64)
     # GRUB doesn't support ELF64 files, need pack the kernel into ELF32 file
-	$(V) echo "Copy ELF64 kernel into ELF32 executable..."
+	$(V) echo "- Copy ELF64 kernel into ELF32 executable..."
 	$(V) $(LLVM_OBJCOPY) $(OBJCOPY_FLAGS) $(BUILD_DIR)/hh_loader/$(BUILD_MODE)/hh_loader
 endif
 
+
 clean:
-	$(V) echo "Cleaning $(BUILD_MODE) build of $(ARCH)"
+	$(V) echo "- Cleaning $(BUILD_MODE) build of $(ARCH)"
 	$(V) rm -rf $(BUILD_DIR)/{kernel,hh_loader,userland}/debug
 
 clean_all:
-	$(V) echo "Cleaning All"
+	$(V) echo "- Cleaning All"
 	$(V) rm -rf $(BUILD_DIR)
