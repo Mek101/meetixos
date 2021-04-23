@@ -77,7 +77,13 @@ endif
 run: image
 	$(V) echo "- Running QEMU $(VIRT_ACCEL)"
 
-image: build
+image: install
+ifeq ($(ARCH),x86_64)
+	$(V) echo "- Building GRUB bootable image..."
+	$(V) grub-mkrescue -d /usr/lib/grub/i386-pc/ -o $(BUILD_DIR)/$(BUILD_MODE)/meetixos.iso $(BUILD_DIR)/sysroot
+endif
+
+install: build
 	$(V) echo "- Copying sysroot to build dir..."
 	$(V) mkdir -p $(BUILD_DIR)/sysroot/$(BUILD_MODE)
 	$(V) cp -Rf $(SYSROOT_DIR)/* $(BUILD_DIR)/sysroot/$(BUILD_MODE)
@@ -100,11 +106,6 @@ image: build
              fi                                                         \
          done
 
-ifeq ($(ARCH),x86_64)
-	$(V) echo "- Building GRUB bootable image..."
-	$(V) grub-mkrescue -d /usr/lib/grub/i386-pc/ -o $(BUILD_DIR)/$(BUILD_MODE)/meetixos.iso $(BUILD_DIR)/sysroot
-endif
-
 build:
 	$(V) echo "- Building for $(ARCH) in $(BUILD_MODE) mode"
 
@@ -114,10 +115,21 @@ build:
                  --manifest-path $(KERNEL)/Cargo.toml \
                  --target $(KERNEL)/$(ARCH_CONF_PATH)/kernel.json
 
+ifeq ($(BUILD_MODE), release)
+	$(V) echo "- Stripping Kernel Core..."
+	$(V) $(LLVM_STRIP) --strip-debug                  \
+             $(BUILD_DIR)/kernel/$(BUILD_MODE)/kernel
+endif
+
+	$(V) echo "- Writing Kernel Loader's Core module..."
+	$(V) echo "const KERNEL_SIZE: usize = `stat --format %s $(BUILD_DIR)/kernel/$(BUILD_MODE)/kernel`;" >$(BUILD_DIR)/kernel/$(BUILD_MODE)/kernel_bin.rs
+	$(V) echo "const KERNEL_BYTES: [u8; KERNEL_SIZE] = *include_bytes!(r\"$(BUILD_DIR)/kernel/$(BUILD_MODE)/kernel\");" >>$(BUILD_DIR)/kernel/$(BUILD_MODE)/kernel_bin.rs
+
 	$(V) echo "- Building Kernel Loader..."
-	$(V) CARGO_TARGET_DIR="$(BUILD_DIR)"                  \
-             $(CARGO) build $(CARGO_FLAGS)                \
-                 --manifest-path $(KERNEL_HHL)/Cargo.toml \
+	$(V) KERNEL_BIN=$(BUILD_DIR)/kernel/$(BUILD_MODE)/kernel_bin.rs \
+         CARGO_TARGET_DIR="$(BUILD_DIR)"                            \
+             $(CARGO) build $(CARGO_FLAGS)                          \
+                 --manifest-path $(KERNEL_HHL)/Cargo.toml           \
                  --target $(KERNEL_HHL)/$(ARCH_CONF_PATH)/hh_loader.json
 
 	$(V) echo "- Building Userland Apps..."
@@ -136,21 +148,14 @@ build:
                       --target $(USERLAND)/$(ARCH_CONF_PATH)/userland.json; \
          done
 
-ifeq ($(BUILD_MODE), release)
-	$(V) echo "- Stripping Kernel Core and Kernel Loader..."
-	$(V) $(LLVM_STRIP) --strip-debug                  \
-             $(BUILD_DIR)/kernel/$(BUILD_MODE)/kernel \
-             $(BUILD_DIR)/hh_loader/$(BUILD_MODE)/hh_loader
-endif
-
-	$(V) echo "- Linking Kernel Core and Kernel Loader..."
-	$(V) touch $(BUILD_DIR)/hh_loader/$(BUILD_MODE)/mx_kernel
-
 ifeq ($(ARCH), x86_64)
     # GRUB doesn't support ELF64 files, need pack the kernel into ELF32 file
 	$(V) echo "- Copy ELF64 kernel into ELF32 executable..."
 	$(V) $(LLVM_OBJCOPY) $(OBJCOPY_FLAGS) $(BUILD_DIR)/hh_loader/$(BUILD_MODE)/hh_loader
 endif
+
+	$(V) echo "- Creating mx_kernel"
+	$(V) cp -f $(BUILD_DIR)/hh_loader/$(BUILD_MODE)/hh_loader $(BUILD_DIR)/hh_loader/$(BUILD_MODE)/mx_kernel
 
 
 clean:

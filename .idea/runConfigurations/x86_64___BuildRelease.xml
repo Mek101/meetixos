@@ -1,0 +1,8 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="x86_64 | BuildRelease" type="MAKEFILE_TARGET_RUN_CONFIGURATION" factoryName="Makefile">
+    <makefile filename="$PROJECT_DIR$/Makefile" target="build" workingDirectory="$PROJECT_DIR$" arguments="ARCH=x86_64 BUILD_MODE=release">
+      <envs />
+    </makefile>
+    <method v="2" />
+  </configuration>
+</component>
