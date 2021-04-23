@@ -22,7 +22,6 @@
     "features": "+a53,+strict-align,-neon,-fp-armv8",
     "max-atomic-width": 128,
     "os": "meetixos",
-    "panic": "abort",
     "panic-strategy": "abort",
     "relocation-model": "static",
     "position-independent-executables": true,

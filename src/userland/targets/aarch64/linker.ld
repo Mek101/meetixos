@@ -1,9 +1,9 @@
-OUTPUT_FORMAT("elf64-riscv")
+OUTPUT_FORMAT("elf64-aarch64")
 
 ENTRY(_start)
 
 SECTIONS {
-    . = 0xfffffffffa000000;
+    . = 0x1000;
 
     .text ALIGN(4K): {
         __text_begin = .;

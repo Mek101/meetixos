@@ -9,6 +9,7 @@ members = [
     "src/lib/heap",
     "src/lib/macros",
     "src/lib/os",
-    "src/lib/sync"
+    "src/lib/sync",
     # Binary Crates
+    "src/userland/bins/example"
 ]
