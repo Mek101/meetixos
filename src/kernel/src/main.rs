@@ -79,7 +79,7 @@ pub unsafe extern "C" fn kern_entry(boot_infos: BootInfos) {
      * The given instance references the higher half loader memory, which will be
      * unmapped in the next steps, and become unreachable
      */
-    let _ = BootInfos::from(boot_infos);
+    let _ = BootInfos::from(&boot_infos);
 
     /* initialize the logging system */
     init_logger().unwrap_or_else(|err| panic!("Logger init failed: {}", err));
