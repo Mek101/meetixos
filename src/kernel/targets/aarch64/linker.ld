@@ -1,6 +1,6 @@
 OUTPUT_FORMAT("elf64-aarch64")
 
-ENTRY(_start)
+ENTRY(kern_start)
 
 SECTIONS {
     . = 0xfffffffffa000000;

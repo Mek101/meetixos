@@ -74,7 +74,8 @@ pub fn write_video(message: &str) {
  * returned to the HAL that enables all the architecture dependent stuffs
  * that requires physical/dynamic memory allocation
  */
-pub unsafe extern "C" fn kern_entry(boot_infos: BootInfos) {
+#[no_mangle]
+pub unsafe extern "C" fn kern_start(boot_infos: BootInfos) {
     /* initialize the kernel's instance of the BootInfos.
      * The given instance references the higher half loader memory, which will be
      * unmapped in the next steps, and become unreachable

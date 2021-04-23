@@ -1,6 +1,6 @@
 OUTPUT_FORMAT("elf64-riscv")
 
-ENTRY(_start)
+ENTRY(kern_start)
 
 SECTIONS {
     . = 0xfffffffffa000000;
