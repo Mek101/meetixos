@@ -7,7 +7,7 @@ use core::panic::PanicInfo;
 
 use hal::boot::infos::BootInfos;
 
-use crate::log::{init_logger, info};
+use crate::log::{info, init_logger};
 use hal::paging::PageDir;
 
 mod arch;
@@ -19,9 +19,13 @@ include!(env!("KERNEL_BIN"));
 #[no_mangle]
 pub unsafe extern "C" fn hhl_rust_entry(raw_info_ptr: *const u8) -> ! {
     /* initialize the higher half loader's instance of the BootInfos */
-    let _boot_info = BootInfos::from(raw_info_ptr);
+    let boot_info = BootInfos::from(raw_info_ptr);
 
     init_logger().unwrap();
+
+    info!("Raw info ptr: {:x}", raw_info_ptr as usize);
+    boot_info.cmdline_args().iter().for_each(|arg| info!("Arg: {}", arg.as_str()));
+    boot_info.mem_areas().iter().for_each(|mem_area| info!("{:?}", mem_area));
 
     info!("MeetiX Kernel Loader v0.1.0");
     info!("Kernel size: {}", KERNEL_SIZE);
@@ -35,5 +39,6 @@ pub unsafe extern "C" fn hhl_rust_entry(raw_info_ptr: *const u8) -> ! {
 
 #[panic_handler]
 fn panic_handler(_: &PanicInfo) -> ! {
+    info!("PANIC");
     loop {}
 }
