@@ -9,3 +9,10 @@ edition = "2018"
 
 [dependencies.hal]
 path = "../hal"
+
+##
+# External Crates
+##
+
+[dependencies.log]
+version = "0.4.14"

@@ -269,7 +269,7 @@ impl KernCaller for ObjId {
  *
  * [`ObjId`]: /api/objs/struct.ObjId.html
  */
-pub trait Object: From<ObjId> + Default + Clone {
+pub trait Object: From<ObjId> + Default + Clone + Sync + Send {
     /** The value of the [`ObjType`] that matches the implementation
      *
      * [`ObjType`]: /api/bits/obj/enum.ObjType.html

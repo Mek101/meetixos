@@ -146,7 +146,7 @@ impl KernCaller for TaskId {
  *
  * [`TaskId`]: /api/tasks/struct.TaskId.html
  */
-pub trait Task: From<TaskId> {
+pub trait Task: From<TaskId> + Sync + Send {
     /** The value of the [`TaskType`] that matches the implementation
      *
      * [`TaskType`]: /api/bits/task/enum.TaskType.html

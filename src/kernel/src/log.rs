@@ -63,7 +63,7 @@ pub fn init_logger() -> Result<(), SetLoggerError> {
 
 /** # Kernel Logger
  *
- * Implements a simple logger that writes into the UART
+ * Implements a simple thread safe logger that writes into the UART
  */
 struct Logger {
     m_uart_writer: SpinMutex<Uart>
@@ -86,7 +86,8 @@ impl Log for Logger {
      * logged
      */
     fn enabled(&self, _metadata: &Metadata) -> bool {
-        true /* the logging level is already managed by the log crate */
+        /* TODO a special file/syscall which dynamically allow setup the log level */
+        true
     }
 
     /** Logs the [`Record`]
