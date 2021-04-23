@@ -6,11 +6,9 @@
  * kernel's entry points (BSP & AP)
  */
 
-pub use entry::*;
 pub use init::*;
 pub use tasks::*;
 
-mod entry;
 mod init;
 mod tasks;
 

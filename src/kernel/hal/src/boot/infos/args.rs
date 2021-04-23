@@ -21,7 +21,7 @@ pub(crate) const BOOT_CMDLINE_ARGS_LEN_MAX: usize = 64;
  * Represents a collection of tokenized arguments given to the kernel by the
  * currently used bootloader
  */
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CmdLineArgs {
     m_args: [CmdLineArg; BOOT_CMDLINE_ARGS_COUNT_MAX],
     m_args_count: usize

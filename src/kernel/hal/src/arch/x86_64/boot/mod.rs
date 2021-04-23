@@ -6,6 +6,4 @@
 
 pub use infos::X64BootInfos as HwBootInfos;
 
-#[macro_use]
-mod entry;
 mod infos;

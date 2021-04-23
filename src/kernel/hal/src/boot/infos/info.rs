@@ -22,6 +22,7 @@ static mut BOOT_INFOS_INNER: Option<BootInfosInner> = None;
  *
  * Stores the common bootloader's informations
  */
+#[repr(transparent)]
 #[derive(Debug, Copy, Clone)]
 pub struct BootInfos {
     m_inner: &'static BootInfosInner
@@ -66,17 +67,43 @@ impl From<*const u8> for BootInfos {
     /** Initializes the global inner informations then constructs the
      * `BootInfos` instance.
      *
-     * His usage from the kernel's code is denied but exposed because used
-     * by the [`bsp_entry`] macro, that expands in kernel's code
-     *
-     * [`bsp_entry`]: /hal/boot/macro.bsp_entry.html
+     * Used by the higher half loader to initialize his instance of the
+     * `BootInfosInner`
      */
     fn from(raw_ptr: *const u8) -> Self {
         unsafe {
             assert!(BOOT_INFOS_INNER.is_none(), "Tried to re-initialize inner BootInfos");
         }
+
+        /* obtain the informations inner and store to the global struct */
         let inner_infos = HwBootInfos::obtain_inner_from_arch_infos(raw_ptr);
-        unsafe { BOOT_INFOS_INNER = Some(inner_infos) };
+        unsafe {
+            BOOT_INFOS_INNER = Some(inner_infos);
+        }
+
+        /* return an instance of the wrapper */
+        Self::obtain()
+    }
+}
+
+impl From<&Self> for BootInfos {
+    /** Initializes the global inner informations then constructs the
+     * `BootInfos` instance.
+     *
+     * Used by the kernel core to clone the higher half loader's instance of
+     * the `BootInfosInner` into the higher half instance
+     */
+    fn from(rhs: &BootInfos) -> Self {
+        unsafe {
+            assert!(BOOT_INFOS_INNER.is_none(), "Tried to re-initialize inner BootInfos");
+        }
+
+        /* clone the boot informations inner and store to our global copy */
+        unsafe {
+            BOOT_INFOS_INNER = Some(rhs.m_inner.clone());
+        }
+
+        /* return an instance of the wrapper */
         Self::obtain()
     }
 }
@@ -86,7 +113,7 @@ impl From<*const u8> for BootInfos {
  * Defines the container of the common boot informations that is initialized
  * and instantiated once across all the HAL/kernel instance
  */
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct BootInfosInner {
     m_hw_phys_mem_offset: VirtAddr,
     m_cmdline_args: CmdLineArgs,

@@ -4,12 +4,17 @@
 
 use core::panic::PanicInfo;
 
+use hal::boot::infos::BootInfos;
+
 mod arch;
 
 //include!(concat!(env!("OUT_DIR"), "/kernel.rs"));
 
 #[no_mangle]
-pub unsafe extern "C" fn hhl_rust_entry(_raw_info_ptr: *const u8) -> ! {
+pub unsafe extern "C" fn hhl_rust_entry(raw_info_ptr: *const u8) -> ! {
+    /* initialize the higher half loader's instance of the BootInfos */
+    let _ = BootInfos::from(raw_info_ptr);
+
     loop { /* loop forever here */ }
 }
 

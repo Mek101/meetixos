@@ -26,7 +26,7 @@ pub const BOOT_MEM_AREAS_COUNT_MAX: usize = 64;
  *
  * [`BootMemArea`]: /hal/boot/infos/struct.BootMemArea.html
  */
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BootMemAreas {
     m_areas: [Option<BootMemArea>; BOOT_MEM_AREAS_COUNT_MAX],
     m_next_usable: usize
@@ -97,7 +97,9 @@ impl BootMemAreas {
     pub fn sort_areas(&mut self) {
         /* use sort_unstable because it uses <quicksort> algorithm */
         self.m_areas.sort_unstable_by(|a1, a2| {
-                        /* comparison algorithm taken from Phillip Opperman bootloader */
+                        /* comparison algorithm taken from Phillip Opperman's
+                         * bootloader
+                         */
                         if a1.is_none() {
                             Ordering::Greater
                         } else if a2.is_none() {

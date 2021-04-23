@@ -24,7 +24,7 @@ use core::mem::size_of;
 
 #[cfg(debug_assertions)]
 use hal::addr::{PhysAddr, VirtAddr};
-use hal::boot::bsp_entry;
+use hal::boot::infos::BootInfos;
 
 use crate::{
     debug::debug_size_multiplier,
@@ -54,8 +54,6 @@ mod mem;
 mod panic;
 mod version;
 
-bsp_entry!(fn bsp_pre_init | fn bsp_init);
-
 pub fn write_video(message: &str) {
     let vga_buffer = 0xb8000 as *mut u8;
 
@@ -76,7 +74,13 @@ pub fn write_video(message: &str) {
  * returned to the HAL that enables all the architecture dependent stuffs
  * that requires physical/dynamic memory allocation
  */
-fn bsp_pre_init() {
+pub unsafe extern "C" fn kern_entry(boot_infos: BootInfos) {
+    /* initialize the kernel's instance of the BootInfos.
+     * The given instance references the higher half loader memory, which will be
+     * unmapped in the next steps, and become unreachable
+     */
+    let _ = BootInfos::from(boot_infos);
+
     /* initialize the logging system */
     init_logger().unwrap_or_else(|err| panic!("Logger init failed: {}", err));
 
@@ -95,45 +99,13 @@ fn bsp_pre_init() {
     info!("Initializing interrupts...");
     init_interrupts();
 
-    /* dump some informations in debug mode, this block of code is not compiled
-     * when the kernel is compiled in release mode but displays many useful debug
-     * informations
-     */
-    #[cfg(debug_assertions)]
-    {
-        dump_boot_infos();
-
-        debug!("Address Size:");
-        debug!("\tVirtAddr size = {} bits, PhysAddr size = {} bits",
-               size_of::<VirtAddr>() * 8,
-               size_of::<PhysAddr>() * 8);
-
-        debug!("Physical Memory Consumption");
-        debug!("\tphys_mem_total_mem:     {}",
-               debug_size_multiplier(phys_mem_total_mem()));
-        debug!("\tphys_mem_allocated_mem: {}",
-               debug_size_multiplier(phys_mem_allocated_mem()));
-        debug!("\tphys_mem_free_memory:   {}",
-               debug_size_multiplier(phys_mem_free_memory()));
-
-        debug!("Dynamic Memory Consumption");
-        debug!("\theap_managed_mem:   {}", debug_size_multiplier(heap_managed_mem()));
-        debug!("\theap_allocated_mem: {}", debug_size_multiplier(heap_allocated_mem()));
-        debug!("\theap_free_memory:   {}", debug_size_multiplier(heap_free_memory()));
-
-        debug!("Page Directory");
-        let active_page_dir = paging_active_page_dir();
-        debug!("\tactive_page_dir.root_phys_frame: {:?}",
-               active_page_dir.root_phys_frame());
-        debug!("\n{:?}", active_page_dir);
-    }
-
     info!("Pre-init done...");
+    kern_debug_and_tests();
 }
 
 /** # Kernel initialization
  */
-fn bsp_init() -> ! {
+fn kern_debug_and_tests() -> ! {
     fn test_4kib_alloc() {
         use crate::mem::phys::phys_mem_alloc_frame;
         use hal::paging::Page4KiB;
@@ -166,6 +138,39 @@ fn bsp_init() -> ! {
         for (i, value) in boxed_int.iter().enumerate() {
             info!("\tvalue ({}, {})", i, value);
         }
+    }
+
+    /* dump some informations in debug mode, this block of code is not compiled
+     * when the kernel is compiled in release mode but displays many useful debug
+     * informations
+     */
+    #[cfg(debug_assertions)]
+    {
+        dump_boot_infos();
+
+        debug!("Address Size:");
+        debug!("\tVirtAddr size = {} bits, PhysAddr size = {} bits",
+               size_of::<VirtAddr>() * 8,
+               size_of::<PhysAddr>() * 8);
+
+        debug!("Physical Memory Consumption");
+        debug!("\tphys_mem_total_mem:     {}",
+               debug_size_multiplier(phys_mem_total_mem()));
+        debug!("\tphys_mem_allocated_mem: {}",
+               debug_size_multiplier(phys_mem_allocated_mem()));
+        debug!("\tphys_mem_free_memory:   {}",
+               debug_size_multiplier(phys_mem_free_memory()));
+
+        debug!("Dynamic Memory Consumption");
+        debug!("\theap_managed_mem:   {}", debug_size_multiplier(heap_managed_mem()));
+        debug!("\theap_allocated_mem: {}", debug_size_multiplier(heap_allocated_mem()));
+        debug!("\theap_free_memory:   {}", debug_size_multiplier(heap_free_memory()));
+
+        debug!("Page Directory");
+        let active_page_dir = paging_active_page_dir();
+        debug!("\tactive_page_dir.root_phys_frame: {:?}",
+               active_page_dir.root_phys_frame());
+        debug!("\n{:?}", active_page_dir);
     }
 
     info!("Initializing Core modules...");
