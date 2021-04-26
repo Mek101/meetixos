@@ -5,10 +5,9 @@
 
 use core::panic::PanicInfo;
 
-use hal::boot::infos::BootInfos;
+use hal::{boot::infos::BootInfos, paging::PageDir};
 
 use crate::log::{info, init_logger};
-use hal::paging::PageDir;
 
 mod arch;
 mod log;

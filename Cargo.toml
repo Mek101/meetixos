@@ -2,14 +2,15 @@
 members = [
     # Kernel Crates
     "src/kernel",
-    "src/kernel/hal",
     "src/kernel/hh_loader",
+    "src/kernel/libs/hal",
+    "src/kernel/libs/logger",
     # Library Crates
-    "src/lib/api",
-    "src/lib/heap",
-    "src/lib/macros",
-    "src/lib/os",
-    "src/lib/sync",
+    "src/libs/api",
+    "src/libs/heap",
+    "src/libs/macros",
+    "src/libs/os",
+    "src/libs/sync",
     # App Crates
     "src/userland/apps/example_app",
     # Binary Crates

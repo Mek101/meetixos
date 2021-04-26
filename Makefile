@@ -10,9 +10,9 @@
 
 ARCH       ?= x86_64
 BUILD_MODE ?= debug
-VIRT_ACCEL ?= -enable-kvm
+VIRT_ACCEL ?= #-enable-kvm
 SMP_CORES  ?= 1 # TODO support SMP in the kernel
-V          ?= @ # disable print of executed command, remove to print commands
+V          ?= #@ # disable print of executed command, remove to print commands
 OFFLINE    ?= false
 
 #

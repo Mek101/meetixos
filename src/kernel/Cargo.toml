@@ -1,15 +1,15 @@
 [package]
 name = "kernel"
 version = "0.1.0"
-authors = ["Marco Cicognani <marco.cicognani@btstore.com>"]
 edition = "2018"
+authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
 
 ##
 # Kernel Crates
 ##
 
 [dependencies.hal]
-path = "hal"
+path = "libs/hal"
 
 ##
 # External Crates
@@ -26,12 +26,12 @@ version = "0.10.1"
 ##
 
 [dependencies.api]
-path = "../lib/api"
+path = "../libs/api"
 features = ["enable_kernel_methods"]
 
 [dependencies.heap]
-path = "../lib/heap"
+path = "../libs/heap"
 features = ["disable_locked"]
 
 [dependencies.sync]
-path = "../lib/sync"
+path = "../libs/sync"

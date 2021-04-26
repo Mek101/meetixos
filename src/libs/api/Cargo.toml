@@ -1,8 +1,8 @@
 [package]
 name = "api"
 version = "0.1.0"
-authors = ["marco <marco.cicognani@btstore.com>"]
 edition = "2018"
+authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
 
 ##
 # External Crates

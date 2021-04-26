@@ -1,8 +1,8 @@
 [package]
 name = "hal"
 version = "0.1.0"
-authors = ["Marco Cicognani <marco.cicognani@btstore.com>"]
 edition = "2018"
+authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
 
 ##
 # External Crates
@@ -43,7 +43,7 @@ version = "0.2.12"
 ##
 
 [dependencies.os]
-path = "../../lib/os"
+path = "../../../libs/os"
 
 [dependencies.macros]
-path = "../../lib/macros"
+path = "../../../libs/macros"
