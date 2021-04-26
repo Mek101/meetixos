@@ -6,25 +6,21 @@
 use core::alloc::Layout;
 
 use hal::{
-    addr::align_up,
-    paging::{Page4KiB, PageSize}
+    addr::{align_up, Address, VirtAddr},
+    paging::{MapFlusher, PTFlags, Page4KiB, PageSize, VirtFrame}
 };
 use heap::locked::raw::RawLazyLockedHeap;
+#[cfg(debug_assertions)]
+use logger::debug;
+use logger::info;
 use sync::{RawMutex, RawSpinMutex};
 
 #[cfg(debug_assertions)]
-use crate::{debug::debug_size_multiplier, log::debug};
-use crate::{
-    log::info,
-    mem::{
-        frame_allocators::KernAllocator,
-        layout::{KRN_HEAP_END, KRN_HEAP_START},
-        paging::paging_active_page_dir
-    }
-};
-use hal::{
-    addr::{Address, VirtAddr},
-    paging::{MapFlusher, PTFlags, VirtFrame}
+use crate::debug::debug_size_multiplier;
+use crate::mem::{
+    frame_allocators::KernAllocator,
+    layout::{KRN_HEAP_END, KRN_HEAP_START},
+    paging::paging_active_page_dir
 };
 
 /** The lazy allocator is initialized before the first use using

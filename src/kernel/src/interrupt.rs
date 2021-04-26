@@ -4,8 +4,7 @@
  */
 
 use hal::interrupt::{InterruptManager, InterruptManagerException, InterruptStackFrame};
-
-use crate::log::info;
+use logger::info;
 
 static mut INTERRUPT_MANAGER: InterruptManager = InterruptManager::new_uninitialized();
 

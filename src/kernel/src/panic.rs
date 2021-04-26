@@ -5,7 +5,9 @@
 
 use core::panic::PanicInfo;
 
-use crate::{log::error, write_video};
+use logger::error;
+
+use crate::write_video;
 
 /** # Panic Handler
  *

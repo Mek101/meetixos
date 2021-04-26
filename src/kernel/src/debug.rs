@@ -6,8 +6,7 @@
 use core::fmt;
 
 use hal::boot::infos::BootInfos;
-
-use crate::log::debug;
+use logger::debug;
 
 pub const GIB: usize = 1024 * 1024 * 1024;
 pub const MIB: usize = 1024 * 1024;

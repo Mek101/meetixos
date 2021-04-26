@@ -11,12 +11,8 @@ authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
 [dependencies.hal]
 path = "../libs/hal"
 
-##
-# External Crates
-##
-
-[dependencies.log]
-version = "0.4.14"
+[dependencies.logger]
+path = "../libs/logger"
 
 ##
 # MeetiX Libraries Crates

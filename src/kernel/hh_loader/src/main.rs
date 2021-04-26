@@ -4,8 +4,9 @@
 #![feature(option_result_unwrap_unchecked)]
 
 use hal::{boot::infos::BootInfos, paging::PageDir};
+use logger::info;
 
-use crate::log::{info, init_logger};
+use crate::log::init_logger;
 
 mod arch;
 mod log;
@@ -19,9 +20,10 @@ pub unsafe extern "C" fn hhl_rust_entry(raw_info_ptr: *const u8) -> ! {
     /* initialize the higher half loader's instance of the BootInfos */
     let boot_info = BootInfos::from(raw_info_ptr);
 
-    init_logger().unwrap();
+    /* initialize the logger */
+    init_logger();
 
-    info!("Raw info ptr: {:x}", raw_info_ptr as usize);
+    info!("Raw info ptr: {:#x}", raw_info_ptr as usize);
     boot_info.cmdline_args().iter().for_each(|arg| info!("Arg: {}", arg.as_str()));
     boot_info.mem_areas().iter().for_each(|mem_area| info!("{:?}", mem_area));
 

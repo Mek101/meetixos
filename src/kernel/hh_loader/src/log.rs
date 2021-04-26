@@ -3,108 +3,80 @@
  * Implements a simple logging sub-system used by the loader
  */
 
-use core::str::FromStr;
-use core::fmt::Write;
+use core::{fmt, str::FromStr};
 
-pub use log::{debug, error, info, warn};
-use log::{LevelFilter, Log, Metadata, Record, set_logger, set_max_level, SetLoggerError};
+use hal::{boot::infos::BootInfos, uart::Uart};
+use logger::{LevelFilter, Logger, LoggerWriter};
+use sync::RawSpinMutex;
 
-use hal::boot::infos::BootInfos;
-use hal::uart::Uart;
-use sync::SpinMutex;
-
-/** Global kernel logger instance, is initialized by the [`init_logger()`]
- * function in the kernel bootstrap
+/** Global kernel loader logger instance, is initialized by the
+ * [`init_logger()`] function called by [`hhl_rust_entry()`]
  *
- * [`init_logger()`]: /kernel/log/fn.init_logger.html
+ * [`init_logger()`]: fn.init_logger.html
+ * [`hhl_rust_entry()`]: fn.hhl_rust_entry.html
  */
-static mut KERN_LOGGER: Option<Logger> = None;
+static mut HHL_LOGGER: Logger<UartWriter, RawSpinMutex> = Logger::new_uninitialized();
 
 /** Default logging level, used as fallback when no valid filters are given
  * via kernel's command line
  */
 const DEFAULT_LOGGING_LEVEL: LevelFilter = LevelFilter::Debug;
 
-/** # Initializes the logger module
+/** # Initializes the logger
  *
- * Initializes the global kernel logger instance and initializes the
- * external logging framework
+ * Initializes the global logger instance
  */
-pub fn init_logger() -> Result<(), SetLoggerError> {
+pub fn init_logger() {
+    /* enable the global logger as global for the log crate too */
     unsafe {
-        assert!(KERN_LOGGER.is_none(), "Re-initializing global logger");
-
-        /* initialize the logger and the `log` framework providing the global logger
-         * instance
-         */
-        KERN_LOGGER = Some(Logger::new());
-        set_logger(KERN_LOGGER.as_ref().unwrap_unchecked())?;
+        HHL_LOGGER.enable_as_global().unwrap();
     }
 
     /* obtain from the from the bootloader informations the command-line
-     * arguments and search for the `-loglvl` key, if provided (and have a valid
-     * value) use it, otherwise fallback to the `DEFAULT_LOGGING_LEVEL`
+     * arguments and search for the `-log-level` key, if provided (and have a
+     * valid value) use it, otherwise fallback to the `DEFAULT_LOGGING_LEVEL`
      */
     let filter_level = {
         let infos = BootInfos::obtain();
         infos.cmdline_args()
-             .find_key("-loglvl")
+             .find_key("-log-level")
              .map_or(DEFAULT_LOGGING_LEVEL, |arg| {
                  LevelFilter::from_str(arg.value()).unwrap_or(DEFAULT_LOGGING_LEVEL)
              })
     };
 
-    /* set the `log`s crate static maximum level, then return `Ok`, the log
-     * module is successfully initialized
-     */
-    set_max_level(filter_level);
-    Ok(())
+    /* hide all the logs above the given filter level */
+    unsafe {
+        HHL_LOGGER.set_max_logging_level(filter_level);
+    }
 }
 
-/** # Loader Logger
+/** # UART LoggerWriter
  *
- * Implements a simple logger that writes into the UART
+ * Implements the [`LoggerWriter`] for the [`Uart`] struct
+ *
+ * [`LoggerWriter`]: trait.LoggerWriter.html
+ * [`Uart`]: struct.Uart.html
  */
-struct Logger {
-    m_uart_writer: SpinMutex<Uart>
+pub struct UartWriter {
+    m_uart: Uart
 }
 
-impl Logger {
-    /** # Constructs a `Logger`
-     *
-     * The returned instance is already initialized and ready to write
+impl LoggerWriter for UartWriter {
+    /** Constructs an initialized `LoggerWriter`
      */
     fn new() -> Self {
         let mut uart = Uart::new();
         uart.init();
-        Self { m_uart_writer: SpinMutex::new(uart) }
+        Self { m_uart: uart }
     }
 }
 
-impl Log for Logger {
-    /** Determines if a log message with the specified metadata would be
-     * logged
+impl fmt::Write for UartWriter {
+    /** Writes a string slice into this writer, returning whether the write
+     * succeeded
      */
-    fn enabled(&self, _metadata: &Metadata) -> bool {
-        true /* the logging level is already managed by the log crate */
-    }
-
-    /** Logs the [`Record`]
-     *
-     * [`Record`]: https://docs.rs/log/0.4.14/log/struct.Record.html
-     */
-    fn log(&self, record: &Record) {
-        let mut writer = self.m_uart_writer.lock();
-        write!(writer,
-               "[{: >5} <> {: <20}] {}\n",
-               record.level(),  /* human readable log-level */
-               record.target(), /* path to the rust module relative to the kernel */
-               record.args()).unwrap()
-    }
-
-    /** Flushes any buffered records
-     */
-    fn flush(&self) {
-        /* No supported buffering */
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        self.m_uart.write_str(s)
     }
 }

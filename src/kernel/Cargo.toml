@@ -11,12 +11,13 @@ authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
 [dependencies.hal]
 path = "libs/hal"
 
+[dependencies.logger]
+path = "libs/logger"
+features = ["heap_buffering"]
+
 ##
 # External Crates
 ##
-
-[dependencies.log]
-version = "0.4.14"
 
 [dependencies.bit_field]
 version = "0.10.1"

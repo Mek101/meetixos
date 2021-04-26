@@ -31,7 +31,7 @@ impl HwBootInfosBase for X64BootInfos {
         let command_line = if let Some(cmdline_tag) = multiboot_hdr.command_line_tag() {
             cmdline_tag.command_line()
         } else {
-            "-loglvl=Debug"
+            "-log-level=Debug"
         };
 
         /* obtain the memory areas */

@@ -12,13 +12,13 @@ use hal::{
     boot::infos::BootInfos,
     paging::{Page2MiB, Page4KiB, PageSize, PhysFrame, PhysFrameRange}
 };
+#[cfg(debug_assertions)]
+use logger::debug;
+use logger::{info, warn};
 use sync::SpinMutex;
 
-#[cfg(debug_assertions)]
-use crate::log::debug;
 use crate::{
     debug::debug_size_multiplier,
-    log::{info, warn},
     mem::paging::{bytes_to_pages_count, paging_map_unmanaged}
 };
 

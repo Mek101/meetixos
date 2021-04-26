@@ -1,115 +1,112 @@
 /*! # Kernel Logging
  *
- * Implements a simple logging sub-system used by all the kernel
+ * Implements a simple UART logging sub-system used by all the kernel.
+ *
+ * TODO for now the implementation uses the same backend writer of the
+ *      hh_loader, implement a `FileWriter` when filesystem become reality
  */
 
-use core::{fmt::Write, str::FromStr};
-
-pub use log::{debug, error, info, warn};
-use log::{
-    set_logger, set_max_level, LevelFilter, Log, Metadata, Record, SetLoggerError
-};
+use core::{fmt, str::FromStr};
 
 use hal::{boot::infos::BootInfos, uart::Uart};
-use sync::SpinMutex;
+use logger::{LevelFilter, Logger, LoggerWriter};
+use sync::RawSpinMutex;
 
-/** Global kernel logger instance, is initialized by the [`init_logger()`]
- * function in the kernel bootstrap
+/** Global kernel logger instance, is initialized by the
+ * [`init_logger()`] function called by [`hhl_rust_entry()`]
  *
- * [`init_logger()`]: /kernel/log/fn.init_logger.html
+ * [`init_logger()`]: fn.init_logger.html
+ * [`hhl_rust_entry()`]: fn.hhl_rust_entry.html
  */
-static mut KERN_LOGGER: Option<Logger> = None;
+static mut KERN_LOGGER: Logger<UartWriter, RawSpinMutex> = Logger::new_uninitialized();
 
 /** Default logging level, used as fallback when no valid filters are given
  * via kernel's command line
  */
 const DEFAULT_LOGGING_LEVEL: LevelFilter = LevelFilter::Debug;
 
-/** # Initializes the logger module
- *
- * Initializes the global kernel logger instance and initializes the
- * external logging framework
+/** Default buffer logging size in bytes, used as fallback when no valid
+ * values are given via kernel's command line
  */
-pub fn init_logger() -> Result<(), SetLoggerError> {
-    unsafe {
-        assert!(KERN_LOGGER.is_none(), "Re-initializing global logger");
+const DEFAULT_BUFFER_SIZE: usize = 512;
 
-        /* initialize the logger and the `log` framework providing the global logger
-         * instance
-         */
-        KERN_LOGGER = Some(Logger::new());
-        set_logger(KERN_LOGGER.as_ref().unwrap_unchecked())?;
+/** # Initializes the logger
+ *
+ * Initializes the global logger instance
+ */
+pub fn init_logger() {
+    /* enable the global logger as global for the log crate too */
+    unsafe {
+        KERN_LOGGER.enable_as_global().unwrap();
     }
 
-    /* obtain from the from the bootloader informations the command-line
-     * arguments and search for the `-loglvl` key, if provided (and have a valid
-     * value) use it, otherwise fallback to the `DEFAULT_LOGGING_LEVEL`
-     */
+    /* search for `-log-level` key into the kernel's command line */
     let filter_level = {
         let infos = BootInfos::obtain();
         infos.cmdline_args()
-             .find_key("-loglvl")
-             .map_or(DEFAULT_LOGGING_LEVEL, |arg| {
-                 if let Ok(level) = LevelFilter::from_str(arg.value()) {
-                     level
-                 } else {
-                     DEFAULT_LOGGING_LEVEL
-                 }
-             })
+            .find_key("-log-level")
+            .map_or(DEFAULT_LOGGING_LEVEL, |arg| {
+                LevelFilter::from_str(arg.value()).unwrap_or(DEFAULT_LOGGING_LEVEL)
+            })
     };
 
-    /* set the `log`s crate static maximum level, then return `Ok`, the log
-     * module is successfully initialized
-     */
-    set_max_level(filter_level);
-    Ok(())
+    /* hide all the logs above the given filter level */
+    unsafe {
+        KERN_LOGGER.set_max_logging_level(filter_level);
+    }
 }
 
-/** # Kernel Logger
+/** # Enables the logging line-buffering
  *
- * Implements a simple thread safe logger that writes into the UART
+ * Searches into the kernel's command line for `-log-buffer-size` and uses
+ * the value as buffer size
  */
-struct Logger {
-    m_uart_writer: SpinMutex<Uart>
+pub fn enable_logger_buffering() {
+    /* search for `-log-buffer-size` key into the kernel's command line */
+    let buffer_size = {
+        let infos = BootInfos::obtain();
+        infos.cmdline_args()
+            .find_key("-log-buffer-size")
+            .map_or(DEFAULT_BUFFER_SIZE, |value| {
+                if let Ok(value) = usize::from_str(value.as_str()) {
+                    value
+                } else {
+                    DEFAULT_BUFFER_SIZE
+                }
+            })
+    };
+
+    unsafe {
+        KERN_LOGGER.enable_buffering(buffer_size);
+    }
 }
 
-impl Logger {
-    /** # Constructs a `Logger`
-     *
-     * The returned instance is already initialized and ready to write
+/** # UART LoggerWriter
+ *
+ * Implements the [`LoggerWriter`] for the [`Uart`] struct
+ *
+ * [`LoggerWriter`]: trait.LoggerWriter.html
+ * [`Uart`]: struct.Uart.html
+ */
+pub struct UartWriter {
+    m_uart: Uart
+}
+
+impl LoggerWriter for UartWriter {
+    /** Constructs an initialized `LoggerWriter`
      */
     fn new() -> Self {
         let mut uart = Uart::new();
         uart.init();
-        Self { m_uart_writer: SpinMutex::new(uart) }
+        Self { m_uart: uart }
     }
 }
 
-impl Log for Logger {
-    /** Determines if a log message with the specified metadata would be
-     * logged
+impl fmt::Write for UartWriter {
+    /** Writes a string slice into this writer, returning whether the write
+     * succeeded
      */
-    fn enabled(&self, _metadata: &Metadata) -> bool {
-        /* TODO a special file/syscall which dynamically allow setup the log level */
-        true
-    }
-
-    /** Logs the [`Record`]
-     *
-     * [`Record`]: https://docs.rs/log/0.4.14/log/struct.Record.html
-     */
-    fn log(&self, record: &Record) {
-        let mut writer = self.m_uart_writer.lock();
-        write!(writer,
-               "[{: >5} <> {: <20}] {}\n",
-               record.level(),  /* human readable log-level */
-               record.target(), /* path to the rust module relative to the kernel */
-               record.args()).unwrap()
-    }
-
-    /** Flushes any buffered records
-     */
-    fn flush(&self) {
-        /* No supported buffering */
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        self.m_uart.write_str(s)
     }
 }

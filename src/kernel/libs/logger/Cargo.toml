@@ -4,5 +4,27 @@ version = "0.1.0"
 edition = "2018"
 authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
 
+##
+# Kernel Crates
+##
+
+[dependencies.hal]
+path = "../hal"
+
+##
+# External Crates
+##
+
 [dependencies.log]
 version = "0.4.14"
+
+##
+# MeetiX Libraries Crates
+##
+
+[dependencies.sync]
+path = "../../../libs/sync"
+
+[features]
+heap_buffering = []
+default = []

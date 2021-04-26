@@ -19,32 +19,18 @@
 //#[macro_use]
 extern crate alloc;
 
-#[cfg(debug_assertions)]
-use core::mem::size_of;
-
-#[cfg(debug_assertions)]
-use hal::addr::{PhysAddr, VirtAddr};
 use hal::boot::infos::BootInfos;
+use logger::info;
 
 use crate::{
     debug::debug_size_multiplier,
     interrupt::init_interrupts,
-    log::{info, init_logger},
+    log::{enable_logger_buffering, init_logger},
     mem::{
         heap::{heap_allocated_mem, init_heap},
         phys::init_phys_mem
     },
     version::KERN_VERSION
-};
-#[cfg(debug_assertions)]
-use crate::{
-    debug::dump_boot_infos,
-    log::debug,
-    mem::{
-        heap::{heap_free_memory, heap_managed_mem},
-        paging::paging_active_page_dir,
-        phys::{phys_mem_allocated_mem, phys_mem_free_memory, phys_mem_total_mem}
-    }
 };
 
 mod debug;
@@ -83,7 +69,7 @@ pub unsafe extern "C" fn kern_start(boot_infos: BootInfos) {
     let _ = BootInfos::from(&boot_infos);
 
     /* initialize the logging system */
-    init_logger().unwrap_or_else(|err| panic!("Logger init failed: {}", err));
+    init_logger();
 
     info!("MeetiX Kernel v{} is booting...", KERN_VERSION);
     write_video("MeetiX Kernel v0.1.0 is booting...");
@@ -95,6 +81,10 @@ pub unsafe extern "C" fn kern_start(boot_infos: BootInfos) {
     /* initialize the heap memory allocator */
     info!("Initializing dynamic memory...");
     init_heap();
+
+    /* enable logger buffering */
+    info!("Enabling logger buffering...");
+    enable_logger_buffering();
 
     /* initialize the interrupt manager */
     info!("Initializing interrupts...");
@@ -147,6 +137,22 @@ fn kern_debug_and_tests() -> ! {
      */
     #[cfg(debug_assertions)]
     {
+        use core::mem::size_of;
+
+        use hal::addr::{PhysAddr, VirtAddr};
+        use logger::debug;
+
+        use crate::{
+            debug::dump_boot_infos,
+            mem::{
+                heap::{heap_free_memory, heap_managed_mem},
+                paging::paging_active_page_dir,
+                phys::{
+                    phys_mem_allocated_mem, phys_mem_free_memory, phys_mem_total_mem
+                }
+            }
+        };
+
         dump_boot_infos();
 
         debug!("Address Size:");
