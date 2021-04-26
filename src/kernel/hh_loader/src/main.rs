@@ -3,14 +3,13 @@
 #![feature(global_asm)]
 #![feature(option_result_unwrap_unchecked)]
 
-use core::panic::PanicInfo;
-
 use hal::{boot::infos::BootInfos, paging::PageDir};
 
 use crate::log::{info, init_logger};
 
 mod arch;
 mod log;
+mod panic;
 
 /* includes the module which links the kernel core binary */
 include!(env!("KERNEL_BIN"));
@@ -34,10 +33,4 @@ pub unsafe extern "C" fn hhl_rust_entry(raw_info_ptr: *const u8) -> ! {
     info!("\n{:?}", page_dir);
 
     loop { /* loop forever here */ }
-}
-
-#[panic_handler]
-fn panic_handler(_: &PanicInfo) -> ! {
-    info!("PANIC");
-    loop {}
 }

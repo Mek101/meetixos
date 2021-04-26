@@ -9,8 +9,8 @@ authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
 ##
 
 [dependencies.lock_api]
-version = "0.4.2"
+version = "0.4.3"
 features = ["nightly"]
 
 [dependencies.spinning_top]
-version = "0.2.2"
+version = "0.2.3"
