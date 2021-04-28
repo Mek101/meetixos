@@ -8,19 +8,8 @@ authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
 # Kernel Crates
 ##
 
-[dependencies.hal]
-path = "libs/hal"
-features = ["kernel_stage"]
-
-[dependencies.logger]
-path = "libs/logger"
-features = ["heap_buffering"]
-
-[dependencies.bitmap_allocator]
-path = "libs/bitmap_allocator"
-
-[dependencies.dbg_utils]
-path = "libs/dbg_utils"
+[dependencies.shared]
+path = "shared"
 
 ##
 # External Crates

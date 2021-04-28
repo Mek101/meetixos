@@ -4,8 +4,6 @@
  * and structures both in kernel's core and hh_loader
  */
 
-#![no_std]
-
 use core::fmt;
 
 /** Kibibyte multiplier

@@ -19,8 +19,8 @@ use crate::addr::{Address, VirtAddr};
  */
 #[derive(Debug, Clone)]
 pub struct VMLayout {
-    m_kern_heap_area: VMLayoutArea,
     m_kern_text_area: VMLayoutArea,
+    m_kern_heap_area: VMLayoutArea,
     m_phys_mem_bitmap_area: VMLayoutArea,
     m_phys_mem_mapping_area: VMLayoutArea,
     m_page_cache_area: VMLayoutArea,
@@ -34,15 +34,15 @@ impl VMLayout {
      *
      * [`VMLayoutArea`]: struct.VMLayoutArea.html
      */
-    pub const fn new(kern_heap_area: VMLayoutArea,
-                     kern_text_area: VMLayoutArea,
+    pub const fn new(kern_text_area: VMLayoutArea,
+                     kern_heap_area: VMLayoutArea,
                      phys_mem_bitmap_area: VMLayoutArea,
                      phys_mem_mapping_area: VMLayoutArea,
                      page_cache_area: VMLayoutArea,
                      tmp_map_area: VMLayoutArea)
                      -> Self {
-        Self { m_kern_heap_area: kern_heap_area,
-               m_kern_text_area: kern_text_area,
+        Self { m_kern_text_area: kern_text_area,
+               m_kern_heap_area: kern_heap_area,
                m_phys_mem_bitmap_area: phys_mem_bitmap_area,
                m_phys_mem_mapping_area: phys_mem_mapping_area,
                m_page_cache_area: page_cache_area,
@@ -62,20 +62,20 @@ impl VMLayout {
                m_tmp_map_area: VMLayoutArea::new_zero() }
     }
 
-    /** Returns the reference to the [`VMLayoutArea`] of kernel's heap
-     *
-     * [`VMLayoutArea`]: struct.VMLayoutArea.html
-     */
-    pub fn kern_heap_area(&self) -> &VMLayoutArea {
-        &self.m_kern_heap_area
-    }
-
     /** Returns the reference to the [`VMLayoutArea`] of kernel's text
      *
      * [`VMLayoutArea`]: struct.VMLayoutArea.html
      */
     pub fn kern_text_area(&self) -> &VMLayoutArea {
         &self.m_kern_text_area
+    }
+
+    /** Returns the reference to the [`VMLayoutArea`] of kernel's heap
+     *
+     * [`VMLayoutArea`]: struct.VMLayoutArea.html
+     */
+    pub fn kern_heap_area(&self) -> &VMLayoutArea {
+        &self.m_kern_heap_area
     }
 
     /** Returns the reference to the [`VMLayoutArea`] of physical memory

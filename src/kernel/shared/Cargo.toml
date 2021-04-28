@@ -1,5 +1,5 @@
 [package]
-name = "hal"
+name = "shared"
 version = "0.1.0"
 edition = "2018"
 authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
@@ -10,6 +10,9 @@ authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
 
 [dependencies.bit_field]
 version = "0.10.1"
+
+[dependencies.log]
+version = "0.4.14"
 
 ##
 # External aarch64 Crates
@@ -43,12 +46,10 @@ version = "0.2.12"
 ##
 
 [dependencies.os]
-path = "../../../libs/os"
+path = "../../libs/os"
 
 [dependencies.macros]
-path = "../../../libs/macros"
+path = "../../libs/macros"
 
-[features]
-loader_stage = []
-kernel_stage = []
-default = ["kernel_stage"]
+[dependencies.sync]
+path = "../../libs/sync"

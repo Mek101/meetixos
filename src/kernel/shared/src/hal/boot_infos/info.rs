@@ -87,7 +87,7 @@ impl From<*const u8> for BootInfos {
     }
 }
 
-#[cfg(feature = "kernel_stage")]
+#[cfg(not(feature = "loader_stage"))]
 impl From<&Self> for BootInfos {
     /** Initializes the global inner informations then constructs the
      * `BootInfos` instance.

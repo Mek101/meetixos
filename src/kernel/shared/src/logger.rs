@@ -7,9 +7,6 @@
  * [`log`]: https://docs.rs/log/0.4.14/log/index.html
  */
 
-#![no_std]
-#![feature(array_methods, const_fn)]
-
 #[cfg(feature = "heap_buffering")]
 extern crate alloc;
 

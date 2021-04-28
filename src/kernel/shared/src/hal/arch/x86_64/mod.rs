@@ -8,7 +8,7 @@
 pub mod addr;
 #[cfg(feature = "loader_stage")]
 pub mod boot;
-#[cfg(feature = "kernel_stage")]
+#[cfg(not(feature = "loader_stage"))]
 pub mod interrupt;
 pub mod paging;
 pub mod uart;

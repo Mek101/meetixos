@@ -3,10 +3,7 @@ members = [
     # Kernel Crates
     "src/kernel",
     "src/kernel/hh_loader",
-    "src/kernel/libs/bitmap_allocator",
-    "src/kernel/libs/dbg_utils",
-    "src/kernel/libs/hal",
-    "src/kernel/libs/logger",
+    "src/kernel/shared",
     # Library Crates
     "src/libs/api",
     "src/libs/heap",
