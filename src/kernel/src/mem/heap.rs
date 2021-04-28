@@ -10,13 +10,9 @@ use hal::{
     paging::{MapFlusher, PTFlags, Page4KiB, PageSize, VirtFrame}
 };
 use heap::locked::raw::RawLazyLockedHeap;
-#[cfg(debug_assertions)]
-use logger::debug;
 use logger::info;
 use sync::{RawMutex, RawSpinMutex};
 
-#[cfg(debug_assertions)]
-use crate::debug::debug_size_multiplier;
 use crate::mem::{
     frame_allocators::KernAllocator,
     layout::{KRN_HEAP_END, KRN_HEAP_START},
@@ -94,6 +90,9 @@ fn heap_mem_supplier(requested_size: usize) -> Option<(usize, usize)> {
 
     #[cfg(debug_assertions)]
     {
+        use dbg_utils::debug_size_multiplier;
+        use logger::debug;
+
         debug!("Supplying additional {} to the heap allocator",
                debug_size_multiplier(page_aligned_size));
     }

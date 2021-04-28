@@ -19,11 +19,10 @@
 //#[macro_use]
 extern crate alloc;
 
-use hal::boot::infos::BootInfos;
+use hal::boot_infos::BootInfos;
 use logger::info;
 
 use crate::{
-    debug::debug_size_multiplier,
     interrupt::init_interrupts,
     log::{enable_logger_buffering, init_logger},
     mem::{
@@ -121,6 +120,7 @@ fn kern_debug_and_tests() -> ! {
 
     fn test_heap_alloc_free() {
         use alloc::boxed::Box;
+        use dbg_utils::debug_size_multiplier;
 
         let boxed_int = Box::new([1u64, 2u64, 3u64, 5u64, 6u64, 7u64, 8u64, 9u64, 10u64]);
 
@@ -139,6 +139,7 @@ fn kern_debug_and_tests() -> ! {
     {
         use core::mem::size_of;
 
+        use dbg_utils::debug_size_multiplier;
         use hal::addr::{PhysAddr, VirtAddr};
         use logger::debug;
 

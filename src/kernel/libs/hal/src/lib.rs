@@ -22,7 +22,8 @@
 extern crate macros;
 
 pub mod addr;
-pub mod boot;
+pub mod boot_infos;
+#[cfg(feature = "kernel_stage")]
 pub mod interrupt;
 pub mod paging;
 pub mod uart;

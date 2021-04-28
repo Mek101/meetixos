@@ -8,7 +8,7 @@ use os::str_utils;
 /** Maximum amount of command line arguments that [`BootInfosInner`] could
  * store
  *
- * [`BootInfosInner`]: /hal/boot/struct.BootInfosInner.html
+ * [`BootInfosInner`]: /hal/boot_infos/struct.BootInfosInner.html
  */
 pub(crate) const BOOT_CMDLINE_ARGS_COUNT_MAX: usize = 32;
 
@@ -33,8 +33,9 @@ impl CmdLineArgs {
      * The given `raw_cmdline` is tokenized and parsed into sub
      * [`CmdLineArg`] object(s)
      *
-     * [`CmdLineArg`]: /hal/boot/infos/struct.CmdLineArg.html
+     * [`CmdLineArg`]: /hal/boot_infos/struct.CmdLineArg.html
      */
+    #[cfg(feature = "loader_stage")]
     pub(crate) fn new(raw_cmdline: &str) -> Self {
         /* split and count the raw string arguments */
         let mut count = 0;
@@ -59,7 +60,7 @@ impl CmdLineArgs {
      * In the first case evaluates only the `-key` part, otherwise all the
      * word
      *
-     * [`CmdLineArg`]: /hal/boot/infos/struct.CmdLineArg.html
+     * [`CmdLineArg`]: /hal/boot_infos/struct.CmdLineArg.html
      */
     pub fn find_key(&self, to_find: &str) -> Option<&CmdLineArg> {
         self.iter().find(|arg| {
@@ -110,6 +111,7 @@ impl CmdLineArg {
      * The raw argument string slice given is tokenized again into key and
      * value if necessary
      */
+    #[cfg(feature = "loader_stage")]
     pub(crate) fn new(arg: &str) -> Self {
         let mut arg_buf = [0; BOOT_CMDLINE_ARGS_LEN_MAX];
         str_utils::copy_str_to_u8_buf(&mut arg_buf, arg);
@@ -136,9 +138,9 @@ impl CmdLineArg {
      * [`CmdLineArg::as_str()`] otherwise
      *
      * [`CmdLineArg::is_key_value()`]:
-     * /hal/boot/infos/struct.CmdLineArg.html#method.is_key_value
+     * /hal/boot_infos/struct.CmdLineArg.html#method.is_key_value
      * [`CmdLineArg::as_str()`]:
-     * /hal/boot/infos/struct.CmdLineArg.html#method.as_str
+     * /hal/boot_infos/struct.CmdLineArg.html#method.as_str
      */
     pub fn key(&self) -> &str {
         if self.is_key_value() {
@@ -153,9 +155,9 @@ impl CmdLineArg {
      * [`CmdLineArg::as_str()`] otherwise
      *
      * [`CmdLineArg::is_key_value()`]:
-     * /hal/boot/infos/struct.CmdLineArg.html#method.is_key_value
+     * /hal/boot_infos/struct.CmdLineArg.html#method.is_key_value
      * [`CmdLineArg::as_str()`]:
-     * /hal/boot/infos/struct.CmdLineArg.html#method.as_str
+     * /hal/boot_infos/struct.CmdLineArg.html#method.as_str
      */
     pub fn value(&self) -> &str {
         if self.is_key_value() {

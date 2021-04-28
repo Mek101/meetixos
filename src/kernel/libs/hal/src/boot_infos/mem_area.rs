@@ -3,7 +3,7 @@
  * Implements the simple descriptor of physical memory region given to the
  * kernel through the [`BootInfos`]
  *
- * [`BootInfos`]: /hal/boot/infos/struct.BootInfos.html
+ * [`BootInfos`]: /hal/boot_infos/struct.BootInfos.html
  */
 
 use core::cmp::Ordering;
@@ -15,8 +15,8 @@ use crate::{
 
 /** Maximum amount of [`BootMemArea`]s storable into a [`BootMemAreas`]
  *
- * [`BootMemArea`]: /hal/boot/struct.BootMemArea.html
- * [`BootMemAreas`]: /hal/boot/struct.BootMemAreas.html
+ * [`BootMemArea`]: /hal/boot_infos/struct.BootMemArea.html
+ * [`BootMemAreas`]: /hal/boot_infos/struct.BootMemAreas.html
  */
 pub const BOOT_MEM_AREAS_COUNT_MAX: usize = 64;
 
@@ -24,7 +24,7 @@ pub const BOOT_MEM_AREAS_COUNT_MAX: usize = 64;
  *
  * Represents a fixed collection of ordered [`BootMemArea`]s
  *
- * [`BootMemArea`]: /hal/boot/infos/struct.BootMemArea.html
+ * [`BootMemArea`]: /hal/boot_infos/struct.BootMemArea.html
  */
 #[derive(Debug, Clone)]
 pub struct BootMemAreas {
@@ -64,32 +64,6 @@ impl BootMemAreas {
         self.m_next_usable += 1;
     }
 
-    /** # Finds a `BootMemArea` by `PhysAddr`
-     *
-     * Returns the [`BootMemArea`] that contains the given [`PhysAddr`]
-     *
-     * [`BootMemArea`]: /hal/boot/infos/struct.BootMemArea.html
-     * [`PhysAddr`]: /hal/addr/struct.PhysAddr.html
-     */
-    pub fn find_area(&self, phys_addr: PhysAddr) -> Option<&BootMemArea> {
-        for area in self.iter() {
-            if area.contains(phys_addr) {
-                return Some(area);
-            }
-        }
-        None
-    }
-
-    pub fn find_area_where<F>(&self, f: F) -> Option<&BootMemArea>
-        where F: Fn(&BootMemArea) -> bool {
-        for area in self.iter() {
-            if f(area) {
-                return Some(area);
-            }
-        }
-        None
-    }
-
     /** # Sort the `BootMemAreas`
      *
      * Places the valid areas at the beginning and the null at the end
@@ -122,7 +96,7 @@ impl BootMemAreas {
 
     /** Returns the iterator to the valid [`BootMemArea`]s
      *
-     * [`BootMemArea`]: /hal/boot/struct.BootMemArea.html
+     * [`BootMemArea`]: /hal/boot_infos/struct.BootMemArea.html
      */
     pub fn iter(&self) -> impl Iterator<Item = &BootMemArea> {
         self.m_areas

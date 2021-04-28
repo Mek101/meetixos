@@ -3,18 +3,16 @@
  * Implements the bootloader independent informations structure
  */
 
-use crate::{
-    addr::VirtAddr,
-    arch::boot::HwBootInfos,
-    boot::infos::{BootMemAreas, CmdLineArgs}
-};
+use crate::boot_infos::{CmdLineArgs, VMLayout};
+#[cfg(feature = "loader_stage")]
+use crate::{arch::boot::HwBootInfos, boot_infos::BootMemAreas};
 
 /** It is initialized by the [`bsp_entry`] entry point macro, to allow the
  * [`BootInfos`] to be copiable and freely accessible without any
  * re-initialization
  *
- * [`bsp_entry`]: /hal/boot/macro.bsp_entry.html
- * [`BootInfos`]: /hal/boot/struct.BootInfos.html
+ * [`bsp_entry`]: /hal/boot_infos/macro.bsp_entry.html
+ * [`BootInfos`]: /hal/boot_infos/struct.BootInfos.html
  */
 static mut BOOT_INFOS_INNER: Option<BootInfosInner> = None;
 
@@ -41,13 +39,6 @@ impl BootInfos {
         }
     }
 
-    /** Returns the physical address of the initial page directory
-     * constructed
-     */
-    pub fn hw_phys_mem_offset(&self) -> VirtAddr {
-        self.m_inner.m_hw_phys_mem_offset
-    }
-
     /** Returns the slice to the kernel's command line
      */
     pub fn cmdline_args(&self) -> &'static CmdLineArgs {
@@ -56,13 +47,23 @@ impl BootInfos {
 
     /** Returns the [`BootMemAreas`] collection
      *
-     * [`BootMemAreas`]: /hal/boot/infos/struct.BootMemAreas.html
+     * [`BootMemAreas`]: /hal/boot_infos/struct.BootMemAreas.html
      */
+    #[cfg(feature = "loader_stage")]
     pub fn mem_areas(&self) -> &'static BootMemAreas {
         &self.m_inner.m_mem_areas
     }
+
+    /** Returns the [`VMLayout`] collection
+     *
+     * [`VMLayout`]: struct.VMLayout.html
+     */
+    pub fn vm_layout(&self) -> &'static VMLayout {
+        &self.m_inner.m_vm_layout
+    }
 }
 
+#[cfg(feature = "loader_stage")]
 impl From<*const u8> for BootInfos {
     /** Initializes the global inner informations then constructs the
      * `BootInfos` instance.
@@ -70,13 +71,13 @@ impl From<*const u8> for BootInfos {
      * Used by the higher half loader to initialize his instance of the
      * `BootInfosInner`
      */
-    fn from(raw_ptr: *const u8) -> Self {
+    fn from(raw_info_ptr: *const u8) -> Self {
         unsafe {
             assert!(BOOT_INFOS_INNER.is_none(), "Tried to re-initialize inner BootInfos");
         }
 
         /* obtain the informations inner and store to the global struct */
-        let inner_infos = HwBootInfos::obtain_inner_from_arch_infos(raw_ptr);
+        let inner_infos = HwBootInfos::obtain_inner_from_arch_infos(raw_info_ptr);
         unsafe {
             BOOT_INFOS_INNER = Some(inner_infos);
         }
@@ -86,6 +87,7 @@ impl From<*const u8> for BootInfos {
     }
 }
 
+#[cfg(feature = "kernel_stage")]
 impl From<&Self> for BootInfos {
     /** Initializes the global inner informations then constructs the
      * `BootInfos` instance.
@@ -98,7 +100,7 @@ impl From<&Self> for BootInfos {
             assert!(BOOT_INFOS_INNER.is_none(), "Tried to re-initialize inner BootInfos");
         }
 
-        /* clone the boot informations inner and store to our global copy */
+        /* clone the boot_infos informations inner and store to our global copy */
         unsafe {
             BOOT_INFOS_INNER = Some(rhs.m_inner.clone());
         }
@@ -110,28 +112,27 @@ impl From<&Self> for BootInfos {
 
 /** # Boot Informations Inner
  *
- * Defines the container of the common boot informations that is initialized
- * and instantiated once across all the HAL/kernel instance
+ * Defines the container of the common boot_infos informations that is
+ * initialized and instantiated once across all the HAL/kernel instance
  */
 #[derive(Debug, Clone)]
 pub(crate) struct BootInfosInner {
-    m_hw_phys_mem_offset: VirtAddr,
     m_cmdline_args: CmdLineArgs,
-    m_mem_areas: BootMemAreas
+    #[cfg(feature = "loader_stage")]
+    m_mem_areas: BootMemAreas,
+    m_vm_layout: VMLayout
 }
 
+#[cfg(feature = "loader_stage")]
 impl BootInfosInner {
     /** # Constructs a `BootInfosInner`
      *
      * The returned instance copies the given buffers into his
      */
-    pub fn new(hw_phys_mem_offset: VirtAddr,
-               raw_cmdline: &str,
-               mem_areas: BootMemAreas)
-               -> Self {
-        Self { m_hw_phys_mem_offset: hw_phys_mem_offset,
-               m_cmdline_args: CmdLineArgs::new(raw_cmdline),
-               m_mem_areas: mem_areas }
+    pub(crate) fn new(raw_cmdline: &str, mem_areas: BootMemAreas) -> Self {
+        Self { m_cmdline_args: CmdLineArgs::new(raw_cmdline),
+               m_mem_areas: mem_areas,
+               m_vm_layout: VMLayout::new_zero() }
     }
 }
 
@@ -139,8 +140,9 @@ impl BootInfosInner {
  *
  * Defines the method that is required by the [`BootInfosInner`]
  *
- * [`BootInfosInner`]: /hal/boot/struct.BootInfosInner.html
+ * [`BootInfosInner`]: /hal/boot_infos/struct.BootInfosInner.html
  */
+#[cfg(feature = "loader_stage")]
 pub(crate) trait HwBootInfosBase {
     /** # Constructs a `BootInfosInner`
      *

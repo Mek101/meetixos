@@ -13,6 +13,10 @@
       <sourceFolder url="file://$MODULE_DIR$/src/libs/macros/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/libs/os/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/libs/sync/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/kernel/libs/bitmap_allocator/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/kernel/libs/dbg_utils/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/kernel/libs/early_allocator/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/kernel/libs/vm_layout/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/src/userland/target" />
     </content>

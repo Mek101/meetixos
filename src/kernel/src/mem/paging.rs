@@ -6,7 +6,7 @@
 
 use hal::{
     addr::{Address, VirtAddr},
-    boot::infos::BootInfos,
+    boot_infos::BootInfos,
     paging::{
         MapFlusher, PTFlags, Page4KiB, PageDir, PageSize, PhysFrame, VirtFrame,
         VirtFrameRange
@@ -30,9 +30,9 @@ static mut UNMNG_AREA_ALLOCATOR: UnmngAreaLockedAllocator =
  * [`PageDir`]: /hal/paging/struct.PageDir.html
  */
 pub fn paging_active_page_dir() -> PageDir {
-    unsafe {
-        PageDir::active_page_dir(BootInfos::obtain().hw_phys_mem_offset().as_usize())
-    }
+    let phys_offset =
+        BootInfos::obtain().vm_layout().phys_mem_mapping_area().start_addr().as_usize();
+    unsafe { PageDir::active_page_dir(phys_offset) }
 }
 
 /** # Makes accessible the given `PhysFrame` range

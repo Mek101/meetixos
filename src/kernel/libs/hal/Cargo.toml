@@ -47,3 +47,8 @@ path = "../../../libs/os"
 
 [dependencies.macros]
 path = "../../../libs/macros"
+
+[features]
+loader_stage = []
+kernel_stage = []
+default = ["kernel_stage"]

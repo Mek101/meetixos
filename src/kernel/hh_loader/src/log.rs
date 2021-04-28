@@ -5,7 +5,7 @@
 
 use core::{fmt, str::FromStr};
 
-use hal::{boot::infos::BootInfos, uart::Uart};
+use hal::{boot_infos::BootInfos, uart::Uart};
 use logger::{LevelFilter, Logger, LoggerWriter};
 use sync::RawSpinMutex;
 
