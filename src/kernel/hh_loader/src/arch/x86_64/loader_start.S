@@ -60,9 +60,9 @@ hhl_l2_page_table:
 .endr
 hhl_page_tables_end:
 
-/* ------------------------------------- .text32 section ------------------------------------- */
+/* ------------------------------------- .rodata section ------------------------------------- */
 
-.section .text
+.section .rodata
 
 /** # Protected 32bit GDT table
  *
@@ -127,6 +127,10 @@ hhl_long_mode_gdt:
      */
     .byte       0xff, 0xff, 0, 0, 0, 0x92, 0xa0, 0x00
 hhl_long_mode_gdt_end:
+
+/* ------------------------------------- .text32 section ------------------------------------- */
+
+.section .text
 
 /** # Higher Half Loader entry point
  *
