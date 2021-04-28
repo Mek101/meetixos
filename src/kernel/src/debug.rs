@@ -11,7 +11,7 @@ use logger::debug;
  *
  * Prints using the `log` module the [`BootInfos`] given by the [`HAL`]
  *
- * [`BootInfos`]: /hal/boot_infos/struct.BootInfos.html
+ * [`BootInfos`]: /hal/infos/struct.BootInfos.html
  * [`HAL`]: /hal/
  */
 pub fn dump_boot_infos() {
@@ -26,7 +26,7 @@ pub fn dump_boot_infos() {
  * Prints using the `log` module the command line inside the [`BootInfos`]
  * given by the [`HAL`]
  *
- * [`BootInfos`]: /hal/boot_infos/struct.BootInfos.html
+ * [`BootInfos`]: /hal/infos/struct.BootInfos.html
  * [`HAL`]: /hal/
  */
 pub fn dump_boot_cmdline() {
@@ -41,7 +41,7 @@ pub fn dump_boot_cmdline() {
  * Prints using the `log` module the memory areas inside the [`BootInfos`]
  * given by the [`HAL`]
  *
- * [`BootInfos`]: /hal/boot_infos/struct.BootInfos.html
+ * [`BootInfos`]: /hal/infos/struct.BootInfos.html
  * [`HAL`]: /hal/
  */
 pub fn dump_boot_mem_areas() {

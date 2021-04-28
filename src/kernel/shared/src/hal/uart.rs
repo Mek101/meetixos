@@ -9,7 +9,7 @@ use core::{
     sync::atomic::{AtomicBool, Ordering}
 };
 
-use crate::hal::arch::uart::HwUart;
+use crate::arch::hal::uart::HwUart;
 
 /** # UART Writer
  *

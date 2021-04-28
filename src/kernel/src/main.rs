@@ -19,8 +19,7 @@
 //#[macro_use]
 extern crate alloc;
 
-use hal::boot_infos::BootInfos;
-use logger::info;
+use shared::{infos::BootInfos, logger::info};
 
 use crate::{
     interrupt::init_interrupts,
@@ -98,7 +97,7 @@ pub unsafe extern "C" fn kern_start(boot_infos: BootInfos) {
 fn kern_debug_and_tests() -> ! {
     fn test_4kib_alloc() {
         use crate::mem::phys::phys_mem_alloc_frame;
-        use hal::paging::Page4KiB;
+        use shared::mem::paging::Page4KiB;
 
         if let Some(phys_frame) = phys_mem_alloc_frame::<Page4KiB>() {
             info!("allocated PhysFrame<Page4KiB>({:?})", phys_frame)
