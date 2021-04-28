@@ -3,9 +3,9 @@
  * Implements the bootloader independent informations structure
  */
 
-use crate::boot_infos::{CmdLineArgs, VMLayout};
+use crate::hal::boot_infos::{CmdLineArgs, VMLayout};
 #[cfg(feature = "loader_stage")]
-use crate::{arch::boot::HwBootInfos, boot_infos::BootMemAreas};
+use crate::hal::{arch::boot::HwBootInfos, boot_infos::BootMemAreas};
 
 /** It is initialized by the [`bsp_entry`] entry point macro, to allow the
  * [`BootInfos`] to be copiable and freely accessible without any

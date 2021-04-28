@@ -3,7 +3,7 @@
  * Implements the x86_64 boot_infos informations gainer
  */
 
-use crate::{
+use crate::hal::{
     addr::{Address, PhysAddr},
     boot_infos::{BootInfosInner, BootMemArea, BootMemAreas, HwBootInfosBase}
 };

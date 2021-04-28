@@ -5,7 +5,7 @@
 
 use core::mem;
 
-use crate::{
+use crate::hal::{
     addr::VirtAddr,
     arch::paging::HwMapFlusher,
     paging::{PageSize, VirtFrame, VirtFrameRangeIncl}

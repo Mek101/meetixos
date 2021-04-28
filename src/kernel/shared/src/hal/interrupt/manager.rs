@@ -6,7 +6,7 @@
 
 use core::sync::atomic::{AtomicUsize, Ordering};
 
-use crate::{arch::interrupt::HwInterruptManager, interrupt::InterruptStackFrame};
+use crate::hal::{arch::interrupt::HwInterruptManager, interrupt::InterruptStackFrame};
 
 /** # Interrupt Handler Function
  *

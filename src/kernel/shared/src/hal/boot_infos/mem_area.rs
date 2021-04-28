@@ -8,7 +8,7 @@
 
 use core::cmp::Ordering;
 
-use crate::{
+use crate::hal::{
     addr::{Address, PhysAddr},
     paging::{PageSize, PhysFrame, PhysFrameRange}
 };

@@ -4,7 +4,7 @@
  * and page tables
  */
 
-use crate::paging::{Page4KiB, PageSize, PhysFrame};
+use crate::hal::paging::{Page4KiB, PageSize, PhysFrame};
 
 /** # Frame Allocator Base
  *

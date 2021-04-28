@@ -8,7 +8,7 @@
  * [`BootInfos`]: struct.BootInfos.html
  */
 
-use crate::addr::{Address, VirtAddr};
+use crate::hal::addr::{Address, VirtAddr};
 
 /** # Kernel Virtual Memory Layout
  *

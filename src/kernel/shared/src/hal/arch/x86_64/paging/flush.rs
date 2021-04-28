@@ -4,7 +4,7 @@
  * structure
  */
 
-use crate::{
+use crate::hal::{
     addr::{Address, VirtAddr},
     paging::HwMapFlusherBase
 };

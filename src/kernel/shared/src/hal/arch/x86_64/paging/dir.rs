@@ -3,7 +3,7 @@
  * Implements the page table flags for the x86_64 architecture
  */
 
-use crate::{
+use crate::hal::{
     addr::{Address, PhysAddr},
     paging::{HwPageDirSupportBase, Page4KiB, PageTableLevel, PhysFrame}
 };

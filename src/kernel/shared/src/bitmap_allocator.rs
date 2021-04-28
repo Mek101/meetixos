@@ -6,7 +6,10 @@
 
 use core::{ops::Range, slice};
 
-use crate::hal::paging::{Page4KiB, PageSize, PhysFrame, PhysFrameRange};
+use crate::hal::{
+    addr::{Address, PhysAddr},
+    paging::{Page4KiB, PageSize, PhysFrame, PhysFrameRange}
+};
 use bit_field::{BitArray, BitField};
 use sync::{Mutex, RawMutex};
 

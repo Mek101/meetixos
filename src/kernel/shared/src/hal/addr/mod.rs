@@ -14,7 +14,7 @@ use core::{
 pub use phys::*;
 pub use virt::*;
 
-use crate::paging::{Frame, PageSize};
+use crate::hal::paging::{Frame, PageSize};
 
 mod phys;
 mod virt;

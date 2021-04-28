@@ -5,13 +5,13 @@
 
 use core::convert::TryFrom;
 
+use bit_field::BitField;
 use x86_64::VirtAddr;
 
-use crate::{
+use crate::hal::{
     addr::{AddressErr, HwAddrBase, HwVirtAddrBase},
     paging::PageTableIndex
 };
-use bit_field::BitField;
 
 /** # x86_64 Physical Address
  *

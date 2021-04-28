@@ -8,7 +8,7 @@ use core::{
     fmt::{Debug, Formatter}
 };
 
-use crate::{
+use crate::hal::{
     addr::{Address, VirtAddr},
     arch::paging::HwPageDirSupport,
     paging::{

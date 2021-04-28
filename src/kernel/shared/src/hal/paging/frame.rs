@@ -16,7 +16,7 @@ use core::{
     ops::{Add, AddAssign, Range, RangeInclusive, Sub, SubAssign}
 };
 
-use crate::{
+use crate::hal::{
     addr::{Address, PhysAddr, VirtAddr},
     paging::{Page1GiB, Page2MiB, Page4KiB, PageSize, PageTableIndex, PageTableLevel}
 };

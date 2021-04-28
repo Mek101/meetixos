@@ -18,7 +18,7 @@ mod table;
 
 use core::fmt::Debug;
 
-use crate::arch::paging::HwPageDirSupport;
+use crate::hal::arch::paging::HwPageDirSupport;
 
 /** # 4KiB Page Size
  *

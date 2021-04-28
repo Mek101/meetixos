@@ -10,7 +10,7 @@ use core::{
     ops::{Add, AddAssign, Sub, SubAssign}
 };
 
-use crate::{
+use crate::hal::{
     addr::{Address, AddressErr, HwAddrBase},
     arch::addr::HwPhysAddr
 };

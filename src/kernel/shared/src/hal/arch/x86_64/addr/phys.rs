@@ -7,7 +7,7 @@ use core::convert::TryFrom;
 
 use x86_64::PhysAddr;
 
-use crate::addr::{AddressErr, HwAddrBase};
+use crate::hal::addr::{AddressErr, HwAddrBase};
 
 /** # x86_64 Physical Address
  *

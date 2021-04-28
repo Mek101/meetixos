@@ -3,7 +3,7 @@
  * Implements the hardware independent interrupt stack frame wrapper
  */
 
-use crate::{
+use crate::hal::{
     addr::{Address, VirtAddr},
     arch::interrupt::HwInterruptStackFrame
 };

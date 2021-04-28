@@ -10,7 +10,7 @@ use core::{
     ops::{Index, IndexMut}
 };
 
-use crate::{
+use crate::hal::{
     addr::{Address, PhysAddr},
     arch::paging::HwPageDirSupport,
     paging::{HwPageDirSupportBase, PageSize, PhysFrame}
