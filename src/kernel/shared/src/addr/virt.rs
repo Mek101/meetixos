@@ -6,12 +6,27 @@
 use core::{
     convert::TryFrom,
     fmt,
-    fmt::{Binary, Debug, LowerHex, Octal, UpperHex},
-    ops::{Add, AddAssign, Sub, SubAssign}
+    fmt::{
+        Binary,
+        Debug,
+        LowerHex,
+        Octal,
+        UpperHex
+    },
+    ops::{
+        Add,
+        AddAssign,
+        Sub,
+        SubAssign
+    }
 };
 
 use crate::{
-    addr::{Address, AddressErr, HwAddrBase},
+    addr::{
+        Address,
+        AddressErr,
+        HwAddrBase
+    },
     arch::addr::HwVirtAddr,
     mem::paging::PageTableIndex
 };
@@ -79,7 +94,7 @@ impl VirtAddr {
 
     /** Returns the fourth level [`PageTableIndex`]
      *
-     * [`PageTableIndex`]: /hal/paging/struct.PageTableIndex.html
+     * [`PageTableIndex`]: crate::mem::paging::table::PageTableIndex
      */
     pub fn level_4_index(&self) -> PageTableIndex {
         PageTableIndex::new(self.m_hw_addr.level_4_index())
@@ -87,7 +102,7 @@ impl VirtAddr {
 
     /** Returns the third level [`PageTableIndex`]
      *
-     * [`PageTableIndex`]: /hal/paging/struct.PageTableIndex.html
+     * [`PageTableIndex`]: crate::mem::paging::table::PageTableIndex
      */
     pub fn level_3_index(&self) -> PageTableIndex {
         PageTableIndex::new(self.m_hw_addr.level_3_index())
@@ -95,7 +110,7 @@ impl VirtAddr {
 
     /** Returns the second level [`PageTableIndex`]
      *
-     * [`PageTableIndex`]: /hal/paging/struct.PageTableIndex.html
+     * [`PageTableIndex`]: crate::mem::paging::table::PageTableIndex
      */
     pub fn level_2_index(&self) -> PageTableIndex {
         PageTableIndex::new(self.m_hw_addr.level_2_index())
@@ -103,7 +118,7 @@ impl VirtAddr {
 
     /** Returns the first level [`PageTableIndex`]
      *
-     * [`PageTableIndex`]: /hal/paging/struct.PageTableIndex.html
+     * [`PageTableIndex`]: crate::mem::paging::table::PageTableIndex
      */
     pub fn level_1_index(&self) -> PageTableIndex {
         PageTableIndex::new(self.m_hw_addr.level_1_index())
@@ -297,7 +312,7 @@ impl SubAssign<Self> for VirtAddr {
  * Defines the interface on which the [`VirtAddr`] relies to export his
  * methods related to paging
  *
- * [`VirtAddr`]: /hal/addr/struct.VirtAddr.html
+ * [`VirtAddr`]: crate::addr:virt::VirtAddr
  */
 pub(crate) trait HwVirtAddrBase: HwAddrBase {
     /** # Constructs an hardware virtual address

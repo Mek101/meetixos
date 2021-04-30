@@ -1,7 +1,7 @@
 /*! # Virtual & Physical Address
  *
  * Implements the abstraction of the memory addresses into his two different
- * types: physical and virtual
+ * kinds: physical and virtual
  */
 
 use core::{
@@ -103,7 +103,7 @@ pub trait Address:
 
     /** Returns the containing [`Frame`] for this `Address`
      *
-     * [`Frame`]: /hal/paging/struct.Frame.html
+     * [`Frame`]: crate::mem::paging::frame::Frame
      */
     fn containing_frame<S>(&self) -> Frame<Self, S>
         where S: PageSize {
@@ -140,7 +140,7 @@ pub struct AddressErr(pub(crate) usize);
 impl fmt::Display for AddressErr {
     /** Formats the value using the given formatter.
      */
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "The given address was not properly aligned ({:#X})", self.0)
     }
 }

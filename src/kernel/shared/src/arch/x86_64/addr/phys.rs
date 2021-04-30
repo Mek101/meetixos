@@ -7,18 +7,20 @@ use core::convert::TryFrom;
 
 use x86_64::PhysAddr;
 
-use crate::addr::{AddressErr, HwAddrBase};
+use crate::addr::{
+    AddressErr,
+    HwAddrBase
+};
 
 /** # x86_64 Physical Address
  *
  * Implements the concrete physical address for the x86_64 architecture.
  *
  * The type ensures that the stored addresses are valid when validated with
- * [`X64PhysAddr::validate()`] using the [`x86_64::PhysAddr`]
+ * [`X64PhysAddr::validate()`](PV) using the [`x86_64::PhysAddr`]
  *
- * [`X64PhysAddr::validate()`]:
- * /hal/arch/x86_64/addr/struct.X64PhysAddr.html#method.validate
- * [`x86_64::PhysAddr`]: https://docs.rs/x86_64/0.13.2/x86_64/addr/struct.PhysAddr.html
+ * [PV]: crate::arch::x86_64::addr::phys::X64PhysAddr::validate
+ * [`x86_64::PhysAddr`]: x86_64::addr::PhysAddr
  */
 #[repr(transparent)]
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]

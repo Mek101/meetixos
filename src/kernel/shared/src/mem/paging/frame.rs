@@ -5,7 +5,7 @@
  * wrapped virtual/physical addresses
  *
  * [`PhysAddr`]: /hal/addr/struct.PhysAddr.html
- * [`VirtAddr`]: /hal/addr/struct.VirtAddr.html
+ * [`VirtAddr`]: crate::addr:virt::VirtAddr
  * [`PAGE_SIZE`]: /hal/paging/constant.PAGE_SIZE.html
  */
 
@@ -46,8 +46,8 @@ use crate::{
  * Applies the [`Frame`] logic to virtual addresses, it's expected to be
  * used as allocation unit for virtual page allocators
  *
- * [`Frame`]: /hal/paging/struct.Frame.html
- * [`VirtAddr`]: /hal/addr/struct.VirtAddr.html
+ * [`Frame`]: crate::mem::paging::frame::Frame
+ * [`VirtAddr`]: crate::addr:virt::VirtAddr
  */
 pub type VirtFrame<S> = Frame<VirtAddr, S>;
 pub type VirtFrameRange<S> = Range<VirtFrame<S>>;
@@ -60,7 +60,7 @@ pub type VirtFrameRangeIncl<S> = RangeInclusive<VirtFrame<S>>;
  * Applies the [`Frame`] logic to physical addresses, it's expected to be
  * used as allocation unit for physical page allocators
  *
- * [`Frame`]: /hal/paging/struct.Frame.html
+ * [`Frame`]: crate::mem::paging::frame::Frame
  * [`PhysAddr`]: /hal/addr/struct.PhysAddr.html
  */
 pub type PhysFrame<S> = Frame<PhysAddr, S>;
@@ -219,7 +219,7 @@ impl<T, S> Frame<T, S>
 impl<S> Frame<VirtAddr, S> where S: PageSize {
     /** Returns the fourth level [`PageTableIndex`]
      *
-     * [`PageTableIndex`]: /hal/paging/struct.PageTableIndex.html
+     * [`PageTableIndex`]: crate::mem::paging::table::PageTableIndex
      */
     pub fn level_4_index(&self) -> PageTableIndex {
         self.m_addr_impl.level_4_index()
@@ -227,7 +227,7 @@ impl<S> Frame<VirtAddr, S> where S: PageSize {
 
     /** Returns the third level [`PageTableIndex`]
      *
-     * [`PageTableIndex`]: /hal/paging/struct.PageTableIndex.html
+     * [`PageTableIndex`]: crate::mem::paging::table::PageTableIndex
      */
     pub fn level_3_index(&self) -> PageTableIndex {
         self.m_addr_impl.level_3_index()
@@ -235,7 +235,7 @@ impl<S> Frame<VirtAddr, S> where S: PageSize {
 
     /** Returns the second level [`PageTableIndex`]
      *
-     * [`PageTableIndex`]: /hal/paging/struct.PageTableIndex.html
+     * [`PageTableIndex`]: crate::mem::paging::table::PageTableIndex
      */
     pub fn level_2_index(&self) -> PageTableIndex {
         self.m_addr_impl.level_2_index()
@@ -243,7 +243,7 @@ impl<S> Frame<VirtAddr, S> where S: PageSize {
 
     /** Returns the first level [`PageTableIndex`]
      *
-     * [`PageTableIndex`]: /hal/paging/struct.PageTableIndex.html
+     * [`PageTableIndex`]: crate::mem::paging::table::PageTableIndex
      */
     pub fn level_1_index(&self) -> PageTableIndex {
         self.m_addr_impl.level_1_index()
@@ -252,7 +252,7 @@ impl<S> Frame<VirtAddr, S> where S: PageSize {
     /** Returns the [`PageTableLevel`]th [`PageTableIndex`]
      *
      * [`PageTableLevel`]: /hal/paging/enum.PageTableLevel.html
-     * [`PageTableIndex`]: /hal/paging/struct.PageTableIndex.html
+     * [`PageTableIndex`]: crate::mem::paging::table::PageTableIndex
      */
     pub fn index_for_level(&self, pt_level: PageTableLevel) -> PageTableIndex {
         match pt_level {
@@ -399,7 +399,7 @@ impl<T, S> SubAssign<usize> for Frame<T, S>
  *
  * Represents a [`Frame`] creation error
  *
- * [`Frame`]: /hal/paging/struct.Frame.html
+ * [`Frame`]: crate::mem::paging::frame::Frame
  */
 #[derive(Debug)]
 pub struct FrameNotAlignedErr;

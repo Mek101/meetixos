@@ -4,8 +4,16 @@
  */
 
 use crate::{
-    addr::{Address, PhysAddr},
-    infos::{BootInfosInner, BootMemArea, BootMemAreas, HwBootInfosBase}
+    addr::{
+        Address,
+        PhysAddr
+    },
+    infos::{
+        BootInfosInner,
+        BootMemArea,
+        BootMemAreas,
+        HwBootInfosBase
+    }
 };
 
 /** # x86_64 Boot Information Gainer

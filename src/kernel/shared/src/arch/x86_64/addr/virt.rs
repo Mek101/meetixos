@@ -9,7 +9,11 @@ use bit_field::BitField;
 use x86_64::VirtAddr;
 
 use crate::{
-    addr::{AddressErr, HwAddrBase, HwVirtAddrBase},
+    addr::{
+        AddressErr,
+        HwAddrBase,
+        HwVirtAddrBase
+    },
     mem::paging::PageTableIndex
 };
 
@@ -21,7 +25,7 @@ use crate::{
  * `canonical` addresses because wraps an [`x86_64::VirtAddr`] which
  * guarantees the same constriction
  *
- * [`x86_64::VirtAddr`]: https://docs.rs/x86_64/0.13.2/x86_64/addr/struct.VirtAddr.html
+ * [`x86_64::VirtAddr`]: x86_64::addr::VirtAddr
  */
 #[repr(transparent)]
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
@@ -39,7 +43,7 @@ impl HwAddrBase for X64VirtAddr {
     /** Validates the inner [`x86_64::VirtAddr`] truncating it if not
      * `canonical`
      *
-     * [`x86_64::VirtAddr`]: https://docs.rs/x86_64/0.13.2/x86_64/addr/struct.VirtAddr.html
+     * [`x86_64::VirtAddr`]: x86_64::addr::VirtAddr
      */
     fn validate(&mut self) {
         *self = if let Ok(addr) = Self::try_from(self.as_usize()) {

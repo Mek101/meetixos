@@ -357,7 +357,7 @@ impl PageDir {
 
     /** Returns the virtual to physical memory offset [`VirtAddr`]
      *
-     * [`VirtAddr`]: /hal/addr/struct.VirtAddr.html
+     * [`VirtAddr`]: crate::addr:virt::VirtAddr
      */
     pub fn phys_mem_offset(&self) -> VirtAddr {
         self.m_phys_offset.m_offset
@@ -746,7 +746,7 @@ impl PhysOffset {
      * The constructs asserts the well alignment of the given [`VirtAddr`]
      * to the [`Page4KiB`]
      *
-     * [`VirtAddr`]: /hal/addr/struct.VirtAddr.html
+     * [`VirtAddr`]: crate::addr:virt::VirtAddr
      * [`Page4KiB`]: /hal/paging/struct.Page4kib.html
      */
     fn new(offset: VirtAddr) -> Self {

@@ -8,7 +8,11 @@ use core::mem;
 use crate::{
     addr::VirtAddr,
     arch::mem::paging::HwMapFlusher,
-    mem::paging::{PageSize, VirtFrame, VirtFrameRangeIncl}
+    mem::paging::{
+        PageSize,
+        VirtFrame,
+        VirtFrameRangeIncl
+    }
 };
 
 /** # Map Flush
@@ -239,7 +243,7 @@ pub(crate) trait HwMapFlusherBase {
      * page table entry for the given [`VirtAddr`] is not more valid
      * because changed
      *
-     * [`VirtAddr`]: /hal/addr/struct.VirtAddr.html
+     * [`VirtAddr`]: crate::addr:virt::VirtAddr
      */
     unsafe fn flush_addr(&self, addr: VirtAddr);
 

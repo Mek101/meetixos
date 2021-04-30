@@ -6,12 +6,27 @@
 use core::{
     convert::TryFrom,
     fmt,
-    fmt::{Binary, Debug, LowerHex, Octal, UpperHex},
-    ops::{Add, AddAssign, Sub, SubAssign}
+    fmt::{
+        Binary,
+        Debug,
+        LowerHex,
+        Octal,
+        UpperHex
+    },
+    ops::{
+        Add,
+        AddAssign,
+        Sub,
+        SubAssign
+    }
 };
 
 use crate::{
-    addr::{Address, AddressErr, HwAddrBase},
+    addr::{
+        Address,
+        AddressErr,
+        HwAddrBase
+    },
     arch::addr::HwPhysAddr
 };
 

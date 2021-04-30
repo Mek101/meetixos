@@ -4,7 +4,10 @@
  */
 
 use crate::{
-    addr::{Address, VirtAddr},
+    addr::{
+        Address,
+        VirtAddr
+    },
     arch::hal::interrupt::HwInterruptStackFrame
 };
 
@@ -28,7 +31,7 @@ impl<'a> InterruptStackFrame<'a> {
 
     /** Returns the [`VirtAddr`] of the last or next instruction
      *
-     * [`VirtAddr`]: /hal/addr/struct.VirtAddr.html
+     * [`VirtAddr`]: crate::addr:virt::VirtAddr
      */
     pub fn instruction_ptr(&self) -> VirtAddr {
         unsafe { VirtAddr::new_unchecked(self.m_inner.instruction_ptr()) }
@@ -36,7 +39,7 @@ impl<'a> InterruptStackFrame<'a> {
 
     /** Returns the [`VirtAddr`] of the current stack pointer position
      *
-     * [`VirtAddr`]: /hal/addr/struct.VirtAddr.html
+     * [`VirtAddr`]: crate::addr:virt::VirtAddr
      */
     pub fn stack_ptr(&self) -> VirtAddr {
         unsafe { VirtAddr::new_unchecked(self.m_inner.stack_ptr()) }

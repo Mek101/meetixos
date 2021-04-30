@@ -13,17 +13,45 @@ extern crate alloc;
 #[cfg(not(feature = "heap_buffering"))]
 use core::marker::PhantomData;
 #[cfg(feature = "heap_buffering")]
-use core::{alloc::Layout, fmt::Error, slice};
-use core::{fmt, fmt::Write, str};
+use core::{
+    alloc::Layout,
+    fmt::Error,
+    slice
+};
+use core::{
+    fmt,
+    fmt::Write,
+    str
+};
 
 #[cfg(feature = "heap_buffering")]
-use alloc::alloc::{alloc_zeroed, dealloc, realloc};
+use alloc::alloc::{
+    alloc_zeroed,
+    dealloc,
+    realloc
+};
 
 /* re-export logging macros renamed with `log_` prefix */
-pub use log::{debug, error, info, warn, LevelFilter};
+pub use log::{
+    debug,
+    error,
+    info,
+    warn,
+    LevelFilter
+};
 
-use log::{set_logger, set_max_level, Log, Metadata, Record, SetLoggerError};
-use sync::{Mutex, RawMutex};
+use log::{
+    set_logger,
+    set_max_level,
+    Log,
+    Metadata,
+    Record,
+    SetLoggerError
+};
+use sync::{
+    Mutex,
+    RawMutex
+};
 
 /** # Logger Wrapper
  *
