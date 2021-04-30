@@ -178,8 +178,6 @@ endif
 	$(V) echo "- Creating mx_kernel"
 	$(V) cp -f $(BUILD_DIR)/hh_loader/$(BUILD_MODE)/hh_loader $(BUILD_DIR)/hh_loader/$(BUILD_MODE)/mx_kernel
 
-
-
 doc: sync_build_doc
 	$(V) echo "normalize_comments = true" >$(DOC_DIR)/rustfmt.toml
 	$(V) pushd $(DOC_DIR) >/dev/null;                                                \

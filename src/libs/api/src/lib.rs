@@ -71,10 +71,7 @@
  */
 
 #![no_std]
-#![feature(asm)]
-#![feature(array_methods)]
-#![feature(min_specialization)]
-#![feature(core_intrinsics)]
+#![feature(asm, array_methods, min_specialization, core_intrinsics)]
 
 pub mod bits;
 pub mod caller;
