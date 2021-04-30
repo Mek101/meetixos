@@ -6,10 +6,6 @@
 use core::{
     convert::TryFrom,
     fmt,
-    fmt::{
-        Display,
-        Formatter
-    },
     iter::Filter,
     ops::{
         Add,

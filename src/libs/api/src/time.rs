@@ -8,11 +8,7 @@
 pub use core::time::Duration;
 use core::{
     fmt,
-    fmt::{
-        Debug,
-        Display,
-        Formatter
-    },
+    fmt::Debug,
     ops::{
         Add,
         AddAssign,
@@ -239,7 +235,7 @@ impl DivAssign<u32> for Instant {
 impl fmt::Display for Instant {
     /** Formats the value using the given formatter.
      */
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.fmt(f)
     }
 }

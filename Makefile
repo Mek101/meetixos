@@ -98,7 +98,7 @@ ifeq ($(ARCH),x86_64)
 	                   $(BUILD_DIR)/sysroot/$(BUILD_MODE)
 endif
 
-install: build
+install: build_all
 	$(V) echo "- Copying sysroot to build dir..."
 	$(V) mkdir -p $(BUILD_DIR)/sysroot/$(BUILD_MODE)
 	$(V) rsync -a $(SYSROOT_DIR)/* $(BUILD_DIR)/sysroot/$(BUILD_MODE)
@@ -122,8 +122,31 @@ install: build
              fi                                                         \
          done
 
-build:
-	$(V) echo "- Building for $(ARCH) in $(BUILD_MODE) mode"
+build_all: build_kernel build_userland
+
+build_userland:
+	$(V) echo "- Building for $(ARCH) Userland in $(BUILD_MODE) mode"
+
+	$(V) echo "- Building Userland Apps..."
+	$(V) for APP_PRJ in $(USERLAND_APPS)/*/Cargo.toml; do                        \
+              RUSTFLAGS="$(RUSTC_FLAGS)"                                         \
+              CARGO_TARGET_DIR="$(BUILD_DIR)"                                    \
+                  $(CARGO) build $(CARGO_FLAGS)                                  \
+                           --manifest-path $${APP_PRJ}                           \
+                           --target $(USERLAND)/$(ARCH_CONF_PATH)/userland.json; \
+         done
+
+	$(V) echo "- Building Userland Binaries..."
+	$(V) for BIN_PRJ in $(USERLAND_BINS)/*/Cargo.toml; do                        \
+              RUSTFLAGS="$(RUSTC_FLAGS)"                                         \
+              CARGO_TARGET_DIR="$(BUILD_DIR)"                                    \
+                  $(CARGO) build $(CARGO_FLAGS)                                  \
+                           --manifest-path $${BIN_PRJ}                           \
+                           --target $(USERLAND)/$(ARCH_CONF_PATH)/userland.json; \
+         done
+
+build_kernel:
+	$(V) echo "- Building for $(ARCH) Kernel in $(BUILD_MODE) mode"
 
 	$(V) echo "- Building Kernel Core..."
 	$(V) RUSTFLAGS="$(RUSTC_FLAGS)"                        \
@@ -149,29 +172,13 @@ endif
                       --manifest-path $(KERNEL_HHL)/Cargo.toml      \
                       --target $(KERNEL_HHL)/$(ARCH_CONF_PATH)/hh_loader.json
 
-	$(V) echo "- Building Userland Apps..."
-	$(V) for APP_PRJ in $(USERLAND_APPS)/*/Cargo.toml; do                        \
-              RUSTFLAGS="$(RUSTC_FLAGS)"                                         \
-              CARGO_TARGET_DIR="$(BUILD_DIR)"                                    \
-                  $(CARGO) build $(CARGO_FLAGS)                                  \
-                           --manifest-path $${APP_PRJ}                           \
-                           --target $(USERLAND)/$(ARCH_CONF_PATH)/userland.json; \
-         done
-
-	$(V) echo "- Building Userland Binaries..."
-	$(V) for BIN_PRJ in $(USERLAND_BINS)/*/Cargo.toml; do                        \
-              RUSTFLAGS="$(RUSTC_FLAGS)"                                         \
-              CARGO_TARGET_DIR="$(BUILD_DIR)"                                    \
-                  $(CARGO) build $(CARGO_FLAGS)                                  \
-                           --manifest-path $${BIN_PRJ}                           \
-                           --target $(USERLAND)/$(ARCH_CONF_PATH)/userland.json; \
-         done
-
 	$(V) echo "- Copy ELF64 kernel into ELF32 executable..."
 	$(V) $(LLVM_OBJCOPY) $(OBJCOPY_FLAGS) $(BUILD_DIR)/hh_loader/$(BUILD_MODE)/hh_loader
 
 	$(V) echo "- Creating mx_kernel"
 	$(V) cp -f $(BUILD_DIR)/hh_loader/$(BUILD_MODE)/hh_loader $(BUILD_DIR)/hh_loader/$(BUILD_MODE)/mx_kernel
+
+
 
 doc: sync_build_doc
 	$(V) echo "normalize_comments = true" >$(DOC_DIR)/rustfmt.toml

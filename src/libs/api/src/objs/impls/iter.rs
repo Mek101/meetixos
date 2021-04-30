@@ -58,7 +58,7 @@ impl KrnIterator {
      */
     pub fn set_begin_to_end_pos(&self, pos: SeekMode) -> Result<usize> {
         self.kern_call_1(KernFnPath::Iterator(KrnIteratorFnId::SetBeginToEndPos),
-                         pos.into())
+                         pos.mode())
     }
 
     /** # Sets the end to begin position
@@ -70,7 +70,7 @@ impl KrnIterator {
      */
     pub fn set_end_to_begin_pos(&self, pos: SeekMode) -> Result<usize> {
         self.kern_call_1(KernFnPath::Iterator(KrnIteratorFnId::SetEndToBeginPos),
-                         pos.into())
+                         pos.mode())
     }
 
     /** # Finds the next iteration element

@@ -13,6 +13,7 @@ version = "0.10.1"
 
 [dependencies.num_enum]
 version = "0.5.1"
+default-features = false
 
 ##
 # MeetiX Libraries Crates
@@ -20,9 +21,6 @@ version = "0.5.1"
 
 [dependencies.os]
 path = "../os"
-
-[dependencies.macros]
-path = "../macros"
 
 [dependencies.sync]
 path = "../sync"

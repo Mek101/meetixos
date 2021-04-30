@@ -28,7 +28,7 @@ use crate::objs::{
  */
 #[repr(u8)]
 #[derive(Debug)]
-#[derive(Default, Clone, Copy)]
+#[derive(Clone, Copy)]
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum ConfigModeType {

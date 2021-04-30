@@ -175,7 +175,7 @@ impl File {
      */
     pub fn set_pos(&self, mode: SeekMode) -> Result<u64> {
         self.kern_call_2(KernFnPath::File(KernFileFnId::SetPos),
-                         mode.into(),
+                         mode.mode(),
                          mode.off().unwrap_or(0))
             .map(|off| off as u64)
     }

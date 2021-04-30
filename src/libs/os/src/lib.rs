@@ -19,9 +19,6 @@
 #![no_std]
 #![feature(asm)]
 
-#[macro_use]
-extern crate macros;
-
 pub use arch::*;
 
 #[cfg(target_arch = "aarch64")]

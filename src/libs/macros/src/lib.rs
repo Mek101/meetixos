@@ -14,5 +14,4 @@ pub use num_enum;
 pub use paste::paste;
 
 pub mod count_reps;
-pub mod enums;
 pub mod ext_bitflags;

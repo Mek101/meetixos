@@ -7,10 +7,6 @@
 use core::{
     convert::TryFrom,
     fmt,
-    fmt::{
-        Display,
-        Formatter
-    },
     ops::Range
 };
 
@@ -47,8 +43,8 @@ impl SysCallId {
      */
     pub fn new(fn_path: KernFnPath, custom_data: u32) -> Self {
         let mut inst = Self::default();
-        inst.0.set_bits(Self::CALL_CLASS_BITS, fn_path.raw_fn_class().into());
-        inst.0.set_bits(Self::CALL_CODE_BITS, fn_path.raw_fn_id().into());
+        inst.0.set_bits(Self::CALL_CLASS_BITS, fn_path.raw_fn_class() as usize);
+        inst.0.set_bits(Self::CALL_CODE_BITS, fn_path.raw_fn_id() as usize);
         inst.0.set_bits(Self::CUSTOM_DATA_BITS, custom_data as usize);
         inst
     }

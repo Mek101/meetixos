@@ -17,7 +17,7 @@ use num_enum::{
  *
  * [`Object::recv()`]: crate::objs::object::Object::recv
  */
-#[repr(u8)]
+#[repr(usize)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
@@ -52,7 +52,7 @@ pub enum RecvMode {
  *
  * [`KrnIterator`]: crate::objs::impls::iter::KrnIterator
  */
-#[repr(u8)]
+#[repr(usize)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
@@ -78,7 +78,7 @@ pub enum KrnIterDirection {
  *
  * [`MMap`]: crate::objs::impls::mmap::MMap
  */
-#[repr(u8)]
+#[repr(usize)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
 #[derive(PartialEq, Eq, PartialOrd, Ord)]

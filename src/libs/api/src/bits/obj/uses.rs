@@ -26,7 +26,7 @@ use num_enum::{
  * [`Object`]: crate::objs::object::Object
  * [`Object::watch()`]: crate::objs::object::Object::watch
  */
-#[repr(u8)]
+#[repr(usize)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
@@ -137,4 +137,12 @@ pub enum ObjUse {
      * [`Object::drop_name()`]: crate::objs::object::Object::drop_name
      */
     Deleting    = 512
+}
+
+impl Default for ObjUse {
+    /** Returns the "default value" for a type
+     */
+    fn default() -> Self {
+        Self::Unknown
+    }
 }

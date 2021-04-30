@@ -17,7 +17,7 @@ use num_enum::{
  *
  * [`TaskId`]: crate::tasks::task::TaskId
  */
-#[repr(u8)]
+#[repr(usize)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
 #[derive(PartialEq, Eq, PartialOrd, Ord)]

@@ -76,9 +76,6 @@
 #![feature(min_specialization)]
 #![feature(core_intrinsics)]
 
-#[macro_use]
-extern crate macros;
-
 pub mod bits;
 pub mod caller;
 pub mod ents;

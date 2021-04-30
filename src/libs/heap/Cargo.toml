@@ -15,6 +15,7 @@ default-features = false
 
 [dependencies.num_enum]
 version = "0.5.1"
+default-features = false
 
 ##
 # MeetiX Libraries Crates

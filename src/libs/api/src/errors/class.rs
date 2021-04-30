@@ -119,6 +119,14 @@ pub enum ErrorClass {
     InterruptedOperation
 }
 
+impl Default for ErrorClass {
+    /** Returns the "default value" for a type
+     */
+    fn default() -> Self {
+        Self::Unknown
+    }
+}
+
 impl fmt::Display for ErrorClass {
     /** Formats the value using the given formatter
      */

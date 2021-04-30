@@ -19,9 +19,9 @@ use num_enum::{
  *
  * [`ObjId`]: crate::objs::object::ObjId
  */
-#[repr(u8)]
+#[repr(usize)]
 #[derive(Debug)]
-#[derive(Default, Clone, Copy)]
+#[derive(Clone, Copy)]
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum ObjType {
@@ -70,6 +70,14 @@ pub enum ObjType {
      * [`KrnIterator`]: crate::objs::impls::iter::KrnIterator
      */
     KrnIterator
+}
+
+impl Default for ObjType {
+    /** Returns the "default value" for a type
+     */
+    fn default() -> Self {
+        Self::Unknown
+    }
 }
 
 impl fmt::Display for ObjType {

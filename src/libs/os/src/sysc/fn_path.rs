@@ -6,13 +6,7 @@
  * call routines
  */
 
-use core::{
-    fmt,
-    fmt::{
-        Display,
-        Formatter
-    }
-};
+use core::fmt;
 
 use crate::sysc::codes::{
     KernDirFnId,
@@ -35,6 +29,7 @@ use crate::sysc::codes::{
     KernTimeInstFnId,
     KrnIteratorFnId
 };
+use core::convert::TryFrom;
 
 /** # Kernel Function Path
  *
@@ -44,6 +39,7 @@ use crate::sysc::codes::{
  * array of the object referenced) that contains the related function
  * identifier
  */
+#[derive(Debug, Copy, Clone)]
 pub enum KernFnPath {
     ObjConfig(KernObjConfigFnId),
     TaskConfig(KernTaskConfigFnId),
@@ -116,6 +112,153 @@ impl KernFnPath {
             Self::OSGroup(fn_id) => fn_id.into(),
             Self::Proc(fn_id) => fn_id.into(),
             Self::Thread(fn_id) => fn_id.into()
+        }
+    }
+}
+
+impl TryFrom<(usize, usize)> for KernFnPath {
+    /** The type returned in the event of a conversion error
+     */
+    type Error = ();
+
+    /** Performs the conversion
+     */
+    fn try_from(value: (usize, usize)) -> Result<Self, Self::Error> {
+        match value.0 {
+            0 => {
+                if let Ok(fn_id) = KernObjConfigFnId::try_from(value.1 as u16) {
+                    Ok(Self::ObjConfig(fn_id))
+                } else {
+                    Err(())
+                }
+            },
+            1 => {
+                if let Ok(fn_id) = KernTaskConfigFnId::try_from(value.1 as u16) {
+                    Ok(Self::TaskConfig(fn_id))
+                } else {
+                    Err(())
+                }
+            },
+            2 => {
+                if let Ok(fn_id) = KernOSEntConfigFnId::try_from(value.1 as u16) {
+                    Ok(Self::OSEntConfig(fn_id))
+                } else {
+                    Err(())
+                }
+            },
+            3 => {
+                if let Ok(fn_id) = KernObjectFnId::try_from(value.1 as u16) {
+                    Ok(Self::Object(fn_id))
+                } else {
+                    Err(())
+                }
+            },
+            4 => {
+                if let Ok(fn_id) = KernTaskFnId::try_from(value.1 as u16) {
+                    Ok(Self::Task(fn_id))
+                } else {
+                    Err(())
+                }
+            },
+            5 => {
+                if let Ok(fn_id) = KernDirFnId::try_from(value.1 as u16) {
+                    Ok(Self::Dir(fn_id))
+                } else {
+                    Err(())
+                }
+            },
+            6 => {
+                if let Ok(fn_id) = KernFileFnId::try_from(value.1 as u16) {
+                    Ok(Self::File(fn_id))
+                } else {
+                    Err(())
+                }
+            },
+            7 => {
+                if let Ok(fn_id) = KernIpcChanFnId::try_from(value.1 as u16) {
+                    Ok(Self::IpcChan(fn_id))
+                } else {
+                    Err(())
+                }
+            },
+            8 => {
+                if let Ok(fn_id) = KrnIteratorFnId::try_from(value.1 as u16) {
+                    Ok(Self::Iterator(fn_id))
+                } else {
+                    Err(())
+                }
+            },
+            9 => {
+                if let Ok(fn_id) = KernLinkFnId::try_from(value.1 as u16) {
+                    Ok(Self::Link(fn_id))
+                } else {
+                    Err(())
+                }
+            },
+            10 => {
+                if let Ok(fn_id) = KernMMapFnId::try_from(value.1 as u16) {
+                    Ok(Self::MMap(fn_id))
+                } else {
+                    Err(())
+                }
+            },
+            11 => {
+                if let Ok(fn_id) = KernMutexFnId::try_from(value.1 as u16) {
+                    Ok(Self::Mutex(fn_id))
+                } else {
+                    Err(())
+                }
+            },
+            12 => {
+                if let Ok(fn_id) = KernTimeInstFnId::try_from(value.1 as u16) {
+                    Ok(Self::TimeInst(fn_id))
+                } else {
+                    Err(())
+                }
+            },
+            13 => {
+                if let Ok(fn_id) = KernPathFnId::try_from(value.1 as u16) {
+                    Ok(Self::Path(fn_id))
+                } else {
+                    Err(())
+                }
+            },
+            14 => {
+                if let Ok(fn_id) = KernOSEntFnId::try_from(value.1 as u16) {
+                    Ok(Self::OSEntity(fn_id))
+                } else {
+                    Err(())
+                }
+            },
+            15 => {
+                if let Ok(fn_id) = KernOSUserFnId::try_from(value.1 as u16) {
+                    Ok(Self::OSUser(fn_id))
+                } else {
+                    Err(())
+                }
+            },
+            16 => {
+                if let Ok(fn_id) = KernOSGroupFnId::try_from(value.1 as u16) {
+                    Ok(Self::OSGroup(fn_id))
+                } else {
+                    Err(())
+                }
+            },
+            17 => {
+                if let Ok(fn_id) = KernProcFnId::try_from(value.1 as u16) {
+                    Ok(Self::Proc(fn_id))
+                } else {
+                    Err(())
+                }
+            },
+            18 => {
+                if let Ok(fn_id) = KernThreadFnId::try_from(value.1 as u16) {
+                    Ok(Self::Thread(fn_id))
+                } else {
+                    Err(())
+                }
+            },
+            _ => Err(())
         }
     }
 }

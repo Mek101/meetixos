@@ -6,6 +6,7 @@
  */
 
 use crate::bits::obj::ObjType;
+use core::convert::TryFrom;
 
 /** # `Path::exists()` States
  *
@@ -39,4 +40,28 @@ pub enum PathExistsState {
     /** An empty path was given
      */
     EmptyPath
+}
+
+impl TryFrom<(usize, usize)> for PathExistsState {
+    /** The type returned in the event of a conversion error
+     */
+    type Error = ();
+
+    /** Performs the conversion
+     */
+    fn try_from(value: (usize, usize)) -> Result<Self, Self::Error> {
+        match value.0 {
+            0 => {
+                if let Ok(obj_type) = ObjType::try_from(value.1) {
+                    Ok(Self::Exists(obj_type))
+                } else {
+                    Err(())
+                }
+            },
+            1 => Ok(Self::ExistsUntil(value.1 as u32)),
+            2 => Ok(Self::NotExists),
+            3 => Ok(Self::EmptyPath),
+            _ => Err(())
+        }
+    }
 }

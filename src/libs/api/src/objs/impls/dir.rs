@@ -5,10 +5,6 @@
 
 use core::{
     fmt,
-    fmt::{
-        Display,
-        Formatter
-    },
     ops::Deref,
     str
 };
