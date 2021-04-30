@@ -109,17 +109,17 @@ install: build_all
                   $(BUILD_DIR)/sysroot/$(BUILD_MODE)/MeetiX
 
 	$(V) echo "- Installing Userland Apps..."
-	$(V) for BIN in $(BUILD_DIR)/userland/$(BUILD_MODE)/*; do           \
-             if [[ -f $${BIN} && -x $${BIN} ]]; then                    \
-                 cp -f $${BIN} $(BUILD_DIR)/sysroot/$(BUILD_MODE)/Bins; \
-             fi                                                         \
+	$(V) for BIN in $(BUILD_DIR)/userland/$(BUILD_MODE)/*; do              \
+             if [[ -f $${BIN} && -x $${BIN} ]]; then                       \
+                 rsync -a $${BIN} $(BUILD_DIR)/sysroot/$(BUILD_MODE)/Bins; \
+             fi                                                            \
          done
 
 	$(V) echo "- Installing Userland Binaries..."
-	$(V) for BIN in $(BUILD_DIR)/userland/$(BUILD_MODE)/*; do           \
-             if [[ -f $${BIN} && -x $${BIN} ]]; then                    \
-                 cp -f $${BIN} $(BUILD_DIR)/sysroot/$(BUILD_MODE)/Bins; \
-             fi                                                         \
+	$(V) for BIN in $(BUILD_DIR)/userland/$(BUILD_MODE)/*; do              \
+             if [[ -f $${BIN} && -x $${BIN} ]]; then                       \
+                 rsync -a $${BIN} $(BUILD_DIR)/sysroot/$(BUILD_MODE)/Bins; \
+             fi                                                            \
          done
 
 build_all: build_kernel build_userland
