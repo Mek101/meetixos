@@ -5,19 +5,37 @@
  */
 
 use hal::{
-    addr::{Address, VirtAddr},
+    addr::{
+        Address,
+        VirtAddr
+    },
     boot_infos::BootInfos,
     paging::{
-        MapFlusher, PTFlags, Page4KiB, PageDir, PageSize, PhysFrame, VirtFrame,
+        MapFlusher,
+        PTFlags,
+        Page4KiB,
+        PageDir,
+        PageSize,
+        PhysFrame,
+        VirtFrame,
         VirtFrameRange
     }
 };
 
-use sync::{Lazy, SpinMutex};
+use sync::{
+    Lazy,
+    SpinMutex
+};
 
 use crate::mem::{
-    frame_allocators::{KernAllocator, RangeAllocator},
-    layout::{KRN_UNMNG_AREA_END, KRN_UNMNG_AREA_START}
+    frame_allocators::{
+        KernAllocator,
+        RangeAllocator
+    },
+    layout::{
+        KRN_UNMNG_AREA_END,
+        KRN_UNMNG_AREA_START
+    }
 };
 
 /** Simple allocator used to manage the kernel's unmanaged area
@@ -44,9 +62,9 @@ pub fn paging_active_page_dir() -> PageDir {
  * If `start_phys_frame` is [`None`] the function uses the [`KernAllocator`]
  * to map physical pages
  *
- * [`Some`]: https://doc.rust-lang.org/std/option/enum.Option.html#variant.Some
+ * [`Some`]: core::option::Option::Some
  * [`PhysFrame`]: /hal/paging/type.PhysFrame.html
- * [`None`]: https://doc.rust-lang.org/std/option/enum.Option.html#variant.None
+ * [`None`]: core::option::Option::None
  * [`KernAllocator`]: /kernel/mem/frame_allocators/struct.KernAllocator.html
  */
 pub fn paging_map_unmanaged<T>(start_phys_frame: Option<PhysFrame<Page4KiB>>,
@@ -143,7 +161,7 @@ impl UnmngAreaLockedAllocator {
      * [`None`] is returned
      *
      * [`VirtFrameRange`]: /hal/paging/type.VirtFrameRange.html
-     * [`None`]: https://doc.rust-lang.org/std/option/enum.Option.html#variant.None
+     * [`None`]: core::option::Option::None
      */
     fn allocate(&mut self, count: usize) -> Option<VirtFrameRange<Page4KiB>> {
         let mut current_frame = self.m_inner.lock();

@@ -49,11 +49,12 @@ impl Slab {
      * The operation is performed in `O(1)` because consists in a
      * [`FreeList::pop()`]
      *
-     * [`Result`]: https://doc.rust-lang.org/std/result/
-     * [`Ok`]: https://doc.rust-lang.org/std/result/enum.Result.html#variant.Ok
-     * [`Err`]: https://doc.rust-lang.org/std/result/enum.Result.html#variant.Err
-     * [`NonNull<u8>`]: https://doc.rust-lang.org/std/ptr/struct.NonNull.html
-     * [`FreeList::pop()`]: ./struct.FreeList.html#method.pop
+     * [`Layout`]: core::alloc::Layout
+     * [`Result`]: core::result::Result
+     * [`Ok`]: core::result::Result::Ok
+     * [`Err`]: core::result::Result::Err
+     * [`NonNull<u8>`]: core::ptr::NonNull
+     * [`FreeList::pop()`]: crate::slab::FreeList::pop
      */
     pub fn alloc_block(&mut self) -> Result<NonNull<u8>, ()> {
         match self.m_free_blocks.pop() {
@@ -69,7 +70,7 @@ impl Slab {
      * The request, as for allocation, happen in `O(1)` due to a
      * [`FreeList::push()`]
      *
-     * [`FreeList::push()`]: ./struct.FreeList.html#method.push
+     * [`FreeList::push()`]: crate::slab::FreeList::push
      */
     pub unsafe fn dealloc_block(&mut self, ptr: NonNull<u8>) {
         self.m_free_blocks.push(&mut *(ptr.as_ptr() as *mut Block));

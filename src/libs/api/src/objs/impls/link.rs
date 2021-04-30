@@ -1,15 +1,28 @@
 /*! # Open Link Object
  *
- * Implements the abstraction of the filesystem link a a a a a a a a a a a a
- * a a a a a a a a
+ * Implements the abstraction of the filesystem link
  */
 
-use os::sysc::{codes::KernLinkFnId, fn_path::KernFnPath};
+use os::sysc::{
+    codes::KernLinkFnId,
+    fn_path::KernFnPath
+};
 
 use crate::{
-    bits::obj::{ObjType, WithTraversableDataObject},
-    caller::{KernCaller, Result},
-    objs::{impls::Any, ObjId, Object, UserCreatable}
+    bits::obj::{
+        ObjType,
+        WithTraversableDataObject
+    },
+    caller::{
+        KernCaller,
+        Result
+    },
+    objs::{
+        impls::Any,
+        ObjId,
+        Object,
+        UserCreatable
+    }
 };
 
 impl_obj_id_object! {
@@ -34,13 +47,13 @@ impl_obj_id_object! {
      * to the linked object, if the type matches the open returns the
      * object, otherwise fails
      *
-     * [`Any`]: /api/objs/impls/struct.Any.html
+     * [`Any`]: crate::objs::impls::any::Any
      * [an hard link]: https://en.wikipedia.org/wiki/Hard_link
-     * [`MMap`]: /api/objs/impls/struct.MMap.html
-     * [`IpcChan`]: /api/objs/impls/struct.IpcChan.html
+     * [`MMap`]: crate::objs::impls::mmap::MMap
+     * [`IpcChan`]: crate::objs::impls::ipc_chan::IpcChan
      * [a soft link]: https://en.wikipedia.org/wiki/Symbolic_link
-     * [`ObjConfig`]: /api/objs/struct.ObjConfig.html
-     * [`File`]: /api/objs/impls/struct.File.html
+     * [`ObjConfig`]: crate::objs::config::ObjConfig
+     * [`File`]: crate::objs::impls::file::File
      */
     pub struct Link : impl WithTraversableDataObject,
                            UserCreatable  {
@@ -57,8 +70,8 @@ impl Link {
      * The [`Any`] contains a valid and opened [`ObjId`] that can perform
      * system calls; it is opened with the same configuration of this link
      *
-     * [`Any`]: /api/objs/impls/struct.Any.html
-     * [`ObjId`]: /api/objs/struct.ObjId.html
+     * [`Any`]: crate::objs::impls::any::Any
+     * [`ObjId`]: crate::objs::object::ObjId
      */
     pub fn deref_link(&self) -> Result<Any> {
         self.kern_call_0(KernFnPath::Link(KernLinkFnId::Deref))
@@ -73,8 +86,7 @@ impl Link {
      * If the `Link` already references an object it is overwritten
      * (definitively deleted if it have no more references).
      *
-     * [`ObjConfig::apply_for()`]:
-     * /api/objs/struct.ObjConfig.html#method.apply_for
+     * [`ObjConfig::apply_for()`]: crate::objs::config::ObjConfig::apply_for
      */
     pub fn refer_to<T: Object>(&self, object: &T) -> Result<()> {
         self.kern_call_2(KernFnPath::Link(KernLinkFnId::ReferTo),

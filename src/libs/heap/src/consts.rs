@@ -6,7 +6,7 @@
 /** Represents the expected alignment for the sizes given to the [`Heap`]
  * manager
  *
- * [`Heap`]: /heap/struct.Heap.html
+ * [`Heap`]: crate::Heap
  */
 pub const PAGE_SIZE: usize = 4096;
 

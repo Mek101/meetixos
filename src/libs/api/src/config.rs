@@ -3,40 +3,50 @@
  * Implements various markers useful for the various configurations like the
  * [`ObjConfig`], [`TaskConfig`] and [`OSEntityConfig`]
  *
- * [`ObjConfig`]: /api/objs/struct.ObjConfig.html
- * [`TaskConfig`]: /api/tasks/struct.TaskConfig.html
- * [`OSEntityConfig`]: /api/ents/struct.OSEntityConfig.html
+ * [`ObjConfig`]: crate::objs::config::ObjConfig
+ * [`TaskConfig`]: crate::tasks::config::TaskConfig
+ * [`OSEntityConfig`]: crate::ents::config::OSEntityConfig
  */
 
 use core::marker::PhantomData;
 
-use crate::objs::{impls::KrnIterator, ObjId};
+use num_enum::{
+    IntoPrimitive,
+    TryFromPrimitive
+};
 
-c_handy_enum! {
-    /** # Configuration Type
-     *
-     * Lists the available implementations for the [`ConfigMode`]
-     *
-     * [`ConfigMode`]: /api/config/trait.ConfigMode.html
+use crate::objs::{
+    impls::KrnIterator,
+    ObjId
+};
+
+/** # Configuration Type
+ *
+ * Lists the available implementations for the [`ConfigMode`]
+ *
+ * [`ConfigMode`]: crate::config::ConfigMode
+ */
+#[repr(u8)]
+#[derive(Debug)]
+#[derive(Default, Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum ConfigModeType {
+    /** No real uses, used as default value
      */
-    pub enum ConfigModeType : u8 {
-        /** No real uses, used as default value
-         */
-        Unknown = 0,
+    Unknown,
 
-        /** Identifies the [`CreatMode`]
-         *
-         * [`CreatMode`]: /api/config/struct.CreatMode.html
-         */
-        Create = 1,
+    /** Identifies the [`CreatMode`]
+     *
+     * [`CreatMode`]: crate::config::CreatMode
+     */
+    Create,
 
-        /** Identifies the [`FindMode`]
-         *
-         * [`FindMode`]: /api/config/struct.FindMode.html
-         */
-        Find = 2,
-
-    }
+    /** Identifies the [`FindMode`]
+     *
+     * [`FindMode`]: crate::config::FindMode
+     */
+    Find
 }
 
 /** # Config Mode Base
@@ -46,7 +56,7 @@ c_handy_enum! {
 pub trait ConfigMode {
     /** The [`ConfigModeType`] which the concrete type represents
      *
-     * [`ConfigModeType`]: /api/config/enum.ConfigModeType.html
+     * [`ConfigModeType`]: crate::config::ConfigModeType
      */
     const TYPE: ConfigModeType;
 }
@@ -80,7 +90,7 @@ impl ConfigMode for FindMode {
  * Library internal wrapper for [`KrnIterator`] that iterates instances of
  * type `T` that inside contains handles of type `H`
  *
- * [`KrnIterator`]: /api/objs/impls/struct.KrnIterator.htm
+ * [`KrnIterator`]: crate::objs::impls::iter::KrnIterator
  */
 pub(crate) struct ConfigFinderIter<H, T>
     where H: From<usize>,

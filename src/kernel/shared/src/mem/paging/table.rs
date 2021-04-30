@@ -6,14 +6,27 @@
 
 use core::{
     fmt,
-    fmt::{Debug, Formatter},
-    ops::{Index, IndexMut}
+    fmt::{
+        Debug,
+        Formatter
+    },
+    ops::{
+        Index,
+        IndexMut
+    }
 };
 
 use crate::{
-    addr::{Address, PhysAddr},
+    addr::{
+        Address,
+        PhysAddr
+    },
     arch::mem::paging::HwPageDirSupport,
-    mem::paging::{HwPageDirSupportBase, PageSize, PhysFrame}
+    mem::paging::{
+        HwPageDirSupportBase,
+        PageSize,
+        PhysFrame
+    }
 };
 
 /** # Page Table
@@ -58,7 +71,7 @@ impl PageTable {
 
     /** Returns an [`Iterator`] of immutable [`PageTableEntry`] references
      *
-     * [`Iterator`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html
+     * [`Iterator`]: core::iter::Iterator
      * [`PageTableEntry`]: /hal/paging/struct.PageTableEntry.html
      */
     pub fn iter(&self) -> impl Iterator<Item = &PageTableEntry> {
@@ -67,7 +80,7 @@ impl PageTable {
 
     /** Returns an [`Iterator`] of mutable [`PageTableEntry`] references
      *
-     * [`Iterator`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html
+     * [`Iterator`]: core::iter::Iterator
      * [`PageTableEntry`]: /hal/paging/struct.PageTableEntry.html
      */
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut PageTableEntry> {
@@ -217,7 +230,7 @@ impl PageTableEntry {
 impl Debug for PageTableEntry {
     /** Formats the value using the given formatter
      */
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("PageTableEntry")
          .field("m_phys_frame", &self.address())
          .field("m_flags", &self.flags())

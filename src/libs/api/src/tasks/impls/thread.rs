@@ -1,13 +1,27 @@
-//! # Thread Management
-//!
-//! Implements the running thread reference
+/*! # Thread Management
+ *
+ * Implements the running thread reference
+ */
 
-use os::sysc::{codes::KernThreadFnId, fn_path::KernFnPath};
+use os::sysc::{
+    codes::KernThreadFnId,
+    fn_path::KernFnPath
+};
 
 use crate::{
-    bits::task::{TaskType, ThreadEntryData, WaitFor},
-    caller::{KernCaller, Result},
-    tasks::{Task, TaskId},
+    bits::task::{
+        TaskType,
+        ThreadEntryData,
+        WaitFor
+    },
+    caller::{
+        KernCaller,
+        Result
+    },
+    tasks::{
+        Task,
+        TaskId
+    },
     time::Duration
 };
 
@@ -20,7 +34,7 @@ impl_task_id_task! {
      * This represents the execution entity on which the kernel's scheduler
      * operates
      *
-     * [`Proc`]: /api/tasks/impls/struct.Proc.html
+     * [`Proc`]: crate::tasks::impls::proc::Proc
      */
     pub struct Thread(TaskType::Thread);
 }
@@ -35,9 +49,9 @@ impl Thread {
      * [`Proc`] that executes this; in that case the referenced `Thread`
      * will stop for the given [`Duration`].
      *
-     * [`Duration`]: /api/time/struct.Duration.html
-     * [`Proc`]: /api/tasks/impls/struct.Proc.html
-     * [`Thread::this()`]: /api/tasks/trait.Task.html#method.this
+     * [`Duration`]: crate::time::Duration
+     * [`Proc`]: crate::tasks::impls::proc::Proc
+     * [`Thread::this()`]: crate::tasks::task::Task::this
      */
     pub fn sleep(&self, duration: Duration) -> Result<()> {
         self.wait_for(WaitFor::Quantum(duration))
@@ -53,7 +67,7 @@ impl Thread {
      * `target Thread` must not be same as returned by
      * [`Thread::this()`]
      *
-     * [`Thread::this()`]: /api/tasks/trait.Task.html#method.this
+     * [`Thread::this()`]: crate::tasks::task::Task::this
      */
     pub fn join(&self, target: Thread) -> Result<()> {
         self.wait_for(WaitFor::Join(target))
@@ -67,7 +81,7 @@ impl Thread {
      * It is denied to call this method with a `Thread` reference that is
      * not the one returned by [`Thread::this()`]
      *
-     * [`Thread::this()`]: /api/tasks/trait.Task.html#method.this
+     * [`Thread::this()`]: crate::tasks::task::Task::this
      */
     pub fn wait_irq(&self, irq: u32) -> Result<()> {
         self.wait_for(WaitFor::Irq(irq))
@@ -78,7 +92,7 @@ impl Thread {
      * Puts the `Thread` into the waiting state for an amount of time
      * according to the [`WaitFor`] mode given
      *
-     * [`WaitFor`]: /api/bits/task/enum.WaitFor.html
+     * [`WaitFor`]: crate::bits::task::modes::WaitFor
      */
     pub fn wait_for(&self, wait_reason: WaitFor) -> Result<()> {
         self.kern_call_1(KernFnPath::Thread(KernThreadFnId::WaitFor),
@@ -98,12 +112,11 @@ impl Thread {
      * [`OSUser`]/[`OSGroup`] must be the same or the administrator.
      *
      * [`LIFO`]: https://en.wikipedia.org/wiki/Stack_(abstract_data_type)
-     * [`Thread`]: /api/tasks/impls/struct.Thread.html
-     * [`Thread::terminate(true)`]:
-     * /api/tasks/trait.Task.html#method.terminate
-     * [`Thread::this()`]: /api/tasks/trait.Task.html#method.this
-     * [`OSUser`]: /api/ents/impls/struct.OSUser.html
-     * [`OSGroup`]: /api/ents/impls/struct.OSGroup.html
+     * [`Thread`]: crate::tasks::impls::thread::Thread
+     * [`Thread::terminate(true)`]: crate::tasks::task::Task::terminate
+     * [`Thread::this()`]: crate::tasks::task::Task::this
+     * [`OSUser`]: crate::ents::impls::user::OSUser
+     * [`OSGroup`]: crate::ents::impls::group::OSGroup
      */
     pub fn add_cleaner(&self, cleanup_fn: fn()) -> Result<()> {
         let thread_entry_data = ThreadEntryData::new_cleaner_callback(cleanup_fn);
@@ -131,7 +144,7 @@ impl Thread {
      * Returns the right [`ThreadEntryData`] variant for the situation that
      * calls this
      *
-     * [`ThreadEntryData`]: /api/bits/task/data/enum.ThreadEntryData.html
+     * [`ThreadEntryData`]: crate::bits::task::data::thread::ThreadEntryData
      */
     pub(crate) fn get_entry_data(&self) -> ThreadEntryData {
         let mut entry_data = ThreadEntryData::default();

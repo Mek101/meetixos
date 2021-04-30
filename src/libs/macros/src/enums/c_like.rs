@@ -44,9 +44,9 @@
  * }
  * ```
  *
- * [`TryFrom`]: https://doc.rust-lang.org/std/convert/trait.TryFrom.html
- * [`Into`]: https://doc.rust-lang.org/std/convert/trait.Into.html
- * [`Display`]: https://doc.rust-lang.org/std/fmt/trait.Display.html
+ * [`TryFrom`]: core::convert::TryFrom
+ * [`Into`]: core::convert::Into
+ * [`Display`]: core::fmt::Display
  */
 #[macro_export]
 macro_rules! c_handy_enum {
@@ -70,12 +70,8 @@ macro_rules! c_handy_enum {
         }
 
         impl core::fmt::Display for $EnumName {
-            /** Formats the value using the given formatter.
-             *
-             * Writes to the given `Formatter` the string value associated
-             * to each variant of the enumeration generated
-             */
-            fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+            #[doc = "Formats the value using the given formatter"]
+            fn fmt(&self, f: &mut core::Formatter<'_>) -> core::fmt::Result {
                 match self {
                     $(
                         $EnumName::$Variant => f.write_str($String),
@@ -104,11 +100,8 @@ macro_rules! c_handy_enum {
         }
 
         impl core::fmt::Display for $EnumName {
-            /** Formats the value using the given formatter.
-             *
-             * Writes to the given `Formatter` the string value of the variant
-             */
-            fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+            #[doc = "Formats the value using the given formatter"]
+            fn fmt(&self, f: &mut core::Formatter<'_>) -> core::fmt::Result {
                 match self {
                     $(
                         $EnumName::$Variant => write!(f, "{}::{}", stringify!($EnumName), stringify!($Variant)),
@@ -141,13 +134,10 @@ macro_rules! c_handy_enum_common {
         }
 
         impl $EnumName {
+            #[doc = "Number of variants for this enumeration"]
             pub const COUNT: usize = macros::count_reps!($($Variant,)*);
 
-            /** # Constructs an all `Iterator`
-             *
-             * Returns an iterator implementation for this enum which iterates
-             * from the first to the last this enumeration
-             */
+            #[doc = "Returns an iterator which starts from the first to the last variant"]
             pub fn iter_all() -> impl Iterator<Item = Self> {
                 use core::convert::TryFrom;
                 macros::paste! {
@@ -155,23 +145,14 @@ macro_rules! c_handy_enum_common {
                 }
             }
 
-            /** # Constructs an `Iterator`
-             *
-             * Returns an iterator implementation for this enum
-             * that starts from the current variant
-             */
+            #[doc = "Returns an iterator which starts from this variant"]
             pub fn iter_from_this(&self) -> impl Iterator<Item = Self> {
                 macros::paste! {
                     [<$EnumName Iter>] { m_current: Some(self.clone()) }
                 }
             }
 
-            /** # Constructs an `Iterator`
-             *
-             * Returns an iterator implementation for this enum that starts
-             * from the first variant and returns as last element the current
-             * variant
-             */
+            #[doc = "Returns an iterator which starts from the first to this variant"]
             pub fn iter_to_this(&self) -> impl Iterator<Item = Self> {
                 use core::convert::TryFrom;
                 macros::paste! {
@@ -183,12 +164,7 @@ macro_rules! c_handy_enum_common {
                 }
             }
 
-            /** # Constructs an `Iterator`
-             *
-             * Returns an iterator implementation for this enum that starts
-             * from the first variant and returns as last element the current
-             * variant
-             */
+            #[doc = "Returns an iterator which starts from the first to the variant before this"]
             pub fn iter_until_this(&self) -> impl Iterator<Item = Self> {
                 use core::convert::TryFrom;
                 macros::paste! {
@@ -200,22 +176,19 @@ macro_rules! c_handy_enum_common {
                 }
             }
 
-            /** Returns the current variant value as integer type
-             */
+            #[doc = "Returns the current variant value as integer type"]
             pub fn as_value(&self) -> $ToFromType {
                 *self as $ToFromType
             }
 
-            /** Returns the current variant value as `usize` type
-             */
+            #[doc = "Returns the current variant value as `usize` type"]
             pub fn as_usize(&self) -> usize {
                 *self as usize
             }
         }
 
         impl Default for $EnumName {
-            /** Returns the "default value" for a type.
-             */
+            #[doc = "Returns the \"default value\" for a type"]
             fn default() -> Self {
                 use core::convert::TryFrom;
                 Self::try_from(0usize).unwrap()
@@ -225,11 +198,7 @@ macro_rules! c_handy_enum_common {
         impl core::convert::TryFrom<$ToFromType> for $EnumName {
             type Error = $ToFromType;
 
-            /** Performs the conversion
-             *
-             * Tries to match the given `code` value to a valid variant
-             * of this enum
-             */
+            #[doc = "Performs the conversion"]
             fn try_from(code: $ToFromType) -> Result<Self, Self::Error> {
                 match code {
                     $($Index => Ok($EnumName::$Variant),)*
@@ -241,11 +210,7 @@ macro_rules! c_handy_enum_common {
         impl core::convert::TryFrom<usize> for $EnumName {
             type Error = usize;
 
-            /** Performs the conversion
-             *
-             * Tries to match the given `code` value to a valid variant
-             * of this enum
-             */
+            #[doc = "Performs the conversion"]
             fn try_from(code: usize) -> Result<Self, Self::Error> {
                 match code {
                     $($Index => Ok($EnumName::$Variant),)*
@@ -255,20 +220,14 @@ macro_rules! c_handy_enum_common {
         }
 
         impl core::convert::Into<$ToFromType> for $EnumName {
-            /** Performs the conversion.
-             *
-             * Consumes the enum instance to the integer type chosen
-             */
+            #[doc = "Performs the conversion"]
             fn into(self) -> $ToFromType {
                 self.as_value()
             }
         }
 
         impl core::convert::Into<usize> for $EnumName {
-            /** Performs the conversion.
-             *
-             * Consumes the enum instance to an usize
-             */
+            #[doc = "Performs the conversion"]
             fn into(self) -> usize {
                 self.as_usize()
             }
@@ -280,12 +239,10 @@ macro_rules! c_handy_enum_common {
             }
 
             impl core::iter::Iterator for [<$EnumName Iter>] {
-                /** The type of the elements being iterated over.
-                 */
+                #[doc = "The type of the elements being iterated over"]
                 type Item = $EnumName;
 
-                /** Advances the iterator and returns the next value.
-                 */
+                #[doc = "Advances the iterator and returns the next value"]
                 fn next(&mut self) -> Option<Self::Item> {
                     use core::convert::TryFrom;
 
@@ -314,12 +271,10 @@ macro_rules! c_handy_enum_common {
             }
 
             impl core::iter::Iterator for [<$EnumName RangeIter>] {
-                /** The type of the elements being iterated over.
-                 */
+                #[doc = "The type of the elements being iterated over"]
                 type Item = $EnumName;
 
-                /** Advances the iterator and returns the next value.
-                 */
+                #[doc = "Advances the iterator and returns the next value"]
                 fn next(&mut self) -> Option<Self::Item> {
                     use core::convert::TryFrom;
 

@@ -1,22 +1,39 @@
 /*! # Memory Mapping Object
  *
- * Implements a scope managed address space memory mapping object a a a a a
- * a a a a a a
+ * Implements a scope managed address space memory mapping object
  */
 
 use core::{
     intrinsics::size_of,
     mem,
-    ops::{Deref, DerefMut},
+    ops::{
+        Deref,
+        DerefMut
+    },
     slice
 };
 
-use os::sysc::{codes::KernMMapFnId, fn_path::KernFnPath};
+use os::sysc::{
+    codes::KernMMapFnId,
+    fn_path::KernFnPath
+};
 
 use crate::{
-    bits::obj::{MMapPtrMode, ObjType, WithExecutableDataObject},
-    caller::{KernCaller, Result},
-    objs::{ObjId, Object, SizeableData, UserCreatable}
+    bits::obj::{
+        MMapPtrMode,
+        ObjType,
+        WithExecutableDataObject
+    },
+    caller::{
+        KernCaller,
+        Result
+    },
+    objs::{
+        ObjId,
+        Object,
+        SizeableData,
+        UserCreatable
+    }
 };
 
 impl_obj_id_object! {
@@ -37,9 +54,9 @@ impl_obj_id_object! {
      * When the `MMap` object goes out of scope the memory is unmapped
      * from the caller process
      *
-     * [`Box`]: https://doc.rust-lang.org/std/boxed/struct.Box.html
-     * [`MMap::get_ptr()`]: /api/objs/impls/struct.html#method.get_ptr
-     * [`MMap::get_ptr_mut()`]: /api/objs/impls/struct.html#method.get_ptr_mut
+     * [`Box`]: alloc::boxed::Box
+     * [`MMap::get_ptr()`]: crate::objs::impls::mmap::MMap::get_ptr
+     * [`MMap::get_ptr_mut()`]: crate::objs::impls::mmap::MMap::get_ptr_mut
      */
     pub struct MMap : impl WithExecutableDataObject,
                            SizeableData,
@@ -57,7 +74,7 @@ impl MMap {
      * If the `MMap` have reached the maximum amount of readers or there is
      * already a writer the thread waits until someone releases the memory
      *
-     * [`ConstMMapBox`]: /api/objs/impls/struct.ConstMMapBox.html
+     * [`ConstMMapBox`]: crate::objs::impls::mmap::ConstMMapBox
      */
     pub fn get_ptr<T>(&self) -> Result<ConstMMapBox<T>> {
         self.get(MMapPtrMode::Readable).map(|(raw_ptr, size)| {
@@ -74,7 +91,7 @@ impl MMap {
      * If the `MMap` already have a writer or have at least one reader the
      * thread waits until all releases the memory
      *
-     * [`MutMMapBox`]: /api/objs/impls/struct.MutMMapBox.html
+     * [`MutMMapBox`]: crate::objs::impls::mmap::MutMMapBox
      */
     pub fn get_ptr_mut<T>(&self) -> Result<MutMMapBox<T>> {
         self.get(MMapPtrMode::Writeable)
@@ -99,9 +116,9 @@ impl MMap {
      * The method consumes the instance and [forget] about it, so the kernel
      * will not close this object
      *
-     * [`File backed MMap`]: /api/objs/impls/struct.File.html#method.mmap
-     * [`File`]: /api/objs/impls/struct.File.html
-     * [forget]: https://doc.rust-lang.org/std/mem/fn.forget.html
+     * [`File backed MMap`]: crate::objs::impls::file::File::map_to_memory
+     * [`File`]: crate::objs::impls::file::File
+     * [forget]: core::mem::forget
      */
     pub fn leak_ptr<T>(self) -> &'static mut [T] {
         let ref_slice = self.get(MMapPtrMode::Writeable)
@@ -115,9 +132,9 @@ impl MMap {
     }
 
     /** Returns whether this `MMap` instance originates from a
-     * [`File::mmap()`] call
+     * [`File::map_to_memory()`](MM) call
      *
-     * [`File::mmap()`]: /api/objs/impls/struct.File.html#method.mmap
+     * [MM]: crate::objs::impls::file::File::map_to_memory
      */
     pub fn is_file_backed(&self) -> bool {
         self.kern_call_0(KernFnPath::MMap(KernMMapFnId::IsFile))
@@ -128,7 +145,7 @@ impl MMap {
     /** Returns the raw pointer to the memory according to the given
      * [`MMapPtrMode`]
      *
-     * [`MMapPtrMode`]: /api/bits/obj/enum.MMapPtrMode.html
+     * [`MMapPtrMode`]: crate::bits::obj::modes::MMapPtrMode
      */
     fn get(&self, mode: MMapPtrMode) -> Result<(usize, usize)> {
         let mut size = 0;
@@ -153,8 +170,8 @@ impl MMap {
  *
  * This object is obtainable calling [`MMap::get_ptr()`]
  *
- * [`MMap`]: /api/objs/impls/struct.MMap.html
- * [`MMap::get_ptr()`]: /api/objs/impls/struct.MMap.html#method.get_ptr
+ * [`MMap`]: crate::objs::impls::mmap::MMap
+ * [`MMap::get_ptr()`]: crate::objs::impls::mmap::MMap::get_ptr
  */
 pub struct ConstMMapBox<'a, T> {
     m_mmap: &'a MMap,
@@ -202,9 +219,8 @@ impl<'a, T> Drop for ConstMMapBox<'a, T> {
  *
  * This object is obtainable calling [`MMap::get_ptr_mut()`]
  *
- * [`MMap`]: /api/objs/impls/struct.MMap.html
- * [`MMap::get_ptr_mut()`]:
- * /api/objs/impls/struct.MMap.html#method.get_ptr_mut
+ * [`MMap`]: crate::objs::impls::mmap::MMap
+ * [`MMap::get_ptr_mut()`]: crate::objs::impls::mmap::MMap::get_ptr_mut
  */
 pub struct MutMMapBox<'a, T> {
     m_mmap: &'a MMap,

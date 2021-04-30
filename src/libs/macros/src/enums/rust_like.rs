@@ -40,8 +40,8 @@
  * }
  * ```
  *
- * [`Display`]: https://doc.rust-lang.org/std/fmt/trait.Display.html
- * [`Into`]: https://doc.rust-lang.org/std/convert/trait.Into.html
+ * [`Display`]: core::fmt::Display
+ * [`Into`]: core::convert::Into
  */
 #[macro_export]
 macro_rules! rust_handy_enum {
@@ -64,11 +64,7 @@ macro_rules! rust_handy_enum {
         impl core::convert::TryFrom<($ToFromType, usize)> for $EnumName {
             type Error = $ToFromType;
 
-            /** Performs the conversion
-             *
-             * Tries to match the given `code` value to a valid variant
-             * of this enum
-             */
+            #[doc = "Performs the conversion"]
             fn try_from(data: ($ToFromType, usize)) -> Result<Self, Self::Error> {
                 use core::convert::TryFrom;
                 match data.0 {
@@ -88,11 +84,7 @@ macro_rules! rust_handy_enum {
         impl core::convert::TryFrom<(usize, usize)> for $EnumName {
             type Error = usize;
 
-            /** Performs the conversion
-             *
-             * Tries to match the given `code` value to a valid variant
-             * of this enum
-             */
+            #[doc = "Performs the conversion"]
             fn try_from(data: (usize, usize)) -> Result<Self, Self::Error> {
                 use core::convert::TryFrom;
                 match data.0 {
@@ -110,39 +102,33 @@ macro_rules! rust_handy_enum {
         }
 
         impl core::convert::Into<usize> for $EnumName {
-		    /** Performs the conversion.
-		     *
-		     * Consumes the enum instance to an usize
-		     */
-			fn into(self) -> usize {
-			    macros::paste! {
-			        match self {
-			            $(
+            #[doc = "Performs the conversion"]
+            fn into(self) -> usize {
+                macros::paste! {
+                    match self {
+                        $(
                             $EnumName::$Variant $(
                                 ([<_ $VariantValue>])
                             )? => $Index,
                         )*
-			        }
-			    }
-			}
-		}
+                    }
+                }
+            }
+        }
 
-		impl core::convert::Into<$ToFromType> for $EnumName {
-		    /** Performs the conversion.
-		     *
-		     * Consumes the enum instance to the integer type chosen
-		     */
-			fn into(self) -> $ToFromType {
-				macros::paste! {
-			        match self {
-			            $(
+        impl core::convert::Into<$ToFromType> for $EnumName {
+            #[doc = "Performs the conversion"]
+            fn into(self) -> $ToFromType {
+                macros::paste! {
+                    match self {
+                        $(
                             $EnumName::$Variant $(
                                 ([<_ $VariantValue>])
                             )? => $Index,
                         )*
-			        }
-			    }
-			}
-		}
+                    }
+                }
+            }
+        }
     };
 }

@@ -13,6 +13,9 @@ version = "0.8.11"
 # we don't need default features since it is used only the internal hole module
 default-features = false
 
+[dependencies.num_enum]
+version = "0.5.1"
+
 ##
 # MeetiX Libraries Crates
 ##
@@ -20,9 +23,6 @@ default-features = false
 [dependencies.api]
 path = "../api"
 optional = true
-
-[dependencies.macros]
-path = "../macros"
 
 [dependencies.sync]
 path = "../sync"

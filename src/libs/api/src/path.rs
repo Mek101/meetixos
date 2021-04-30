@@ -1,23 +1,38 @@
-/**! # Path Manager
+/*! # Path Manager
  *
  * VFS paths manager utility
  */
+
 use core::{
     convert::TryFrom,
     fmt,
-    fmt::{Display, Formatter},
+    fmt::{
+        Display,
+        Formatter
+    },
     iter::Filter,
-    ops::{Add, AddAssign, Sub, SubAssign},
+    ops::{
+        Add,
+        AddAssign,
+        Sub,
+        SubAssign
+    },
     str::Split
 };
 
 use os::{
     limits::VFS_PATH_LEN_MAX,
     str_utils,
-    sysc::{codes::KernPathFnId, fn_path::KernFnPath}
+    sysc::{
+        codes::KernPathFnId,
+        fn_path::KernFnPath
+    }
 };
 
-use crate::{bits::path::PathExistsState, caller::KernCaller};
+use crate::{
+    bits::path::PathExistsState,
+    caller::KernCaller
+};
 
 /** # Path Manager
  *
@@ -44,9 +59,9 @@ use crate::{bits::path::PathExistsState, caller::KernCaller};
  * # Printing
  * As string with [`Display`]
  *
- * [`Path::append()`]: /api/path/struct.Path.html#method.append
- * [`Path::append_raw()`]: /api/path/struct.Path.html#method.append_raw
- * [`Path::components()`]: /api/path/struct.Path.html#method.components
+ * [`Path::append()`]: crate::path::Path::append
+ * [`Path::append_raw()`]: crate::path::Path::append_raw
+ * [`Path::components()`]: crate::path::Path::components
  * [`Display`]: https://doc.rust-lang.org/std/fmt/trait.Display.html
  */
 #[derive(Debug, Copy, Clone)]
@@ -91,28 +106,29 @@ impl Path {
      * The parent links are resolved until it is possible
      */
     pub fn append_raw(&mut self, raw_path: &str) {
-        // check for absolute path, it overwrites the previous one
+        /* check for absolute path, it overwrites the previous one */
         if raw_path.starts_with(Self::SEPARATOR) {
             self.m_len = 0;
             self.m_abs = true;
         }
 
-        // special case: only the separator character is given
+        /* special case: only the separator character is given */
         if raw_path == Self::SEPARATOR {
             self.append_unchecked(Self::SEPARATOR);
             return;
         }
 
-        // iterate for each component, ignoring empty values (i.e multiple contiguous
-        // separators produces empty components)
+        /* iterate for each component, ignoring empty values (i.e multiple contiguous
+         * separators produces empty components)
+         */
         for c in raw_path.split(Self::SEPARATOR).filter(|uc| !uc.is_empty()) {
-            // check whether the separator must be prepended
+            /* check whether the separator must be prepended */
             let need_sep = {
                 (self.is_empty() && self.is_absolute())
                 || (!self.is_empty() && !self.last_is_separator())
             };
 
-            // insert, remove, or ignore the component
+            /* insert, remove, or ignore the component */
             match c {
                 Self::SELF_LINK => continue,
                 Self::PARENT_LINK if self.may_pop_last() => {
@@ -134,8 +150,8 @@ impl Path {
      *
      * When the `Path` have no more elements return [`None`]
      *
-     * [`Some(Path)`]: https://doc.rust-lang.org/std/option/enum.Option.html#variant.Some
-     * [`None`]: https://doc.rust-lang.org/std/option/enum.Option.html#variant.None
+     * [`Some(Path)`]: core::option::Option::Some
+     * [`None`]: core::option::Option::None
      */
     pub fn pop(&mut self) -> Option<Path> {
         self.components()
@@ -144,11 +160,12 @@ impl Path {
             .map(|len| {
                 let parent = self.basename();
 
-                // remove the last component
+                /* remove the last component */
                 self.m_len -= len;
 
-                // to avoid that the next call to pop() returns an empty element remove
-                // the path separator, if any.
+                /* to avoid that the next call to pop() returns an empty element remove
+                 * the path separator, if any.
+                 */
                 if self.last_is_separator() {
                     self.m_len -= 1;
                 }
@@ -162,7 +179,7 @@ impl Path {
      * Asks to the kernel to resolve the stored path and return a
      * [`PathExistsState`] which tells with his variants the result
      *
-     * [`PathExistsState`]: /api/bits/path/enum.PathExistsState.html
+     * [`PathExistsState`]: crate::bits::path::PathExistsState
      */
     pub fn exists(&self) -> PathExistsState {
         let mut index = 0usize;
@@ -367,9 +384,7 @@ impl SubAssign<usize> for Path {
 }
 
 impl PartialEq for Path {
-    /**
-     * * This method tests for self and other values to be equal, and is
-     *   used
+    /** This method tests for self and other values to be equal, and is used
      * by ==.
      */
     fn eq(&self, other: &Self) -> bool {
@@ -389,10 +404,10 @@ impl AsRef<[u8]> for Path {
     }
 }
 
-impl Display for Path {
+impl fmt::Display for Path {
     /** Formats the value using the given formatter
      */
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.as_str())
     }
 }
@@ -404,9 +419,9 @@ impl Display for Path {
  *
  * It essentially consists in a [`str::Split`] and a [`iter::Filter`]
  *
- * [`Path`]: /api/path/struct.Path.html
- * [`str::Split`]: https://doc.rust-lang.org/std/str/struct.Split.html
- * [`iter::Filter`]: https://doc.rust-lang.org/std/iter/struct.Filter.html
+ * [`Path`]: crate::path::Path
+ * [`str::Split`]: core::str::Split
+ * [`iter::Filter`]: core::iter::Filter
  */
 struct PathComponentIter<'a>(Filter<Split<'a, &'a str>, fn(&&str) -> bool>);
 

@@ -11,9 +11,5 @@ authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
 [dependencies.bit_field]
 version = "0.10.1"
 
-##
-# MeetiX Libraries Crates
-##
-
-[dependencies.macros]
-path = "../macros"
+[dependencies.num_enum]
+version = "0.5.1"

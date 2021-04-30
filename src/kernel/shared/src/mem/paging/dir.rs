@@ -5,16 +5,36 @@
 
 use core::{
     fmt,
-    fmt::{Debug, Formatter}
+    fmt::{
+        Debug,
+        Formatter
+    }
 };
 
 use crate::{
-    addr::{Address, VirtAddr},
+    addr::{
+        Address,
+        VirtAddr
+    },
     arch::mem::paging::HwPageDirSupport,
     mem::paging::{
-        FrameAllocator, MapFlush, MapFlusher, MapRangeFlush, PTFlags, Page1GiB, Page2MiB,
-        Page4KiB, PageSize, PageTable, PageTableEntry, PageTableEntryErr, PageTableIndex,
-        PageTableLevel, PhysFrame, VirtFrame, VirtFrameRange
+        FrameAllocator,
+        MapFlush,
+        MapFlusher,
+        MapRangeFlush,
+        PTFlags,
+        Page1GiB,
+        Page2MiB,
+        Page4KiB,
+        PageSize,
+        PageTable,
+        PageTableEntry,
+        PageTableEntryErr,
+        PageTableIndex,
+        PageTableLevel,
+        PhysFrame,
+        VirtFrame,
+        VirtFrameRange
     }
 };
 
@@ -627,7 +647,7 @@ impl Debug for PageDir {
     /** Formats the value using the given formatter
      */
     #[rustfmt::skip]
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for (l4_index, l4_entry) in self.root_page_table().iter_mut().enumerate() {
             if l4_entry.is_unused() {
                 continue;

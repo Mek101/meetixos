@@ -2,24 +2,31 @@
  *
  * Implements a data enumeration with the [`Task`] specific data
  *
- * [`Task`]: /api/tasks/trait.Task.html
+ * [`Task`]: crate::tasks::task::Task
  */
 
 use core::cmp::min;
 
 use os::{
-    limits::{PROC_ARG_COUNT_MAX, PROC_ARG_LEN_MAX, TASK_NAME_LEN_MAX},
+    limits::{
+        PROC_ARG_COUNT_MAX,
+        PROC_ARG_LEN_MAX,
+        TASK_NAME_LEN_MAX
+    },
     str_utils
 };
 
 use crate::{
-    bits::task::{RUserThreadEntry, ThreadEntryData},
+    bits::task::{
+        RUserThreadEntry,
+        ThreadEntryData
+    },
     objs::impls::File
 };
 
 /** Initializes a standard [`RawProcArgs`]
  *
- * [`RawProcArgs`]: /api/bits/task/type.RawProcArgs.html
+ * [`RawProcArgs`]: crate::bits::task::data::RawProcArgs
  */
 pub const RAW_PROC_ARGS_INIT: RawProcArgs = [[0; PROC_ARG_LEN_MAX]; PROC_ARG_COUNT_MAX];
 
@@ -27,7 +34,7 @@ pub const RAW_PROC_ARGS_INIT: RawProcArgs = [[0; PROC_ARG_LEN_MAX]; PROC_ARG_COU
  *
  * Identifies the raw type used to provide [`Proc`] arguments to the kernel
  *
- * [`Proc`]: /api/tasks/impls/struct.Proc.html
+ * [`Proc`]: crate::tasks::impls::proc::Proc
  */
 pub type RawProcArgs = [[u8; PROC_ARG_LEN_MAX]; PROC_ARG_COUNT_MAX];
 
@@ -39,7 +46,7 @@ pub type RawProcArgs = [[u8; PROC_ARG_LEN_MAX]; PROC_ARG_COUNT_MAX];
 pub enum TaskSpecData {
     /** Contains the specific data to construct and execute a [`Thread`]
      *
-     * [`Thread`]: /api/tasks/impls/struct.Thread.html
+     * [`Thread`]: crate::tasks::impls::thread::Thread
      */
     Thread {
         m_user_thread: ThreadEntryData,
@@ -48,7 +55,7 @@ pub enum TaskSpecData {
 
     /** Contains the specific data to construct and execute a [`Proc`]
      *
-     * [`Proc`]: /api/tasks/impls/struct.Proc.html
+     * [`Proc`]: crate::tasks::impls::proc::Proc
      */
     Proc {
         m_executable: File,
@@ -65,7 +72,7 @@ impl TaskSpecData {
      *
      * Fills the [`Thread`] variant data with the given values
      *
-     * [`Thread`]: /api/tasks/impls/struct.Thread.html
+     * [`Thread`]: crate::tasks::impls::thread::Thread
      */
     pub fn new_thread(entry_point: Option<RUserThreadEntry>,
                       arg: Option<usize>,
@@ -99,8 +106,8 @@ impl TaskSpecData {
      * The arguments count and length are truncated when exceed the
      * [`PROC_ARG_LEN_MAX`] and the [`PROC_ARG_COUNT_MAX`]
      *
-     * [`PROC_ARG_LEN_MAX`]: /os/limits/constant.PROC_ARG_LEN_MAX.html
-     * [`PROC_ARG_COUNT_MAX`]: /os/limits/constant.PROC_ARG_COUNT_MAX.html
+     * [`PROC_ARG_LEN_MAX`]: os::limits::PROC_ARG_LEN_MAX
+     * [`PROC_ARG_COUNT_MAX`]: os::limits::PROC_ARG_COUNT_MAX
      */
     pub fn new_proc(exe: File, args: Option<&[&str]>) -> Self {
         Self::Proc { m_executable: exe,

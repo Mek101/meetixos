@@ -3,26 +3,36 @@
  * Implements a raw locked heap that relies to a [`Mutex`] to ensure mutual
  * exclusion access
  *
- * [`Mutex`]: /sync/struct.Mutex.html
+ * [`Mutex`]: sync::Mutex
  */
 
 use core::{
-    alloc::{GlobalAlloc, Layout},
+    alloc::{
+        GlobalAlloc,
+        Layout
+    },
     ptr,
     ptr::NonNull
 };
 
-use sync::{Lazy, Mutex, RawMutex};
+use sync::{
+    Lazy,
+    Mutex,
+    RawMutex
+};
 
-use crate::{Heap, HeapMemorySupplier};
+use crate::{
+    Heap,
+    HeapMemorySupplier
+};
 
 /** # Raw Lazy Mutex Supplier
  *
  * Represents the callback used by the [`RawLazyLockedHeap`] to obtain the
  * [`RawMutex`] implementation
  *
- * [`RawLazyLockedHeap`]: /heap/locked/raw/struct.RawLazyLockedHeap.html
- * [`RawMutex`]: /sync/trait.RawMutex.html
+ * [`RawLazyLockedHeap`]: crate::locked::raw::RawLazyLockedHeap
+ * [`RawMutex`]: sync::RawMutex
  */
 pub type RawLazyMutexSupplier<M> = fn() -> Option<M>;
 
@@ -31,11 +41,10 @@ pub type RawLazyMutexSupplier<M> = fn() -> Option<M>;
  * Implements a locked heap with a customizable [`Mutex`] backend that is
  * lazily initialized.
  *
- * This allow the use of the struct as [`global_allocator`] using constant
+ * This allow the use of the struct as `global_allocator` using constant
  * initialization
  *
- * [`Mutex`]: /sync/struct.Mutex.html]
- * [`global_alloc`]: https://doc.rust-lang.org/std/alloc/index.html#the-global_allocator-attribute
+ * [`Mutex`]: sync::Mutex
  */
 pub struct RawLazyLockedHeap<M>
     where M: RawMutex + 'static {
@@ -116,8 +125,8 @@ unsafe impl<M> GlobalAlloc for RawLazyLockedHeap<M> where M: RawMutex {
  * when created, this is the only way (for now) to have a lazy function to
  * give to the [`Lazy`] that captures local objects
  *
- * [`FnOnce`]: https://doc.rust-lang.org/std/ops/trait.FnOnce.html
- * [`Lazy`]: /sync/struct.Lazy.html
+ * [`FnOnce`]: core::ops::FnOnce
+ * [`Lazy`]: sync::Lazy
  */
 struct LazyHeapInitializer<T>
     where T: RawMutex {

@@ -3,31 +3,39 @@
  * Implements the variants that identifies the various [`TaskId`]
  * implementations
  *
- * [`TaskId`]: /api/tasks/struct.TaskId.html
+ * [`TaskId`]: crate::tasks::task::TaskId
  */
 
-c_handy_enum! {
-    /** # `Task` Types
-     *
-     * Lists the available object types represented by an [`TaskId`]
-     *
-     * [`TaskId`]: /api/tasks/struct.TaskId.html
+use num_enum::{
+    IntoPrimitive,
+    TryFromPrimitive
+};
+
+/** # `Task` Types
+ *
+ * Lists the available object types represented by an [`TaskId`]
+ *
+ * [`TaskId`]: crate::tasks::task::TaskId
+ */
+#[repr(u8)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum TaskType {
+    /** No real uses, used as default value
      */
-    pub enum TaskType: u8 {
-        /** No real uses, used as default value
-         */
-        Unknown = 0,
+    Unknown,
 
-        /** Identifies a [`Thread`] task
-         *
-         * [`Thread`]: /api/tasks/impls/struct.Thread.html
-         */
-        Thread  = 1,
+    /** Identifies a [`Thread`] task
+     *
+     * [`Thread`]: crate::tasks::impls::thread::Thread
+     */
+    Thread,
 
-        /** Identifies a [`Proc`] task
-         *
-         * [`Proc`]: /api/tasks/impls/struct.Proc.html
-         */
-        Proc    = 2,
-    }
+    /** Identifies a [`Proc`] task
+     *
+     * [`Proc`]: crate::tasks::impls::proc::Proc
+     */
+    Proc
 }

@@ -3,17 +3,21 @@
  * Implements the error descriptor used by all the system calls
  */
 
-use core::{
-    fmt,
-    fmt::{Display, Formatter}
-};
+use core::fmt;
 
-use os::{limits::ERROR_MESSAGE_LEN_MAX, str_utils, sysc::id::SysCallId};
+use os::{
+    limits::ERROR_MESSAGE_LEN_MAX,
+    str_utils,
+    sysc::id::SysCallId
+};
 
 use crate::{
     errors::ErrorClass,
     tasks::{
-        impls::{Proc, Thread},
+        impls::{
+            Proc,
+            Thread
+        },
         Task
     }
 };
@@ -46,7 +50,7 @@ impl Error {
 
     /** Returns the [`ErrorClass`]
      *
-     * [`ErrorClass`]: /api/errors/enum.ErrorClass.html
+     * [`ErrorClass`]: crate::errors::class::ErrorClass
      */
     pub fn class(&self) -> ErrorClass {
         self.m_class
@@ -54,7 +58,7 @@ impl Error {
 
     /** Returns the [`SysCallId`]
      *
-     * [`SysCallId`]: /os/sysc/id/struct.SysCallId.html
+     * [`SysCallId`]: os::sysc::id::SysCallId
      */
     pub fn syscall(&self) -> SysCallId {
         self.m_syscall
@@ -69,17 +73,17 @@ impl Error {
     /**
      * Returns `self` as mutable usize pointer (used by the [`KernCaller`])
      *
-     * [`KernCaller`]: /api/caller/trait.KernCaller.html
+     * [`KernCaller`]: crate::caller::KernCaller
      */
     pub(crate) fn as_ptr(&mut self) -> *mut usize {
         self as *mut _ as *mut usize
     }
 }
 
-impl Display for Error {
+impl fmt::Display for Error {
     /** Formats the value using the given formatter.
      */
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let pid = Proc::this().id();
         let tid = Thread::this().id();
 
@@ -88,8 +92,10 @@ impl Display for Error {
          *       : Reason: <Optional error message from the kernel>
          */
         let mut res = writeln!(f, "[{}:{}] Error: {}", pid, tid, self.m_class);
-        if res.is_ok() && self.m_message.is_some() {
-            res = writeln!(f, "\t: Reason: {}", self.message().unwrap());
+        if res.is_ok() {
+            if let Some(message) = self.message() {
+                res = writeln!(f, "\t: Reason: {}", message);
+            }
         }
         res
     }

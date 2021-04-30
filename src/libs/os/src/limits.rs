@@ -16,33 +16,33 @@ pub const VFS_NAME_LEN_MAX: usize = 256;
 /** Represents the maximum amount of threads that could use
  * [`Object::watch()`] at the same time for the same object
  *
- * [`Object::watch()`]: /api/objs/trait.Object.html#method.watch
+ * [`Object::watch()`]: api::objs::object::Object::watch
  */
 pub const OBJ_WATCHERS_COUNT_MAX: usize = 64;
 
 /** Represents the maximum amount of [`Object`]'s instance each process can
  * open simultaneously
  *
- * [`Object`]: /api/objs/trait.Object.html
+ * [`Object`]: api::objs::object::Object
  */
 pub const OBJ_OPENED_COUNT_MAX: usize = 1024;
 
 /** Represents the maximum length in bytes for an [`OSEntity`] name
  *
- * [`OSEntity`]: /api/ents/trait.OSEntity.html
+ * [`OSEntity`]: api::ents::entity::OSEntity
  */
 pub const ENTITY_NAME_LEN_MAX: usize = 64;
 
 /** Represents the maximum amount of [`OSGroup`]s for each [`OSUser`]
  *
- * [`OSGroup`]: /api/ents/struct.OSGroup.html
- * [`OSUser`]: /api/ents/struct.OSUser.html
+ * [`OSGroup`]: api::ents::group::OSGroup
+ * [`OSUser`]: api::ents::user::OSUser
  */
 pub const OSUSER_GROUPS_COUNT_MAX: usize = 64;
 
 /** Represents the maximum length in bytes for a [`Task`] name
  *
- * [`Task`]: /api/tasks/trait.Task.html
+ * [`Task`]: api::tasks::task::Task
  */
 pub const TASK_NAME_LEN_MAX: usize = 32;
 
@@ -57,6 +57,6 @@ pub const PROC_ARG_LEN_MAX: usize = 64;
 /** Represents the maximum length in bytes for the formatted error message in
  * [`Error`] struct
  *
- * [`Error`]: /api/errors/struct.Error.html
+ * [`Error`]: api::errors::error::Error
  */
 pub const ERROR_MESSAGE_LEN_MAX: usize = 64;

@@ -2,7 +2,7 @@
  *
  * Implements the standard and unique way to open or create [`Object`]s
  *
- * [`Object`]: /api/objs/trait.Object.html
+ * [`Object`]: crate::objs::object::Object
  */
 
 use core::marker::PhantomData;
@@ -11,14 +11,31 @@ use bit_field::BitField;
 
 use os::{
     str_utils,
-    sysc::{codes::KernObjConfigFnId, fn_path::KernFnPath}
+    sysc::{
+        codes::KernObjConfigFnId,
+        fn_path::KernFnPath
+    }
 };
 
 use crate::{
-    bits::obj::{Grants, ObjType},
-    caller::{KernCaller, Result},
-    config::{ConfigMode, CreatMode, FindMode},
-    objs::{ObjId, Object, UserCreatable},
+    bits::obj::{
+        Grants,
+        ObjType
+    },
+    caller::{
+        KernCaller,
+        Result
+    },
+    config::{
+        ConfigMode,
+        CreatMode,
+        FindMode
+    },
+    objs::{
+        ObjId,
+        Object,
+        UserCreatable
+    },
     path::Path
 };
 
@@ -38,17 +55,15 @@ use crate::{
  * The constructed configuration can be then applied with:
  * * [`ObjConfig::apply_for()`] - to open or create a named object (an
  *   object with a name into the VFS)
- * * [`ObjConfig::apply_for_anon()`] - to create anonymous object that are
- *   local to the scope of the object and not represented into the VFS
+ * * [`ObjConfig::apply_for_anon()`](AN) - to create anonymous object that
+ *   are local to the scope of the object and not represented into the VFS
  *
- * [`Object`]: /api/objs/trait.Object.html
+ * [`Object`]: crate::objs::object::Object
  * [`open()`]: https://man7.org/linux/man-pages/man2/open.2.html
- * [`ObjConfig::for_read()`]:
- * /api/objs/struct.ObjConfig.html#method.for_read [`O_RDONLY`]: https://man7.org/linux/man-pages/man2/open.2.html
- * [`ObjConfig::apply_for()`]:
- * /api/objs/struct.ObjConfig.html#method.apply_for
- * [`ObjConfig::apply_for_anon()`]:
- * /api/objs/struct.ObjConfig.html#method.apply_for_anon
+ * [`ObjConfig::for_read()`]: crate::objs::config::ObjConfig::for_read
+ * [`O_RDONLY`]: https://man7.org/linux/man-pages/man2/open.2.html
+ * [`ObjConfig::apply_for()`]: crate::objs::config::ObjConfig::apply_for
+ * [AN]: rate::objs::config::ObjConfig::apply_for_anon
  */
 #[derive(Debug)]
 pub struct ObjConfig<T, M>
@@ -85,9 +100,9 @@ impl<T> ObjConfig<T, CreatMode> where T: Object + UserCreatable {
      * The caller [`OSUser`] (or at least one of his joined [`OSGroup`]s)
      * must have write grants for the parent directory
      *
-     * [`Grants`]: /api/bits/obj/struct.Grants.html
-     * [`OSUser`]: /api/ents/impls/struct.OSUser.html
-     * [`OSGroup`]: /api/ents/impls/struct.OSGroup.html
+     * [`Grants`]: crate::bits::obj::grants::Grants
+     * [`OSUser`]: crate::ents::impls::user::OSUser
+     * [`OSGroup`]: crate::ents::impls::group::OSGroup
      */
     pub fn with_grants(&mut self, grants: Grants<T>) -> &mut Self {
         self.m_grants = grants;
@@ -106,10 +121,9 @@ impl<T> ObjConfig<T, CreatMode> where T: Object + UserCreatable {
      * contains the handle, when the object goes out of scope (from all the
      * tasks that owns it) it is definitely destroyed
      *
-     * [`have no name`]: /api/objs/infos/struct.ObjInfo.html#method.is_named
-     * [`Object::send()`]: /api/objs/trait.Object.html#method.send
-     * [`ObjConfig::exclusive()`]:
-     * /api/objs/struct.ObjConfig.html#method.exclusive
+     * [`have no name`]: crate::objs::infos::info::ObjInfo::is_named
+     * [`Object::send()`]: crate::objs::object::Object::send
+     * [`ObjConfig::exclusive()`]: crate::objs::config::ObjConfig::exclusive
      */
     pub fn apply_for_anon(&self) -> Result<T> {
         self.apply_builder_config()
@@ -158,12 +172,12 @@ impl<T, M> ObjConfig<T, M>
      * optional for others (i.e [`File`]s, [`IpcChan`]nels) but
      * mandatory for [`MMap`]s **when created**
      *
-     * [`Dir`]: /api/objs/impls/struct.Dir.html
-     * [`OsRawMutex`]: /api/objs/impls/struct.OsRawMutex.html
-     * [`Link`]: /api/objs/impls/struct.Link.html
-     * [`File`]: /api/objs/impls/struct.File.html
-     * [`IpcChan`]: /api/objs/impls/struct.IpcChan.html
-     * [`MMap`]: /api/objs/impls/struct.MMap.html
+     * [`Dir`]: crate::objs::impls::dir::Dir
+     * [`OsRawMutex`]: crate::objs::impls::mutex::OsRawMutex
+     * [`Link`]: crate::objs::impls::link::Link
+     * [`File`]: crate::objs::impls::file::File
+     * [`IpcChan`]: crate::objs::impls::ipc_chan::IpcChan
+     * [`MMap`]: crate::objs::impls::mmap::MMap
      */
     pub fn with_size(&mut self, size: usize) -> &mut Self {
         self.m_flags.set_bit(Self::CFG_SET_SIZE_BIT, true);
@@ -217,13 +231,12 @@ impl<T, M> ObjConfig<T, M>
      * kernel to ensure the caller user have the data execution
      * permissions for the object to open
      *
-     * [here]: /api/bits/obj/struct.Grants.html#method.set_data_executable
-     * [`Object`]: /api/objs/trait.Object.html
-     * [`File`]: /api/objs/impls/struct.File.html
-     * [`MMap`]: /api/objs/impls/struct.MMap.html
-     * [`TaskConfig<Proc>::run()`]:
-     * /api/tasks/struct.TaskConfig.html#method.run-1
-     * [`NO_EXECUTE`]: https://docs.rs/x86_64/0.12.3/x86_64/structures/paging/page_table/struct.PageTableFlags.html#associatedconstant.NO_EXECUTE
+     * [here]: crate::bits::obj::grants::Grants::set_data_executable
+     * [`Object`]: crate::objs::object::Object
+     * [`File`]: crate::objs::impls::file::File
+     * [`MMap`]: crate::objs::impls::mmap::MMap
+     * [`TaskConfig<Proc>::run()`]: crate::tasks::config::TaskConfig::run-1
+     * [`NO_EXECUTE`]: shared::mem::paging::table::PTFlags::NO_EXECUTE
      */
     pub fn for_exec(&mut self) -> &mut Self {
         self.m_flags.set_bit(Self::CFG_EXEC_BIT, true);
@@ -244,14 +257,14 @@ impl<T, M> ObjConfig<T, M>
      * until there is a reference to them. When the references reaches the 0
      * they are definitely destroyed
      *
-     * [`ObjConfig::creat()`]: /api/objs/struct.ObjConfig.html#method.creat
-     * [`File`]: /api/objs/impls/struct.File.html
-     * [`Dir`]: /api/objs/impls/struct.Dir.html
-     * [`Link`]: /api/objs/impls/struct.Link.html
-     * [`OsRawMutex`]: /api/objs/impls/struct.OsRawMutex.html
-     * [`Object::drop_name()`]: /api/objs/trait.Object.html#method.drop_name
-     * [`MMap`]: /api/objs/impls/struct.MMap.html
-     * [`IpcChan`]: /api/objs/impls/struct.IpcChan.html
+     * [`ObjConfig::creat()`]: crate::objs::config::ObjConfig::creat
+     * [`File`]: crate::objs::impls::file::File
+     * [`Dir`]: crate::objs::impls::dir::Dir
+     * [`Link`]: crate::objs::impls::link::Link
+     * [`OsRawMutex`]: crate::objs::impls::mutex::OsRawMutex
+     * [`Object::drop_name()`]: crate::objs::object::Object::drop_name
+     * [`MMap`]: crate::objs::impls::mmap::MMap
+     * [`IpcChan`]: crate::objs::impls::ipc_chan::IpcChan
      */
     pub fn apply_for<P>(&mut self, path: P) -> Result<T>
         where P: AsRef<[u8]> {
@@ -277,8 +290,7 @@ impl<T, M> ObjConfig<T, M>
 {
     /** Returns whether [`ObjConfig::for_read()`] was called
      *
-     * [`ObjConfig::for_read()`]:
-     * /api/objs/struct.ObjConfig.html#method.for_read
+     * [`ObjConfig::for_read()`]: crate::objs::config::ObjConfig::for_read
      */
     pub fn is_read(&self) -> bool {
         self.m_flags.get_bit(Self::CFG_READ_BIT)
@@ -286,8 +298,7 @@ impl<T, M> ObjConfig<T, M>
 
     /** Returns whether [`ObjConfig::for_write()`] was called
      *
-     * [`ObjConfig::for_write()`]:
-     * /api/objs/struct.ObjConfig.html#method.for_write
+     * [`ObjConfig::for_write()`]: crate::objs::config::ObjConfig::for_write
      */
     pub fn is_write(&self) -> bool {
         self.m_flags.get_bit(Self::CFG_WRITE_BIT)
@@ -295,8 +306,7 @@ impl<T, M> ObjConfig<T, M>
 
     /** Returns whether [`ObjConfig::for_exec()`] was called
      *
-     * [`ObjConfig::for_exec()`]:
-     * /api/objs/struct.ObjConfig.html#method.for_exec
+     * [`ObjConfig::for_exec()`]: crate::objs::config::ObjConfig::for_exec
      */
     pub fn is_exec(&self) -> bool {
         self.m_flags.get_bit(Self::CFG_EXEC_BIT)
@@ -304,8 +314,7 @@ impl<T, M> ObjConfig<T, M>
 
     /** Returns whether [`ObjConfig::exclusive()`] was called
      *
-     * [`ObjConfig::exclusive()`]:
-     * /api/objs/struct.ObjConfig.html#method.exclusive
+     * [`ObjConfig::exclusive()`]: crate::objs::config::ObjConfig::exclusive
      */
     pub fn is_exclusive(&self) -> bool {
         self.m_flags.get_bit(Self::CFG_EXCLUSIVE_BIT)
@@ -313,8 +322,7 @@ impl<T, M> ObjConfig<T, M>
 
     /** Returns whether [`ObjConfig::with_size()`] was called
      *
-     * [`ObjConfig::with_size()`]:
-     * /api/objs/struct.ObjConfig.html#method.with_size
+     * [`ObjConfig::with_size()`]: crate::objs::config::ObjConfig::with_size
      */
     pub fn is_sized(&self) -> bool {
         self.m_flags.get_bit(Self::CFG_SET_SIZE_BIT)
@@ -322,8 +330,7 @@ impl<T, M> ObjConfig<T, M>
 
     /** Returns whether [`ObjConfig::creat()`] was called
      *
-     * [`ObjConfig::creat()`]:
-     * /api/objs/struct.ObjConfig.html#method.creat
+     * [`ObjConfig::creat()`]: crate::objs::config::ObjConfig::creat
      */
     pub fn is_creat(&self) -> bool {
         self.m_flags.get_bit(Self::CFG_CREAT_BIT)
@@ -331,8 +338,8 @@ impl<T, M> ObjConfig<T, M>
 
     /** Returns the [`Grants`] given with [`ObjConfig::creat()`]
      *
-     * [`Grants`]: /api/bits/obj/struct.Grants.html
-     * [`ObjConfig::creat()`]: /api/objs/struct.ObjConfig.html#method.creat
+     * [`Grants`]: crate::bits::obj::grants::Grants
+     * [`ObjConfig::creat()`]: crate::objs::config::ObjConfig::creat
      */
     pub fn grants(&self) -> Grants<T> {
         self.m_grants
@@ -340,8 +347,7 @@ impl<T, M> ObjConfig<T, M>
 
     /** Returns the size in bytes given to [`ObjConfig::with_size()`]
      *
-     * [`ObjConfig::with_size()`]:
-     * /api/objs/struct.ObjConfig.html#method.with_size
+     * [`ObjConfig::with_size()`]: crate::objs::config::ObjConfig::with_size
      */
     pub fn size(&self) -> usize {
         self.m_size
@@ -349,7 +355,7 @@ impl<T, M> ObjConfig<T, M>
 
     /** Returns the [`ObjType`] given via generics
      *
-     * [`ObjType`]: /api/bits/obj/enum.ObjType.html
+     * [`ObjType`]: crate::bits::obj::types::ObjType
      */
     pub fn obj_type(&self) -> ObjType {
         self.m_type
@@ -357,9 +363,8 @@ impl<T, M> ObjConfig<T, M>
 
     /** Returns the [`Path`] given to [`ObjConfig::apply_for()`]
      *
-     * [`Path`]: /api/path/struct.Path.html
-     * [`ObjConfig::apply_for()`]:
-     * /api/objs/struct.ObjConfig.html#method.apply_for
+     * [`Path`]: crate::path::Path
+     * [`ObjConfig::apply_for()`]: crate::objs::config::ObjConfig::apply_for
      */
     pub fn path(&self) -> Option<&Path> {
         self.m_path.as_ref()
@@ -378,10 +383,10 @@ impl<T, M> KernCaller for ObjConfig<T, M>
  * Marker trait implemented for the objects that have meaning with concept
  * of resizable data, like [`File`], [`MMap`] and [`IpcChan`]
  *
- * [`File`]: /api/objs/impls/struct.File.html
- * [`MMap`]: /api/objs/impls/struct.MMap.html
- * [`IpcChan`]: /api/objs/impls/struct.IpcChan.html
+ * [`File`]: crate::objs::impls::file::File
+ * [`MMap`]: crate::objs::impls::mmap::MMap
+ * [`IpcChan`]: crate::objs::impls::ipc_chan::IpcChan
  */
 pub trait SizeableData {
-    // No methods, just a marker trait
+    /* No methods, just a marker trait */
 }

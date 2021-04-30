@@ -3,120 +3,140 @@
  * Implements various enumerations that are used for certain [`Object`]
  * related calls
  *
- * [`Object`]: /api/objs/trait.Object.html
+ * [`Object`]: crate::objs::object::Object
  */
 
-c_handy_enum! {
-    /** # `Object::recv()` Waiting Modes
-     *
-     * Lists the available modes for [`Object::recv()`]
-     *
-     * [`Object::recv()`]: /api/objs/trait.Object.html#method.recv
-     */
-    pub enum RecvMode: u8 {
-        /** This mode simply asks to the kernel whether an object of the requested
-         * type is already available into the object receiving queue, if not it
-         * returns an [`Err(RecvErr::NoAvailObj)`] error
-         *
-         * [`Err(RecvErr::NoAvailObj)`]: /api/errors/obj/enum.RecvErr.html#variant.NoAvailObj
-         */
-        Poll = 0,
+use num_enum::{
+    IntoPrimitive,
+    TryFromPrimitive
+};
 
-        /** This mode puts the task in a waiting state until an object of the
-         * requested type is available into the task's receiving queue.
-         *
-         * If already available the system call immediately returns and the task
-         * will not fall into waiting state.
-         *
-         * If the kernel's wait queue is full the system call returns an
-         * [`Err(RecvErr::KernWaitQueueFull)`] error
-         *
-         * [`Err(RecvErr::KernWaitQueueFull)`]: /api/errors/obj/enum.RecvErr.html#variant.KernWaitQueueFull
-         */
-        Sync = 1,
-    }
+/** # `Object::recv()` Waiting Modes
+ *
+ * Lists the available modes for [`Object::recv()`]
+ *
+ * [`Object::recv()`]: crate::objs::object::Object::recv
+ */
+#[repr(u8)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum RecvMode {
+    /** This mode simply asks to the kernel whether an object of the
+     * requested type is already available into the object receiving
+     * queue, if not it returns an [`Err(NoDataAvailable)`](E) error
+     *
+     * [E]: crate::errors::ErrorClass::NoDataAvailable
+     */
+    Poll,
+
+    /** This mode puts the task in a waiting state until an object of the
+     * requested type is available into the task's receiving queue.
+     *
+     * If already available the system call immediately returns and the task
+     * will not fall into waiting state.
+     *
+     * If the kernel's wait queue is full the system call returns an
+     * [`Err(LimitReached)`](E) error
+     *
+     * [E]: crate::errors::ErrorClass::LimitReached
+     */
+    Sync
 }
 
-c_handy_enum! {
-    /** # `KrnIterator::find_next()` Modes
+/** # `KrnIterator::find_next()` Modes
+ *
+ * Lists the internally used modes to identify the direction of the
+ * [`KrnIterator`] in use
+ *
+ * [`KrnIterator`]: crate::objs::impls::iter::KrnIterator
+ */
+#[repr(u8)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum KrnIterDirection {
+    /** Internally used when called [`KrnIterator::find_next()`](L)
      *
-     * Lists the internally used modes to identify the direction of the
-     * [`KrnIterator`] in use
-     *
-     * [`KrnIterator`]: /api/objs/impls/struct.KrnIterator.html
+     * [L]: crate::objs::impls::iter::KrnIterator::find_next
      */
-    pub enum KrnIterDirection: u8 {
-        /** Internally used when called [`KrnIterator::find_next()`]
-         *
-         * [`KrnIterator::find_next()`]: /api/objs/impls/struct.KrnIterator.html#method.find_next
-         */
-        BeginToEnd = 0,
+    BeginToEnd,
 
-        /** Internally used when called [`KrnIterator::find_next_back()`]
-         *
-         * [`KrnIterator::find_next_back()`]: /api/objs/impls/struct.KrnIterator.html#method.find_next_back
-         */
-        EndToBegin = 1,
-    }
+    /** Internally used when called [`KrnIterator::find_next_back()`](L)
+     *
+     * [L]: crate::objs::impls::iter::KrnIterator::find_next_back
+     */
+    EndToBegin
 }
 
-c_handy_enum! {
-    /** # `MMap::get_ptr` Modes
+/** # `MMap::get_ptr` Modes
+ *
+ * Lists the internally used modes that are given to the kernel to manage
+ * synchronization over the memory of a [`MMap`]
+ *
+ * [`MMap`]: crate::objs::impls::mmap::MMap
+ */
+#[repr(u8)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum MMapPtrMode {
+    /** Internally used when called [`MMap::get_ptr()`]
      *
-     * Lists the internally used modes that are given to the kernel to manage
-     * synchronization over the memory of a [`MMap`]
-     *
-     * [`MMap`]: /api/objs/impls/struct.MMap.html
+     * [`MMap::get_ptr()`]: crate::objs::impls::mmap::MMap::get_ptr
      */
-    pub enum MMapPtrMode: u8 {
-        /** Internally used when called [`MMap::get_ptr()`]
-         *
-         * [`MMap::get_ptr()`]: /api/objs/impls/struct.MMap.html#method.get_ptr
-         */
-        Readable = 0,
+    Readable,
 
-        /** Internally used when called [`MMap::get_ptr_mut()`]
-         *
-         * [`MMap::get_ptr_mut()`]: /api/objs/impls/struct.MMap.html#method.get_ptr_mut
-         */
-        Writeable = 1,
-
-        /** Internally used when called [`MMap::leak_ptr()`]
-         *
-         * [`MMap::leak_ptr()`]: /api/objs/impls/struct.MMap.html#method.leak_ptr
-         */
-        Leak = 2,
-    }
+    /** Internally used when called [`MMap::get_ptr_mut()`]
+     *
+     * [`MMap::get_ptr_mut()`]: crate::objs::impls::mmap::MMap::get_ptr_mut
+     */
+    Writeable
 }
 
-rust_handy_enum! {
-    /** # `File::set_pos` & `Dir::set_pos` Modes
-     *
-     * Lists the available modes for [`File::set_pos()`] and [`Dir::set_index()`]
-     *
-     * [`File::set_pos()`]: /api/objs/impls/struct.File.html#method.set_pos
-     * [`Dir::set_pos()`]: /api/objs/impls/struct.Dir.html#method.set_index
+/** # `File::set_pos` & `Dir::set_pos` Modes
+ *
+ * Lists the available modes for [`File::set_pos()`] and
+ * [`Dir::set_index()`]
+ *
+ * [`File::set_pos()`]: crate::objs::impls::file::File::set_pos
+ * [`Dir::set_pos()`]: crate::objs::impls::dir::Dir::set_index
+ */
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+pub enum SeekMode {
+    /** The given offset will be interpreted as an absolute offset
      */
-    pub enum SeekMode: u8 {
-        /** The given offset will be interpreted as an absolute offset
-         */
-        Absolute(offset: u64) = 0,
+    Absolute(u64),
 
-        /** The given offset will be added to the current offset
-         * (position relative)
-         */
-        Relative(offset: i64) = 1,
+    /** The given offset will be added to the current offset
+     * (position relative)
+     */
+    Relative(i64),
 
-        /** The cursor of the object will be moved to the end
-         */
-        End = 2,
-    }
+    /** The cursor of the object will be moved to the end
+     */
+    End
 }
 
 impl SeekMode {
+    /* Returns the integer which identifies the mode
+     */
+    pub fn mode(&self) -> usize {
+        match self {
+            SeekMode::Absolute(_) => 0,
+            SeekMode::Relative(_) => 1,
+            SeekMode::End => 2
+        }
+    }
+
     /** Returns [`Some(offset)`] if the variants have any
      *
-     * [`Some(offset)`]: https://doc.rust-lang.org/std/option/enum.Option.html#variant.Some
+     * [`Some(offset)`]: core::option::Option::Some
      */
     pub fn off(&self) -> Option<usize> {
         match *self {

@@ -3,22 +3,45 @@
  * Implements the standard and unique way to find existing [`Task`]s or
  * spawn new one
  *
- * [`Task`]: /api/tasks/trait.Task.html
+ * [`Task`]: crate::tasks::task::Task
  */
 
 use core::marker::PhantomData;
 
-use os::sysc::{codes::KernTaskConfigFnId, fn_path::KernFnPath};
+use os::sysc::{
+    codes::KernTaskConfigFnId,
+    fn_path::KernFnPath
+};
 
 use crate::{
-    bits::task::{SchedPolicy, TaskCpu, TaskPrio, TaskSpecData},
-    caller::{KernCaller, Result},
-    config::{ConfigFinderIter, ConfigMode, CreatMode, FindMode},
-    ents::impls::{OSGroup, OSUser},
+    bits::task::{
+        SchedPolicy,
+        TaskCpu,
+        TaskPrio,
+        TaskSpecData
+    },
+    caller::{
+        KernCaller,
+        Result
+    },
+    config::{
+        ConfigFinderIter,
+        ConfigMode,
+        CreatMode,
+        FindMode
+    },
+    ents::impls::{
+        OSGroup,
+        OSUser
+    },
     objs::impls::File,
     tasks::{
-        impls::{Proc, Thread},
-        Task, TaskId
+        impls::{
+            Proc,
+            Thread
+        },
+        Task,
+        TaskId
     }
 };
 
@@ -34,30 +57,26 @@ use crate::{
  * enables/specifies a filter in [`FindMode`].
  *
  * The configuration in [`CreatMode`] can be run with:
- * * [`TaskConfig::<Thread, CreatMode>::run()`] - to spawn a new thread for
- *   the current caller process
- * * [`TaskConfig::<Proc, CreatMode>::run()`] - to spawn a new process that
- *   executes a new executable program
+ * * [`TaskConfig::<Thread, CreatMode>::run()`](TC) - to spawn a new thread
+ *   for the current caller process
+ * * [`TaskConfig::<Proc, CreatMode>::run()`](PC) - to spawn a new process
+ *   that executes a new executable program
  *
  * Otherwise, in [`FindMode`], can be launched with
- * [`TaskConfig::<FindMode>::search()`]
+ * [`TaskConfig::<FindMode>::search()`](FC)
  *
- * [`Task`]: /api/tasks/trait.Task.html
+ * [`Task`]: crate::tasks::task::Task
  * [`fork()`]: https://man7.org/linux/man-pages/man2/fork.2.html
  * [`clone()`]: https://man7.org/linux/man-pages/man2/clone.2.html
  * [`exec()`]: https://man7.org/linux/man-pages/man2/execve.2.html
  * [`pthread_*`]: https://linux.die.net/man/7/pthreads
  * [`sched_*`]: https://www.man7.org/linux/man-pages/man7/sched.7.html
- * [`TaskConfig::with_prio()`]:
- * /api/tasks/struct.TaskConfig.html#method.with_prio
- * [`TaskConfig::<Thread, CreatMode>::run()`]:
- * /api/tasks/struct.TaskConfig.html#method.run-1
- * [`TaskConfig::<Proc, CreatMode>::run()`]:
- * /api/tasks/struct.TaskConfig.html#method.run
- * [`TaskConfig::<FindMode>::search()`]:
- * /api/tasks/struct.TaskConfig.html#method.search
- * [`CreatMode`]: /api/config/struct.CreatMode.html
- * [`FindMode`]: /api/config/struct.FindMode.html
+ * [`TaskConfig::with_prio()`]: crate::tasks::config::TaskConfig::with_prio
+ * [TC]: crate::tasks::config::TaskConfig::run-1
+ * [PC]: crate::tasks::config::TaskConfig::run
+ * [FC]: crate::tasks::config::TaskConfig::search
+ * [`CreatMode`]: crate::config::CreatMode
+ * [`FindMode`]: crate::config::FindMode
  */
 #[derive(Debug)]
 pub struct TaskConfig<T, M>
@@ -107,7 +126,7 @@ impl<T: Task, M: ConfigMode> TaskConfig<T, M> {
 
     /** Returns the [`Task`] to use as parent for searching
      *
-     * [`Task`]: /api/tasks/trait.Task.html
+     * [`Task`]: crate::tasks::task::Task
      */
     pub fn children_parent(&self) -> Option<&T> {
         self.m_children_of.as_ref()
@@ -115,8 +134,8 @@ impl<T: Task, M: ConfigMode> TaskConfig<T, M> {
 
     /** Returns the [`SchedPolicy`] chosen for the new [`Task`]
      *
-     * [`SchedPolicy`]: /api/bits/task/enum.SchedPolicy.html
-     * [`Task`]: /api/tasks/trait.Task.html
+     * [`SchedPolicy`]: crate::bits::task::modes::SchedPolicy
+     * [`Task`]: crate::tasks::task::Task
      */
     pub fn sched_policy(&self) -> SchedPolicy {
         self.m_sched_policy
@@ -124,8 +143,8 @@ impl<T: Task, M: ConfigMode> TaskConfig<T, M> {
 
     /** Returns the [`TaskCpu`] chosen for the new [`Task`]
      *
-     * [`TaskCpu`]: /api/bits/task/enum.TaskCpu.html
-     * [`Task`]: /api/tasks/trait.Task.html
+     * [`TaskCpu`]: crate::bits::task::modes::TaskCpu
+     * [`Task`]: crate::tasks::task::Task
      */
     pub fn task_cpu(&self) -> TaskCpu {
         self.m_cpu
@@ -133,7 +152,7 @@ impl<T: Task, M: ConfigMode> TaskConfig<T, M> {
 
     /** Returns the reference to the [`TaskSpecData`]
      *
-     * [`TaskSpecData`]: /api/bits/task/enum.TaskSpecData.html
+     * [`TaskSpecData`]: crate::bits::task::data::spec::TaskSpecData
      */
     pub fn task_spec_data(&self) -> &TaskSpecData {
         &self.m_spec
@@ -141,7 +160,7 @@ impl<T: Task, M: ConfigMode> TaskConfig<T, M> {
 
     /** Returns the optional [`OSUser`] chosen
      *
-     * [`OSUser`]: /api/ents/impls/struct.OSUser.html
+     * [`OSUser`]: crate::ents::impls::user::OSUser
      */
     pub fn os_user(&self) -> Option<OSUser> {
         self.m_os_user
@@ -149,7 +168,7 @@ impl<T: Task, M: ConfigMode> TaskConfig<T, M> {
 
     /** Returns the optional [`OSGroup`] chosen
      *
-     * [`OSGroup`]: /api/ents/impls/struct.OSGroup.html
+     * [`OSGroup`]: crate::ents::impls::group::OSGroup
      */
     pub fn os_group(&self) -> Option<OSGroup> {
         self.m_os_group
@@ -162,8 +181,8 @@ impl<T> TaskConfig<T, CreatMode> where T: Task {
      * The variant of [`SchedPolicy`] given tells to the kernel which
      * scheduling algorithm must be used for the new [`Task`]
      *
-     * [`SchedPolicy`]: /api/bits/task/enum.SchedPolicy.html
-     * [`Task`]: /api/tasks/trait.Task.html
+     * [`SchedPolicy`]: crate::bits::task::modes::SchedPolicy
+     * [`Task`]: crate::tasks::task::Task
      */
     pub fn with_sched_policy(&mut self, sched_policy: SchedPolicy) -> &mut Self {
         self.m_sched_policy = sched_policy;
@@ -176,8 +195,8 @@ impl<T> TaskConfig<T, CreatMode> where T: Task {
      * class of priority that the new [`Task`] must have for all his
      * execution life
      *
-     * [`TaskPrio`]: /api/bits/task/enum.TaskPrio.html
-     * [`Task`]: /api/tasks/trait.Task.html
+     * [`TaskPrio`]: crate::bits::task::modes::TaskPrio
+     * [`Task`]: crate::tasks::task::Task
      */
     pub fn with_prio(&mut self, priority: TaskPrio) -> &mut Self {
         self.m_prio = priority;
@@ -190,8 +209,8 @@ impl<T> TaskConfig<T, CreatMode> where T: Task {
      * the new [`Task`] must be affine to a subset of the available CPUs
      * in a SMP environment
      *
-     * [`TaskCpu`]: /api/bits/task/enum.TaskCpu.html
-     * [`Task`]: /api/tasks/trait.Task.html
+     * [`TaskCpu`]: crate::bits::task::modes::TaskCpu
+     * [`Task`]: crate::tasks::task::Task
      */
     pub fn with_cpu(&mut self, cpu: TaskCpu) -> &mut Self {
         self.m_cpu = cpu;
@@ -203,7 +222,7 @@ impl<T> TaskConfig<T, CreatMode> where T: Task {
      * Requests to the kernel to apply the given configuration to spawn a
      * new [`Task`]
      *
-     * [`Task`]: /api/tasks/trait.Task.html
+     * [`Task`]: crate::tasks::task::Task
      */
     fn run_task(self) -> Result<T> {
         self.kern_call_1(KernFnPath::TaskConfig(KernTaskConfigFnId::CreateTask),
@@ -229,7 +248,7 @@ impl<T> TaskConfig<T, FindMode> where T: Task {
      * Enables the parent [`Task`] filter to tell the kernel on which
      * children iterate
      *
-     * [`Task`]: /api/tasks/trait.Task.html
+     * [`Task`]: crate::tasks::task::Task
      */
     pub fn children_of(&mut self, task: T) -> &mut Self {
         self.m_children_of = Some(task);
@@ -241,8 +260,8 @@ impl<T> TaskConfig<T, FindMode> where T: Task {
      * Enables the owner [`OSUser`] filter to tell the kernel which
      * [`Task`]s select
      *
-     * [`OSUser`]: /api/ents/impls/struct.OSUser.html
-     * [`Task`]: /api/tasks/trait.Task.html
+     * [`OSUser`]: crate::ents::impls::user::OSUser
+     * [`Task`]: crate::tasks::task::Task
      */
     pub fn owned_by_user(&mut self, user: OSUser) -> &mut Self {
         self.m_os_user = Some(user);
@@ -254,8 +273,8 @@ impl<T> TaskConfig<T, FindMode> where T: Task {
      * Enables the owner [`OSGroup`] filter to tell the kernel which
      * [`Task`]s select
      *
-     * [`OSGroup`]: /api/ents/impls/struct.OSGroup.html
-     * [`Task`]: /api/tasks/trait.Task.html
+     * [`OSGroup`]: crate::ents::impls::group::OSGroup
+     * [`Task`]: crate::tasks::task::Task
      */
     pub fn owned_by_group(&mut self, group: OSGroup) -> &mut Self {
         self.m_os_group = Some(group);
@@ -272,9 +291,9 @@ impl<T> TaskConfig<T, FindMode> where T: Task {
      * iteration pool with **ALL** the active tasks of the `T` type
      * ([`Proc`] or [`Thread`])
      *
-     * [`Iterator`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html
-     * [`Proc`]: /api/tasks/impls/struct.Proc.html
-     * [`Thread`]: /api/tasks/impls/struct.Thread.html
+     * [`Iterator`]: core::iter::Iterator
+     * [`Proc`]: crate::tasks::impls::proc::Proc
+     * [`Thread`]: crate::tasks::impls::thread::Thread
      */
     pub fn search(self) -> Result<impl Iterator<Item = T>> {
         self.kern_call_1(KernFnPath::TaskConfig(KernTaskConfigFnId::InitFind),
@@ -289,8 +308,8 @@ impl TaskConfig<Proc, CreatMode> {
      * Overrides the owner [`OSUser`] which, otherwise, will be inherited by
      * the parent [`Proc`]
      *
-     * [`OSUser`]: /api/ents/impls/struct.OSUser.html
-     * [`Proc`]: /api/tasks/impls/struct.Proc.html
+     * [`OSUser`]: crate::ents::impls::user::OSUser
+     * [`Proc`]: crate::tasks::impls::proc::Proc
      */
     pub fn owned_by_user(&mut self, user: OSUser) -> &mut Self {
         self.m_os_user = Some(user);
@@ -302,8 +321,8 @@ impl TaskConfig<Proc, CreatMode> {
      * Overrides the owner [`OSGroup`] which, otherwise, will be inherited
      * by the parent [`Proc`]
      *
-     * [`OSGroup`]: /api/ents/impls/struct.OSGroup.html
-     * [`Proc`]: /api/tasks/impls/struct.Proc.html
+     * [`OSGroup`]: crate::ents::impls::group::OSGroup
+     * [`Proc`]: crate::tasks::impls::proc::Proc
      */
     pub fn owned_by_group(&mut self, group: OSGroup) -> &mut Self {
         self.m_os_group = Some(group);
@@ -321,11 +340,11 @@ impl TaskConfig<Proc, CreatMode> {
      * The [`File`] must be a valid executable file format, and must be
      * [opened] with [read]/[execute] options enabled
      *
-     * [`Proc`]: /api/tasks/impls/struct.Proc.html
-     * [`File`]: /api/objs/impls/struct.File.html
-     * [opened]: /api/objs/struct.ObjConfig.html
-     * [read]: /api/objs/struct.ObjConfig.html#method.for_read
-     * [execute]: /api/objs/struct.ObjConfig.html#method.for_exec
+     * [`Proc`]: crate::tasks::impls::proc::Proc
+     * [`File`]: crate::objs::impls::file::File
+     * [opened]: crate::objs::config::ObjConfig
+     * [read]: crate::objs::config::ObjConfig::for_read
+     * [execute]: crate::objs::config::ObjConfig::for_exec
      */
     pub fn run(mut self, file: File, args: Option<&[&str]>) -> Result<Proc> {
         self.m_spec = TaskSpecData::new_proc(file, args);
@@ -339,8 +358,8 @@ impl TaskConfig<Proc, FindMode> {
      * Enables the executed [`File`] filter to tell the kernel on which
      * [`Proc`] iterate
      *
-     * [`File`]: /api/objs/impls/struct.File.html
-     * [`Proc`]: /api/tasks/impls/struct.Proc.html
+     * [`File`]: crate::objs::impls::file::File
+     * [`Proc`]: crate::tasks::impls::proc::Proc
      */
     pub fn executor_of(&mut self, file: File) -> &mut Self {
         self.m_spec = TaskSpecData::new_proc(file, None);
@@ -363,9 +382,9 @@ impl TaskConfig<Thread, CreatMode> {
      * The newly created [`Thread`] shares the same address space of the
      * [`Proc`] that spawns it
      *
-     * [`Thread`]: /api/tasks/impls/struct.Thread.html
-     * [`Proc`]: /api/tasks/impls/struct.Proc.html
-     * [`Task::terminate()`]: /api/tasks/trait.Task.html#method.terminate
+     * [`Thread`]: crate::tasks::impls::thread::Thread
+     * [`Proc`]: crate::tasks::impls::proc::Proc
+     * [`Task::terminate()`]: crate::tasks::task::Task::terminate
      */
     pub fn run(mut self,
                entry_point: fn(usize) -> bool,
@@ -383,7 +402,7 @@ impl TaskConfig<Thread, FindMode> {
      * Enables the [`Thread`] name filter to tell the kernel on which name
      * iterate
      *
-     * [`Thread`]: /api/tasks/impls/struct.Thread.html
+     * [`Thread`]: crate::tasks::impls::thread::Thread
      */
     pub fn with_name(&mut self, name: &str) -> &mut Self {
         self.m_spec = TaskSpecData::new_thread(None, None, Some(name));

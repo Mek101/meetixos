@@ -4,8 +4,16 @@
  */
 
 use os::{
-    sysc::{fn_path::KernFnPath, id::SysCallId},
-    syscall_0, syscall_1, syscall_2, syscall_3, syscall_4, syscall_5
+    sysc::{
+        fn_path::KernFnPath,
+        id::SysCallId
+    },
+    syscall_0,
+    syscall_1,
+    syscall_2,
+    syscall_3,
+    syscall_4,
+    syscall_5
 };
 
 use crate::errors::Error;
@@ -44,11 +52,10 @@ pub(crate) trait KernCaller {
     /** # Composes the `SysCallId`
      *
      * Instantiates a [`SysCallId`] with the given parameter, the value
-     * returned by the [`caller_handle_bits()`] and the call class
+     * returned by the [`caller_handle_bits()`](HB) and the call class
      *
-     * [`SysCallId`]: /os/sysc/id/struct.SysCallId.html
-     * [`caller_handle_bits()`]:
-     * /api/caller/trait.KernCaller.html#method.caller_handle_bits
+     * [`SysCallId`]: os::sysc::id::SysCallId
+     * [HB]: crate::caller::KernCaller::caller_handle_bits
      */
     fn call_id(&self, id: KernFnPath) -> SysCallId {
         SysCallId::new(id, self.caller_handle_bits()).into()
@@ -62,9 +69,8 @@ pub(crate) trait KernCaller {
      * Internally is composed the complete call identifier with
      * [`KernCaller::call_id()`]
      *
-     * [`KernFnPath`]: /os/sysc/fn_path/enum.KernFnPath.html
-     * [`KernCaller::call_id()`]:
-     * /api/caller/trait.KernCaller.html#method.call_id
+     * [`KernFnPath`]: os::sysc::fn_path::KernFnPath
+     * [`KernCaller::call_id()`]: crate::caller::KernCaller::call_id
      */
     fn kern_call_0(&self, id: KernFnPath) -> Result<usize> {
         let mut error = Error::default();
@@ -79,9 +85,8 @@ pub(crate) trait KernCaller {
      * Internally is composed the complete call identifier with
      * [`KernCaller::call_id()`]
      *
-     * [`KernFnPath`]: /os/sysc/fn_path/enum.KernFnPath.html
-     * [`KernCaller::call_id()`]:
-     * /api/caller/trait.KernCaller.html#method.call_id
+     * [`KernFnPath`]: os::sysc::fn_path::KernFnPath
+     * [`KernCaller::call_id()`]: crate::caller::KernCaller::call_id
      */
     fn kern_call_1(&self, id: KernFnPath, a1: usize) -> Result<usize> {
         let mut error = Error::default();
@@ -96,9 +101,8 @@ pub(crate) trait KernCaller {
      * Internally is composed the complete call identifier with
      * [`KernCaller::call_id()`]
      *
-     * [`KernFnPath`]: /os/sysc/fn_path/enum.KernFnPath.html
-     * [`KernCaller::call_id()`]:
-     * /api/caller/trait.KernCaller.html#method.call_id
+     * [`KernFnPath`]: os::sysc::fn_path::KernFnPath
+     * [`KernCaller::call_id()`]: crate::caller::KernCaller::call_id
      */
     fn kern_call_2(&self, id: KernFnPath, a1: usize, a2: usize) -> Result<usize> {
         let mut error = Error::default();
@@ -113,9 +117,8 @@ pub(crate) trait KernCaller {
      * Internally is composed the complete call identifier with
      * [`KernCaller::call_id()`]
      *
-     * [`KernFnPath`]: /os/sysc/fn_path/enum.KernFnPath.html
-     * [`KernCaller::call_id()`]:
-     * /api/caller/trait.KernCaller.html#method.call_id
+     * [`KernFnPath`]: os::sysc::fn_path::KernFnPath
+     * [`KernCaller::call_id()`]: crate::caller::KernCaller::call_id
      */
     fn kern_call_3(&self,
                    id: KernFnPath,
@@ -137,9 +140,8 @@ pub(crate) trait KernCaller {
      * Internally is composed the complete call identifier with
      * [`KernCaller::call_id()`]
      *
-     * [`KernFnPath`]: /os/sysc/fn_path/enum.KernFnPath.html
-     * [`KernCaller::call_id()`]:
-     * /api/caller/trait.KernCaller.html#method.call_id
+     * [`KernFnPath`]: os::sysc::fn_path::KernFnPath
+     * [`KernCaller::call_id()`]: crate::caller::KernCaller::call_id
      */
     fn kern_call_4(&self,
                    id: KernFnPath,
@@ -162,9 +164,8 @@ pub(crate) trait KernCaller {
      * Internally is composed the complete call identifier with
      * [`KernCaller::call_id()`]
      *
-     * [`KernFnPath`]: /os/sysc/fn_path/enum.KernFnPath.html
-     * [`KernCaller::call_id()`]:
-     * /api/caller/trait.KernCaller.html#method.call_id
+     * [`KernFnPath`]: os::sysc::fn_path::KernFnPath
+     * [`KernCaller::call_id()`]: crate::caller::KernCaller::call_id
      */
     fn kern_call_5(&self,
                    id: KernFnPath,

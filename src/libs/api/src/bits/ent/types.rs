@@ -3,31 +3,39 @@
  * Implements the variants that identifies the various [`OSEntityId`]
  * based implementations
  *
- * [`OSEntityId`]: /api/ents/struct.OSEntityId.html
+ * [`OSEntityId`]: crate::ents::entity::OSEntityId
  */
 
-c_handy_enum! {
-    /** # `OSEntity` Types
-     *
-     * Lists the available object types represented by an [`OSEntityId`]
-     *
-     * [`OSEntityId`]: /api/ents/struct.OSEntityId.html
+use num_enum::{
+    IntoPrimitive,
+    TryFromPrimitive
+};
+
+/** # `OSEntity` Types
+ *
+ * Lists the available object types represented by an [`OSEntityId`]
+ *
+ * [`OSEntityId`]: crate::ents::entity::OSEntityId
+ */
+#[repr(u8)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum OSEntityType {
+    /** No real uses, used as default or error value
      */
-    pub enum OSEntityType: u8 {
-        /** No real uses, used as default or error value
-         */
-        Unknown = 0,
+    Unknown,
 
-        /** Identifies an [`OSUser`] entity
-         *
-         * [`OSUser`]: /api/ents/impls/struct.OSUser.html
-         */
-        User = 1,
+    /** Identifies an [`OSUser`] entity
+     *
+     * [`OSUser`]: crate::ents::impls::user::OSUser
+     */
+    User,
 
-        /** Identifies an [`OSGroup`] entity
-         *
-         * [`OSGroup`]: /api/ents/impls/struct.OSGroup.html
-        */
-        Group = 2,
-    }
+    /** Identifies an [`OSGroup`] entity
+     *
+     * [`OSGroup`]: crate::ents::impls::group::OSGroup.html
+     */
+    Group
 }

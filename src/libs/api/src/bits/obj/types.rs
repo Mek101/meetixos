@@ -3,61 +3,88 @@
  * Implements the variants that identifies the various [`ObjId`]
  * implementations
  *
- * [`ObjId`]: /api/objs/struct.ObjId.html
+ * [`ObjId`]: crate::objs::object::ObjId
  */
 
-c_handy_enum! {
-    /** # `Object` Types
-     *
-     * Lists the available object types represented by an [`ObjId`]
-     *
-     * [`ObjId`]: /api/objs/struct.ObjId.html
+use core::fmt;
+
+use num_enum::{
+    IntoPrimitive,
+    TryFromPrimitive
+};
+
+/** # `Object` Types
+ *
+ * Lists the available object types represented by an [`ObjId`]
+ *
+ * [`ObjId`]: crate::objs::object::ObjId
+ */
+#[repr(u8)]
+#[derive(Debug)]
+#[derive(Default, Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum ObjType {
+    /** No real uses, used as default value
      */
-    pub enum ObjType : u8 {
-        /** No real uses, used as default value
-         */
-        Unknown = 0,
+    Unknown,
 
-        /** Identifies a [`File`] object
-         *
-         * [`File`]: /api/objs/impls/struct.File.html
-         */
-        File = 1,
+    /** Identifies a [`File`] object
+     *
+     * [`File`]: crate::objs::impls::file::File
+     */
+    File,
 
-        /** Identifies a [`Dir`] object
-         *
-         * [`Dir`]: /api/objs/impls/struct.Dir.html
-         */
-        Dir = 2,
+    /** Identifies a [`Dir`] object
+     *
+     * [`Dir`]: crate::objs::impls::dir::Dir
+     */
+    Dir,
 
-        /** Identifies a [`Link`] object
-         *
-         * [`Link`]: /api/objs/impls/struct.Link.html
-         */
-        Link = 3,
+    /** Identifies a [`Link`] object
+     *
+     * [`Link`]: crate::objs::impls::link::Link
+     */
+    Link,
 
-        /** Identifies a [`MMap`] object
-         *
-         * [`MMap`]: /api/objs/impls/struct.MMap.html
-         */
-        MMap = 4,
+    /** Identifies a [`MMap`] object
+     *
+     * [`MMap`]: crate::objs::impls::mmap::MMap
+     */
+    MMap,
 
-        /** Identifies an [`IpcChan`] object
-         *
-         * [`IpcChan`]: /api/objs/impls/struct.MMap.html
-         */
-        IpcChan = 5,
+    /** Identifies an [`IpcChan`] object
+     *
+     * [`IpcChan`]: crate::objs::impls::mmap::MMap
+     */
+    IpcChan,
 
-        /** Identifies an [`OsRawMutex`] object
-         *
-         * [`OsRawMutex`]: /api/objs/impls/struct.OsRawMutex.html
-         */
-        OsRawMutex = 6,
+    /** Identifies an [`OsRawMutex`] object
+     *
+     * [`OsRawMutex`]: crate::objs::impls::mutex::OsRawMutex
+     */
+    OsRawMutex,
 
-        /** Identifies an [`Iterator`] object
-         *
-         * [`Iterator`]: /api/objs/impls/struct.Iterator.html
-         */
-        Iterator = 7,
+    /** Identifies an [`KrnIterator`] object
+     *
+     * [`KrnIterator`]: crate::objs::impls::iter::KrnIterator
+     */
+    KrnIterator
+}
+
+impl fmt::Display for ObjType {
+    /** Formats the value using the given formatter
+     */
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Unknown => write!(f, "Unknown"),
+            Self::File => write!(f, "File"),
+            Self::Dir => write!(f, "Dir"),
+            Self::Link => write!(f, "Link"),
+            Self::MMap => write!(f, "MMap"),
+            Self::IpcChan => write!(f, "IpcChan"),
+            Self::OsRawMutex => write!(f, "OsRawMutex"),
+            Self::KrnIterator => write!(f, "KrnIterator")
+        }
     }
 }

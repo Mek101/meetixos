@@ -5,14 +5,30 @@
 
 use core::ptr::NonNull;
 
-use os::sysc::{codes::KernFileFnId, fn_path::KernFnPath};
+use os::sysc::{
+    codes::KernFileFnId,
+    fn_path::KernFnPath
+};
 
 use crate::{
-    bits::obj::{ObjType, SeekMode, WithExecutableDataObject},
-    caller::{KernCaller, Result},
+    bits::obj::{
+        ObjType,
+        SeekMode,
+        WithExecutableDataObject
+    },
+    caller::{
+        KernCaller,
+        Result
+    },
     objs::{
-        impls::{Dir, MMap},
-        ObjId, Object, SizeableData, UserCreatable
+        impls::{
+            Dir,
+            MMap
+        },
+        ObjId,
+        Object,
+        SizeableData,
+        UserCreatable
     }
 };
 
@@ -25,12 +41,12 @@ impl_obj_id_object! {
      * for a file, like [`read()`], [`write()`], [`seek()`] and many
      * others.
      *
-     * It is possible to map a `File` into a piece of the caller's
-     * process address space like the Unix's [`mmap()`] system call
+     * It is possible to map a `File` into a virtual memory region of
+     * the caller process like the Unix's [`mmap()`] system call
      *
-     * [`read()`]: /api/objs/impls/struct.File.html#method.read
-     * [`write()`]: /api/objs/impls/struct.File.html#method.write
-     * [`seek()`]: /api/objs/impls/struct.File.html#method.set_pos
+     * [`read()`]: crate::objs::impls::file::File::read
+     * [`write()`]: crate::objs::impls::file::File::write
+     * [`seek()`]: crate::objs::impls::file::File::set_pos
      * [`mmap()`]: https://man7.org/linux/man-pages/man2/mmap.2.html
      */
     pub struct File : impl WithExecutableDataObject,
@@ -71,8 +87,8 @@ impl File {
      * optimizations like a better usage of the VFS cache and, if
      * available, FS copy on write, which reduces time and space usages
      *
-     * [`File::read()`]: /api/objs/impls/struct.File.html#method.read
-     * [`File::write()`]: /api/objs/impls/struct.File.html#method.write
+     * [`File::read()`]: crate::objs::impls::file::File::read
+     * [`File::write()`]: crate::objs::impls::file::File::write
      */
     pub fn copy_to(&self, dest: &Dir) -> Result<Self> {
         self.kern_call_1(KernFnPath::File(KernFileFnId::Copy),
@@ -87,9 +103,9 @@ impl File {
      * involves kernel optimizations, because it simply changes the
      * parent directory node of this file.
      *
-     * [`File::read()`]: /api/objs/impls/struct.File.html#method.read
-     * [`File::write()`]: /api/objs/impls/struct.File.html#method.write
-     * [`File::drop_name()`]: /api/objs/trait.Object.html#method.drop_name
+     * [`File::read()`]: crate::objs::impls::file::File::read
+     * [`File::write()`]: crate::objs::impls::file::File::write
+     * [`File::drop_name()`]: crate::objs::object::Object::drop_name
      */
     pub fn move_to(&self, dest: &Dir) -> Result<()> {
         self.kern_call_1(KernFnPath::File(KernFileFnId::Move),
@@ -131,11 +147,10 @@ impl File {
      *      because ELF offsets are always page aligned (but into the file
      *      content too?)
      *
-     * [`MMap`]: /api/objs/impls/struct.MMap.html
-     * [`None`]: https://doc.rust-lang.org/std/option/enum.Option.html#variant.None
-     * [`Err`]: https://doc.rust-lang.org/std/result/enum.Result.html#variant.Err
-     * [`ObjConfig::for_write()`]:
-     * /api/objs/struct.ObjConfig.html#method.for_write
+     * [`MMap`]: crate::objs::impls::mmap::MMap
+     * [`None`]: core::option::Option::None
+     * [`Err`]: core::result::Result::Err
+     * [`ObjConfig::for_write()`]: crate::objs::config::ObjConfig::for_write
      */
     pub fn map_to_memory(&self,
                          addr: Option<NonNull<u8>>,
@@ -156,7 +171,7 @@ impl File {
      * According to the [`SeekMode`] given, it updates the read/write
      * position.
      *
-     * [`SeekMode`]: /api/bits/obj/enum.SeekMode.html
+     * [`SeekMode`]: crate::bits::obj::modes::SeekMode
      */
     pub fn set_pos(&self, mode: SeekMode) -> Result<u64> {
         self.kern_call_2(KernFnPath::File(KernFileFnId::SetPos),

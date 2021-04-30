@@ -3,7 +3,7 @@
  * Implements the standard and unique way to find existing [`OSEntity`]s or
  * create new one
  *
- * [`OSEntity`]: /api/ents/trait.OSEntity.html
+ * [`OSEntity`]: crate::ents::entity::OSEntity
  */
 
 use core::marker::PhantomData;
@@ -13,14 +13,28 @@ use bit_field::BitField;
 use os::{
     limits::ENTITY_NAME_LEN_MAX,
     str_utils,
-    sysc::{codes::KernOSEntConfigFnId, fn_path::KernFnPath}
+    sysc::{
+        codes::KernOSEntConfigFnId,
+        fn_path::KernFnPath
+    }
 };
 
 use crate::{
     bits::ent::OSEntityType,
-    caller::{KernCaller, Result},
-    config::{ConfigFinderIter, ConfigMode, CreatMode, FindMode},
-    ents::{OSEntity, OSEntityId}
+    caller::{
+        KernCaller,
+        Result
+    },
+    config::{
+        ConfigFinderIter,
+        ConfigMode,
+        CreatMode,
+        FindMode
+    },
+    ents::{
+        OSEntity,
+        OSEntityId
+    }
 };
 
 /** # `OSEntity` Configuration
@@ -28,7 +42,7 @@ use crate::{
  * Implements a function standard interface to find existing [`OSEntity`] or
  * create new one.
  *
- * [`OSEntity`]: /api/ents/trait.OSEntity.html
+ * [`OSEntity`]: crate::ents::entity::OSEntity
  */
 #[derive(Debug)]
 pub struct OSEntConfig<T, M>
@@ -60,7 +74,7 @@ impl<T> OSEntConfig<T, CreatMode> where T: OSEntity {
      *
      * Makes the resultant [`OSEntity`] an administrative account
      *
-     * [`OSEntity`]: /api/ents/trait.OSEntity.html
+     * [`OSEntity`]: crate::ents::entity::OSEntity
      */
     pub fn make_admin(&mut self) -> &mut Self {
         self.m_flags.set_bit(Self::CFG_ADMIN_BIT, true);
@@ -77,7 +91,7 @@ impl<T> OSEntConfig<T, CreatMode> where T: OSEntity {
      * ensures that the allocated id is not the same of the existing
      * one.
      *
-     * [`OSEntity`]: /api/ents/trait.OSEntity.html
+     * [`OSEntity`]: crate::ents::entity::OSEntity
      */
     pub fn apply(mut self, name: &str) -> Result<T> {
         let mut buf = [0; ENTITY_NAME_LEN_MAX];
@@ -136,9 +150,9 @@ impl<T> OSEntConfig<T, FindMode> where T: OSEntity {
      * iteration pool with **ALL** the active entities of the `T` type
      * ([`OSUser`] or [`OSGroup`])
      *
-     * [`Iterator`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html
-     * [`OSUser`]: /api/ents/impls/struct.OSUser.html
-     * [`OSGroup`]: /api/ents/impls/struct.OSGroup.html
+     * [`Iterator`]: core::iter::Iterator
+     * [`OSUser`]: crate::ents::impls::user::OSUser
+     * [`OSGroup`]: crate::ents::impls::group::OSGroup
      */
     pub fn search(self) -> Result<impl Iterator<Item = T>> {
         self.kern_call_1(KernFnPath::OSEntConfig(KernOSEntConfigFnId::InitFind),
@@ -163,9 +177,9 @@ impl<T, M> OSEntConfig<T, M>
      * Or tells exactly which identifier the searched OSEntity have in
      * [`FindMode`]
      *
-     * [`OSEntity`]: /api/ents/trait.OSEntity.html
-     * [`CreatMode`]: /api/config/struct.CreatMode.html
-     * [`FindMode`]: /api/config/struct.FindMode.html
+     * [`OSEntity`]: crate::ents::entity::OSEntity
+     * [`CreatMode`]: crate::config::CreatMode
+     * [`FindMode`]: crate::config::FindMode
      */
     pub fn with_id(&mut self, id: u16) -> &mut Self {
         self.m_id = Some(id);
@@ -201,7 +215,7 @@ impl<T: OSEntity, M: ConfigMode> OSEntConfig<T, M> {
 
     /** Returns the [`OSEntityType`]
      *
-     * [`OSEntityType`]: /api/bits/ent/enum.OSEntityType.html
+     * [`OSEntityType`]: crate::bits::ent::types::OSEntityType
      */
     pub fn ent_type(&self) -> OSEntityType {
         self.m_type

@@ -7,7 +7,10 @@
 use core::{
     convert::TryFrom,
     fmt,
-    fmt::{Display, Formatter},
+    fmt::{
+        Display,
+        Formatter
+    },
     ops::Range
 };
 
@@ -19,17 +22,16 @@ use crate::sysc::fn_path::KernFnPath;
  *
  * Defines a wrapper for the raw system call identifier.
  *
- * Due to the low quantity of system calls available and because the system
- * is compilable only for 64bit architectures waste more than 48 bits of the
- * identifier and use additional registers to store the [call class] and the
- * [custom data] (used to perform instance call) is really stupid.
+ * Since the OS is compatible only with 64bit capable architectures a single
+ * register can be quietly used to store more than one think, it is enough
+ * play with bits.
  *
- * So, according to rules defined by internal constants, the 64bits of the
- * identifier are all used for the previously said data
+ * In particular the syscall-id register stores the [`KernFnPath`], which is
+ * 32bit wide, and the [custom data field], which fills the remaining upper
+ * 32bits
  *
- * [call class]: /os/sysc/classes/index.html
- * [custom data]:
- * /api/caller/trait.KernCaller.html#method.caller_handle_bits
+ * [`KernFnPath`]: crate::sysc::fn_path::KernFnPath
+ * [custom data field]: api::caller::KernCaller::caller_handle_bits
  */
 #[derive(Debug, Default, Copy, Clone)]
 pub struct SysCallId(usize);
@@ -53,7 +55,7 @@ impl SysCallId {
 
     /** Returns the [`KernFnPath`]
      *
-     * [`KernFnPath`]: /os/sysc/fn_path/enum.KernFnPath.html
+     * [`KernFnPath`]: crate::sysc::fn_path::KernFnPath
      */
     pub fn fn_path(&self) -> KernFnPath {
         KernFnPath::try_from((self.0.get_bits(Self::CALL_CLASS_BITS),
@@ -62,8 +64,7 @@ impl SysCallId {
 
     /** Returns the [custom data] bits
      *
-     * [custom data]:
-     * /api/caller/trait.KernCaller.html#method.caller_handle_bits
+     * [custom data]: api::caller::KernCaller::caller_handle_bits
      */
     pub fn custom_data(&self) -> u32 {
         self.0.get_bits(Self::CUSTOM_DATA_BITS) as u32
@@ -86,10 +87,10 @@ impl Into<usize> for SysCallId {
     }
 }
 
-impl Display for SysCallId {
+impl fmt::Display for SysCallId {
     /** Formats the value using the given formatter.
      */
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}:{}", self.fn_path(), self.custom_data())
     }
 }

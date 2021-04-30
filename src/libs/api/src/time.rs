@@ -4,17 +4,33 @@
  * represent the time
  */
 
-/** re-export `Duration` as libapi's struct */
+/** re-export `Duration` as libapi struct */
 pub use core::time::Duration;
 use core::{
     fmt,
-    fmt::{Debug, Display, Formatter},
+    fmt::{
+        Debug,
+        Display,
+        Formatter
+    },
     ops::{
-        Add, AddAssign, Deref, DerefMut, Div, DivAssign, Mul, MulAssign, Sub, SubAssign
+        Add,
+        AddAssign,
+        Deref,
+        DerefMut,
+        Div,
+        DivAssign,
+        Mul,
+        MulAssign,
+        Sub,
+        SubAssign
     }
 };
 
-use os::sysc::{codes::KernTimeInstFnId, fn_path::KernFnPath};
+use os::sysc::{
+    codes::KernTimeInstFnId,
+    fn_path::KernFnPath
+};
 
 use crate::caller::KernCaller;
 
@@ -26,12 +42,11 @@ use crate::caller::KernCaller;
  * [`Instant::as_duration()`]/[`Instant::as_duration_mut()`] or the
  * [`Deref`]/[`DerefMut`]
  *
- * [`Duration`]: /api/time/struct.Duration.html
- * [`Instant::as_duration()`]:
- * /api/time/struct.Instant.html#method.as_duration [`Instant::
- * as_duration_mut()`]: /api/time/struct.Instant.html#method.as_duration_mut
- * [`Deref`]: https://doc.rust-lang.org/std/ops/trait.Deref.html
- * [`DerefMut`]: https://doc.rust-lang.org/std/ops/trait.DerefMut.html
+ * [`Duration`]: crate::time::Duration
+ * [`Instant::as_duration()`]: crate::time::Instant::as_duration
+ * [`Instant::as_duration_mut()`]: crate::time::Instant::as_duration_mut
+ * [`Deref`]: core::ops::Deref
+ * [`DerefMut`]: core::ops::DerefMut
  */
 #[derive(Debug, Default, Copy, Clone, Eq, PartialEq)]
 pub struct Instant(Duration);
@@ -60,7 +75,7 @@ impl Instant {
 
     /** Returns the reference to the underling [`Duration`] instance
      *
-     * [`Duration`]: /api/time/struct.Duration.html
+     * [`Duration`]: crate::time::Duration
      */
     pub fn as_duration(&self) -> &Duration {
         &self.0
@@ -68,7 +83,7 @@ impl Instant {
 
     /** Returns the mutable reference to the underling [`Duration`] instance
      *
-     * [`Duration`]: /api/time/struct.Duration.html
+     * [`Duration`]: crate::time::Duration
      */
     pub fn as_duration_mut(&mut self) -> &mut Duration {
         &mut self.0
@@ -84,7 +99,7 @@ impl From<Duration> for Instant {
 }
 
 impl KernCaller for Instant {
-    // Nothing to implement
+    /* Nothing to implement */
 }
 
 impl Deref for Instant {
@@ -94,7 +109,7 @@ impl Deref for Instant {
 
     /** Dereferences the value to the underling [`Duration`] instance
      *
-     * [`Duration`]: /api/time/struct.Duration.html
+     * [`Duration`]: crate::time::Duration
      */
     fn deref(&self) -> &Self::Target {
         self.as_duration()
@@ -104,7 +119,7 @@ impl Deref for Instant {
 impl DerefMut for Instant {
     /** Mutably dereferences the value to the underling [`Duration`] instance
      *
-     * [`Duration`]: /api/time/struct.Duration.html
+     * [`Duration`]: crate::time::Duration
      */
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.as_duration_mut()
@@ -118,7 +133,7 @@ impl Add for Instant {
 
     /** Dispatches the operation to the [`Duration`] implementation
      *
-     * [`Duration`]: /api/time/struct.Duration.html
+     * [`Duration`]: crate::time::Duration
      */
     fn add(self, rhs: Instant) -> Instant {
         Self((*self) + (*rhs))
@@ -128,7 +143,7 @@ impl Add for Instant {
 impl AddAssign for Instant {
     /** Dispatches the operation to the [`Duration`] implementation
      *
-     * [`Duration`]: /api/time/struct.Duration.html
+     * [`Duration`]: crate::time::Duration
      */
     fn add_assign(&mut self, rhs: Instant) {
         *self = *self + rhs;
@@ -142,7 +157,7 @@ impl Sub for Instant {
 
     /** Dispatches the operation to the [`Duration`] implementation
      *
-     * [`Duration`]: /api/time/struct.Duration.html
+     * [`Duration`]: crate::time::Duration
      */
     fn sub(self, rhs: Instant) -> Instant {
         Self((*self) - (*rhs))
@@ -152,7 +167,7 @@ impl Sub for Instant {
 impl SubAssign for Instant {
     /** Dispatches the operation to the [`Duration`] implementation
      *
-     * [`Duration`]: /api/time/struct.Duration.html
+     * [`Duration`]: crate::time::Duration
      */
     fn sub_assign(&mut self, rhs: Instant) {
         *self = *self - rhs;
@@ -166,7 +181,7 @@ impl Mul<u32> for Instant {
 
     /** Dispatches the operation to the [`Duration`] implementation
      *
-     * [`Duration`]: /api/time/struct.Duration.html
+     * [`Duration`]: crate::time::Duration
      */
     fn mul(self, rhs: u32) -> Instant {
         Self((*self) * rhs)
@@ -180,7 +195,7 @@ impl Mul<Instant> for u32 {
 
     /** Dispatches the operation to the [`Duration`] implementation
      *
-     * [`Duration`]: /api/time/struct.Duration.html
+     * [`Duration`]: crate::time::Duration
      */
     fn mul(self, rhs: Instant) -> Instant {
         Instant((*rhs) * self)
@@ -190,7 +205,7 @@ impl Mul<Instant> for u32 {
 impl MulAssign<u32> for Instant {
     /** Dispatches the operation to the [`Duration`] implementation
      *
-     * [`Duration`]: /api/time/struct.Duration.html
+     * [`Duration`]: crate::time::Duration
      */
     fn mul_assign(&mut self, rhs: u32) {
         *self = *self * rhs;
@@ -204,7 +219,7 @@ impl Div<u32> for Instant {
 
     /** Dispatches the operation to the [`Duration`] implementation
      *
-     * [`Duration`]: /api/time/struct.Duration.html
+     * [`Duration`]: crate::time::Duration
      */
     fn div(self, rhs: u32) -> Instant {
         Self((*self) / rhs)
@@ -214,17 +229,17 @@ impl Div<u32> for Instant {
 impl DivAssign<u32> for Instant {
     /** Dispatches the operation to the [`Duration`] implementation
      *
-     * [`Duration`]: /api/time/struct.Duration.html
+     * [`Duration`]: crate::time::Duration
      */
     fn div_assign(&mut self, rhs: u32) {
         *self = *self / rhs;
     }
 }
 
-impl Display for Instant {
+impl fmt::Display for Instant {
     /** Formats the value using the given formatter.
      */
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         self.0.fmt(f)
     }
 }

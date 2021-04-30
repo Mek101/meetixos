@@ -5,12 +5,26 @@
 
 use core::num::NonZeroUsize;
 
-use os::sysc::{codes::KernIpcChanFnId, fn_path::KernFnPath};
+use os::sysc::{
+    codes::KernIpcChanFnId,
+    fn_path::KernFnPath
+};
 
 use crate::{
-    bits::obj::{ObjType, RecvMode},
-    caller::{KernCaller, Result},
-    objs::{ObjId, Object, SizeableData, UserCreatable}
+    bits::obj::{
+        ObjType,
+        RecvMode
+    },
+    caller::{
+        KernCaller,
+        Result
+    },
+    objs::{
+        ObjId,
+        Object,
+        SizeableData,
+        UserCreatable
+    }
 };
 
 impl_obj_id_object! {
@@ -43,9 +57,9 @@ impl IpcChan {
      * automatically created by the kernel, otherwise, if it already exists,
      * the message is appended to the queue which have the same id
      *
-     * [`AsRef`]: https://doc.rust-lang.org/std/convert/trait.AsRef.html
+     * [`AsRef`]: core::convert::AsRef
      * [`u8 slice`]: https://doc.rust-lang.org/std/primitive.slice.html
-     * [`None`]: https://doc.rust-lang.org/std/option/enum.Option.html#variant.None
+     * [`None`]: core::option::Option::None
      */
     pub fn send_msg<T>(&self, msg: &T, id: Option<NonZeroUsize>) -> Result<usize>
         where T: AsRef<[u8]> {
@@ -72,8 +86,8 @@ impl IpcChan {
      * The system call returns the size of the message received in bytes
      * when [`Ok`]
      *
-     * [`None`]: https://doc.rust-lang.org/std/option/enum.Option.html#variant.None
-     * [`Ok`]: https://doc.rust-lang.org/std/result/enum.Result.html#variant.Ok
+     * [`None`]: core::option::Option::None
+     * [`Ok`]: core::result::Result::Ok
      */
     pub fn recv_msg<T>(&self,
                        mode: RecvMode,

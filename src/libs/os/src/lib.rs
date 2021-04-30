@@ -10,9 +10,9 @@
  * Refer to the [`api`] crate to right use the kernel's system call
  * interface, this crate is not intended for direct uses
  *
- * [`Result`]: https://doc.rust-lang.org/std/result/
- * [`Ok`]: https://doc.rust-lang.org/std/result/enum.Result.html#variant.Ok
- * [`Err`]: https://doc.rust-lang.org/std/result/enum.Result.html#variant.Err
+ * [`Result`]: core::result::Result
+ * [`Ok`]: core::result::Result::Ok
+ * [`Err`]: core::result::Result::Err
  * [`api`]: /api/index.html
  */
 

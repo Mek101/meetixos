@@ -7,260 +7,322 @@
  * system call routines and identify the proper system call to call
  */
 
-c_handy_enum! {
-    /** # `ObjConfig` System Calls Codes
-     *
-     * Lists the system call codes for the [`ObjConfig`] struct
-     *
-     * [`ObjConfig`]: /api/objs/struct.ObjConfig.html
-     */
-    pub enum KernObjConfigFnId: u16 {
-        ApplyConfig = 0,
-    }
+use num_enum::{
+    IntoPrimitive,
+    TryFromPrimitive
+};
+
+/** # `ObjConfig` System Calls Codes
+ *
+ * Lists the system call codes for the [`ObjConfig`] struct
+ *
+ * [`ObjConfig`]: api::objs::config::ObjConfig
+ */
+#[repr(u16)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum KernObjConfigFnId {
+    ApplyConfig
 }
 
-c_handy_enum! {
-    /** # `TaskConfig` System Calls Codes
-     *
-     * Lists the system call codes for the [`TaskConfig`] struct
-     *
-     * [`ObjConfig`]: /api/tasks/struct.TaskConfig.html
-     */
-    pub enum KernTaskConfigFnId: u16 {
-        CreateTask = 0,
-        InitFind   = 1,
-    }
+/** # `TaskConfig` System Calls Codes
+ *
+ * Lists the system call codes for the [`TaskConfig`] struct
+ *
+ * [`TaskConfig`]: api::tasks::config::TaskConfig
+ */
+#[repr(u16)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum KernTaskConfigFnId {
+    CreateTask,
+    InitFind
 }
 
-c_handy_enum! {
-    /** # `OSEntConfig` System Calls Codes
-     *
-     * Lists the system call codes for the [`OSEntConfig`] struct
-     *
-     * [`OSEntConfig`]: /api/ents/struct.OSEntConfig.html
-     */
-    pub enum KernOSEntConfigFnId: u16 {
-        CreateEntity = 0,
-        InitFind     = 1,
-    }
+/** # `OSEntConfig` System Calls Codes
+ *
+ * Lists the system call codes for the [`OSEntConfig`] struct
+ *
+ * [`OSEntConfig`]: api::ents::config::OSEntConfig
+ */
+#[repr(u16)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum KernOSEntConfigFnId {
+    CreateEntity,
+    InitFind
 }
 
-c_handy_enum! {
-    /** # `Object` System Calls Codes
-     *
-     * Lists the system call codes for the [`Object`] trait
-     *
-     * [`Object`]: /api/objs/trait.Object.html
-     */
-    pub enum KernObjectFnId: u16 {
-        AddRef     = 0,
-        Drop       = 1,
-        DropName   = 2,
-        Info       = 3,
-        UpdateInfo = 4,
-        Send       = 5,
-        Recv       = 6,
-        Watch      = 7,
-        IsValid    = 8,
-    }
+/** # `Object` System Calls Codes
+ *
+ * Lists the system call codes for the [`Object`] trait
+ *
+ * [`Object`]: api::objs::object::Object
+ */
+#[repr(u16)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum KernObjectFnId {
+    AddRef,
+    Drop,
+    DropName,
+    Info,
+    UpdateInfo,
+    Send,
+    Recv,
+    Watch,
+    IsValid
 }
 
-c_handy_enum! {
-    /** # `Task` System Calls Codes
-     *
-     * Lists the system call codes for the [`Task`] trait
-     *
-     * [`Task`]: /api/tasks/struct.Task.html
-     */
-    pub enum KernTaskFnId: u16 {
-        This      = 0,
-        Terminate = 1,
-        Yield     = 2,
-        IsAlive   = 3,
-    }
+/** # `Task` System Calls Codes
+ *
+ * Lists the system call codes for the [`Task`] trait
+ *
+ * [`Task`]: api::tasks::task::Task
+ */
+#[repr(u16)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum KernTaskFnId {
+    This,
+    Terminate,
+    Yield,
+    IsAlive
 }
 
-c_handy_enum! {
-    /** # `Dir` System Calls Codes
-     *
-     * Lists the system call codes for the [`Dir`] struct
-     *
-     * [`Dir`]: /api/objs/impls/struct.Dir.html
-     */
-    pub enum KernDirFnId: u16 {
-        InitIter = 0,
-    }
+/** # `Dir` System Calls Codes
+ *
+ * Lists the system call codes for the [`Dir`] struct
+ *
+ * [`Dir`]: api::objs::impls::dir::Dir
+ */
+#[repr(u16)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum KernDirFnId {
+    InitIter
 }
 
-c_handy_enum! {
-    /** # `File` System Calls Codes
-     *
-     * Lists the system call codes for the [`File`] struct
-     *
-     * [`File`]: /api/objs/impls/struct.File.html
-     */
-    pub enum KernFileFnId: u16 {
-        ReadData  = 0,
-        WriteData = 1,
-        Copy      = 2,
-        Move      = 3,
-        SetPos    = 4,
-        MapToMem  = 5,
-    }
+/** # `File` System Calls Codes
+ *
+ * Lists the system call codes for the [`File`] struct
+ *
+ * [`File`]: api::objs::impls::file::File
+ */
+#[repr(u16)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum KernFileFnId {
+    ReadData,
+    WriteData,
+    Copy,
+    Move,
+    SetPos,
+    MapToMem
 }
 
-c_handy_enum! {
-    /** # `IpcChan` System Calls Codes
-     *
-     * Lists the system call codes for the [`IpcChan`] struct
-     *
-     * [`IpcChan`]: /api/objs/impls/struct.IpcChan.html
-     */
-    pub enum KernIpcChanFnId: u16 {
-        Send = 0,
-        Recv = 1,
-    }
+/** # `IpcChan` System Calls Codes
+ *
+ * Lists the system call codes for the [`IpcChan`] struct
+ *
+ * [`IpcChan`]: api::objs::impls::ipc_chan::IpcChan
+ */
+#[repr(u16)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum KernIpcChanFnId {
+    Send,
+    Recv
 }
 
-c_handy_enum! {
-    /** # `Iterator` System Calls Codes
-     *
-     * Lists the system call codes for the [`Iterator`] struct
-     *
-     * [`Iterator`]: /api/objs/impls/struct.Iterator.html
-     */
-    pub enum KrnIteratorFnId: u16 {
-        NextValue        = 0,
-        SetBeginToEndPos = 1,
-        SetEndToBeginPos = 2,
-    }
+/** # `Iterator` System Calls Codes
+ *
+ * Lists the system call codes for the [`KrnIterator`] struct
+ *
+ * [`KrnIterator`]: api::objs::impls::iter::KrnIterator
+ */
+#[repr(u16)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum KrnIteratorFnId {
+    NextValue,
+    SetBeginToEndPos,
+    SetEndToBeginPos
 }
 
-c_handy_enum! {
-    /** # `Link` System Calls Codes
-     *
-     * Lists the system call codes for the [`Link`] struct
-     *
-     * [`Link`]: /api/objs/impls/struct.Link.html
-     */
-    pub enum KernLinkFnId: u16 {
-        Deref   = 0,
-        ReferTo = 1,
-    }
+/** # `Link` System Calls Codes
+ *
+ * Lists the system call codes for the [`Link`] struct
+ *
+ * [`Link`]: api::objs::impls::link::Link
+ */
+#[repr(u16)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum KernLinkFnId {
+    Deref,
+    ReferTo
 }
 
-c_handy_enum! {
-    /** # `MMap` System Calls Codes
-     *
-     * Lists the system call codes for the [`MMap`] struct
-     *
-     * [`MMap`]: /api/objs/impls/struct.MMap.html
-     */
-    pub enum KernMMapFnId: u16 {
-        GetPtr  = 0,
-        DropPtr = 1,
-        IsFile  = 2,
-    }
+/** # `MMap` System Calls Codes
+ *
+ * Lists the system call codes for the [`MMap`] struct
+ *
+ * [`MMap`]: api::objs::impls::mmap::MMap
+ */
+#[repr(u16)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum KernMMapFnId {
+    GetPtr,
+    DropPtr,
+    IsFile
 }
 
-c_handy_enum! {
-    /** # `Mutex` System Calls Codes
-     *
-     * Lists the system call codes for the [`Mutex`] struct
-     *
-     * [`Mutex`]: /api/objs/impls/struct.Mutex.html
-     */
-    pub enum KernMutexFnId: u16 {
-        Lock     = 0,
-        TryLock  = 1,
-        Unlock   = 2,
-        IsLocked = 3,
-    }
+/** # `Mutex` System Calls Codes
+ *
+ * Lists the system call codes for the [`Mutex`] struct
+ *
+ * [`Mutex`]: api::objs::impls::mutex::Mutex
+ */
+#[repr(u16)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum KernMutexFnId {
+    Lock,
+    TryLock,
+    Unlock,
+    IsLocked
 }
 
-c_handy_enum! {
-    /** # `Instant` System Calls Codes
-     *
-     * Lists the system call codes for the [`Instant`] struct
-     *
-     * [`Instant`]: /api/time/struct.Instant.html
-     */
-    pub enum KernTimeInstFnId: u16 {
-        Now = 0,
-    }
+/** # `Instant` System Calls Codes
+ *
+ * Lists the system call codes for the [`Instant`] struct
+ *
+ * [`Instant`]: api::time::Instant
+ */
+#[repr(u16)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum KernTimeInstFnId {
+    Now
 }
 
-c_handy_enum! {
-    /** # `Path` System Calls Codes
-     *
-     * Lists the system call codes for the [`Path`] struct
-     *
-     * [`Path`]: /api/path/struct.Mutex.html
-     */
-    pub enum KernPathFnId: u16 {
-        Exists = 0,
-    }
+/** # `Path` System Calls Codes
+ *
+ * Lists the system call codes for the [`Path`] struct
+ *
+ * [`Path`]: api::path::Path
+ */
+#[repr(u16)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum KernPathFnId {
+    Exists
 }
 
-c_handy_enum! {
-    /** # `OSEntity` System Calls Codes
-     *
-     * Lists the system call codes for the [`OSEntity`] trait
-     *
-     * [`OSEntity`]: /api/ents/trait.OSEntity.html
-     */
-    pub enum KernOSEntFnId: u16 {
-        Name = 0,
-    }
+/** # `OSEntity` System Calls Codes
+ *
+ * Lists the system call codes for the [`OSEntity`] trait
+ *
+ * [`OSEntity`]: api::ents::entity::OSEntity
+ */
+#[repr(u16)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum KernOSEntFnId {
+    Name
 }
 
-c_handy_enum! {
-    /** # `OSUser` System Calls Codes
-     *
-     * Lists the system call codes for the [`OSUser`] struct
-     *
-     * [`OSUser`]: /api/ents/impls/struct.OSUser.html
-     */
-    pub enum KernOSUserFnId: u16 {
-        Groups = 0,
-    }
+/** # `OSUser` System Calls Codes
+ *
+ * Lists the system call codes for the [`OSUser`] struct
+ *
+ * [`OSUser`]: api::ents::impls::user::OSUser
+ */
+#[repr(u16)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum KernOSUserFnId {
+    Groups
 }
 
-c_handy_enum! {
-    /** # `OSGroup` System Calls Codes
-     *
-     * Lists the system call codes for the [`OSGroup`] struct
-     *
-     * [`OSGroup`]: /api/ents/impls/struct.OSGroup.html
-     */
-    pub enum KernOSGroupFnId: u16 {
-        AddUser = 0,
-    }
+/** # `OSGroup` System Calls Codes
+ *
+ * Lists the system call codes for the [`OSGroup`] struct
+ *
+ * [`OSGroup`]: api::ents::impls::group::OSGroup
+ */
+#[repr(u16)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum KernOSGroupFnId {
+    AddUser
 }
 
-c_handy_enum! {
-    /** # `Proc` System Calls Codes
-     *
-     * Lists the system call codes for the [`Proc`] struct
-     *
-     * [`Proc`]: /api/tasks/impls/struct.Proc.html
-     */
-    pub enum KernProcFnId: u16 {
-        MainThread = 0,
-    }
+/** # `Proc` System Calls Codes
+ *
+ * Lists the system call codes for the [`Proc`] struct
+ *
+ * [`Proc`]: api::tasks::impls::proc::Proc
+ */
+#[repr(u16)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum KernProcFnId {
+    MainThread
 }
 
-c_handy_enum! {
-    /** # `Thread` System Calls Codes
-     *
-     * Lists the system call codes for the [`Thread`] struct
-     *
-     * [`Thread`]: /api/tasks/impls/struct.Thread.html
-     */
-    pub enum KernThreadFnId: u16 {
-        WaitFor = 0,
-        AddCleaner = 1,
-        CallbackReturn = 2,
-        GetEntryData = 3,
-    }
+/** # `Thread` System Calls Codes
+ *
+ * Lists the system call codes for the [`Thread`] struct
+ *
+ * [`Thread`]: api::tasks::impls::thread::Thread
+ */
+#[repr(u16)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum KernThreadFnId {
+    WaitFor,
+    AddCleaner,
+    CallbackReturn,
+    GetEntryData
 }

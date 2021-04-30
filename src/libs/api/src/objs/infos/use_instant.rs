@@ -3,7 +3,11 @@
  * Implements the descriptor of a usage instant
  */
 
-use crate::{bits::obj::ObjUse, tasks::impls::Thread, time::Instant};
+use crate::{
+    bits::obj::ObjUse,
+    tasks::impls::Thread,
+    time::Instant
+};
 
 /** # Object Use Instant
  *
@@ -32,7 +36,7 @@ impl ObjUseInstant {
 impl ObjUseInstant {
     /** Returns the [`ObjUse`] performed by the referred user
      *
-     * [`ObjUse`]: /api/bits/obj/enum.ObjUse.html
+     * [`ObjUse`]: crate::bits::obj::uses::ObjUse
      */
     pub fn obj_use(&self) -> ObjUse {
         self.m_obj_use
@@ -40,7 +44,7 @@ impl ObjUseInstant {
 
     /** Returns the [`Thread`] that have performed the usage
      *
-     * [`Thread`]: /api/tasks/impls/struct.Thread.html
+     * [`Thread`]: crate::tasks::impls::thread::Thread
      */
     pub fn user(&self) -> Thread {
         self.m_user
@@ -48,7 +52,7 @@ impl ObjUseInstant {
 
     /** Returns the [`Instant`] instant of the operation
      *
-     * [`Instant`]: /api/time/struct.Instant.html
+     * [`Instant`]: crate::time::Instant
      */
     pub fn use_start(&self) -> Instant {
         self.m_use_start

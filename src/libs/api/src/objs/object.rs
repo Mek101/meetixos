@@ -6,16 +6,36 @@
 
 use core::mem;
 
-use os::sysc::{codes::KernObjectFnId, fn_path::KernFnPath};
+use os::sysc::{
+    codes::KernObjectFnId,
+    fn_path::KernFnPath
+};
 
 use crate::{
     bits::{
-        obj::{ObjType, ObjUse, RecvMode},
-        task::{RWatchCBThreadEntry, ThreadEntryData}
+        obj::{
+            ObjType,
+            ObjUse,
+            RecvMode
+        },
+        task::{
+            RWatchCBThreadEntry,
+            ThreadEntryData
+        }
     },
-    caller::{KernCaller, Result},
-    config::{CreatMode, FindMode},
-    objs::{impls::Any, infos::ObjInfo, ObjConfig},
+    caller::{
+        KernCaller,
+        Result
+    },
+    config::{
+        CreatMode,
+        FindMode
+    },
+    objs::{
+        impls::Any,
+        infos::ObjInfo,
+        ObjConfig
+    },
     tasks::Task,
     time::Instant
 };
@@ -32,9 +52,9 @@ use crate::{
  *
  * Read more doc about [`Object`] and [`ObjId`] -> [here]
  *
- * [`Object`]: /api/objs/trait.Object.html
+ * [`Object`]: crate::objs::object::Object
  * [implementations]: /api/objs/impls/index.html
- * [`ObjId`]: /api/objs/struct.ObjId.html
+ * [`ObjId`]: crate::objs::object::ObjId
  * [here]: /api/index.html#objects
  */
 #[repr(transparent)]
@@ -47,7 +67,7 @@ impl ObjId {
      * Used only by the [`OsRawMutex`] to satisfy the constant
      * initialization
      *
-     * [`OsRawMutex`]: /api/objs/impls/struct.OsRawMutex.html
+     * [`OsRawMutex`]: crate::objs::impls::mutex::OsRawMutex
      */
     pub(crate) const fn const_new() -> Self {
         Self(0)
@@ -63,9 +83,9 @@ impl ObjId {
      * multiple tasks can read the data or the infos but only one a time
      * can write them
      *
-     * [`Task`]: /api/tasks/trait.Task.html
-     * [`Thread`]: /api/tasks/impls/struct.Thread.html
-     * [`Process`]: /api/tasks/impls/struct.Proc.html
+     * [`Task`]: crate::tasks::task::Task
+     * [`Thread`]: crate::tasks::impls::thread::Thread
+     * [`Process`]: crate::tasks::impls::proc::Proc
      */
     fn send<T>(&self, receiver: &T) -> Result<()>
         where T: Task {
@@ -79,8 +99,8 @@ impl ObjId {
      * The previous handle is first released with [`Drop`] then overwritten
      * with the new handle received according to the [`RecvMode`] given
      *
-     * [`Drop`]: https://doc.rust-lang.org/std/ops/trait.Drop.html
-     * [`RecvMode`]: /api/bits/obj/enum.RecvMode.html
+     * [`Drop`]: core::ops::Drop
+     * [`RecvMode`]: crate::bits::obj::modes::RecvMode
      */
     pub(crate) fn recv(&mut self, obj_type: ObjType, mode: RecvMode) -> Result<()> {
         self.kern_call_2(KernFnPath::Object(KernObjectFnId::Recv),
@@ -96,8 +116,7 @@ impl ObjId {
      *
      * Internally used by [`ObjInfo::update()`]
      *
-     * [`ObjInfo::update()`]:
-     * /api/objs/infos/struct.ObjInfo.html#method.update
+     * [`ObjInfo::update()`]: crate::objs::infos::info::ObjInfo::update
      */
     pub(crate) fn update_infos<T>(&self, infos: &ObjInfo<T>) -> Result<()>
         where T: Object {
@@ -122,8 +141,8 @@ impl ObjId {
      * Registers the given `callback` to be executed whenever one of the
      * bitwise given [`ObjUse`] happen.
      *
-     * The caller must have [information read grants] to successfully call
-     * this method.
+     * The caller must have [information read grants](RG) to successfully
+     * call this method.
      *
      * The given `callback` must accept an [`ObjUseInstant`] as argument and
      * must return a boolean that tells to the kernel whether the callback
@@ -134,10 +153,9 @@ impl ObjId {
      * given filters overlaps a previously registered callback an error will
      * be returned
      *
-     * [`ObjUse`]: /api/objs/infos/struct.ObjUse.html
-     * [information read grants]:
-     * /api/bits/obj/struct.Grants.html#method.set_info_readable
-     * [`ObjUseInstant`]: /api/objs/infos/struct/ObjUseInstant.html
+     * [`ObjUse`]: crate::bits::obj::uses::ObjUse
+     * [RG]: crate::bits::obj::grants::Grants::set_info_readable
+     * [`ObjUseInstant`]: crate::objs::infos::use_instant::ObjUseInstant
      */
     fn watch(&self, filter: ObjUse, callback_fn: RWatchCBThreadEntry) -> Result<()> {
         let thread_entry_data = ThreadEntryData::new_watch_callback(callback_fn);
@@ -149,7 +167,7 @@ impl ObjId {
 
     /** Returns the [`ObjInfo`] of this object
      *
-     * [`ObjInfo`]: /api/objs/infos/struct.ObjInfo.html
+     * [`ObjInfo`]: crate::objs::infos::info::ObjInfo
      */
     pub(crate) fn infos<T>(&self) -> Result<ObjInfo<T>>
         where T: Object {
@@ -174,7 +192,7 @@ impl ObjId {
 
     /** Returns the raw identifier of this [`ObjId`]
      *
-     * [`ObjId`]: /api/objs/struct.ObjId.html
+     * [`ObjId`]: crate::objs::object::ObjId
      */
     pub fn as_raw(&self) -> u32 {
         self.0
@@ -182,7 +200,7 @@ impl ObjId {
 
     /** Returns the raw identifier of this [`ObjId`] as `usize`
      *
-     * [`ObjId`]: /api/objs/struct.ObjId.html
+     * [`ObjId`]: crate::objs::object::ObjId
      */
     pub fn as_raw_usize(&self) -> usize {
         self.as_raw() as usize
@@ -196,7 +214,7 @@ impl Clone for ObjId {
      * kernel's object, so changes on any of the cloned instances affect the
      * same kernel's object
      *
-     * [`ObjId`]: /api/objs/struct.ObjId.html
+     * [`ObjId`]: crate::objs::object::ObjId
      */
     fn clone(&self) -> Self {
         self.kern_call_0(KernFnPath::Object(KernObjectFnId::AddRef))
@@ -219,13 +237,13 @@ impl Drop for ObjId {
      * until there is a reference to them. When the references reaches the 0
      * they are definitely destroyed
      *
-     * [`File`]: /api/objs/impls/struct.File.html
-     * [`Dir`]: /api/objs/impls/struct.Dir.html
-     * [`Link`]: /api/objs/impls/struct.Link.html
-     * [`OsRawMutex`]: /api/objs/impls/struct.OsRawMutex.html
-     * [`Object::drop_name()`]: /api/objs/trait.Object.html#method.drop_name
-     * [`MMap`]: /api/objs/impls/struct.MMap.html
-     * [`IpcChan`]: /api/objs/impls/struct.IpcChan.html
+     * [`File`]: crate::objs::impls::file::File
+     * [`Dir`]: crate::objs::impls::dir::Dir
+     * [`Link`]: crate::objs::impls::link::Link
+     * [`OsRawMutex`]: crate::objs::impls::mutex::OsRawMutex
+     * [`Object::drop_name()`]: crate::objs::object::Object::drop_name
+     * [`MMap`]: crate::objs::impls::mmap::MMap
+     * [`IpcChan`]: crate::objs::impls::ipc_chan::IpcChan
      */
     fn drop(&mut self) {
         if self.is_valid() {
@@ -267,31 +285,31 @@ impl KernCaller for ObjId {
  * and provides convenient methods to easily perform works that normally
  * implies more than one call.
  *
- * [`ObjId`]: /api/objs/struct.ObjId.html
+ * [`ObjId`]: crate::objs::object::ObjId
  */
 pub trait Object: From<ObjId> + Default + Clone + Sync + Send {
     /** The value of the [`ObjType`] that matches the implementation
      *
-     * [`ObjType`]: /api/bits/obj/enum.ObjType.html
+     * [`ObjType`]: crate::bits::obj::types::ObjType
      */
     const TYPE: ObjType;
 
     /** Returns the immutable reference to the underling [`ObjId`] instance
      *
-     * [`ObjId`]: /api/objs/struct.ObjId.html
+     * [`ObjId`]: crate::objs::object::ObjId
      */
     fn obj_handle(&self) -> &ObjId;
 
     /** Returns the mutable reference to the underling [`ObjId`] instance
      *
-     * [`ObjId`]: /api/objs/struct.ObjId.html
+     * [`ObjId`]: crate::objs::object::ObjId
      */
     fn obj_handle_mut(&mut self) -> &mut ObjId;
 
     /** Returns an uninitialized [`ObjConfig`] to open an existing [`Object`]
      *
-     * [`ObjConfig`]: /api/objs/struct.ObjConfig.html
-     * [`Object`]: /api/objs/trait.Object.html
+     * [`ObjConfig`]: crate::objs::config::ObjConfig
+     * [`Object`]: crate::objs::object::Object
      */
     fn open() -> ObjConfig<Self, FindMode> {
         ObjConfig::<Self, FindMode>::new()
@@ -301,7 +319,7 @@ pub trait Object: From<ObjId> + Default + Clone + Sync + Send {
      *
      * Consumes the object into his [`ObjId`] instance
      *
-     * [`ObjId`]: /api/objs/struct.ObjId.html
+     * [`ObjId`]: crate::objs::object::ObjId
      */
     fn into_id(self) -> ObjId {
         let raw_id = self.obj_handle().as_raw();
@@ -313,7 +331,7 @@ pub trait Object: From<ObjId> + Default + Clone + Sync + Send {
      *
      * Consumes the object upcasting it to an [`Any`] instance
      *
-     * [`Any`]: /api/objs/impls/struct.Any.html
+     * [`Any`]: crate::objs::impls::any::Any
      */
     fn into_any(self) -> Any {
         Any::from(self.into_id())
@@ -335,8 +353,8 @@ pub trait Object: From<ObjId> + Default + Clone + Sync + Send {
      * Registers the given `callback` to be executed whenever one of the
      * bitwise given [`ObjUse`] happen.
      *
-     * The caller must have [information read grants] to successfully call
-     * this method.
+     * The caller must have [information read grants](RG) to successfully
+     * call this method.
      *
      * The given `callback` must accept an [`ObjUseInstant`] as argument and
      * must return a boolean that tells to the kernel whether the callback
@@ -347,10 +365,9 @@ pub trait Object: From<ObjId> + Default + Clone + Sync + Send {
      * given filters overlaps a previously registered callback an error will
      * be returned
      *
-     * [`ObjUse`]: /api/objs/infos/struct.ObjUse.html
-     * [information read grants]:
-     * /api/bits/obj/struct.Grants.html#method.set_info_readable
-     * [`ObjUseInstant`]: /api/objs/infos/struct/ObjUseInstant.html
+     * [`ObjUse`]: crate::bits::obj::uses::ObjUse
+     * [RG]: crate::bits::obj::grants::Grants::set_info_readable
+     * [`ObjUseInstant`]: crate::objs::infos::use_instant::ObjUseInstant
      */
     fn watch(&self, filter: ObjUse, callback_fn: RWatchCBThreadEntry) -> Result<()> {
         self.obj_handle().watch(filter, callback_fn)
@@ -366,9 +383,9 @@ pub trait Object: From<ObjId> + Default + Clone + Sync + Send {
      * multiple tasks can read the data or the infos but only one a time
      * can write them
      *
-     * [`Task`]: /api/tasks/trait.Task.html
-     * [`Thread`]: /api/tasks/impls/struct.Thread.html
-     * [`Process`]: /api/tasks/impls/struct.Proc.html
+     * [`Task`]: crate::tasks::task::Task
+     * [`Thread`]: crate::tasks::impls::thread::Thread
+     * [`Process`]: crate::tasks::impls::proc::Proc
      */
     fn send<T>(&self, task: &T) -> Result<()>
         where T: Task {
@@ -380,8 +397,8 @@ pub trait Object: From<ObjId> + Default + Clone + Sync + Send {
      * The previous handle is first released with [`Drop`] then overwritten
      * with the new handle received according to the [`RecvMode`] given
      *
-     * [`Drop`]: https://doc.rust-lang.org/std/ops/trait.Drop.html
-     * [`RecvMode`]: /api/bits/obj/enum.RecvMode.html
+     * [`Drop`]: core::ops::Drop
+     * [`RecvMode`]: crate::bits::obj::modes::RecvMode
      */
     fn recv(&mut self, mode: RecvMode) -> Result<()> {
         self.obj_handle_mut().recv(Self::TYPE, mode)
@@ -393,8 +410,8 @@ pub trait Object: From<ObjId> + Default + Clone + Sync + Send {
      * instance then performs an [`Object::recv()`] using the given
      * [`RecvMode`]
      *
-     * [`Object::recv()`]: /api/objs/trait.Object.html#method.recv
-     * [`RecvMode`]: /api/bits/obj/enum.RecvMode.html
+     * [`Object::recv()`]: crate::objs::object::Object::recv
+     * [`RecvMode`]: crate::bits::obj::modes::RecvMode
      */
     fn recv_new(mode: RecvMode) -> Result<Self> {
         let mut obj = Self::default();
@@ -403,7 +420,7 @@ pub trait Object: From<ObjId> + Default + Clone + Sync + Send {
 
     /** Returns the [`ObjInfo`] of this object
      *
-     * [`ObjInfo`]: /api/objs/infos/struct.ObjInfo.html
+     * [`ObjInfo`]: crate::objs::infos::info::ObjInfo
      */
     fn infos(&self) -> Result<ObjInfo<Self>> {
         self.obj_handle().infos()
@@ -411,7 +428,7 @@ pub trait Object: From<ObjId> + Default + Clone + Sync + Send {
 
     /** Returns the [`ObjType`] of the object
      *
-     * [`ObjType`]: /api/bits/obj/enum.ObjType.html
+     * [`ObjType`]: crate::bits::obj::types::ObjType
      */
     fn obj_type(&self) -> ObjType {
         self.infos().unwrap_or_default().obj_type()
@@ -424,7 +441,7 @@ pub trait Object: From<ObjId> + Default + Clone + Sync + Send {
      * 2. Last data modify [`Instant`]
      * 3. Last info modify [`Instant`]
      *
-     * [`Instant`]: /api/time/struct.Instant.html
+     * [`Instant`]: crate::time::Instant
      */
     fn timestamps(&self) -> (Instant, Instant, Instant, Instant) {
         self.infos().unwrap_or_default().timestamps()
@@ -432,7 +449,7 @@ pub trait Object: From<ObjId> + Default + Clone + Sync + Send {
 
     /** Returns the [size] of the object
      *
-     * [size]: /api/objs/infos/struct.ObjInfo.html#method.size
+     * [size]: crate::objs::infos::info::ObjInfo::size
      */
     fn size(&self) -> usize {
         self.infos().unwrap_or_default().size()
@@ -446,8 +463,8 @@ pub trait Object: From<ObjId> + Default + Clone + Sync + Send {
 pub trait UserCreatable: Object {
     /** Returns an uninitialized [`ObjConfig`] to create a new [`Object`]
      *
-     * [`ObjConfig`]: /api/objs/struct.ObjConfig.html
-     * [`Object`]: /api/objs/trait.Object.html
+     * [`ObjConfig`]: crate::objs::config::ObjConfig
+     * [`Object`]: crate::objs::object::Object
      */
     fn creat() -> ObjConfig<Self, CreatMode> {
         ObjConfig::<Self, CreatMode>::new()
@@ -467,40 +484,24 @@ macro_rules! impl_obj_id_object {
         pub struct $ObjTypeName(ObjId);
 
         impl Object for $ObjTypeName {
-            /** The value of the [`ObjType`] that matches the implementation
-             *
-             * [`ObjType`]: /api/bits/ent/enum.ObjType.html
-             */
             const TYPE: ObjType = $ObjType;
 
-            /** Returns the immutable reference to the underling [`ObjId`] instance
-             *
-             * [`ObjId`]: /api/objs/struct.ObjId.html
-             */
             fn obj_handle(&self) -> &ObjId {
                 &self.0
             }
 
-            /** Returns the mutable reference to the underling [`ObjId`] instance
-             *
-             * [`ObjId`]: /api/objs/struct.ObjId.html
-             */
             fn obj_handle_mut(&mut self) -> &mut ObjId {
                 &mut self.0
             }
         }
 
         impl From<ObjId> for $ObjTypeName {
-            /** Performs the conversion.
-             */
             fn from(id: ObjId) -> Self {
                 Self(id)
             }
         }
 
         impl KernCaller for $ObjTypeName {
-            /** Returns the raw identifier of the object
-             */
             fn caller_handle_bits(&self) -> u32 {
                 self.obj_handle().caller_handle_bits()
             }

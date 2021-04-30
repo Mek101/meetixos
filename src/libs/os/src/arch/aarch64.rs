@@ -72,7 +72,7 @@ macro_rules! raw_syscall {
  * No additional arguments than the [`SysCallId`] and the `err_ptr_value`
  * are given to the kernel
  *
- * [`SysCallId`]: /os/sysc/id/struct.SysCallId.html
+ * [`SysCallId`]: crate::sysc::id::SysCallId
  */
 #[inline(always)]
 pub unsafe fn syscall_0(id: SysCallId, err_ptr_value: *mut usize) -> Result<usize, ()> {
@@ -87,7 +87,7 @@ pub unsafe fn syscall_0(id: SysCallId, err_ptr_value: *mut usize) -> Result<usiz
  * One additional argument than the [`SysCallId`] and the `err_ptr_value`
  * is given to the kernel
  *
- * [`SysCallId`]: /os/sysc/id/struct.SysCallId.html
+ * [`SysCallId`]: crate::sysc::id::SysCallId
  */
 #[inline(always)]
 pub unsafe fn syscall_1(id: SysCallId,
@@ -105,7 +105,7 @@ pub unsafe fn syscall_1(id: SysCallId,
  * Two additional arguments than the [`SysCallId`] and the `err_ptr_value`
  * are given to the kernel
  *
- * [`SysCallId`]: /os/sysc/id/struct.SysCallId.html
+ * [`SysCallId`]: crate::sysc::id::SysCallId
  */
 #[inline(always)]
 pub unsafe fn syscall_2(id: SysCallId,
@@ -124,7 +124,7 @@ pub unsafe fn syscall_2(id: SysCallId,
  * Three additional arguments than the [`SysCallId`] and the `err_ptr_value`
  * are given to the kernel
  *
- * [`SysCallId`]: /os/sysc/id/struct.SysCallId.html
+ * [`SysCallId`]: crate::sysc::id::SysCallId
  */
 #[inline(always)]
 pub unsafe fn syscall_3(id: SysCallId,
@@ -144,7 +144,7 @@ pub unsafe fn syscall_3(id: SysCallId,
  * Four additional arguments than the [`SysCallId`] and the `err_ptr_value`
  * are given to the kernel
  *
- * [`SysCallId`]: /os/sysc/id/struct.SysCallId.html
+ * [`SysCallId`]: crate::sysc::id::SysCallId
  */
 #[inline(always)]
 pub unsafe fn syscall_4(id: SysCallId,
@@ -170,7 +170,7 @@ pub unsafe fn syscall_4(id: SysCallId,
  * Five additional arguments than the [`SysCallId`] and the `err_ptr_value`
  * are given to the kernel
  *
- * [`SysCallId`]: /os/sysc/id/struct.SysCallId.html
+ * [`SysCallId`]: crate::sysc::id::SysCallId
  */
 #[inline(always)]
 pub unsafe fn syscall_5(id: SysCallId,

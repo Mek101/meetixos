@@ -3,13 +3,23 @@
  * Implements a shareable mutually exclusive gate
  */
 
-use os::sysc::{codes::KernMutexFnId, fn_path::KernFnPath};
-use sync::{GuardNoSend, RawMutex};
+use os::sysc::{
+    codes::KernMutexFnId,
+    fn_path::KernFnPath
+};
+use sync::{
+    GuardNoSend,
+    RawMutex
+};
 
 use crate::{
     bits::obj::ObjType,
     caller::KernCaller,
-    objs::{ObjId, Object, UserCreatable}
+    objs::{
+        ObjId,
+        Object,
+        UserCreatable
+    }
 };
 
 /** # Mutual Exclusion Gate
@@ -19,8 +29,8 @@ use crate::{
  *
  * Refer to the [`sync::Mutex`] for complete documentation
  *
- * [`OsRawMutex`]: /api/objs/impls/struct.OsRawMutex.html
- * [`sync::Mutex`]: /sync/struct.Mutex.html
+ * [`OsRawMutex`]: crate::objs::impls::mutex::OsRawMutex
+ * [`sync::Mutex`]: sync::Mutex
  */
 pub type Mutex<T> = sync::Mutex<OsRawMutex, T>;
 
@@ -28,7 +38,7 @@ pub type Mutex<T> = sync::Mutex<OsRawMutex, T>;
  *
  * Scoped box that allow access to the data when the [`Mutex`] is locked
  *
- * [`Mutex`]: /api/objs/impls/type.Mutex.html
+ * [`Mutex`]: crate::objs::impls::mutex::Mutex
  */
 pub type MutexGuard<'a, T> = sync::MutexGuard<'a, OsRawMutex, T>;
 
@@ -53,7 +63,7 @@ impl OsRawMutex {
      * Const stub used only to satisfy the `INIT` constant requirement of
      * [`RawMutex`]
      *
-     * [`RawMutex`]: https://docs.rs/lock_api/0.4.2/lock_api/struct.Mutex.html
+     * [`RawMutex`]: sync::RawMutex
      */
     const fn const_init_for_raw() -> Self {
         Self(ObjId::const_new())
@@ -68,7 +78,7 @@ impl OsRawMutex {
      *
      * The method consumes the instance because move it into the [`Mutex`]
      *
-     * [`Mutex`]: /api/objs/impls/type.Mutex.html
+     * [`Mutex`]: crate::objs::impls::mutex::Mutex
      */
     pub const fn into_mutex<T>(self, value: T) -> Mutex<T> {
         Mutex::const_new(self, value)
@@ -79,8 +89,8 @@ unsafe impl RawMutex for OsRawMutex {
     /** Create [`Mutex`] with this constant will throw [`panic!()`] at first
      * call
      *
-     * [`Mutex`]: /api/objs/impls/type.Mutex.html
-     * [`panic!()`]: https://doc.rust-lang.org/std/macro.panic.html
+     * [`Mutex`]: crate::objs::impls::mutex::Mutex
+     * [`panic!()`]: core::panic
      */
     const INIT: Self = Self::const_init_for_raw();
 
@@ -88,8 +98,8 @@ unsafe impl RawMutex for OsRawMutex {
      * primitives, because each thread have his own open object table, but
      * is obviously possible using [`Object::send()`] system call
      *
-     * [`Mutex`]: /api/objs/impls/type.Mutex.html
-     * [`Object::send()`]: /api/objs/trait.Object.html#method.send
+     * [`Mutex`]: crate::objs::impls::mutex::Mutex
+     * [`Object::send()`]: crate::objs::object::Object::send
      */
     type GuardMarker = GuardNoSend;
 

@@ -2,7 +2,7 @@
  *
  * Exports the various [`Object`] implementations
  *
- * [`Object`]: /api/objs/trait.Object.html
+ * [`Object`]: crate::objs::object::Object
  */
 
 pub use any::*;

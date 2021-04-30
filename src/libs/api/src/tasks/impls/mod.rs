@@ -2,7 +2,7 @@
  *
  * Exports the various [`Task`] implementations
  *
- * [`Task`]: /api/tasks/trait.Task.html
+ * [`Task`]: crate::tasks::task::Task
  */
 
 pub use proc::*;

@@ -9,7 +9,14 @@ use core::marker::PhantomData;
 use bit_field::BitField;
 
 use crate::objs::{
-    impls::{Dir, File, IpcChan, Link, MMap, OsRawMutex},
+    impls::{
+        Dir,
+        File,
+        IpcChan,
+        Link,
+        MMap,
+        OsRawMutex
+    },
     Object
 };
 
@@ -17,7 +24,7 @@ use crate::objs::{
  *
  * Represents the permissions bits for the [`Object`] implementations
  *
- * [`Object`]: /api/objs/trait.Object.html
+ * [`Object`]: crate::objs::object::Object
  */
 #[derive(Debug)]
 pub struct Grants<T>
@@ -29,51 +36,51 @@ pub struct Grants<T>
 impl<T> Grants<T> where T: Object {
     /** `Open` permission bits
      */
-    pub const OPENABLE_USER_BIT: usize = 0;
-    pub const OPENABLE_GROUP_BIT: usize = 1;
-    pub const OPENABLE_OTHER_BIT: usize = 2;
+    pub const OPEN_USER: usize = 0;
+    pub const OPEN_GROUP: usize = 1;
+    pub const OPEN_OTHER: usize = 2;
 
     /** Owner user `data` permission bits
      */
-    pub const DATA_USER_READ_BIT: usize = 3;
-    pub const DATA_USER_WRITE_BIT: usize = 4;
-    pub const DATA_USER_EXEC_BIT: usize = 5;
-    pub const DATA_USER_TRAVERS_BIT: usize = Self::DATA_USER_EXEC_BIT;
+    pub const DATA_USER_READ: usize = 3;
+    pub const DATA_USER_WRITE: usize = 4;
+    pub const DATA_USER_EXEC: usize = 5;
+    pub const DATA_USER_TRAVERS: usize = Self::DATA_USER_EXEC;
 
     /** Owner's group `read` data permission bits
      */
-    pub const DATA_GROUP_READ_BIT: usize = 6;
-    pub const DATA_GROUP_WRITE_BIT: usize = 7;
-    pub const DATA_GROUP_EXEC_BIT: usize = 8;
-    pub const DATA_GROUP_TRAVERS_BIT: usize = Self::DATA_GROUP_EXEC_BIT;
+    pub const DATA_GROUP_READ: usize = 6;
+    pub const DATA_GROUP_WRITE: usize = 7;
+    pub const DATA_GROUP_EXEC: usize = 8;
+    pub const DATA_GROUP_TRAVERS: usize = Self::DATA_GROUP_EXEC;
 
     /** Other users/groups `data` permission bits
      */
-    pub const DATA_OTHER_READ_BIT: usize = 9;
-    pub const DATA_OTHER_WRITE_BIT: usize = 10;
-    pub const DATA_OTHER_EXEC_BIT: usize = 11;
-    pub const DATA_OTHER_TRAVERS_BIT: usize = Self::DATA_OTHER_EXEC_BIT;
+    pub const DATA_OTHER_READ: usize = 9;
+    pub const DATA_OTHER_WRITE: usize = 10;
+    pub const DATA_OTHER_EXEC: usize = 11;
+    pub const DATA_OTHER_TRAVERS: usize = Self::DATA_OTHER_EXEC;
 
     /** Owner user `information` permissions bits
      */
-    pub const INFO_USER_READ_BIT: usize = 12;
-    pub const INFO_USER_WRITE_BIT: usize = 13;
+    pub const INFO_USER_READ: usize = 12;
+    pub const INFO_USER_WRITE: usize = 13;
 
     /** Owner's group `informations` permissions bits
      */
-    pub const INFO_GROUP_READ_BIT: usize = 14;
-    pub const INFO_GROUP_WRITE_BIT: usize = 15;
+    pub const INFO_GROUP_READ: usize = 14;
+    pub const INFO_GROUP_WRITE: usize = 15;
 
     /** Other users/groups `informations` permissions bits
      */
-    pub const INFO_OTHER_READ_BIT: usize = 16;
-    pub const INFO_OTHER_WRITE_BIT: usize = 17;
+    pub const INFO_OTHER_READ: usize = 16;
+    pub const INFO_OTHER_WRITE: usize = 17;
 
     /** `Visibility` permission bits
      */
-    pub const VISIBLE_USER_BIT: usize = 18;
-    pub const VISIBLE_GROUP_BIT: usize = 19;
-    pub const VISIBLE_OTHER_BIT: usize = 20;
+    pub const VISIBLE_USER: usize = 18;
+    pub const VISIBLE_GROUP: usize = 19;
+    pub const VISIBLE_OTHER: usize = 20;
 
     /** # Constructs a new `Grants`
      *
@@ -88,26 +95,23 @@ impl<T> Grants<T> where T: Object {
      *
      * The values given as arguments are used as bit values for,
      * respectively:
-     * * [`OPENABLE_USER_BIT`]
-     * * [`OPENABLE_GROUP_BIT`]
-     * * [`OPENABLE_OTHER_BIT`]
+     * * [`OPENABLE_USER`](OU)
+     * * [`OPENABLE_GROUP`](OG)
+     * * [`OPENABLE_OTHER`](OH)
      *
      * When the caller have `openable` permissions for an [`ObjId`] based
      * object means that it can call successfully [`Object::open()`]
      *
-     * [`OPENABLE_USER_BIT`]:
-     * /api/bits/obj/struct.Grants.html#associatedconstant.OPENABLE_USER_BIT
-     * [`OPENABLE_GROUP_BIT`]:
-     * /api/bits/obj/struct.Grants.html#associatedconstant.
-     * OPENABLE_GROUP_BIT [`OPENABLE_OTHER_BIT`]:
-     * /api/bits/obj/struct.Grants.html#associatedconstant.
-     * OPENABLE_OTHER_BIT [`ObjId`]: /api/objs/struct.ObjId.html
-     * [`Object::open()`]: /api/objs/trait.Object.html#method.open
+     * [OU]: crate::bits::obj::grants::Grants::OPENABLE_USER
+     * [OG]: crate::bits::obj::grants::Grants::OPENABLE_GROUP
+     * [OH]: crate::bits::obj::grants::Grants::OPENABLE_OTHER
+     * [`ObjId`]: crate::objs::object::ObjId
+     * [`Object::open()`]: crate::objs::object::Object::open
      */
     pub fn set_openable(&mut self, user: bool, group: bool, other: bool) -> &mut Self {
-        self.m_bits.set_bit(Self::OPENABLE_USER_BIT, user);
-        self.m_bits.set_bit(Self::OPENABLE_GROUP_BIT, group);
-        self.m_bits.set_bit(Self::OPENABLE_OTHER_BIT, other);
+        self.m_bits.set_bit(Self::OPEN_USER, user);
+        self.m_bits.set_bit(Self::OPEN_GROUP, group);
+        self.m_bits.set_bit(Self::OPEN_OTHER, other);
         self
     }
 
@@ -115,32 +119,28 @@ impl<T> Grants<T> where T: Object {
      *
      * The values given as arguments are used as bit values for,
      * respectively:
-     * * [`DATA_USER_READ_BIT`]
-     * * [`DATA_GROUP_READ_BIT`]
-     * * [`DATA_OTHER_READ_BIT`]
+     * * [`DATA_USER_READ`](DU)
+     * * [`DATA_GROUP_READ`](DG)
+     * * [`DATA_OTHER_READ`](DO)
      *
      * When the caller have `openable` and `data read` permissions for an
      * [`ObjId`] based objects means that it can apply successfully
      * [`ObjConfig::for_read()`]
      *
-     * [`DATA_USER_READ_BIT`]:
-     * /api/bits/obj/struct.Grants.html#associatedconstant.
-     * DATA_USER_READ_BIT [`DATA_GROUP_READ_BIT`]:
-     * /api/bits/obj/struct.Grants.html#associatedconstant.
-     * DATA_GROUP_READ_BIT [`DATA_OTHER_READ_BIT`]:
-     * /api/bits/obj/struct.Grants.html#associatedconstant.
-     * DATA_OTHER_READ_BIT [`ObjId`]: /api/objs/struct.ObjId.html
-     * [`ObjConfig::for_read()`]:
-     * /api/objs/struct.ObjConfig.html#method.for_read
+     * [DU]: crate::bits::obj::grants::Grants::DATA_USER_READ
+     * [DG]: crate::bits::obj::grants::Grants::DATA_GROUP_READ
+     * [DO]: crate::bits::obj::grants::Grants::DATA_OTHER_READ
+     * [`ObjId`]: crate::objs::object::ObjId
+     * [`ObjConfig::for_read()`]: crate::objs::config::ObjConfig::for_read
      */
     pub fn set_data_readable(&mut self,
                              user: bool,
                              group: bool,
                              other: bool)
                              -> &mut Self {
-        self.m_bits.set_bit(Self::DATA_USER_READ_BIT, user);
-        self.m_bits.set_bit(Self::DATA_GROUP_READ_BIT, group);
-        self.m_bits.set_bit(Self::DATA_OTHER_READ_BIT, other);
+        self.m_bits.set_bit(Self::DATA_USER_READ, user);
+        self.m_bits.set_bit(Self::DATA_GROUP_READ, group);
+        self.m_bits.set_bit(Self::DATA_OTHER_READ, other);
         self
     }
 
@@ -148,32 +148,28 @@ impl<T> Grants<T> where T: Object {
      *
      * The values given as arguments are used as bit values for,
      * respectively:
-     * * [`DATA_USER_WRITE_BIT`]
-     * * [`DATA_GROUP_WRITE_BIT`]
-     * * [`DATA_OTHER_WRITE_BIT`]
+     * * [`DATA_USER_WRITE`](DU)
+     * * [`DATA_GROUP_WRITE`](DG)
+     * * [`DATA_OTHER_WRITE`](DO)
      *
      * When the caller have `openable` and `data write` permissions for an
      * [`ObjId`] based objects means that it can apply successfully
      * [`ObjConfig::for_write()`]
      *
-     * [`DATA_USER_WRITE_BIT`]:
-     * /api/bits/obj/struct.Grants.html#associatedconstant.
-     * DATA_USER_WRITE_BIT [`DATA_GROUP_WRITE_BIT`]:
-     * /api/bits/obj/struct.Grants.html#associatedconstant.
-     * DATA_GROUP_WRITE_BIT [`DATA_OTHER_WRITE_BIT`]:
-     * /api/bits/obj/struct.Grants.html#associatedconstant.
-     * DATA_OTHER_WRITE_BIT [`ObjId`]: /api/objs/struct.ObjId.html
-     * [`ObjConfig::for_write()`]:
-     * /api/objs/struct.ObjConfig.html#method.for_write
+     * [DU]: crate::bits::obj::grants::Grants::DATA_USER_WRITE
+     * [DG]: crate::bits::obj::grants::Grants::DATA_GROUP_WRITE
+     * [DO]: crate::bits::obj::grants::Grants::DATA_OTHER_WRITE
+     * [`ObjId`]: crate::objs::object::ObjId
+     * [`ObjConfig::for_write()`]: crate::objs::config::ObjConfig::for_write
      */
     pub fn set_data_writeable(&mut self,
                               user: bool,
                               group: bool,
                               other: bool)
                               -> &mut Self {
-        self.m_bits.set_bit(Self::DATA_USER_WRITE_BIT, user);
-        self.m_bits.set_bit(Self::DATA_GROUP_WRITE_BIT, group);
-        self.m_bits.set_bit(Self::DATA_OTHER_WRITE_BIT, other);
+        self.m_bits.set_bit(Self::DATA_USER_WRITE, user);
+        self.m_bits.set_bit(Self::DATA_GROUP_WRITE, group);
+        self.m_bits.set_bit(Self::DATA_OTHER_WRITE, other);
         self
     }
 
@@ -181,31 +177,27 @@ impl<T> Grants<T> where T: Object {
      *
      * The values given as arguments are used as bit values for,
      * respectively:
-     * * [`INFO_USER_READ_BIT`]
-     * * [`INFO_GROUP_READ_BIT`]
-     * * [`INFO_OTHER_READ_BIT`]
+     * * [`INFO_USER_READ`](IU)
+     * * [`INFO_GROUP_READ`](IG)
+     * * [`INFO_OTHER_READ`](IO)
      *
      * When the caller have this permission can successfully call
      * [`Object::infos()`] and [`Object::watch()`]
      *
-     * [`INFO_USER_READ_BIT`]:
-     * /api/bits/obj/struct.Grants.html#associatedconstant.
-     * INFO_USER_READ_BIT [`INFO_GROUP_READ_BIT`]:
-     * /api/bits/obj/struct.Grants.html#associatedconstant.
-     * INFO_GROUP_READ_BIT [`INFO_OTHER_READ_BIT`]:
-     * /api/bits/obj/struct.Grants.html#associatedconstant.
-     * INFO_OTHER_READ_BIT [`Object::infos()`]:
-     * /api/objs/trait.Object.html#method.infos [`Object::watch()`]:
-     * /api/objs/trait.Object.html#method.watch
+     * [IU]: crate::bits::obj::grants::Grants::INFO_USER_READ
+     * [IG]: crate::bits::obj::grants::Grants::INFO_GROUP_READ
+     * [IO]: crate::bits::obj::grants::Grants::INFO_OTHER_READ
+     * [`Object::infos()`]: crate::objs::object::Object::infos
+     * [`Object::watch()`]: crate::objs::object::Object::watch
      */
     pub fn set_info_readable(&mut self,
                              user: bool,
                              group: bool,
                              other: bool)
                              -> &mut Self {
-        self.m_bits.set_bit(Self::INFO_USER_READ_BIT, user);
-        self.m_bits.set_bit(Self::INFO_GROUP_READ_BIT, group);
-        self.m_bits.set_bit(Self::INFO_OTHER_READ_BIT, other);
+        self.m_bits.set_bit(Self::INFO_USER_READ, user);
+        self.m_bits.set_bit(Self::INFO_GROUP_READ, group);
+        self.m_bits.set_bit(Self::INFO_OTHER_READ, other);
         self
     }
 
@@ -213,32 +205,27 @@ impl<T> Grants<T> where T: Object {
      *
      * The values given as arguments are used as bit values for,
      * respectively:
-     * * [`INFO_USER_WRITE_BIT`]
-     * * [`INFO_GROUP_WRITE_BIT`]
-     * * [`INFO_OTHER_WRITE_BIT`]
+     * * [`INFO_USER_WRITE`](IU)
+     * * [`INFO_GROUP_WRITE`](IG)
+     * * [`INFO_OTHER_WRITE`](IO)
      *
      * When the caller have this permission can successfully call
      * [`ObjInfo::update()`] and [`Object::drop_name()`]
      *
-     * [`INFO_USER_WRITE_BIT`]:
-     * /api/bits/obj/struct.Grants.html#associatedconstant.
-     * INFO_USER_WRITE_BIT [`INFO_GROUP_WRITE_BIT`]:
-     * /api/bits/obj/struct.Grants.html#associatedconstant.
-     * INFO_GROUP_WRITE_BIT [`INFO_OTHER_WRITE_BIT`]:
-     * /api/bits/obj/struct.Grants.html#associatedconstant.
-     * INFO_OTHER_WRITE_BIT [`ObjInfo::update()`]:
-     * /api/objs/infos/struct.ObjInfo.html#method.update
-     * [`Object::drop_name()`]:
-     * /api/objs/trait.Object.html#method.drop_name
+     * [IU]: crate::bits::obj::grants::Grants::INFO_USER_WRITE
+     * [IG]: crate::bits::obj::grants::Grants::INFO_GROUP_WRITE
+     * [IO]: crate::bits::obj::grants::Grants::INFO_OTHER_WRITE
+     * [`ObjInfo::update()`]: api::objs::infos::ObjInfo::update
+     * [`Object::drop_name()`]: crate::objs::object::Object::drop_name
      */
     pub fn set_info_writeable(&mut self,
                               user: bool,
                               group: bool,
                               other: bool)
                               -> &mut Self {
-        self.m_bits.set_bit(Self::INFO_USER_WRITE_BIT, user);
-        self.m_bits.set_bit(Self::INFO_GROUP_WRITE_BIT, group);
-        self.m_bits.set_bit(Self::INFO_OTHER_WRITE_BIT, other);
+        self.m_bits.set_bit(Self::INFO_USER_WRITE, user);
+        self.m_bits.set_bit(Self::INFO_GROUP_WRITE, group);
+        self.m_bits.set_bit(Self::INFO_OTHER_WRITE, other);
         self
     }
 
@@ -246,9 +233,9 @@ impl<T> Grants<T> where T: Object {
      *
      * The values given as arguments are used as bit values for,
      * respectively:
-     * * [`VISIBLE_USER_BIT`]
-     * * [`VISIBLE_GROUP_BIT`]
-     * * [`VISIBLE_OTHER_BIT`]
+     * * [`VISIBLE_USER`](VU)
+     * * [`VISIBLE_GROUP`](VG)
+     * * [`VISIBLE_OTHER`](VO)
      *
      * These bits allows administrators to configure the filesystem point of
      * view for the OS users. A named object that have his visibility bit
@@ -256,17 +243,14 @@ impl<T> Grants<T> where T: Object {
      * openable if have the `OPENABLE_BIT` enabled) when scanning the
      * parent directory
      *
-     * [`VISIBLE_USER_BIT`]:
-     * /api/bits/obj/struct.Grants.html#associatedconstant.VISIBLE_USER_BIT
-     * [`VISIBLE_GROUP_BIT`]:
-     * /api/bits/obj/struct.Grants.html#associatedconstant.VISIBLE_GROUP_BIT
-     * [`VISIBLE_OTHER_BIT`]:
-     * /api/bits/obj/struct.Grants.html#associatedconstant.VISIBLE_OTHER_BIT
+     * [VU]: crate::bits::obj::grants::Grants::VISIBLE_USER
+     * [VG]: crate::bits::obj::grants::Grants::VISIBLE_GROUP
+     * [VO]: crate::bits::obj::grants::Grants::VISIBLE_OTHER
      */
     pub fn set_visible(&mut self, user: bool, group: bool, other: bool) -> &mut Self {
-        self.m_bits.set_bit(Self::VISIBLE_USER_BIT, user);
-        self.m_bits.set_bit(Self::VISIBLE_GROUP_BIT, group);
-        self.m_bits.set_bit(Self::VISIBLE_OTHER_BIT, other);
+        self.m_bits.set_bit(Self::VISIBLE_USER, user);
+        self.m_bits.set_bit(Self::VISIBLE_GROUP, group);
+        self.m_bits.set_bit(Self::VISIBLE_OTHER, other);
         self
     }
 
@@ -286,46 +270,39 @@ impl<T> Grants<T> where T: Object {
 }
 
 impl<T> Grants<T> where T: Object + WithExecutableDataObject {
-    #[rustfmt::skip] /* skip the format of this comment */
     /** # Sets the `DATA_EXEC_BIT`s
      *
      * The values given as arguments are used as bit values for,
      * respectively:
-     * * [`DATA_USER_EXEC_BIT`]
-     * * [`DATA_GROUP_EXEC_BIT`]
-     * * [`DATA_OTHER_EXEC_BIT`]
+     * * [`DATA_USER_EXEC`](DU)
+     * * [`DATA_GROUP_EXEC`](DG)
+     * * [`DATA_OTHER_EXEC`](DO)
      *
      * These permission bits enables behaviours that differs a bit based on
      * the type of the object they refers to:
-     * * [`File`]s - The data content can be executed, so the file can be used
-     *   as executable file for [`TaskConfig<Proc>::run()`]
-     * * [`MMap`]s - The data content can be executed, this implies only that
-     *   the [`MMap`] can be opened with [`ObjConfig::for_exec()`] and the
-     *   kernel will maps the pages without [`PTFlags::NO_EXECUTE`]
+     * * [`File`]s - The data content can be executed, so the file can be
+     *   used as executable file for [`TaskConfig<Proc>::run()`]
+     * * [`MMap`]s - The data content can be executed, this implies only
+     *   that the [`MMap`] can be opened with [`ObjConfig::for_exec()`] and
+     *   the kernel will maps the pages without [`PTFlags::NO_EXECUTE`](NE)
      *
-     * [`DATA_USER_EXEC_BIT`]:
-     * /api/bits/obj/struct.Grants.html#associatedconstant.DATA_USER_EXEC_BIT
-     * [`DATA_GROUP_EXEC_BIT`]:
-     * /api/bits/obj/struct.Grants.html#associatedconstant.DATA_GROUP_EXEC_BIT
-     * [`DATA_OTHER_EXEC_BIT`]:
-     * /api/bits/obj/struct.Grants.html#associatedconstant.DATA_OTHER_EXEC_BIT
-     * [`File`]: /api/objs/impls/struct.File.html
-     * [`TaskConfig<Proc>::run()`]:
-     * /api/tasks/struct.TaskConfig.html#method.run-1
-     * [`MMap`]: /api/objs/impls/struct.MMap.html
-     * [`ObjConfig::for_exec()`]:
-     * /api/objs/struct.ObjConfig.html#method.for_exec
-     * [`PTFlags::NO_EXECUTE`]:
-     * /hal/paging/struct.PTFlags.html#associatedconstant.PTFlags::NO_EXECUTE
+     * [DU]: crate::bits::obj::grants::Grants::DATA_USER_EXEC
+     * [DG]: crate::bits::obj::grants::Grants::DATA_GROUP_EXEC
+     * [DO]: crate::bits::obj::grants::Grants::DATA_OTHER_EXEC
+     * [`File`]: crate::objs::impls::file::File
+     * [`TaskConfig<Proc>::run()`]: crate::tasks::config::TaskConfig::run
+     * [`MMap`]: crate::objs::impls::mmap::MMap
+     * [`ObjConfig::for_exec()`]: crate::objs::config::ObjConfig::for_exec
+     * [NE]: shared::mem::paging::table::PTFlags::NO_EXECUTE
      */
     pub fn set_data_executable(&mut self,
                                user: bool,
                                group: bool,
                                other: bool)
                                -> &mut Self {
-        self.m_bits.set_bit(Self::DATA_USER_EXEC_BIT, user);
-        self.m_bits.set_bit(Self::DATA_GROUP_EXEC_BIT, group);
-        self.m_bits.set_bit(Self::DATA_OTHER_EXEC_BIT, other);
+        self.m_bits.set_bit(Self::DATA_USER_EXEC, user);
+        self.m_bits.set_bit(Self::DATA_GROUP_EXEC, group);
+        self.m_bits.set_bit(Self::DATA_OTHER_EXEC, other);
         self
     }
 }
@@ -335,9 +312,9 @@ impl<T> Grants<T> where T: Object + WithTraversableDataObject {
      *
      * The values given as arguments are used as bit values for,
      * respectively:
-     * * [`DATA_USER_TRAVERSE_BIT`]
-     * * [`DATA_GROUP_TRAVERSE_BIT`]
-     * * [`DATA_OTHER_TRAVERSE_BIT`]
+     * * [`DATA_USER_TRAVERSE`](TU)
+     * * [`DATA_GROUP_TRAVERSE`](TG)
+     * * [`DATA_OTHER_TRAVERSE`](TO)
      *
      * These permission bits enable/disable the following behaviours:
      * * [`Dir`]s & [`Link`]s - Their name can be traversed when they are
@@ -345,29 +322,20 @@ impl<T> Grants<T> where T: Object + WithTraversableDataObject {
      *   name either a link name in case one of them have no
      *   `DATA_TRAVERS_BIT` enabled the path resolution fails
      *
-     * [`DATA_USER_TRAVERSE_BIT`]:
-     * /api/bits/obj/struct.Grants.html#associatedconstant.
-     * DATA_USER_TRAVERS_BIT
-     *
-     * [`DATA_GROUP_TRAVERSE_BIT`]:
-     * /api/bits/obj/struct.Grants.html#associatedconstant.
-     * DATA_GROUP_TRAVERS_BIT
-     *
-     * [`DATA_OTHER_TRAVERSE_BIT`]:
-     * /api/bits/obj/struct.Grants.html#associatedconstant.
-     * DATA_OTHER_TRAVERS_BIT
-     *
-     * [`Dir`]: /api/objs/impls/struct.Dir.html
-     * [`Link`]: /api/objs/impls/struct.Link.html
+     * [TU]: crate::bits::obj::grants::Grants::DATA_USER_TRAVERS
+     * [TG]: crate::bits::obj::grants::Grants::DATA_GROUP_TRAVERS
+     * [TO]: crate::bits::obj::grants::Grants::DATA_OTHER_TRAVERS
+     * [`Dir`]: crate::objs::impls::dir::Dir
+     * [`Link`]: crate::objs::impls::link::Link
      */
     pub fn set_data_traversable(&mut self,
                                 user: bool,
                                 group: bool,
                                 other: bool)
                                 -> &mut Self {
-        self.m_bits.set_bit(Self::DATA_USER_TRAVERS_BIT, user);
-        self.m_bits.set_bit(Self::DATA_GROUP_TRAVERS_BIT, group);
-        self.m_bits.set_bit(Self::DATA_OTHER_TRAVERS_BIT, other);
+        self.m_bits.set_bit(Self::DATA_USER_TRAVERS, user);
+        self.m_bits.set_bit(Self::DATA_GROUP_TRAVERS, group);
+        self.m_bits.set_bit(Self::DATA_OTHER_TRAVERS, other);
         self
     }
 }
@@ -397,8 +365,8 @@ impl<T> From<u32> for Grants<T> where T: Object {
 impl Default for Grants<Dir> {
     /** Returns the default [`Grants`] for a [`Dir`]
      *
-     * [`Grants`]: /api/bits/obj/struct.Grants.html
-     * [`Dir`]: /api/objs/impls/struct.Dir.html
+     * [`Grants`]: crate::bits::obj::grants::Grants
+     * [`Dir`]: crate::objs::impls::dir::Dir
      */
     fn default() -> Self {
         Self::new().set_openable(true, true, true)
@@ -415,8 +383,8 @@ impl Default for Grants<Dir> {
 impl Default for Grants<File> {
     /** Returns the default [`Grants`] for a [`File`]
      *
-     * [`Grants`]: /api/bits/obj/struct.Grants.html
-     * [`File`]: /api/objs/impls/struct.File.html
+     * [`Grants`]: crate::bits::obj::grants::Grants
+     * [`File`]: crate::objs::impls::file::File
      */
     fn default() -> Self {
         Self::new().set_openable(true, true, true)
@@ -433,8 +401,8 @@ impl Default for Grants<File> {
 impl Default for Grants<IpcChan> {
     /** Returns the default [`Grants`] for a [`IpcChan`]
      *
-     * [`Grants`]: /api/bits/obj/struct.Grants.html
-     * [`IpcChan`]: /api/objs/impls/struct.IpcChan.html
+     * [`Grants`]: crate::bits::obj::grants::Grants
+     * [`IpcChan`]: crate::objs::impls::ipc_chan::IpcChan
      */
     fn default() -> Self {
         Self::new().set_openable(true, true, true)
@@ -450,8 +418,8 @@ impl Default for Grants<IpcChan> {
 impl Default for Grants<Link> {
     /** Returns the default [`Grants`] for a [`Link`]
      *
-     * [`Grants`]: /api/bits/obj/struct.Grants.html
-     * [`Link`]: /api/objs/impls/struct.Link.html
+     * [`Grants`]: crate::bits::obj::grants::Grants
+     * [`Link`]: crate::objs::impls::link::Link
      */
     fn default() -> Self {
         Self::new().set_openable(true, true, true)
@@ -468,8 +436,8 @@ impl Default for Grants<Link> {
 impl Default for Grants<MMap> {
     /** Returns the default [`Grants`] for a [`MMap`]
      *
-     * [`Grants`]: /api/bits/obj/struct.Grants.html
-     * [`MMap`]: /api/objs/impls/struct.MMap.html
+     * [`Grants`]: crate::bits::obj::grants::Grants
+     * [`MMap`]: crate::objs::impls::mmap::MMap
      */
     fn default() -> Self {
         Self::new().set_openable(true, true, false)
@@ -486,8 +454,8 @@ impl Default for Grants<MMap> {
 impl Default for Grants<OsRawMutex> {
     /** Returns the default [`Grants`] for a [`OsRawMutex`]
      *
-     * [`Grants`]: /api/bits/obj/struct.Grants.html
-     * [`OsRawMutex`]: /api/objs/impls/struct.OsRawMutex.html
+     * [`Grants`]: crate::bits::obj::grants::Grants
+     * [`OsRawMutex`]: crate::objs::impls::mutex::OsRawMutex
      */
     fn default() -> Self {
         Self::new().set_openable(true, true, true)
@@ -514,8 +482,8 @@ impl<T> Default for Grants<T> where T: Object {
  * Marker trait implemented for the objects that have meaning with concept
  * of data execution as machine instructions, like [`File`] and [`MMap`]
  *
- * [`File`]: /api/objs/impls/struct.File.html
- * [`MMap`]: /api/objs/impls/struct.MMap.html
+ * [`File`]: crate::objs::impls::file::File
+ * [`MMap`]: crate::objs::impls::mmap::MMap
  */
 pub trait WithExecutableDataObject {
     /* No methods, just a marker trait */
@@ -526,8 +494,8 @@ pub trait WithExecutableDataObject {
  * Marker trait implemented for the objects that have meaning with concept
  * of traversable data, like [`Link`] and [`Dir`]
  *
- * [`Link`]: /api/objs/impls/struct.Link.html
- * [`Dir`]: /api/objs/impls/struct.Dir.html
+ * [`Link`]: crate::objs::impls::link::Link
+ * [`Dir`]: crate::objs::impls::dir::Dir
  */
 pub trait WithTraversableDataObject {
     /* No methods, just a marker trait */

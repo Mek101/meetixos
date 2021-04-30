@@ -1,3 +1,7 @@
+# Global Cargo Config
+#
+# Contains the cargo configuration for cross compilation common to all the sub-projects
+
 [unstable]
 build-std = ["core", "compiler_builtins", "alloc"]
 build-std-features = ["compiler-builtins-mem"]

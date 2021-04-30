@@ -7,9 +7,9 @@
  * [`LockedHeap`] that is simply an [`Heap`] instance wrapped in a [`Mutex`]
  *
  * [`no_std`]: https://doc.rust-lang.org/1.7.0/book/no-stdlib.html
- * [`LockedHeap`]: locked/struct.LockedHeap.html
- * [`Heap`]: struct.Heap.html
- * [`Mutex`]: /api/objs/impls/type.Mutex.html
+ * [`LockedHeap`]: crate::locked::LockedHeap
+ * [`Heap`]: crate::Heap
+ * [`Mutex`]: api::objs::impls::mutex::Mutex
  */
 
 #![no_std]
@@ -19,14 +19,23 @@
 #![feature(const_fn_fn_ptr_basics)]
 #![feature(once_cell)]
 
-#[macro_use]
-extern crate macros;
-
-use core::{alloc::Layout, cmp::max, ptr::NonNull};
+use core::{
+    alloc::Layout,
+    cmp::max,
+    ptr::NonNull
+};
 
 use linked_list_allocator::hole::HoleList;
 
-use crate::{consts::SLAB_THRESHOLD, slab::Slab};
+use num_enum::{
+    IntoPrimitive,
+    TryFromPrimitive
+};
+
+use crate::{
+    consts::SLAB_THRESHOLD,
+    slab::Slab
+};
 
 pub mod consts;
 pub mod locked;
@@ -41,31 +50,44 @@ pub mod slab;
  * The function must return the starting address of the new virtual area
  * allocated and the aligned size of his minimum allocation block
  *
- * [`Heap`]: /heap/struct.Heap.html
+ * [`Heap`]: crate::Heap
  */
 pub type HeapMemorySupplier = fn(requested_size: usize) -> Option<(usize, usize)>;
 
-c_handy_enum! {
-    /** # Sub Allocators Identifier
-     *
-     * Lists the currently available allocators of the [`Heap`] manager.
-     *
-     * [`Heap`]: /heap/struct.Heap.html
-     */
-    pub enum Allocator: u8 {
-        Slab64Bytes   = 0,
-        Slab128Bytes  = 1,
-        Slab256Bytes  = 2,
-        Slab512Bytes  = 3,
-        Slab1024Bytes = 4,
-        Slab2048Bytes = 5,
-        Slab4096Bytes = 6,
-        Slab8192Bytes = 7,
-        LinkedList    = 8,
-    }
+/** # Sub Allocators Identifier
+ *
+ * Lists the currently available allocators of the [`Heap`] manager.
+ *
+ * [`Heap`]: crate::Heap
+ */
+#[repr(u8)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum Allocator {
+    Slab64Bytes,
+    Slab128Bytes,
+    Slab256Bytes,
+    Slab512Bytes,
+    Slab1024Bytes,
+    Slab2048Bytes,
+    Slab4096Bytes,
+    Slab8192Bytes,
+    LinkedList
 }
 
 impl Allocator {
+    const VARIANTS: [Allocator] = *[Self::Slab64Bytes,
+                                    Self::Slab128Bytes,
+                                    Self::Slab256Bytes,
+                                    Self::Slab512Bytes,
+                                    Self::Slab1024Bytes,
+                                    Self::Slab2048Bytes,
+                                    Self::Slab4096Bytes,
+                                    Self::Slab8192Bytes,
+                                    Self::LinkedList];
+
     /** # Constructs an `Allocator` from a `Layout`
      *
      * Returns the best Allocator variant to serve the given request.
@@ -74,14 +96,14 @@ impl Allocator {
      * allocator the difference between the [`layout.size()`] and the block
      * size of the [`Slab`] doesn't exceed the [`SLAB_THRESHOLD`]
      *
-     * [`layout.size()`]: https://doc.rust-lang.org/std/alloc/struct.Layout.html#method.size
-     * [`Slab`]: /heap/slab/struct.Slab.html
-     * [`SLAB_THRESHOLD`]: /heap/consts/constant.SLAB_THRESHOLD.html
+     * [`layout.size()`]: core::alloc::Layout::size
+     * [`Slab`]: crate::slab::Slab
+     * [`SLAB_THRESHOLD`]: crate::consts::SLAB_THRESHOLD
      */
     pub fn for_layout(layout: Layout) -> Allocator {
         let mut chosen = Allocator::LinkedList;
-        for allocator in Self::iter_all() {
-            let alloc_size = allocator.max_block_size();
+        for allocator in Self::VARIANTS.iter() {
+            let alloc_size = allocator.max_alloc_size();
 
             /* allocators that doesn't have the requested size and the requested
              * alignment are discarded before the check of the threshold
@@ -94,7 +116,7 @@ impl Allocator {
              * is less than the SLAB_THRESHOLD
              */
             if alloc_size - layout.size() < SLAB_THRESHOLD {
-                chosen = allocator
+                chosen = allocator.clone();
             } else {
                 /* break if the previous condition is not respected, because the next
                  * slab allocator (if not directly the linked_list) doubles the size of
@@ -111,7 +133,7 @@ impl Allocator {
 
     /** Returns the minimum allocation block size for the selected variant
      */
-    pub fn min_block_size(&self) -> usize {
+    pub fn min_alloc_size(&self) -> usize {
         match self {
             Self::Slab64Bytes => 64,
             Self::Slab128Bytes => 128,
@@ -127,10 +149,10 @@ impl Allocator {
 
     /** Returns the maximum allocation block size for the selected variant
      */
-    pub fn max_block_size(&self) -> usize {
+    pub fn max_alloc_size(&self) -> usize {
         match self {
             Allocator::LinkedList => usize::MAX,
-            _ => self.min_block_size()
+            _ => self.min_alloc_size()
         }
     }
 
@@ -139,7 +161,7 @@ impl Allocator {
      */
     pub fn min_managed_size(&self) -> usize {
         if *self != Self::LinkedList {
-            self.min_block_size() * 2
+            self.min_alloc_size() * 4
         } else {
             /* for the linked list request at least 16KB */
             16 * 1024
@@ -151,11 +173,11 @@ impl Allocator {
      * Calculates the minimum memory consumption requested by an [`Heap`]
      * instance to become functional
      *
-     * [`Heap`]: /heap/struct.Heap.html
+     * [`Heap`]: crate::Heap
      */
     pub fn cumulative_min_managed_size() -> usize {
         let mut size = 0;
-        for allocator in Self::iter_all() {
+        for allocator in Self::VARIANTS.iter() {
             size += allocator.min_managed_size();
         }
         size
@@ -165,7 +187,7 @@ impl Allocator {
 /** # Heap Manager
  *
  * Defines a multi strategy heap manager that could be used as
- * [`global_allocator`] in single threaded environments.
+ * `global_allocator` in single threaded environments.
  *
  * For Thread safe implementation look [here]
  *
@@ -179,11 +201,10 @@ impl Allocator {
  * Slab allocator comes from the internal [`slab`] module, linked list
  * allocator comes from Philipp Oppermann's [`linked_list_allocator`] crate
  *
- * [`global_allocator`]: https://doc.rust-lang.org/edition-guide/rust-2018/platform-and-target-support/global-allocators.html
- * [here]: /heap/locked/raw/struct.RawLazyLockedHeap.html
- * [`SLAB_THRESHOLD`]: /heap/consts/constant.SLAB_THRESHOLD.html
- * [`slab`]: /heap/slab/struct.Slab.html
- * [`linked_list_allocator`]: https://docs.rs/linked_list_allocator/0.8.6/linked_list_allocator/
+ * [here]: crate::locked::raw::RawLazyLockedHeap
+ * [`SLAB_THRESHOLD`]: crate::consts::SLAB_THRESHOLD
+ * [`slab`]: crate::slab::Slab
+ * [`linked_list_allocator`]: linked_list_allocator::hole::HoleList
  */
 pub struct Heap {
     m_slab_64: Slab,
@@ -206,7 +227,7 @@ impl Heap {
      * It will manage the memory returned by the [`HeapMemoryGiver`]
      * callback given.
      *
-     * [`HeapMemoryGiver`]: /heap/type.HeapMemoryGiver.html
+     * [`HeapMemoryGiver`]: crate::HeapMemoryGiver
      */
     pub unsafe fn new(mem_supplier: HeapMemorySupplier) -> Self {
         /* immediately ask to the given supplier the minimum amount of memory to make
@@ -239,12 +260,7 @@ impl Heap {
      *
      * The given memory region is dispatched to the given [`Allocator`].
      *
-     * * `mem` must be aligned to [`ADDRESS_ALIGNMENT`]
-     * * `size` must be at least [`SUB_MIN_SIZE`]
-     *
-     * [`Allocator`]: /heap/enum.Allocator.html
-     * [`ADDRESS_ALIGNMENT`]: /heap/consts/constant.ADDRESS_ALIGNMENT.html
-     * [`SUB_MIN_SIZE`]: /heap/consts/constant.SUB_MIN_SIZE.html
+     * [`Allocator`]: crate::Allocator
      */
     pub unsafe fn add_region(&mut self, addr: usize, size: usize, allocator: Allocator) {
         /* check whether the caller wants to add memory to a slab allocator, in that
@@ -254,7 +270,7 @@ impl Heap {
          */
         let mut size = size;
         if allocator != Allocator::LinkedList {
-            let exceeding = size % allocator.min_block_size();
+            let exceeding = size % allocator.min_alloc_size();
 
             /* if the remaining subregion is at least the minimum required size of the
              * linked list give it to him, otherwise leave the remaining space
@@ -300,15 +316,13 @@ impl Heap {
      *
      * To know which allocator will be used call [`layout_to_allocator()`].
      *
-     * [`Layout`]: https://doc.rust-lang.org/std/alloc/struct.Layout.html
-     * [`Result`]: https://doc.rust-lang.org/std/result/
-     * [`Ok`]: https://doc.rust-lang.org/std/result/enum.Result.html#variant.Ok
-     * [`Err`]: https://doc.rust-lang.org/std/result/enum.Result.html#variant.Err
-     * [`NonNull<u8>`]: https://doc.rust-lang.org/std/ptr/struct.NonNull.html
-     * [`Allocator::LinkedList`]:
-     * /heap/enum.Allocator.html#variant.LinkedList
-     * [`layout_to_allocator()`]:
-     * /heap/struct.Heap.html#method.layout_to_allocator
+     * [`Layout`]: core::alloc::Layout
+     * [`Result`]: core::result::Result
+     * [`Ok`]: core::result::Result::Ok
+     * [`Err`]: core::result::Result::Err
+     * [`NonNull<u8>`]: core::ptr::NonNull
+     * [`Allocator::LinkedList`]: crate::Allocator::LinkedList
+     * [`layout_to_allocator()`]: crate::Allocator::layout_to_allocator
      */
     pub fn allocate(&mut self, layout: Layout) -> Result<NonNull<u8>, ()> {
         let allocator = Allocator::for_layout(layout);
@@ -360,10 +374,8 @@ impl Heap {
      *
      * To know which allocator will be used call [`layout_to_allocator()`].
      *
-     * [`Allocator::LinkedList`]:
-     * /heap/enum.Allocator.html#variant.LinkedList
-     * [`layout_to_allocator()`]:
-     * /heap/struct.Heap.html#method.layout_to_allocator
+     * [`Allocator::LinkedList`]: crate::Allocator::LinkedList
+     * [`layout_to_allocator()`]: crate::Allocator::layout_to_allocator
      */
     pub unsafe fn deallocate(&mut self, ptr: NonNull<u8>, layout: Layout) {
         match Allocator::for_layout(layout) {
@@ -406,12 +418,12 @@ impl Heap {
      *
      * Returns the [`Slab`] that allocates the next [`Allocator`] sizes
      *
-     * [`Slab`]: /heap/slab/struct.Slab.html
-     * [`Allocator`]: /heap/enum.Allocator.html
+     * [`Slab`]: crate::slab::Slab
+     * [`Allocator`]: crate::Allocator
      */
     unsafe fn construct_slab(addr: &mut usize, allocator: Allocator) -> Slab {
         let slab =
-            Slab::new(*addr, allocator.min_managed_size(), allocator.min_block_size());
+            Slab::new(*addr, allocator.min_managed_size(), allocator.min_alloc_size());
         *addr += allocator.min_managed_size();
         slab
     }

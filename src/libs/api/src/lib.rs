@@ -49,25 +49,25 @@
  *
  * [`Objects`]: /api/objs/index.html
  * [`Tasks`]: /api/tasks/index.html
- * [`ObjId`]: /api/objs/struct.ObjId.html
+ * [`ObjId`]: crate::objs::object::ObjId
  * [`RAII`]: https://en.wikipedia.org/wiki/Resource_acquisition_is_initialization
  * [`ObjId` based objects]: /api/objs/impls/index.html
- * [`Drop`]: https://doc.rust-lang.org/std/ops/trait.Drop.html
- * [`ObjConfig`]: /api/objs/struct.ObjConfig.html
- * [`Object`]: /api/objs/trait.Object.html
- * [delete the object]: /api/objs/trait.Object.html#method.drop_name
- * [obtain informations]: /api/objs/trait.Object.html#method.infos
+ * [`Drop`]: core::ops::Drop
+ * [`ObjConfig`]: crate::objs::config::ObjConfig
+ * [`Object`]: crate::objs::object::Object
+ * [delete the object]: crate::objs::object::Object::drop_name
+ * [obtain informations]: crate::objs::object::Object::infos
  * [`stat()`]: https://en.wikipedia.org/wiki/Stat_(system_call)
- * [watch it]: /api/objs/trait.Object.html#method.watch
- * [sendable]: /api/objs/trait.Object.html#method.send
- * [receivable]: /api/objs/trait.Object.html#method.recv
- * [`File`]: /api/objs/impls/struct.File.html
- * [`Mutex`]: /api/objs/impls/type.Mutex.html
- * [`MMap`]: /api/objs/impls/struct.MMap.html
- * [`TaskId`]: /api/tasks/struct.TaskId.html
+ * [watch it]: crate::objs::object::Object::watch
+ * [sendable]: crate::objs::object::Object::send
+ * [receivable]: crate::objs::object::Object::recv
+ * [`File`]: crate::objs::impls::file::File
+ * [`Mutex`]: crate::objs::impls::mutex::Mutex
+ * [`MMap`]: crate::objs::impls::mmap::MMap
+ * [`TaskId`]: crate::tasks::task::TaskId
  * [`pid_t`]: https://www.gnu.org/software/libc/manual/html_node/Process-Identification.html
  * [`pthread_t`]: https://www.man7.org/linux/man-pages/man3/pthread_self.3.html
- * [`TaskConfig`]: /api/tasks/struct.TaskConfig.html
+ * [`TaskConfig`]: crate::tasks::config::TaskConfig
  */
 
 #![no_std]

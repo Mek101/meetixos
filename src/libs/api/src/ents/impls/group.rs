@@ -3,12 +3,22 @@
  * Implements the abstraction of the operating system users group
  */
 
-use os::sysc::{codes::KernOSGroupFnId, fn_path::KernFnPath};
+use os::sysc::{
+    codes::KernOSGroupFnId,
+    fn_path::KernFnPath
+};
 
 use crate::{
     bits::ent::OSEntityType,
-    caller::{KernCaller, Result},
-    ents::{impls::OSUser, OSEntity, OSEntityId}
+    caller::{
+        KernCaller,
+        Result
+    },
+    ents::{
+        impls::OSUser,
+        OSEntity,
+        OSEntityId
+    }
 };
 
 /** # Users Group
@@ -17,8 +27,8 @@ use crate::{
  * in common a class of permissions over the VFS objects that owns as a
  * group
  *
- * [`OSEntityId`]: /api/ents/struct.OSEntityId.html
- * [`OSUser`]: /api/ents/impls/struct.OSUser.html
+ * [`OSEntityId`]: crate::ents::entity::OSEntityId
+ * [`OSUser`]: crate::ents::impls::user::OSUser
  */
 #[derive(Debug, Default, Copy, Clone)]
 pub struct OSGroup(OSEntityId);
@@ -30,7 +40,7 @@ impl OSGroup {
      * by this group.
      *
      * This call affects only the runtime tables of the kernel, update the
-     * `/MeetiX/Configs/users_groups.db` file to make it permanent
+     * `/MeetiX/Configs/users_groups.xml` file to make it permanent
      */
     pub fn add_user(&self, user: &OSUser) -> Result<()> {
         self.kern_call_1(KernFnPath::OSGroup(KernOSGroupFnId::AddUser),
@@ -42,7 +52,7 @@ impl OSGroup {
 impl KernCaller for OSGroup {
     /** Returns the raw identifier of the underling [`OSEntityId`]
      *
-     * [`OSEntityId`]: /api/ents/struct.OSEntityId.html
+     * [`OSEntityId`]: crate::ents::entity::OSEntityId
      */
     fn caller_handle_bits(&self) -> u32 {
         self.0.caller_handle_bits()
@@ -60,14 +70,14 @@ impl From<OSEntityId> for OSGroup {
 impl OSEntity for OSGroup {
     /** The value of the [`OSEntityType`] that matches the implementation
      *
-     * [`OSEntityType`]: /api/bits/ent/enum.OSEntityType.html
+     * [`OSEntityType`]: crate::bits::ent::types::OSEntityType
      */
     const TYPE: OSEntityType = OSEntityType::Group;
 
     /** Returns the immutable reference to the underling [`OSEntityId`]
      * instance
      *
-     * [`OSEntityId`]: /api/ents/struct.OSEntityId.html
+     * [`OSEntityId`]: crate::ents::entity::OSEntityId
      */
     fn os_entity_handle(&self) -> &OSEntityId {
         &self.0

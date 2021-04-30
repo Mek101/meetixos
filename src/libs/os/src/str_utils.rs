@@ -18,7 +18,7 @@ pub fn copy_str_to_u8_buf(dst: &mut [u8], src: &str) {
  *
  * Wrapper for [`u8_ptr_to_str_slice()`]
  *
- * [`u8_ptr_to_str_slice()`]: /api/utils/function.u8_ptr_to_str_slice
+ * [`u8_ptr_to_str_slice()`]: crate::str_utils::u8_ptr_to_str_slice
  */
 pub fn u8_slice_to_str_slice<'a>(slice: &[u8]) -> &'a str {
     u8_ptr_to_str_slice(slice.as_ptr(), slice.len())
@@ -29,8 +29,8 @@ pub fn u8_slice_to_str_slice<'a>(slice: &[u8]) -> &'a str {
  * Safe wrapper for [`slice::from_raw_parts()`] &
  * [`str::from_utf8_unchecked()`]
  *
- * [`slice::from_raw_parts()`]: https://doc.rust-lang.org/std/slice/fn.from_raw_parts.html
- * [`str::from_utf8_unchecked()`]: https://doc.rust-lang.org/std/str/fn.from_utf8_unchecked.html
+ * [`slice::from_raw_parts()`]: core::slice::from_raw_parts
+ * [`str::from_utf8_unchecked()`]: core::str::from_utf8_unchecked
  */
 pub fn u8_ptr_to_str_slice<'a>(ptr: *const u8, len: usize) -> &'a str {
     unsafe {

@@ -2,40 +2,41 @@
  *
  * Implements the enumeration related to certain calls of [`Path`]
  *
- * [`Path`]: /api/path/struct.Path.html
+ * [`Path`]: crate::path::Path
  */
 
 use crate::bits::obj::ObjType;
 
-rust_handy_enum! {
-    /** # `Path::exists()` States
+/** # `Path::exists()` States
+ *
+ * Lists the available states for [`Path::exists()`]
+ *
+ * [`Path::exists()`]: crate::path::Path
+ */
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+pub enum PathExistsState {
+    /** The path exists from the current directory (or the root if the
+     * [`Path`] is absolute) to the last component.
      *
-     * Lists the available states for [`Path::exists()`]
+     * It contains the [`ObjType`] of the last component referenced
      *
-     * [`Path::exists()`]: /api/path/struct.Path.html
+     * [`Path`]: crate::path::Path
+     * [`ObjType`]: crate::bits::obj::types::ObjType
      */
-    pub enum PathExistsState: u8 {
-        /** The path exists from the current directory (or the root if the
-         * [`Path`] is absolute) to the last component.
-         *
-         * It contains the [`ObjType`] of the last component referenced
-         *
-         * [`Path`]: /api/path/struct.Path.html
-         * [`ObjType`]: /api/bits/obj/enum.ObjType.html
-         */
-        Exists(obj_type: ObjType) = 0,
+    Exists(ObjType),
 
-        /** The path exists only until a certain component, the variant
-         * contains the index of the last existing component
-         */
-        ExistsUntil(last_existing_element_index: u32) = 1,
+    /** The path exists only until a certain component, the variant
+     * contains the index of the last existing component
+     */
+    ExistsUntil(u32),
 
-        /** The path doesn't exists completely
-         */
-        NotExists = 2,
+    /** The path doesn't exists completely
+     */
+    NotExists,
 
-        /** An empty path was given
-         */
-        EmptyPath = 3,
-    }
+    /** An empty path was given
+     */
+    EmptyPath
 }

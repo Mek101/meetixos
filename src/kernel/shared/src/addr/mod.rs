@@ -7,14 +7,28 @@
 use core::{
     convert::TryFrom,
     fmt,
-    fmt::{Binary, Debug, LowerHex, Octal, UpperHex},
-    ops::{Add, AddAssign, Sub, SubAssign}
+    fmt::{
+        Binary,
+        Debug,
+        LowerHex,
+        Octal,
+        UpperHex
+    },
+    ops::{
+        Add,
+        AddAssign,
+        Sub,
+        SubAssign
+    }
 };
 
 pub use phys::*;
 pub use virt::*;
 
-use crate::mem::paging::{Frame, PageSize};
+use crate::mem::paging::{
+    Frame,
+    PageSize
+};
 
 mod phys;
 mod virt;
@@ -69,7 +83,7 @@ pub trait Address:
      *
      * Returns on [`Ok`] the aligned up address using the given `align`
      *
-     * [`Ok`]: https://doc.rust-lang.org/std/result/enum.Result.html#variant.Ok
+     * [`Ok`]: core::result::Result::Ok
      */
     fn align_up<A>(self, align: A) -> Result<Self, AddressErr>
         where A: Into<usize> {
@@ -80,7 +94,7 @@ pub trait Address:
      *
      * Returns on [`Ok`] the aligned down address using the given `align`
      *
-     * [`Ok`]: https://doc.rust-lang.org/std/result/enum.Result.html#variant.Ok
+     * [`Ok`]: core::result::Result::Ok
      */
     fn align_down<A>(self, align: A) -> Result<Self, AddressErr>
         where A: Into<usize> {
@@ -126,7 +140,7 @@ pub struct AddressErr(pub(crate) usize);
 impl fmt::Display for AddressErr {
     /** Formats the value using the given formatter.
      */
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "The given address was not properly aligned ({:#X})", self.0)
     }
 }

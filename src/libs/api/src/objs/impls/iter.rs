@@ -3,12 +3,25 @@
  * Implements the reference to a kernel iterator
  */
 
-use os::sysc::{codes::KrnIteratorFnId, fn_path::KernFnPath};
+use os::sysc::{
+    codes::KrnIteratorFnId,
+    fn_path::KernFnPath
+};
 
 use crate::{
-    bits::obj::{KrnIterDirection, ObjType, SeekMode},
-    caller::{KernCaller, Result},
-    objs::{ObjId, Object}
+    bits::obj::{
+        KrnIterDirection,
+        ObjType,
+        SeekMode
+    },
+    caller::{
+        KernCaller,
+        Result
+    },
+    objs::{
+        ObjId,
+        Object
+    }
 };
 
 impl_obj_id_object! {
@@ -27,11 +40,11 @@ impl_obj_id_object! {
      * either used directly, but always wrapped into another structure that
      * ensures type validity
      *
-     * [`DirEntry`]: /api/objs/impls/struct.DirEntry.html
-     * [`Task::find()`]: /api/tasks/trait.Task.html#method.find
+     * [`DirEntry`]: crate::objs::impls::dir::DirEntry
+     * [`Task::find()`]: crate::tasks::task::Task::find
      */
     pub struct KrnIterator {
-        where TYPE = ObjType::Iterator;
+        where TYPE = ObjType::KrnIterator;
     }
 }
 
@@ -41,7 +54,7 @@ impl KrnIterator {
      * According to the [`SeekMode`] given, it updates the begin to end
      * position
      *
-     * [`SeekMode`]: /api/bits/obj/enum.SeekMode.html
+     * [`SeekMode`]: crate::bits::obj::modes::SeekMode
      */
     pub fn set_begin_to_end_pos(&self, pos: SeekMode) -> Result<usize> {
         self.kern_call_1(KernFnPath::Iterator(KrnIteratorFnId::SetBeginToEndPos),
@@ -53,7 +66,7 @@ impl KrnIterator {
      * According to the [`SeekMode`] given, it updates the end to begin
      * position
      *
-     * [`SeekMode`]: /api/bits/obj/enum.SeekMode.html
+     * [`SeekMode`]: crate::bits::obj::modes::SeekMode
      */
     pub fn set_end_to_begin_pos(&self, pos: SeekMode) -> Result<usize> {
         self.kern_call_1(KernFnPath::Iterator(KrnIteratorFnId::SetEndToBeginPos),
@@ -85,7 +98,7 @@ impl KrnIterator {
      * Returns the next element into the pool reading the next element
      * according to the given [`KrnIterDirection`]
      *
-     * [`KrnIterDirection`]: /api/bits/obj/enum.KrnIterDirection.html
+     * [`KrnIterDirection`]: crate::bits::obj::modes::KrnIterDirection
      */
     fn next_res<T>(&self, direction: KrnIterDirection) -> Result<Option<T>>
         where T: Default {

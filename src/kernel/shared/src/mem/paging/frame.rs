@@ -13,13 +13,29 @@ use core::{
     fmt,
     iter::Step,
     marker::PhantomData,
-    ops::{Add, AddAssign, Range, RangeInclusive, Sub, SubAssign}
+    ops::{
+        Add,
+        AddAssign,
+        Range,
+        RangeInclusive,
+        Sub,
+        SubAssign
+    }
 };
 
 use crate::{
-    addr::{Address, PhysAddr, VirtAddr},
+    addr::{
+        Address,
+        PhysAddr,
+        VirtAddr
+    },
     mem::paging::{
-        Page1GiB, Page2MiB, Page4KiB, PageSize, PageTableIndex, PageTableLevel
+        Page1GiB,
+        Page2MiB,
+        Page4KiB,
+        PageSize,
+        PageTableIndex,
+        PageTableLevel
     }
 };
 
@@ -391,7 +407,7 @@ pub struct FrameNotAlignedErr;
 impl fmt::Display for FrameNotAlignedErr {
     /** Formats the value using the given formatter.
      */
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "The given frame address was not properly aligned")
     }
 }

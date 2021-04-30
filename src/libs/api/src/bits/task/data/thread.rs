@@ -3,12 +3,15 @@
  * Implements a [`Thread`] specific enumeration with the data used by the
  * various entry points
  *
- * [`Thread`]: /api/tasks/impls/struct.Thread.html
+ * [`Thread`]: crate::tasks::impls::thread::Thread
  */
 
 use crate::{
     objs::infos::ObjUseInstant,
-    tasks::{impls::Thread, Task}
+    tasks::{
+        impls::Thread,
+        Task
+    }
 };
 
 /** # C `Thread` Entry Point
@@ -16,7 +19,7 @@ use crate::{
  * Identifies the function prototype of the [`Thread`]'s C entry point
  * accepted by the kernel
  *
- * [`Thread`]: /api/tasks/impls/struct.Thread.html
+ * [`Thread`]: crate::tasks::impls::thread::Thread
  */
 pub type CThreadEntry = extern "C" fn() -> !;
 
@@ -25,7 +28,7 @@ pub type CThreadEntry = extern "C" fn() -> !;
  * Identifies the function prototype of the [`Thread`]'s rust entry point
  * accepted by the kernel for the user [`Thread`]s
  *
- * [`Thread`]: /api/tasks/impls/struct.Thread.html
+ * [`Thread`]: crate::tasks::impls::thread::Thread
  */
 pub type RUserThreadEntry = fn(usize) -> bool;
 
@@ -34,8 +37,8 @@ pub type RUserThreadEntry = fn(usize) -> bool;
  * Identifies the function prototype of the [`Thread`]'s rust entry point
  * accepted by the kernel for the [watch callback]
  *
- * [`Thread`]: /api/tasks/impls/struct.Thread.html
- * [watch callback]: /api/objs/trait.Object.html#method.watch
+ * [`Thread`]: crate::tasks::impls::thread::Thread
+ * [watch callback]: crate::objs::object::Object::watch
  */
 pub type RWatchCBThreadEntry = fn(ObjUseInstant) -> bool;
 
@@ -44,9 +47,8 @@ pub type RWatchCBThreadEntry = fn(ObjUseInstant) -> bool;
  * Identifies the function prototype of the [`Thread`]'s rust entry point
  * accepted by the kernel for the [cleaner callback]
  *
- * [`Thread`]: /api/tasks/impls/struct.Thread.html
- * [cleaner callback]:
- * /api/tasks/impls/struct.Thread.html#method.add_cleaner
+ * [`Thread`]: crate::tasks::impls::thread::Thread
+ * [cleaner callback]: crate::tasks::impls::thread::Thread::add_cleaner
  */
 pub type RCleanerCBThreadEntry = fn();
 
@@ -59,18 +61,18 @@ pub type RCleanerCBThreadEntry = fn();
  * userspace [`c_thread_entry`] the rust entry point and eventual
  * additional informations for the execution
  *
- * [`Thread`]: /api/tasks/impls/struct.Thread.html
- * [watch]: /api/objs/trait.Object.html#method.watch
- * [cleanup]: /api/tasks/impls/struct.Thread.html#method.add_cleaner
- * [`c_thread_entry`]: /api/bits/task/data/fn.c_thread_entry.html
+ * [`Thread`]: crate::tasks::impls::thread::Thread
+ * [watch]: crate::objs::object::Object::watch
+ * [cleanup]: crate::tasks::impls::thread::Thread::add_cleaner
+ * [`c_thread_entry`]: crate::bits::task::data::c_thread_entry
  */
 #[derive(Debug, Clone)]
 pub enum ThreadEntryData {
     /** Contains the data to spawn/execute a new [`Thread`] using
      * [`Thread::spawn()`]
      *
-     * [`Thread`]: /api/tasks/impls/struct.Thread.html
-     * [`Thread::spawn()`]: /api/tasks/impls/struct.Thread.html#method.spawn
+     * [`Thread`]: crate::tasks::impls::thread::Thread
+     * [`Thread::spawn()`]: crate::tasks::impls::thread::Thread::spawn
      */
     User {
         m_rust_entry_point: RUserThreadEntry,
@@ -81,7 +83,7 @@ pub enum ThreadEntryData {
     /** Contains the data to register/execute a new [`Object::watch()`]
      * callback
      *
-     * [`Object::watch()`]: /api/objs/trait.Object.html#method.watch
+     * [`Object::watch()`]: crate::objs::object::Object::watch
      */
     WatchCallback {
         m_rust_entry_point: RWatchCBThreadEntry,
@@ -91,8 +93,7 @@ pub enum ThreadEntryData {
 
     /** Contains the data to register/execute a new [`cleaner callback`]
      *
-     * [cleaner callback]:
-     * /api/tasks/impls/struct.Thread.html#method.add_cleaner
+     * [cleaner callback]: crate::tasks::impls::thread::Thread::add_cleaner
      */
     CleanerCallback {
         m_rust_entry_point: RCleanerCBThreadEntry,

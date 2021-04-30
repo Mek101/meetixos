@@ -5,7 +5,10 @@
 
 use core::{
     fmt,
-    fmt::{Display, Formatter},
+    fmt::{
+        Display,
+        Formatter
+    },
     ops::Deref,
     str
 };
@@ -13,13 +16,27 @@ use core::{
 use os::{
     limits::VFS_NAME_LEN_MAX,
     str_utils,
-    sysc::{codes::KernDirFnId, fn_path::KernFnPath}
+    sysc::{
+        codes::KernDirFnId,
+        fn_path::KernFnPath
+    }
 };
 
 use crate::{
-    bits::obj::{ObjType, WithTraversableDataObject},
-    caller::{KernCaller, Result},
-    objs::{impls::KrnIterator, ObjId, Object, UserCreatable}
+    bits::obj::{
+        ObjType,
+        WithTraversableDataObject
+    },
+    caller::{
+        KernCaller,
+        Result
+    },
+    objs::{
+        impls::KrnIterator,
+        ObjId,
+        Object,
+        UserCreatable
+    }
 };
 
 impl_obj_id_object! {
@@ -34,8 +51,8 @@ impl_obj_id_object! {
      * The `Dir` provides an [`Iterator`] implementation, so it is possible
      * to iterate the children in a for loop using the [`Dir::iter()`] method
      *
-     * [`Iterator`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html
-     * [`Dir::iter()`]: /api/objs/impls/struct.Dir.html#method.iter
+     * [`Iterator`]: core::iter::Iterator
+     * [`Dir::iter()`]: crate::objs::impls::dir::Dir::iter
      */
     pub struct Dir : impl WithTraversableDataObject,
                           UserCreatable {
@@ -47,10 +64,9 @@ impl Dir {
     /** # Constructs an `Iterator`
      *
      * The returned iterator starts from the current index until reached
-     * [`ErrorClass::EndOfDataReached`]
+     * [`ErrorClass::EndOfDataReached`](EF)
      *
-     * [`ErrorClass::EndOfDataReached`]:
-     * /api/errors/class/enum.ErrorClass.html#variant.EndOfDataReached
+     * [EF]: crate::errors::class::ErrorClass::EndOfDataReached
      */
     pub fn iter(&self) -> Result<impl Iterator<Item = DirEntry>> {
         self.kern_call_0(KernFnPath::Dir(KernDirFnId::InitIter))
@@ -63,7 +79,7 @@ impl Dir {
  * Allows to iterate with a foreach each [`DirEntry`] of the referenced
  * directory
  *
- * [`DirEntry`]: /api/objs/impls/struct.DirEntry.html
+ * [`DirEntry`]: crate::objs::impls::dir::DirEntry
  */
 pub struct DirIter(KrnIterator);
 
@@ -85,10 +101,9 @@ impl Iterator for DirIter {
     type Item = DirEntry;
 
     /** It is possible to reuse the same `Dir` iterator rewinding it using
-     * [`DirIter::set_pos()`]
+     * [`DirIter::set_pos()`](SP)
      *
-     * [`DirIter::set_pos()`]:
-     * /api/objs/impls/struct.KrnIterator.html#method.set_pos
+     * [SP]: crate::objs::impls::iter::KrnIterator::set_pos
      */
     fn next(&mut self) -> Option<Self::Item> {
         self.0.find_next().unwrap()
@@ -123,7 +138,7 @@ impl DirEntry {
 
     /** Returns the [`ObjType`] of the child
      *
-     * [`ObjType`]: /api/bits/obj/enum.ObjType.html
+     * [`ObjType`]: crate::bits::obj::types::ObjType
      */
     pub fn obj_type(&self) -> ObjType {
         self.m_type
@@ -156,10 +171,10 @@ impl Default for DirEntry {
     }
 }
 
-impl Display for DirEntry {
+impl fmt::Display for DirEntry {
     /** Formats the value using the given formatter.
      */
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} - {}", self.obj_type(), self.name())
     }
 }

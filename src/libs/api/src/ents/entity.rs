@@ -7,13 +7,22 @@ use core::str;
 
 use os::{
     str_utils,
-    sysc::{codes::KernOSEntFnId, fn_path::KernFnPath}
+    sysc::{
+        codes::KernOSEntFnId,
+        fn_path::KernFnPath
+    }
 };
 
 use crate::{
     bits::ent::OSEntityType,
-    caller::{KernCaller, Result},
-    config::{CreatMode, FindMode},
+    caller::{
+        KernCaller,
+        Result
+    },
+    config::{
+        CreatMode,
+        FindMode
+    },
     ents::OSEntConfig
 };
 
@@ -26,9 +35,9 @@ use crate::{
  * methods are private, but exposed via the [`OSEntity`] trait and
  * implemented by the [`OSUser`] and the [`OSGroup`]
  *
- * [`OSEntity`]: /api/ents/trait.OSEntity.html
- * [`OSUser`]: /api/ents/impls/struct.OSUser.html
- * [`OSGroup`]: /api/ents/impls/struct.OSGroup.html
+ * [`OSEntity`]: crate::ents::entity::OSEntity
+ * [`OSUser`]: crate::ents::impls::user::OSUser
+ * [`OSGroup`]: crate::ents::impls::group::OSGroup
  */
 #[derive(Debug, Default, Copy, Clone)]
 pub struct OSEntityId(u16);
@@ -90,26 +99,26 @@ impl KernCaller for OSEntityId {
  * It mainly exposes the private methods of the [`OSEntityId`] for safe
  * calling.
  *
- * [`OSEntityId`]: /api/ents/struct.OSEntityId.html
+ * [`OSEntityId`]: crate::ents::entity::OSEntityId
  */
 pub trait OSEntity: From<OSEntityId> + Default {
     /** The value of the [`OSEntityType`] that matches the implementation
      *
-     * [`OSEntityType`]: /api/bits/ent/enum.OSEntityType.html
+     * [`OSEntityType`]: crate::bits::ent::types::OSEntityType
      */
     const TYPE: OSEntityType;
 
     /** Returns the immutable reference to the underling [`OSEntityId`]
      * instance
      *
-     * [`OSEntityId`]: /api/ents/struct.OSEntityId.html
+     * [`OSEntityId`]: crate::ents::entity::OSEntityId
      */
     fn os_entity_handle(&self) -> &OSEntityId;
 
     /** Returns an uninitialized [`OSEntConfig`] to create a new [`OSEntity`]
      *
-     * [`OSEntConfig`]: /api/objs/struct.OSEntConfig.html
-     * [`OSEntity`]: /api/ents/trait.OSEntity.html
+     * [`OSEntConfig`]: crate::ents::config::OSEntConfig
+     * [`OSEntity`]: crate::ents::entity::OSEntity
      */
     fn creat() -> OSEntConfig<Self, CreatMode> {
         OSEntConfig::<Self, CreatMode>::new()
@@ -118,8 +127,8 @@ pub trait OSEntity: From<OSEntityId> + Default {
     /** Returns an uninitialized [`OSEntConfig`] to find existing
      * [`OSEntity`]
      *
-     * [`OSEntConfig`]: /api/objs/struct.OSEntConfig.html
-     * [`OSEntity`]: /api/ents/trait.OSEntity.html
+     * [`OSEntConfig`]: crate::ents::config::OSEntConfig
+     * [`OSEntity`]: crate::ents::entity::OSEntity
      */
     fn find() -> OSEntConfig<Self, FindMode> {
         OSEntConfig::<Self, FindMode>::new()
@@ -129,7 +138,7 @@ pub trait OSEntity: From<OSEntityId> + Default {
      *
      * Puts into `buf` the name of this [`OSEntity`]
      *
-     * [`OSEntity`]: /api/ents/trait.OSEntity.html
+     * [`OSEntity`]: crate::ents::entity::OSEntity
      */
     fn name<'a>(&self, buf: &'a mut [u8]) -> Result<&'a str> {
         self.os_entity_handle().name(buf)
