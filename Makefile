@@ -98,7 +98,7 @@ ifeq ($(ARCH),x86_64)
 	                   $(BUILD_DIR)/sysroot/$(BUILD_MODE)
 endif
 
-install: build_all
+install: build
 	$(V) echo "- Copying sysroot to build dir..."
 	$(V) mkdir -p $(BUILD_DIR)/sysroot/$(BUILD_MODE)
 	$(V) rsync -a $(SYSROOT_DIR)/* $(BUILD_DIR)/sysroot/$(BUILD_MODE)
