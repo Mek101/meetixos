@@ -20,15 +20,14 @@ OFFLINE    ?= false
 #
 
 REPO_ROOT    ?= $(shell pwd)
-SRC_DIR      ?= $(REPO_ROOT)/src
-BOOT_CFG_DIR ?= $(SRC_DIR)/boot/$(ARCH)
-SYSROOT_DIR  ?= $(SRC_DIR)/sysroot
+BOOT_CFG_DIR ?= $(REPO_ROOT)/boot/$(ARCH)
+SYSROOT_DIR  ?= $(REPO_ROOT)/sysroot
 BUILD_DIR    ?= $(REPO_ROOT)/target/$(ARCH)
 DOC_DIR      ?= $(BUILD_DIR)/doc
 
-KERNEL        ?= $(SRC_DIR)/kernel
+KERNEL        ?= $(REPO_ROOT)/kernel
 KERNEL_HHL    ?= $(KERNEL)/hh_loader
-USERLAND      ?= $(SRC_DIR)/userland
+USERLAND      ?= $(REPO_ROOT)/userland
 USERLAND_APPS ?= $(USERLAND)/apps
 USERLAND_BINS ?= $(USERLAND)/bins
 
@@ -125,19 +124,10 @@ install: build
 build: build_kernel build_userland
 
 build_userland:
-	$(V) echo "- Building for $(ARCH) Userland in $(BUILD_MODE) mode"
+	$(V) echo "- Building $(ARCH) Userland in $(BUILD_MODE) mode"
 
-	$(V) echo "- Building Userland Apps..."
-	$(V) for APP_PRJ in $(USERLAND_APPS)/*/Cargo.toml; do                        \
-              RUSTFLAGS="$(RUSTC_FLAGS)"                                         \
-              CARGO_TARGET_DIR="$(BUILD_DIR)"                                    \
-                  $(CARGO) build $(CARGO_FLAGS)                                  \
-                           --manifest-path $${APP_PRJ}                           \
-                           --target $(USERLAND)/$(ARCH_CONF_PATH)/userland.json; \
-         done
-
-	$(V) echo "- Building Userland Binaries..."
 	$(V) for BIN_PRJ in $(USERLAND_BINS)/*/Cargo.toml; do                        \
+              echo "- Compiling '$$(basename $$(dirname $${BIN_PRJ}))'";         \
               RUSTFLAGS="$(RUSTC_FLAGS)"                                         \
               CARGO_TARGET_DIR="$(BUILD_DIR)"                                    \
                   $(CARGO) build $(CARGO_FLAGS)                                  \
@@ -145,8 +135,17 @@ build_userland:
                            --target $(USERLAND)/$(ARCH_CONF_PATH)/userland.json; \
          done
 
+	$(V) for APP_PRJ in $(USERLAND_APPS)/*/Cargo.toml; do                        \
+              echo "- Compiling '$$(basename $$(dirname $${APP_PRJ}))'";         \
+              RUSTFLAGS="$(RUSTC_FLAGS)"                                         \
+              CARGO_TARGET_DIR="$(BUILD_DIR)"                                    \
+                  $(CARGO) build $(CARGO_FLAGS)                                  \
+                           --manifest-path $${APP_PRJ}                           \
+                           --target $(USERLAND)/$(ARCH_CONF_PATH)/userland.json; \
+         done
+
 build_kernel:
-	$(V) echo "- Building for $(ARCH) Kernel in $(BUILD_MODE) mode"
+	$(V) echo "- Building $(ARCH) Kernel in $(BUILD_MODE) mode"
 
 	$(V) echo "- Building Kernel Core..."
 	$(V) RUSTFLAGS="$(RUSTC_FLAGS)"                        \
