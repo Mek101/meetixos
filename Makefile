@@ -122,7 +122,7 @@ install: build_all
              fi                                                            \
          done
 
-build_all: build_kernel build_userland
+build: build_kernel build_userland
 
 build_userland:
 	$(V) echo "- Building for $(ARCH) Userland in $(BUILD_MODE) mode"
