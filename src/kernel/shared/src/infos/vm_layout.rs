@@ -11,8 +11,11 @@
 use core::fmt;
 
 use crate::{
-    addr::{Address, VirtAddr},
-    dbg::debug_size_multiplier
+    addr::{
+        Address,
+        VirtAddr
+    },
+    dbg::dbg_display_size
 };
 
 /** # Kernel Virtual Memory Layout
@@ -20,7 +23,7 @@ use crate::{
  * Stores the collection of [`VMLayoutArea`] which defines the kernel core's
  * virtual memory layout
  *
- * [`VMLayoutArea`]: struct.VMLayoutArea.html
+ * [`VMLayoutArea`]: crate::infos::vm_layout::VMLayoutArea
  */
 #[derive(Debug, Clone)]
 pub struct VMLayout {
@@ -37,7 +40,7 @@ impl VMLayout {
      *
      * The returned instance is filled with the given [`VMLayoutArea`]s
      *
-     * [`VMLayoutArea`]: struct.VMLayoutArea.html
+     * [`VMLayoutArea`]: crate::infos::vm_layout::VMLayoutArea
      */
     pub const fn new(kern_text_area: VMLayoutArea,
                      kern_heap_area: VMLayoutArea,
@@ -69,7 +72,7 @@ impl VMLayout {
 
     /** Returns the reference to the [`VMLayoutArea`] of kernel's text
      *
-     * [`VMLayoutArea`]: struct.VMLayoutArea.html
+     * [`VMLayoutArea`]: crate::infos::vm_layout::VMLayoutArea
      */
     pub fn kern_text_area(&self) -> &VMLayoutArea {
         &self.m_kern_text_area
@@ -77,7 +80,7 @@ impl VMLayout {
 
     /** Returns the reference to the [`VMLayoutArea`] of kernel's heap
      *
-     * [`VMLayoutArea`]: struct.VMLayoutArea.html
+     * [`VMLayoutArea`]: crate::infos::vm_layout::VMLayoutArea
      */
     pub fn kern_heap_area(&self) -> &VMLayoutArea {
         &self.m_kern_heap_area
@@ -86,7 +89,7 @@ impl VMLayout {
     /** Returns the reference to the [`VMLayoutArea`] of physical memory
      * bitmap
      *
-     * [`VMLayoutArea`]: struct.VMLayoutArea.html
+     * [`VMLayoutArea`]: crate::infos::vm_layout::VMLayoutArea
      */
     pub fn phys_mem_bitmap_area(&self) -> &VMLayoutArea {
         &self.m_phys_mem_bitmap_area
@@ -95,7 +98,7 @@ impl VMLayout {
     /** Returns the reference to the [`VMLayoutArea`] of physical memory
      * mapping
      *
-     * [`VMLayoutArea`]: struct.VMLayoutArea.html
+     * [`VMLayoutArea`]: crate::infos::vm_layout::VMLayoutArea
      */
     pub fn phys_mem_mapping_area(&self) -> &VMLayoutArea {
         &self.m_phys_mem_mapping_area
@@ -103,7 +106,7 @@ impl VMLayout {
 
     /** Returns the reference to the [`VMLayoutArea`] of page cache
      *
-     * [`VMLayoutArea`]: struct.VMLayoutArea.html
+     * [`VMLayoutArea`]: crate::infos::vm_layout::VMLayoutArea
      */
     pub fn page_cache_area(&self) -> &VMLayoutArea {
         &self.m_page_cache_area
@@ -111,7 +114,7 @@ impl VMLayout {
 
     /** Returns the reference to the [`VMLayoutArea`] of temporary mapping
      *
-     * [`VMLayoutArea`]: struct.VMLayoutArea.html
+     * [`VMLayoutArea`]: crate::infos::vm_layout::VMLayoutArea
      */
     pub fn tmp_map_area(&self) -> &VMLayoutArea {
         &self.m_tmp_map_area
@@ -194,6 +197,6 @@ impl fmt::Display for VMLayoutArea {
                "{:?}..{:?} ({})",
                self.start_addr(),
                self.end_addr(),
-               debug_size_multiplier(self.size()))
+               dbg_display_size(self.size()))
     }
 }

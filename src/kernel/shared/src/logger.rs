@@ -3,16 +3,14 @@
  * Implements a thread-safe, generics-customizable [`Logger`] structure
  * which is managed under the hood by the [`log`] crate
  *
- * [`Logger`]: struct.Logger.html
- * [`log`]: https://docs.rs/log/0.4.14/log/index.html
+ * [`Logger`]: crate::logger::Logger
+ * [`log`]: log::debug
  */
 
-#[cfg(feature = "heap_buffering")]
+#[cfg(not(feature = "loader_stage"))]
 extern crate alloc;
 
-#[cfg(not(feature = "heap_buffering"))]
-use core::marker::PhantomData;
-#[cfg(feature = "heap_buffering")]
+#[cfg(not(feature = "loader_stage"))]
 use core::{
     alloc::Layout,
     fmt::Error,
@@ -24,14 +22,17 @@ use core::{
     str
 };
 
-#[cfg(feature = "heap_buffering")]
-use alloc::alloc::{
-    alloc_zeroed,
-    dealloc,
-    realloc
+#[cfg(not(feature = "loader_stage"))]
+use alloc::{
+    alloc::{
+        alloc_zeroed,
+        dealloc,
+        realloc
+    },
+    vec::Vec
 };
 
-/* re-export logging macros renamed with `log_` prefix */
+/* re-export logging macros */
 pub use log::{
     debug,
     error,
@@ -59,26 +60,25 @@ use sync::{
  * manage heap-allocated buffer and write to different kind of
  * [`LoggerWriter`]s
  *
- * [`Log`]: https://docs.rs/log/0.4.14/log/trait.Log.html
- * [`LoggerWriter`]: trait.LoggerWriter.html
+ * [`Log`]: log::Log
+ * [`LoggerWriter`]: crate::logger::LoggerWriter
  */
-pub struct Logger<'a, W, L>
+pub struct Logger<W, L>
     where W: LoggerWriter,
           L: RawMutex + Send + Sync {
-    m_inner: Mutex<L, Option<LoggerInner<'a, W>>>
+    m_inner: Mutex<L, Option<LoggerInner<W>>>
 }
 
-impl<'a, W, L> Logger<'a, W, L>
+impl<W, L> Logger<W, L>
     where W: LoggerWriter,
           L: RawMutex + Send + Sync
 {
     /** # Constructs an uninitialized `Logger`
      *
      * The returned instance must be initialized with
-     * [`Logger::enable_as_global()`]
+     * [`Logger::enable_as_global()`](LE)
      *
-     * [`Logger::enable_as_global()`]:
-     * struct.Logger.html#method.enable_as_global
+     * [LE]: crate::logger::Logger::enable_as_global
      */
     pub const fn new_uninitialized() -> Self {
         Self { m_inner: Mutex::new(None) }
@@ -89,7 +89,7 @@ impl<'a, W, L> Logger<'a, W, L>
      * Initializes the inner instance and sets `self` as global logger with
      * [`log::set_logger()`]
      *
-     * [`log::set_logger()`]: https://docs.rs/log/0.4.14/log/fn.set_logger.html
+     * [`log::set_logger()`]: log::set_logger
      */
     pub fn enable_as_global(&'static mut self) -> Result<(), SetLoggerError> {
         self.m_inner = Mutex::new(Some(LoggerInner::<W>::new()));
@@ -98,47 +98,13 @@ impl<'a, W, L> Logger<'a, W, L>
 
     /** # Enables logger's line-buffering
      *
-     * Allocates an heap buffer of the given size, or
-     * extends/shrinks/re-uses the already existing buffer
+     * Enables the line-buffering for this logger re-using the previously
+     * kept buffer or allocating a new one
      */
-    #[cfg(feature = "heap_buffering")]
-    pub fn enable_buffering(&self, buffer_size: usize) -> bool {
+    #[cfg(not(feature = "loader_stage"))]
+    pub fn enable_buffering(&self) {
         if let Some(ref mut inner) = *self.m_inner.lock() {
-            /* obtain the pointer to the buffer to use */
-            let (buffer, buffer_size) = if let Some(ref mut buffer) = inner.m_buffer {
-                /* well, the inner instance holds a valid buffer, so check whether the
-                 * given buffer size is 0 or matches the current buffer size; in this
-                 * case return the current buffer's pointer, otherwise
-                 * re-allocate it
-                 */
-                if buffer_size == 0 || buffer_size == buffer.len() {
-                    (buffer.as_mut_ptr(), buffer.len())
-                } else {
-                    /* re-allocate the buffer if the size doesn't match and is non-zero */
-                    let new_buf_ptr = unsafe {
-                        realloc(buffer.as_mut_ptr(),
-                                Layout::for_value(&buffer),
-                                buffer_size)
-                    };
-                    (new_buf_ptr, buffer_size)
-                }
-            } else {
-                /* allocate a clean buffer from the heap */
-                let new_buf_ptr = unsafe {
-                    alloc_zeroed(Layout::from_size_align_unchecked(buffer_size, 1))
-                };
-                (new_buf_ptr, buffer_size)
-            };
-
-            /* enable the inner's buffering */
-            if !buffer.is_null() {
-                inner.enable_buffering(unsafe {
-                         slice::from_raw_parts_mut(buffer, buffer_size)
-                     });
-                true
-            } else {
-                false
-            }
+            inner.enable_buffering();
         } else {
             panic!("Enabling buffering for a NON-initialized Logger");
         }
@@ -150,13 +116,12 @@ impl<'a, W, L> Logger<'a, W, L>
      * `keep_buffer` is `false`.
      *
      * If the buffer is kept, following calls to
-     * [`Logger::enable_buffering()`] will re-use the existing buffer or
+     * [`Logger::enable_buffering()`](LB) will re-use the existing buffer or
      * simply re-allocates it
      *
-     * [`Logger::enable_buffering()`]:
-     * struct.Logger.html#method.enable_buffering
+     * [LB]: crate::logger::Logger::enable_buffering
      */
-    #[cfg(feature = "heap_buffering")]
+    #[cfg(not(feature = "loader_stage"))]
     pub fn disable_buffering(&self, keep_buffer: bool) {
         if let Some(ref mut inner) = *self.m_inner.lock() {
             if inner.is_buffered() {
@@ -169,14 +134,14 @@ impl<'a, W, L> Logger<'a, W, L>
 
     /** Sets the [`log::LevelFilter`] for the active instance
      *
-     * [`log::LevelFilter`]: https://docs.rs/log/0.4.14/log/enum.LevelFilter.html
+     * [`log::LevelFilter`]: log::LevelFilter
      */
     pub fn set_max_logging_level(&'static self, log_level: LevelFilter) {
         set_max_level(log_level);
     }
 }
 
-impl<'a, W, L> Log for Logger<'a, W, L>
+impl<W, L> Log for Logger<W, L>
     where W: LoggerWriter,
           L: RawMutex + Send + Sync
 {
@@ -189,7 +154,7 @@ impl<'a, W, L> Log for Logger<'a, W, L>
 
     /** Logs the [`Record`]
      *
-     * [`Record`]: https://docs.rs/log/0.4.14/log/struct.Record.html
+     * [`Record`]: log::Record
      */
     fn log(&self, record: &Record) {
         if let Some(ref mut inner) = *self.m_inner.lock() {
@@ -204,10 +169,7 @@ impl<'a, W, L> Log for Logger<'a, W, L>
     /** Flushes any buffered records
      */
     fn flush(&self) {
-        #[cfg(feature = "heap_buffering")]
-        if let Some(ref mut inner) = *self.m_inner.lock() {
-            inner.flush()
-        }
+        /* the implementation manages by itself the buffering */
     }
 }
 
@@ -219,7 +181,7 @@ impl<'a, W, L> Log for Logger<'a, W, L>
  * This trait is used by the [`Logger`] to communicate with the real logger
  * storage/hardware (a serial output, the video, or a file)
  *
- * [`Logger`]: struct.Logger.html
+ * [`Logger`]: crate::logger::Logger
  */
 pub trait LoggerWriter: Write + Send + Sync {
     /** Constructs an initialized `LoggerWriter`
@@ -232,46 +194,46 @@ pub trait LoggerWriter: Write + Send + Sync {
  * Implements the middleware between the public [`Logger`] and the backend
  * [`LoggerWriter`].
  *
- * It Manages the line-buffering
+ * It Manages the line-buffering when enabled and available
+ *
+ * [`Logger`]: crate::logger::Logger
+ * [`LoggerWriter`]: crate::logger::LoggerWriter
  */
-struct LoggerInner<'a, W>
+struct LoggerInner<W>
     where W: LoggerWriter {
-    m_writer: W,
-    #[cfg(feature = "heap_buffering")]
-    m_buffer: Option<&'a mut [u8]>,
-    #[cfg(feature = "heap_buffering")]
+    #[cfg(not(feature = "loader_stage"))]
+    m_buffer: Option<LoggerBuffer>,
+    #[cfg(not(feature = "loader_stage"))]
     m_buffered: bool,
-    #[cfg(feature = "heap_buffering")]
-    m_buf_pos: usize,
-    #[cfg(not(feature = "heap_buffering"))]
-    _unused: PhantomData<&'a mut [u8]>
+    m_writer: W
 }
 
-impl<'a, W> LoggerInner<'a, W> where W: LoggerWriter {
+impl<W> LoggerInner<W> where W: LoggerWriter {
     /** # Constructs a `LoggerInner`
      *
      * The returned instance is not buffered
      */
     fn new() -> Self {
-        Self { m_writer: W::new(),
-               #[cfg(feature = "heap_buffering")]
+        Self { #[cfg(not(feature = "loader_stage"))]
                m_buffer: None,
-               #[cfg(feature = "heap_buffering")]
+               #[cfg(not(feature = "loader_stage"))]
                m_buffered: false,
-               #[cfg(feature = "heap_buffering")]
-               m_buf_pos: 0,
-               #[cfg(not(feature = "heap_buffering"))]
-               _unused: PhantomData }
+               m_writer: W::new() }
     }
 
     /** # Enables the line-buffering
      *
-     * Stores the given buffer reference and enables the buffered flag
+     * Allocates a buffer of [`LoggerBuffer::SIZE`], further write to the
+     * logger inner will buffer the pieces until the `\n` character
+     *
+     * [`LoggerBuffer::SIZE`]: crate::logger::LoggerBuffer::SIZE
      */
-    #[cfg(feature = "heap_buffering")]
-    fn enable_buffering(&mut self, buffer: &'a mut [u8]) {
-        self.m_buffer = Some(buffer);
-        self.m_buffered = true
+    #[cfg(not(feature = "loader_stage"))]
+    fn enable_buffering(&mut self) {
+        if self.m_buffer.is_none() {
+            self.m_buffer = Some(LoggerBuffer::new());
+        }
+        self.m_buffered = true;
     }
 
     /** # Disables the line-buffering
@@ -279,14 +241,12 @@ impl<'a, W> LoggerInner<'a, W> where W: LoggerWriter {
      * Disables the buffered flags and, if `keep_buffer` is false
      * de-allocates the heap buffer
      */
-    #[cfg(feature = "heap_buffering")]
+    #[cfg(not(feature = "loader_stage"))]
     fn disable_buffering(&mut self, keep_buffer: bool) {
         self.m_buffered = false;
         if !keep_buffer {
-            if let Some(ref mut buffer) = self.m_buffer {
-                unsafe { dealloc(buffer.as_mut_ptr(), Layout::for_value(&buffer)) }
-                self.m_buffer = None;
-            }
+            /* overwriting with <None> the field throws the <drop> call for it */
+            self.m_buffer = None;
         }
     }
 
@@ -295,79 +255,31 @@ impl<'a, W> LoggerInner<'a, W> where W: LoggerWriter {
      * Flushes the buffer when encounters the newline character `'\n'` or
      * when the buffer is not empty/big enough
      */
-    #[cfg(feature = "heap_buffering")]
+    #[cfg(not(feature = "loader_stage"))]
     fn write_in_buffer(&mut self, s: &str) -> fmt::Result {
-        if let Some(ref buffer) = self.m_buffer {
-            /* check whether the remaining buffer if not enough to store the given
-             * slice but is enough when empty, in this case flush the buffer and
-             * continue.
-             * Otherwise write unbuffered
-             */
-            if buffer.len() - self.m_buf_pos < s.len() && s.len() < buffer.len() {
-                self.flush();
-            } else if buffer.len() < s.len() {
-                /* flush anyway, just to be sure */
-                self.flush();
-                return self.m_writer.write_str(s);
-            }
-        }
-
         if let Some(ref mut buffer) = self.m_buffer {
-            /* store each byte into the buffer */
-            for byte in s.as_bytes().iter() {
-                /* store the current byte into the buffer */
-                let byte = *byte;
-                buffer[self.m_buf_pos] = byte;
-                self.m_buf_pos += 1;
-
-                /* flush if found ascii newline */
-                if byte == b'\n' {
-                    /* TODO here could be called self.flush(), but the compiler throws
-                     *      an error due to double mutable borrow
-                     */
-                    let _ =
-                        self.m_writer
-                            .write_str(unsafe {
-                                str::from_utf8_unchecked(&buffer[..self.m_buf_pos])
-                            });
-                    self.m_buf_pos = 0;
-                }
-            }
-            Ok(())
+            buffer.write_str_chunk(s, |buffer| {
+                      if let Ok(utf8_str) = str::from_utf8(buffer) {
+                          self.m_writer.write_str(utf8_str)
+                      } else {
+                          Err(Error)
+                      }
+                  })
         } else {
             Err(Error)
         }
     }
 
-    /** # Flushes the buffer
-     *
-     * Empty the buffer writing each byte to the underling [`LoggerWriter`]
-     *
-     * [`LoggerWriter`]: trait.LoggerWriter.html
-     */
-    #[cfg(feature = "heap_buffering")]
-    fn flush(&mut self) {
-        if self.is_buffered() && self.m_buf_pos > 0 {
-            if let Some(ref buffer) = self.m_buffer {
-                let _ = self.m_writer
-                            .write_str(unsafe {
-                                str::from_utf8_unchecked(&buffer[..self.m_buf_pos])
-                            });
-                self.m_buf_pos = 0;
-            }
-        }
-    }
-
     /** Returns whether the `LoggerInner` uses buffering
      */
-    #[cfg(feature = "heap_buffering")]
+    #[cfg(not(feature = "loader_stage"))]
     fn is_buffered(&self) -> bool {
         self.m_buffered
     }
 }
 
-#[cfg(feature = "heap_buffering")]
-impl<'a, W> Write for LoggerInner<'a, W> where W: LoggerWriter {
+#[cfg(not(feature = "loader_stage"))]
+impl<W> Write for LoggerInner<W> where W: LoggerWriter {
     /** Writes a string slice into this writer, returning whether the write
      * succeeded
      */
@@ -380,12 +292,89 @@ impl<'a, W> Write for LoggerInner<'a, W> where W: LoggerWriter {
     }
 }
 
-#[cfg(not(feature = "heap_buffering"))]
-impl<'a, W> Write for LoggerInner<'a, W> where W: LoggerWriter {
+#[cfg(feature = "loader_stage")]
+impl<W> Write for LoggerInner<W> where W: LoggerWriter {
     /** Writes a string slice into this writer, returning whether the write
      * succeeded
      */
     fn write_str(&mut self, s: &str) -> fmt::Result {
         self.m_writer.write_str(s)
+    }
+}
+
+/** # Logger Buffer Manager
+ *
+ * Manages a byte buffer using a [`Vec<u8>`] with initial capacity of
+ * [`LoggerBuffer::SIZE`].
+ *
+ * The object stores buffer until catches the ASCII new-line `\n`
+ *
+ * [`Vec<u8>`]: alloc::vec::Vec
+ * [`LoggerBuffer::SIZE`]: crate::logger::LoggerBuffer::SIZE
+ */
+#[cfg(not(feature = "loader_stage"))]
+struct LoggerBuffer {
+    m_buffer: Vec<u8>
+}
+
+#[cfg(not(feature = "loader_stage"))]
+impl LoggerBuffer {
+    /** Size of the buffer in bytes
+     */
+    const SIZE: usize = 512;
+
+    /** # Constructs a new `LoggerBuffer`
+     *
+     * The returned instance allocates a buffer of
+     * [`LoggerBuffer::SIZE`](BF)
+     *
+     * [BF]: crate::logger::LoggerBuffer::SIZE
+     */
+    fn new() -> Self {
+        Self { m_buffer: Vec::with_capacity(Self::SIZE) }
+    }
+
+    /** # Writes `str_chunk` to the buffer
+     *
+     * Fills the buffer with the given `str_chunk` and calls
+     * `flush_callback` when encounters ASCII `\n`
+     */
+    fn write_str_chunk<F>(&mut self, str_chunk: &str, flush_callback: F) -> fmt::Result
+        where F: Fn(&[u8]) -> fmt::Result {
+        /* extend the buffer if the remaining capacity doesn't suffice */
+        if !self.can_store(str_chunk) {
+            self.m_buffer.reserve(str_chunk.len());
+        }
+
+        /* iterate each byte into the given string and put it into the buffer */
+        for byte in str_chunk.as_bytes() {
+            let byte = *byte;
+            self.m_buffer.push(byte);
+
+            /* catch ASCII new-line to flush the buffer */
+            if byte == b'\n' {
+                /* call the callback given to flush the buffer */
+                if let Err(err) = flush_callback(self.m_buffer.as_slice()) {
+                    return Err(err);
+                } else {
+                    /* reset the buffer */
+                    self.m_buffer.truncate(0);
+                    Ok(())
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /** Returns whether the buffer can hold `s` without re-allocations
+     */
+    fn can_store(&self, s: &str) -> bool {
+        self.capacity() - self.m_buffer.len() < s.len()
+    }
+
+    /** Returns the capacity of the buffer
+     */
+    fn capacity(&self) -> usize {
+        self.m_buffer.capacity()
     }
 }

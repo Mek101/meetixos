@@ -9,7 +9,7 @@ use uart_16550::SerialPort;
 
 pub use X64Uart as HwUart;
 
-use crate::hal::uart::HwUartBase;
+use crate::uart::HwUartBase;
 
 /** The x86_64 implementation of the UART module uses the COM1 for
  * communication.

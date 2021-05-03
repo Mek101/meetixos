@@ -25,19 +25,19 @@ pub const TIB: usize = GIB * 1024;
 /** Returns a [`fmt::Display`] implementation to print in a pretty way the
  * `size_value` given
  *
- * [`fmt::Display`]: https://doc.rust-lang.org/std/fmt/trait.Display.html
+ * [`fmt::Display`]: core::fmt::Display
  */
-pub fn debug_size_multiplier(size_value: usize) -> impl fmt::Display {
+pub fn dbg_display_size(size_value: usize) -> impl fmt::Display {
     DebugSizeMul::new(size_value)
 }
 
 /** # Debug Size Multiplier
  *
- * Internal debug struct used by the [`debug_size_multiplier()`] to
+ * Internal debug struct used by the [`dbg_display_size()`] to
  * implement [`fmt::Display`]
  *
- * [`debug_size_multiplier()`]: /kernel/debug/fn.debug_size_multiplier.html
- * [`fmt::Display`]: https://doc.rust-lang.org/std/fmt/trait.Display.html
+ * [`dbg_display_size()`]: crate::dbg::dbg_display_size
+ * [`fmt::Display`]: core::fmt::Display
  */
 struct DebugSizeMul {
     m_value: usize,

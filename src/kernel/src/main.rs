@@ -19,13 +19,22 @@
 //#[macro_use]
 extern crate alloc;
 
-use shared::{infos::BootInfos, logger::info};
+use shared::{
+    infos::BootInfos,
+    logger::info
+};
 
 use crate::{
     interrupt::init_interrupts,
-    log::{enable_logger_buffering, init_logger},
+    log::{
+        enable_logger_buffering,
+        init_logger
+    },
     mem::{
-        heap::{heap_allocated_mem, init_heap},
+        heap::{
+            heap_allocated_mem,
+            init_heap
+        },
         phys::init_phys_mem
     },
     version::KERN_VERSION
@@ -119,11 +128,11 @@ fn kern_debug_and_tests() -> ! {
 
     fn test_heap_alloc_free() {
         use alloc::boxed::Box;
-        use dbg_utils::debug_size_multiplier;
+        use dbg_utils::dbg_display_size;
 
         let boxed_int = Box::new([1u64, 2u64, 3u64, 5u64, 6u64, 7u64, 8u64, 9u64, 10u64]);
 
-        info!("\theap_allocated_mem: {}", debug_size_multiplier(heap_allocated_mem()));
+        info!("\theap_allocated_mem: {}", dbg_display_size(heap_allocated_mem()));
 
         for (i, value) in boxed_int.iter().enumerate() {
             info!("\tvalue ({}, {})", i, value);
@@ -138,17 +147,25 @@ fn kern_debug_and_tests() -> ! {
     {
         use core::mem::size_of;
 
-        use dbg_utils::debug_size_multiplier;
-        use hal::addr::{PhysAddr, VirtAddr};
+        use dbg_utils::dbg_display_size;
+        use hal::addr::{
+            PhysAddr,
+            VirtAddr
+        };
         use logger::debug;
 
         use crate::{
             debug::dump_boot_infos,
             mem::{
-                heap::{heap_free_memory, heap_managed_mem},
+                heap::{
+                    heap_free_memory,
+                    heap_managed_mem
+                },
                 paging::paging_active_page_dir,
                 phys::{
-                    phys_mem_allocated_mem, phys_mem_free_memory, phys_mem_total_mem
+                    phys_mem_allocated_mem,
+                    phys_mem_free_memory,
+                    phys_mem_total_mem
                 }
             }
         };
@@ -161,17 +178,15 @@ fn kern_debug_and_tests() -> ! {
                size_of::<PhysAddr>() * 8);
 
         debug!("Physical Memory Consumption");
-        debug!("\tphys_mem_total_mem:     {}",
-               debug_size_multiplier(phys_mem_total_mem()));
+        debug!("\tphys_mem_total_mem:     {}", dbg_display_size(phys_mem_total_mem()));
         debug!("\tphys_mem_allocated_mem: {}",
-               debug_size_multiplier(phys_mem_allocated_mem()));
-        debug!("\tphys_mem_free_memory:   {}",
-               debug_size_multiplier(phys_mem_free_memory()));
+               dbg_display_size(phys_mem_allocated_mem()));
+        debug!("\tphys_mem_free_memory:   {}", dbg_display_size(phys_mem_free_memory()));
 
         debug!("Dynamic Memory Consumption");
-        debug!("\theap_managed_mem:   {}", debug_size_multiplier(heap_managed_mem()));
-        debug!("\theap_allocated_mem: {}", debug_size_multiplier(heap_allocated_mem()));
-        debug!("\theap_free_memory:   {}", debug_size_multiplier(heap_free_memory()));
+        debug!("\theap_managed_mem:   {}", dbg_display_size(heap_managed_mem()));
+        debug!("\theap_allocated_mem: {}", dbg_display_size(heap_allocated_mem()));
+        debug!("\theap_free_memory:   {}", dbg_display_size(heap_free_memory()));
 
         debug!("Page Directory");
         let active_page_dir = paging_active_page_dir();

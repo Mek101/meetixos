@@ -3,23 +3,44 @@
  * Implements the global physical memory allocator used by the kernel
  */
 
-use core::{ops::Range, slice};
+use core::{
+    ops::Range,
+    slice
+};
 
-use bit_field::{BitArray, BitField};
+use bit_field::{
+    BitArray,
+    BitField
+};
 
 use bitmap_allocator::LockedBitMapAllocator;
-use dbg_utils::debug_size_multiplier;
+use dbg_utils::dbg_display_size;
 use hal::{
-    addr::{Address, PhysAddr},
+    addr::{
+        Address,
+        PhysAddr
+    },
     boot_infos::BootInfos,
-    paging::{Page2MiB, Page4KiB, PageSize, PhysFrame, PhysFrameRange}
+    paging::{
+        Page2MiB,
+        Page4KiB,
+        PageSize,
+        PhysFrame,
+        PhysFrameRange
+    }
 };
 #[cfg(debug_assertions)]
 use logger::debug;
-use logger::{info, warn};
+use logger::{
+    info,
+    warn
+};
 use sync::RawSpinMutex;
 
-use crate::mem::paging::{bytes_to_pages_count, paging_map_unmanaged};
+use crate::mem::paging::{
+    bytes_to_pages_count,
+    paging_map_unmanaged
+};
 
 /* bitmap allocator */
 static mut BITMAP_ALLOCATOR: LockedBitMapAllocator<RawSpinMutex> =

@@ -8,7 +8,7 @@ use os::str_utils;
 /** Maximum amount of command line arguments that [`BootInfosInner`] could
  * store
  *
- * [`BootInfosInner`]: /hal/infos/struct.BootInfosInner.html
+ * [`BootInfosInner`]: crate::infos::args::BootInfosInner
  */
 pub(crate) const BOOT_CMDLINE_ARGS_COUNT_MAX: usize = 32;
 
@@ -33,7 +33,7 @@ impl CmdLineArgs {
      * The given `raw_cmdline` is tokenized and parsed into sub
      * [`CmdLineArg`] object(s)
      *
-     * [`CmdLineArg`]: /hal/infos/struct.CmdLineArg.html
+     * [`CmdLineArg`]: crate::infos::args::CmdLineArg
      */
     #[cfg(feature = "loader_stage")]
     pub(crate) fn new(raw_cmdline: &str) -> Self {
@@ -60,7 +60,7 @@ impl CmdLineArgs {
      * In the first case evaluates only the `-key` part, otherwise all the
      * word
      *
-     * [`CmdLineArg`]: /hal/infos/struct.CmdLineArg.html
+     * [`CmdLineArg`]: crate::infos::args::CmdLineArg
      */
     pub fn find_key(&self, to_find: &str) -> Option<&CmdLineArg> {
         self.iter().find(|arg| {
@@ -134,13 +134,11 @@ impl CmdLineArg {
     }
 
     /** Returns the `-key` part of the `-key=value` if
-     * [`CmdLineArg::is_key_value()`] returns true, same as
-     * [`CmdLineArg::as_str()`] otherwise
+     * [`CmdLineArg::is_key_value()`](KV) returns true, same as
+     * [`CmdLineArg::as_str()`](AS) otherwise
      *
-     * [`CmdLineArg::is_key_value()`]:
-     * /hal/infos/struct.CmdLineArg.html#method.is_key_value
-     * [`CmdLineArg::as_str()`]:
-     * /hal/infos/struct.CmdLineArg.html#method.as_str
+     * [KV]: crate::infos::args::CmdLineArg::is_key_value
+     * [AS]: crate::infos::args::CmdLineArg::as_str
      */
     pub fn key(&self) -> &str {
         if self.is_key_value() {
@@ -151,13 +149,11 @@ impl CmdLineArg {
     }
 
     /** Returns the `value` part of the `-key=value` if
-     * [`CmdLineArg::is_key_value()`] returns true, same as
-     * [`CmdLineArg::as_str()`] otherwise
+     * [`CmdLineArg::is_key_value()`](KV) returns true, same as
+     * [`CmdLineArg::as_str()`](AS) otherwise
      *
-     * [`CmdLineArg::is_key_value()`]:
-     * /hal/infos/struct.CmdLineArg.html#method.is_key_value
-     * [`CmdLineArg::as_str()`]:
-     * /hal/infos/struct.CmdLineArg.html#method.as_str
+     * [KV]: crate::infos::args::CmdLineArg::is_key_value
+     * [AS]: crate::infos::args::CmdLineArg::as_str
      */
     pub fn value(&self) -> &str {
         if self.is_key_value() {

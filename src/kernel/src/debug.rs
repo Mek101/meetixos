@@ -3,7 +3,7 @@
  * Implements dump & debug utility functions
  */
 
-use dbg_utils::debug_size_multiplier;
+use dbg_utils::dbg_display_size;
 use hal::boot_infos::BootInfos;
 use logger::debug;
 
@@ -49,6 +49,6 @@ pub fn dump_boot_mem_areas() {
     /*for mma in BootInfos::obtain().mem_areas().iter() {
         debug!("\t\tBootMemArea {{ {:?}, {} }}",
                mma.start_phys_addr(),
-               debug_size_multiplier(mma.size()));
+               dbg_display_size(mma.size()));
     }*/
 }

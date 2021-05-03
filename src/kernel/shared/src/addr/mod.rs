@@ -132,7 +132,7 @@ pub trait Address:
  *
  * Internally contains a raw address `usize` with the error value given
  *
- * [`Address`]: /hal/addr/trait.Address.html
+ * [`Address`]: crate::addr::Address
  */
 #[derive(Debug, Copy, Clone)]
 pub struct AddressErr(pub(crate) usize);
@@ -171,7 +171,7 @@ pub const fn align_up(addr: usize, align: usize) -> usize {
  * Defines the interface on which the [`Address`] trait relies to use the
  * hardware implementation of the addresses
  *
- * [`Address`]: /hal/addr/trait.Address.html
+ * [`Address`]: crate::addr::Address
  */
 pub(crate) trait HwAddrBase: TryFrom<usize, Error = AddressErr> {
     /** # Constructs an unchecked `HwAddrBase` based `Address`

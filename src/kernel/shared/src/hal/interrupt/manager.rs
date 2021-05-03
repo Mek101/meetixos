@@ -4,10 +4,14 @@
  * architecture independent manager
  */
 
-use core::sync::atomic::{AtomicUsize, Ordering};
+use core::sync::atomic::{
+    AtomicUsize,
+    Ordering
+};
 
 use crate::{
-    arch::hal::interrupt::HwInterruptManager, hal::interrupt::InterruptStackFrame
+    arch::hal::interrupt::HwInterruptManager,
+    hal::interrupt::InterruptStackFrame
 };
 
 /** # Interrupt Handler Function
@@ -41,10 +45,10 @@ impl InterruptManager {
     /** # Constructs an uninitialized `InterruptManager`
      *
      * The returned instance must be loaded with
-     * [`InterruptManager::enable_as_global()`]
+     * [`InterruptManager::enable_as_global()`](IG)
      *
-     * [`InterruptManager::enable_as_global()`]:
-     * /hal/interrupt/struct.InterruptManager.html#method.enable_as_global
+     * [IG]: crate::hal::interrupt::manager::InterruptManager::
+     * enable_as_global
      */
     pub const fn new_uninitialized() -> Self {
         Self { m_hw_intr_man: HwInterruptManager::CONST_NEW,
@@ -67,8 +71,8 @@ impl InterruptManager {
 
     /** # Registers an `InterruptManagerException` callback
      *
-     * Registers the given [`ExceptionHandler`] as callback for the given
-     * [`InterruptManagerException`].
+     * Registers the given [`ExceptionHandler`](EH) as callback for the
+     * given [`InterruptManagerException`](IM).
      *
      * Note that each registered callback may be called to handle more than
      * one hardware exception type (of the same domain of course), due to
@@ -77,9 +81,8 @@ impl InterruptManager {
      *
      * Each call overwrites previously registered handler
      *
-     * [`ExceptionHandler`]: /hal/interrupt/type.ExceptionHandler.html
-     * [`InterruptManagerException`]:
-     * /hal/interrupt/enum.InterruptManagerException.html
+     * [EH]: crate::hal::interrupt::manager::ExceptionHandler
+     * [IM]: crate::hal::interrupt::manager::InterruptManagerException
      */
     pub fn set_except_handler(&mut self,
                               exception: InterruptManagerException,
@@ -89,12 +92,12 @@ impl InterruptManager {
 
     /** # Registers an interrupt callback
      *
-     * Registers the given [`InterruptHandler`] as callback for the given
-     * interrupt number.
+     * Registers the given [`InterruptHandler`](IH) as callback for the
+     * given interrupt number.
      *
      * Each call overwrites previously registered handlers
      *
-     * [`InterruptHandler`]: /hal/interrupt/type.InterruptHandler.html
+     * [IH]: crate::hal::interrupt::manager::InterruptHandler
      */
     pub fn set_intr_handler(&mut self, intr: usize, handler: InterruptHandler) {
         self.m_handlers.set_intr_handler(intr, handler);
@@ -145,7 +148,7 @@ impl InterruptManager {
 
     /** Returns a reference to the [`InterruptStats`]
      *
-     * [`InterruptStats`]: /hal/interrupt/struct.InterruptStats.html
+     * [`InterruptStats`]: crate::hal::interrupt::manager::InterruptStats
      */
     pub fn stats(&self) -> &InterruptManagerStats {
         &self.m_handlers.m_intr_stats
@@ -158,7 +161,7 @@ impl InterruptManager {
  * exceptions only, which was solved (i.e the [`ExceptionHandler`] have
  * returned `true`)
  *
- * [`ExceptionHandler`]: /hal/interrupt/type.ExceptionHandler.html
+ * [`ExceptionHandler`]: crate::hal::interrupt::manager::ExceptionHandler
  */
 pub struct InterruptManagerStats {
     /* InterruptManagerException::MathDomain statistics */
@@ -200,22 +203,21 @@ impl InterruptManagerStats {
                m_intr_throws: [ATOMIC_ZERO; HwInterruptManager::INTR_COUNT] }
     }
 
-    /** Returns how many [`InterruptManagerException::MathDomain`] was
+    /** Returns how many [`InterruptManagerException::MathDomain`](MD) was
      * handled
      *
-     * [`InterruptManagerException::MathDomain`]:
-     * /hal/interrupt/enum.InterruptManagerException.html#variant.MathDomain
+     * [MD]: crate::hal::interrupt::manager::InterruptManagerException::
+     * MathDomain
      */
     pub fn math_domain_faults(&self) -> usize {
         self.m_math_domain_faults.load(Ordering::SeqCst)
     }
 
-    /** Returns how many [`InterruptManagerException::MathDomain`] was
-     * solved (i.e the [`ExceptionHandler`] have returned `true`)
+    /** Returns how many [`InterruptManagerException::MathDomain`](MD) was
+     * solved (i.e the [`ExceptionHandler`](EH) have returned `true`)
      *
-     * [`InterruptManagerException::MathDomain`]:
-     * /hal/interrupt/enum.InterruptManagerException.html#variant.MathDomain
-     * [`ExceptionHandler`]: /hal/interrupt/type.ExceptionHandler.html
+     * [MD]: crate::hal::interrupt::manager::InterruptManagerException::
+     * MathDomain [EH]: crate::hal::interrupt::manager::ExceptionHandler
      */
     pub fn math_domain_faults_solved(&self) -> usize {
         self.m_math_domain_faults_solved.load(Ordering::SeqCst)
@@ -402,33 +404,44 @@ impl InterruptManagerStats {
     }
 }
 
-c_handy_enum! {
-    /** # Interrupt Manager Exceptions
-     *
-     * Enumerates the manageable exceptions that are assignable
-     * through [`InterruptManager::set_except_handler()`]
-     *
-     * [`InterruptManager::set_except_handler()`]:
-     * /hal/interrupt/struct.InterruptManager.html#method.set_except_handler
+/** # Interrupt Manager Exceptions
+ *
+ * Enumerates the manageable exceptions that are assignable
+ * through [`InterruptManager::set_except_handler()`]
+ *
+ * [`InterruptManager::set_except_handler()`]:
+ * /hal/interrupt/struct.InterruptManager.html#method.set_except_handler
+ */
+#[repr(usize)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum InterruptManagerException {
+    /** Mathematical errors, like division by zero, overflows and many
+     * others, depends on the underling architecture
      */
-    pub enum InterruptManagerException : u16 {
-        /** Mathematical errors, like division by zero, overflows and many
-         * others, depends on the underling architecture
-         */
-        MathDomain    = 0,
+    MathDomain,
 
-        /** Invalid instruction code or operands
-         */
-        InvalidInstr  = 1,
+    /** Invalid instruction code or operands
+     */
+    InvalidInstr,
 
-        /** Pagination fault, like missing pages or protection violations
-         */
-        PageFault     = 2,
+    /** Pagination fault, like missing pages or protection violations
+     */
+    PageFault,
 
-        /** Floating point, like sign exception
-         */
-        FloatingPoint = 3,
-    }
+    /** Floating point, like sign exception
+     */
+    FloatingPoint,
+
+    /** Amount of managed exceptions
+     */
+    Count
+}
+
+impl InterruptManagerException {
+    pub const COUNT: usize = Self::Count as usize;
 }
 
 /** # Interrupt Manager Handlers

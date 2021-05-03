@@ -1,7 +1,7 @@
 /*! # Kernel Loader/Core Shared Code
  *
- * This crate contains all the code shared among the kernel's loader and the
- * kernel's core which is not desirable to be replicated
+ * This crate contains wrappers, simplifications, and more in general all
+ * the code which is in common to the hh_loader and the kernel's core
  */
 
 #![no_std]
@@ -25,3 +25,4 @@ pub mod logger;
 pub mod mem;
 
 mod arch;
+pub mod uart;

@@ -369,52 +369,59 @@ ext_bitflags! {
     }
 }
 
-c_handy_enum! {
-    /** # Page Table Level
-     *
-     * Enumerates the 4 level of page tables supported by the 64 bit
-     * architectures.
-     *
-     * This simple enum is used by the [`PageDir`] structure to iterate
-     * and construct intermediate page table levels
-     *
-     * [`PageDir`]: /hal/paging/struct.PageDir.html
-     */
-    pub enum PageTableLevel: u8 {
-        Level4 = 0,
-        Level3 = 1,
-        Level2 = 2,
-        Level1 = 3,
-    }
+/** # Page Table Level
+ *
+ * Enumerates the 4 level of page tables supported by the 64 bit
+ * architectures.
+ *
+ * This simple enum is used by the [`PageDir`] structure to iterate
+ * and construct intermediate page table levels
+ *
+ * [`PageDir`]: /hal/paging/struct.PageDir.html
+ */
+#[repr(usize)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum PageTableLevel {
+    Level4,
+    Level3,
+    Level2,
+    Level1
 }
 
-c_handy_enum! {
-    /** # Page Table Entry Errors
+/** # Page Table Entry Errors
+ *
+ * Enumerates the errors that could occur when call
+ * [`PageTableEntry::phys_frame()`]
+ *
+ * [`PageTableEntry::phys_frame()`]:
+ * /hal/paging/struct.PageTableEntry.html#method.phys_frame
+ */
+#[repr(usize)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+pub enum PageTableEntryErr {
+    /** The [`PhysFrame`] is not present (i.e the entry haven't
+     * the [`PTFlags::PRESENT`] flag active)
      *
-     * Enumerates the errors that could occur when call
-     * [`PageTableEntry::phys_frame()`]
-     *
-     * [`PageTableEntry::phys_frame()`]: /hal/paging/struct.PageTableEntry.html#method.phys_frame
+     * [`PhysFrame`]: /hal/paging/type.PhysFrame.html
+     * [`PTFlags::PRESENT`]:
+     * /hal/paging/struct.PTFlags.html#associatedconstant.PRESENT
      */
-    pub enum PageTableEntryErr : u8 {
-        /** The [`PhysFrame`] is not present (i.e the entry haven't
-         * the [`PTFlags::PRESENT`] flag active)
-         *
-         * [`PhysFrame`]: /hal/paging/type.PhysFrame.html
-         * [`PTFlags::PRESENT`]: /hal/paging/struct.PTFlags.html#associatedconstant.PRESENT
-         */
-        PhysFrameNotPresent = 0,
+    PhysFrameNotPresent = 0,
 
-        /** Requested the [`PhysFrame`] of a smallest [`PageSize`] of the
-         * currently stored (i.e requested a [`Page4KiB`] frame but
-         * the entry contains a [`Page2MiB`] or a [`Page1GiB`])
-         *
-         * [`PhysFrame`]: /hal/paging/type.PhysFrame.html
-         * [`PageSize`]: /hal/paging/trait.PageSize.html
-         * [`Page4KiB`]: /hal/paging/struct.Page4KiB.html
-         * [`Page2MiB`]: /hal/paging/struct.Page2MiB.html
-         * [`Page1GiB`]: /hal/paging/struct.Page1GiB.html
-         */
-        InUseForBigFrame    = 1,
-    }
+    /** Requested the [`PhysFrame`] of a smallest [`PageSize`] of the
+     * currently stored (i.e requested a [`Page4KiB`] frame but
+     * the entry contains a [`Page2MiB`] or a [`Page1GiB`])
+     *
+     * [`PhysFrame`]: /hal/paging/type.PhysFrame.html
+     * [`PageSize`]: /hal/paging/trait.PageSize.html
+     * [`Page4KiB`]: /hal/paging/struct.Page4KiB.html
+     * [`Page2MiB`]: /hal/paging/struct.Page2MiB.html
+     * [`Page1GiB`]: /hal/paging/struct.Page1GiB.html
+     */
+    InUseForBigFrame    = 1
 }

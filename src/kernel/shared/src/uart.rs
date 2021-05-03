@@ -6,10 +6,13 @@
 
 use core::{
     fmt,
-    sync::atomic::{AtomicBool, Ordering}
+    sync::atomic::{
+        AtomicBool,
+        Ordering
+    }
 };
 
-use crate::arch::hal::uart::HwUart;
+use crate::arch::uart::HwUart;
 
 /** # UART Writer
  *
@@ -19,7 +22,7 @@ use crate::arch::hal::uart::HwUart;
  * The object implements [`fmt::Write`], so it is possible to use all the
  * formatting methods/macros
  *
- * [`fmt::Write`]: https://doc.rust-lang.org/std/fmt/trait.Write.html
+ * [`fmt::Write`]: core::fmt::Write
  */
 pub struct Uart {
     m_inner: UartWriterInner<HwUart>
@@ -31,7 +34,7 @@ impl Uart {
      * The returned instance hasn't initialized the hardware yet, use
      * [`Uart::init()`] to do that
      *
-     * [`Uart::init()`]: /hal/uart/struct.Uart.html#method.init
+     * [`Uart::init()`]: crate::Uart::init
      */
     pub fn new() -> Self {
         Self { m_inner: UartWriterInner::new() }
@@ -61,7 +64,7 @@ impl fmt::Write for Uart {
  * Defines a little amount of methods that are required by the
  * [`UartWriterInner`]
  *
- * [`UartWriterInner`]: /hal/uart/struct.UartWriterInner.html
+ * [`UartWriterInner`]: crate::uart::UartWriterInner
  */
 pub(crate) trait HwUartBase: fmt::Write {
     /** # Constructs an `UartBase` based object
@@ -87,7 +90,7 @@ pub(crate) trait HwUartBase: fmt::Write {
  * Encapsulates a possibly uninitialized [`UartBase`] based object and
  * manages atomically his initialization
  *
- * [`UartBase`]: /hal/uart/trait.UartBase.html
+ * [`UartBase`]: crate::uart::HwUartBase
  */
 struct UartWriterInner<T>
     where T: HwUartBase {
@@ -101,8 +104,7 @@ impl<T> UartWriterInner<T> where T: HwUartBase {
      * The returned instance is not initialized and not ready for use, use
      * the [`UartWriterInner::init()`] before any usage
      *
-     * [`UartWriterInner::init()`]:
-     * /hal/uart/struct.UartWriterInner.html#method.init
+     * [`UartWriterInner::init()`]: crate::uart::UartWriterInner::init
      */
     pub fn new() -> Self {
         Self { m_inited: AtomicBool::new(false),
@@ -138,7 +140,7 @@ impl<T> UartWriterInner<T> where T: HwUartBase {
      *
      * An [`fmt::Error`] is returned if the hardware is not initialized
      *
-     * [`fmt::Error`]: https://doc.rust-lang.org/std/fmt/struct.Error.html
+     * [`fmt::Error`]: core::fmt::Error
      */
     pub fn write_str(&mut self, str: &str) -> fmt::Result {
         if self.m_inited.load(Ordering::SeqCst) {

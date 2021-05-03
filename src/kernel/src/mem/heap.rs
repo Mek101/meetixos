@@ -6,16 +6,32 @@
 use core::alloc::Layout;
 
 use hal::{
-    addr::{align_up, Address, VirtAddr},
-    paging::{MapFlusher, PTFlags, Page4KiB, PageSize, VirtFrame}
+    addr::{
+        align_up,
+        Address,
+        VirtAddr
+    },
+    paging::{
+        MapFlusher,
+        PTFlags,
+        Page4KiB,
+        PageSize,
+        VirtFrame
+    }
 };
 use heap::locked::raw::RawLazyLockedHeap;
 use logger::info;
-use sync::{RawMutex, RawSpinMutex};
+use sync::{
+    RawMutex,
+    RawSpinMutex
+};
 
 use crate::mem::{
     frame_allocators::KernAllocator,
-    layout::{KRN_HEAP_END, KRN_HEAP_START},
+    layout::{
+        KRN_HEAP_END,
+        KRN_HEAP_START
+    },
     paging::paging_active_page_dir
 };
 
@@ -90,11 +106,11 @@ fn heap_mem_supplier(requested_size: usize) -> Option<(usize, usize)> {
 
     #[cfg(debug_assertions)]
     {
-        use dbg_utils::debug_size_multiplier;
+        use dbg_utils::dbg_display_size;
         use logger::debug;
 
         debug!("Supplying additional {} to the heap allocator",
-               debug_size_multiplier(page_aligned_size));
+               dbg_display_size(page_aligned_size));
     }
 
     /* ensure that the kernel heap's reserved virtual area is still in limits */

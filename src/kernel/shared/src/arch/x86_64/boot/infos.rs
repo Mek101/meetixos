@@ -21,7 +21,7 @@ use crate::{
  * This struct simply implements the [`HwBootInfosBase`] to construct the
  * [`BootInfosInner`]
  *
- * [`HwBootInfosBase`]: /hal/infos/trait.HwBootInfosBase.html
+ * [`HwBootInfosBase`]: crate::infos::info::HwBootInfosBase
  * [`BootInfosInner`]: /hal/infos/struct.BootInfosInner.html
  */
 pub struct X64BootInfos;

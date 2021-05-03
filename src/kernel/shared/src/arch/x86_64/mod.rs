@@ -10,3 +10,4 @@ pub mod addr;
 pub mod boot;
 pub mod hal;
 pub mod mem;
+pub mod uart;

@@ -3,20 +3,27 @@
  * Implements the simple descriptor of physical memory region given to the
  * kernel through the [`BootInfos`]
  *
- * [`BootInfos`]: /hal/infos/struct.BootInfos.html
+ * [`BootInfos`]: crate::infos::info::BootInfos
  */
 
 use core::cmp::Ordering;
 
 use crate::{
-    addr::{Address, PhysAddr},
-    mem::paging::{PageSize, PhysFrame, PhysFrameRange}
+    addr::{
+        Address,
+        PhysAddr
+    },
+    mem::paging::{
+        PageSize,
+        PhysFrame,
+        PhysFrameRange
+    }
 };
 
 /** Maximum amount of [`BootMemArea`]s storable into a [`BootMemAreas`]
  *
- * [`BootMemArea`]: /hal/infos/struct.BootMemArea.html
- * [`BootMemAreas`]: /hal/infos/struct.BootMemAreas.html
+ * [`BootMemArea`]: crate::infos::mem_area::BootMemArea
+ * [`BootMemAreas`]: crate::infos::mem_area::BootMemAreas
  */
 pub const BOOT_MEM_AREAS_COUNT_MAX: usize = 64;
 
@@ -24,7 +31,7 @@ pub const BOOT_MEM_AREAS_COUNT_MAX: usize = 64;
  *
  * Represents a fixed collection of ordered [`BootMemArea`]s
  *
- * [`BootMemArea`]: /hal/infos/struct.BootMemArea.html
+ * [`BootMemArea`]: crate::infos::mem_area::BootMemArea
  */
 #[derive(Debug, Clone)]
 pub struct BootMemAreas {
@@ -96,7 +103,7 @@ impl BootMemAreas {
 
     /** Returns the iterator to the valid [`BootMemArea`]s
      *
-     * [`BootMemArea`]: /hal/infos/struct.BootMemArea.html
+     * [`BootMemArea`]: crate::infos::mem_area::BootMemArea
      */
     pub fn iter(&self) -> impl Iterator<Item = &BootMemArea> {
         self.m_areas
@@ -128,26 +135,16 @@ impl BootMemArea {
 
     /** Returns whether the given [`PhysAddr`] belongs to this `BootMemArea`
      *
-     * [`PhysAddr`]: /hal/addr/struct.PhysAddr.html
+     * [`PhysAddr`]: crate::addr::phys::PhysAddr
      */
     pub fn contains(&self, phys_addr: PhysAddr) -> bool {
         phys_addr >= self.m_start_phys_addr
         && phys_addr < self.m_start_phys_addr + self.m_size
     }
 
-    pub fn sub_area(&self, phys_addr: PhysAddr) -> Option<BootMemArea> {
-        if self.contains(phys_addr) {
-            let new_size = self.m_size - (phys_addr - self.m_start_phys_addr).as_usize();
-
-            Some(Self::new(phys_addr, new_size))
-        } else {
-            None
-        }
-    }
-
     /** Returns this `BootMemArea` as [`PhysFrameRange`]
      *
-     * [`PhysFrameRange`]: /hal/paging/type.PhysFrameRange.html
+     * [`PhysFrameRange`]: crate::mem::paging::frame::PhysFrameRange
      */
     pub fn as_frame_range<S>(&self) -> PhysFrameRange<S>
         where S: PageSize {
