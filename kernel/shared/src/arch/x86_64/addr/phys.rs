@@ -17,7 +17,7 @@ use crate::addr::{
  * Implements the concrete physical address for the x86_64 architecture.
  *
  * The type ensures that the stored addresses are valid when validated with
- * [`X64PhysAddr::validate()`](PV) using the [`x86_64::PhysAddr`]
+ * [`X64PhysAddr::validate()`][PV] using the [`x86_64::PhysAddr`]
  *
  * [PV]: crate::arch::x86_64::addr::phys::X64PhysAddr::validate
  * [`x86_64::PhysAddr`]: x86_64::addr::PhysAddr

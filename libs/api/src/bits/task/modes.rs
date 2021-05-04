@@ -3,7 +3,7 @@
  * Implements various enumerations that are used for certain [`Task`]
  * related calls
  *
- * [`Task`]: crate::tasks::task::Task
+ * [`Task`]: crate::tasks::Task
  */
 
 use num_enum::{
@@ -19,9 +19,9 @@ use crate::{
 /** # `Task` Scheduling Policy
  *
  * Lists the available scheduling policies that can be given to
- * [`TaskConfig::with_sched_policy()`](TP)
+ * [`TaskConfig::with_sched_policy()`][TP]
  *
- * [TP]: crate::tasks::config::TaskConfig::with_sched_policy
+ * [TP]: crate::tasks::TaskConfig::with_sched_policy
  */
 #[repr(u8)]
 #[derive(Debug)]
@@ -46,7 +46,7 @@ pub enum SchedPolicy {
      * The tasks that use this policy must release the CPU with
      * [`Task::yield_next()`]
      *
-     * [`Task::yield_next()`]: crate::tasks::task::Task::yield_next
+     * [`Task::yield_next()`]: crate::tasks::Task::yield_next
      */
     Cooperative
 }
@@ -78,8 +78,8 @@ pub enum TaskPrio {
  *
  * The use of this enumeration is intended with [`TaskConfig::with_cpu()`]
  *
- * [`Task`]: crate::tasks::task::Task
- * [`TaskConfig::with_cpu()`]: crate::tasks::config::TaskConfig::with_cpu
+ * [`Task`]: crate::tasks::Task
+ * [`TaskConfig::with_cpu()`]: crate::tasks::TaskConfig::with_cpu
  */
 #[derive(Debug)]
 #[derive(Clone, Copy)]
@@ -138,13 +138,13 @@ impl TaskCpu {
  *
  * Lists the available reasons for which a [`Thread`] can wait
  *
- * [`Thread`]: crate::tasks::impls::thread::Thread
+ * [`Thread`]: crate::tasks::impls::Thread
  */
 pub enum WaitFor {
     /** The current [`Thread`] sleeps for a precise quantum of time expressed
      * by the given [`Duration`]
      *
-     * [`Thread`]: crate::tasks::impls::thread::Thread
+     * [`Thread`]: crate::tasks::impls::Thread
      * [`Duration`]: crate::time::Duration
      */
     Quantum(Duration),
@@ -153,14 +153,14 @@ pub enum WaitFor {
      *
      * The [`Thread`] must not be the same
      *
-     * [`Thread`]: crate::tasks::impls::thread::Thread
+     * [`Thread`]: crate::tasks::impls::Thread
      */
     Join(Thread),
 
     /** The current [`Thread`] sleeps until the interrupt identified by the
      * given number not throws
      *
-     * [`Thread`]: crate::tasks::impls::thread::Thread
+     * [`Thread`]: crate::tasks::impls::Thread
      */
     Irq(u32)
 }

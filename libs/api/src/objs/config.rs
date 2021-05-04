@@ -2,7 +2,7 @@
  *
  * Implements the standard and unique way to open or create [`Object`]s
  *
- * [`Object`]: crate::objs::object::Object
+ * [`Object`]: crate::objs::Object
  */
 
 use core::marker::PhantomData;
@@ -55,14 +55,14 @@ use crate::{
  * The constructed configuration can be then applied with:
  * * [`ObjConfig::apply_for()`] - to open or create a named object (an
  *   object with a name into the VFS)
- * * [`ObjConfig::apply_for_anon()`](AN) - to create anonymous object that
+ * * [`ObjConfig::apply_for_anon()`][AN] - to create anonymous object that
  *   are local to the scope of the object and not represented into the VFS
  *
- * [`Object`]: crate::objs::object::Object
+ * [`Object`]: crate::objs::Object
  * [`open()`]: https://man7.org/linux/man-pages/man2/open.2.html
- * [`ObjConfig::for_read()`]: crate::objs::config::ObjConfig::for_read
+ * [`ObjConfig::for_read()`]: crate::objs::ObjConfig::for_read
  * [`O_RDONLY`]: https://man7.org/linux/man-pages/man2/open.2.html
- * [`ObjConfig::apply_for()`]: crate::objs::config::ObjConfig::apply_for
+ * [`ObjConfig::apply_for()`]: crate::objs::ObjConfig::apply_for
  * [AN]: rate::objs::config::ObjConfig::apply_for_anon
  */
 #[derive(Debug)]
@@ -100,9 +100,9 @@ impl<T> ObjConfig<T, CreatMode> where T: Object + UserCreatable {
      * The caller [`OSUser`] (or at least one of his joined [`OSGroup`]s)
      * must have write grants for the parent directory
      *
-     * [`Grants`]: crate::bits::obj::grants::Grants
-     * [`OSUser`]: crate::ents::impls::user::OSUser
-     * [`OSGroup`]: crate::ents::impls::group::OSGroup
+     * [`Grants`]: crate::bits::obj::Grants
+     * [`OSUser`]: crate::ents::impls::OSUser
+     * [`OSGroup`]: crate::ents::impls::OSGroup
      */
     pub fn with_grants(&mut self, grants: Grants<T>) -> &mut Self {
         self.m_grants = grants;
@@ -122,8 +122,8 @@ impl<T> ObjConfig<T, CreatMode> where T: Object + UserCreatable {
      * tasks that owns it) it is definitely destroyed
      *
      * [`have no name`]: crate::objs::infos::info::ObjInfo::is_named
-     * [`Object::send()`]: crate::objs::object::Object::send
-     * [`ObjConfig::exclusive()`]: crate::objs::config::ObjConfig::exclusive
+     * [`Object::send()`]: crate::objs::Object::send
+     * [`ObjConfig::exclusive()`]: crate::objs::ObjConfig::exclusive
      */
     pub fn apply_for_anon(&self) -> Result<T> {
         self.apply_builder_config()
@@ -172,12 +172,12 @@ impl<T, M> ObjConfig<T, M>
      * optional for others (i.e [`File`]s, [`IpcChan`]nels) but
      * mandatory for [`MMap`]s **when created**
      *
-     * [`Dir`]: crate::objs::impls::dir::Dir
-     * [`OsRawMutex`]: crate::objs::impls::mutex::OsRawMutex
-     * [`Link`]: crate::objs::impls::link::Link
-     * [`File`]: crate::objs::impls::file::File
-     * [`IpcChan`]: crate::objs::impls::ipc_chan::IpcChan
-     * [`MMap`]: crate::objs::impls::mmap::MMap
+     * [`Dir`]: crate::objs::impls::Dir
+     * [`OsRawMutex`]: crate::objs::impls::OsRawMutex
+     * [`Link`]: crate::objs::impls::Link
+     * [`File`]: crate::objs::impls::File
+     * [`IpcChan`]: crate::objs::impls::IpcChan
+     * [`MMap`]: crate::objs::impls::MMap
      */
     pub fn with_size(&mut self, size: usize) -> &mut Self {
         self.m_flags.set_bit(Self::CFG_SET_SIZE_BIT, true);
@@ -231,11 +231,11 @@ impl<T, M> ObjConfig<T, M>
      * kernel to ensure the caller user have the data execution
      * permissions for the object to open
      *
-     * [here]: crate::bits::obj::grants::Grants::set_data_executable
-     * [`Object`]: crate::objs::object::Object
-     * [`File`]: crate::objs::impls::file::File
-     * [`MMap`]: crate::objs::impls::mmap::MMap
-     * [`TaskConfig<Proc>::run()`]: crate::tasks::config::TaskConfig::run-1
+     * [here]: crate::bits::obj::Grants::set_data_executable
+     * [`Object`]: crate::objs::Object
+     * [`File`]: crate::objs::impls::File
+     * [`MMap`]: crate::objs::impls::MMap
+     * [`TaskConfig<Proc>::run()`]: crate::tasks::TaskConfig::run-1
      * [`NO_EXECUTE`]: shared::mem::paging::table::PTFlags::NO_EXECUTE
      */
     pub fn for_exec(&mut self) -> &mut Self {
@@ -257,14 +257,14 @@ impl<T, M> ObjConfig<T, M>
      * until there is a reference to them. When the references reaches the 0
      * they are definitely destroyed
      *
-     * [`ObjConfig::creat()`]: crate::objs::config::ObjConfig::creat
-     * [`File`]: crate::objs::impls::file::File
-     * [`Dir`]: crate::objs::impls::dir::Dir
-     * [`Link`]: crate::objs::impls::link::Link
-     * [`OsRawMutex`]: crate::objs::impls::mutex::OsRawMutex
-     * [`Object::drop_name()`]: crate::objs::object::Object::drop_name
-     * [`MMap`]: crate::objs::impls::mmap::MMap
-     * [`IpcChan`]: crate::objs::impls::ipc_chan::IpcChan
+     * [`ObjConfig::creat()`]: crate::objs::ObjConfig::creat
+     * [`File`]: crate::objs::impls::File
+     * [`Dir`]: crate::objs::impls::Dir
+     * [`Link`]: crate::objs::impls::Link
+     * [`OsRawMutex`]: crate::objs::impls::OsRawMutex
+     * [`Object::drop_name()`]: crate::objs::Object::drop_name
+     * [`MMap`]: crate::objs::impls::MMap
+     * [`IpcChan`]: crate::objs::impls::IpcChan
      */
     pub fn apply_for<P>(&mut self, path: P) -> Result<T>
         where P: AsRef<[u8]> {
@@ -290,7 +290,7 @@ impl<T, M> ObjConfig<T, M>
 {
     /** Returns whether [`ObjConfig::for_read()`] was called
      *
-     * [`ObjConfig::for_read()`]: crate::objs::config::ObjConfig::for_read
+     * [`ObjConfig::for_read()`]: crate::objs::ObjConfig::for_read
      */
     pub fn is_read(&self) -> bool {
         self.m_flags.get_bit(Self::CFG_READ_BIT)
@@ -298,7 +298,7 @@ impl<T, M> ObjConfig<T, M>
 
     /** Returns whether [`ObjConfig::for_write()`] was called
      *
-     * [`ObjConfig::for_write()`]: crate::objs::config::ObjConfig::for_write
+     * [`ObjConfig::for_write()`]: crate::objs::ObjConfig::for_write
      */
     pub fn is_write(&self) -> bool {
         self.m_flags.get_bit(Self::CFG_WRITE_BIT)
@@ -306,7 +306,7 @@ impl<T, M> ObjConfig<T, M>
 
     /** Returns whether [`ObjConfig::for_exec()`] was called
      *
-     * [`ObjConfig::for_exec()`]: crate::objs::config::ObjConfig::for_exec
+     * [`ObjConfig::for_exec()`]: crate::objs::ObjConfig::for_exec
      */
     pub fn is_exec(&self) -> bool {
         self.m_flags.get_bit(Self::CFG_EXEC_BIT)
@@ -314,7 +314,7 @@ impl<T, M> ObjConfig<T, M>
 
     /** Returns whether [`ObjConfig::exclusive()`] was called
      *
-     * [`ObjConfig::exclusive()`]: crate::objs::config::ObjConfig::exclusive
+     * [`ObjConfig::exclusive()`]: crate::objs::ObjConfig::exclusive
      */
     pub fn is_exclusive(&self) -> bool {
         self.m_flags.get_bit(Self::CFG_EXCLUSIVE_BIT)
@@ -322,7 +322,7 @@ impl<T, M> ObjConfig<T, M>
 
     /** Returns whether [`ObjConfig::with_size()`] was called
      *
-     * [`ObjConfig::with_size()`]: crate::objs::config::ObjConfig::with_size
+     * [`ObjConfig::with_size()`]: crate::objs::ObjConfig::with_size
      */
     pub fn is_sized(&self) -> bool {
         self.m_flags.get_bit(Self::CFG_SET_SIZE_BIT)
@@ -330,7 +330,7 @@ impl<T, M> ObjConfig<T, M>
 
     /** Returns whether [`ObjConfig::creat()`] was called
      *
-     * [`ObjConfig::creat()`]: crate::objs::config::ObjConfig::creat
+     * [`ObjConfig::creat()`]: crate::objs::ObjConfig::creat
      */
     pub fn is_creat(&self) -> bool {
         self.m_flags.get_bit(Self::CFG_CREAT_BIT)
@@ -338,8 +338,8 @@ impl<T, M> ObjConfig<T, M>
 
     /** Returns the [`Grants`] given with [`ObjConfig::creat()`]
      *
-     * [`Grants`]: crate::bits::obj::grants::Grants
-     * [`ObjConfig::creat()`]: crate::objs::config::ObjConfig::creat
+     * [`Grants`]: crate::bits::obj::Grants
+     * [`ObjConfig::creat()`]: crate::objs::ObjConfig::creat
      */
     pub fn grants(&self) -> Grants<T> {
         self.m_grants
@@ -347,7 +347,7 @@ impl<T, M> ObjConfig<T, M>
 
     /** Returns the size in bytes given to [`ObjConfig::with_size()`]
      *
-     * [`ObjConfig::with_size()`]: crate::objs::config::ObjConfig::with_size
+     * [`ObjConfig::with_size()`]: crate::objs::ObjConfig::with_size
      */
     pub fn size(&self) -> usize {
         self.m_size
@@ -364,7 +364,7 @@ impl<T, M> ObjConfig<T, M>
     /** Returns the [`Path`] given to [`ObjConfig::apply_for()`]
      *
      * [`Path`]: crate::path::Path
-     * [`ObjConfig::apply_for()`]: crate::objs::config::ObjConfig::apply_for
+     * [`ObjConfig::apply_for()`]: crate::objs::ObjConfig::apply_for
      */
     pub fn path(&self) -> Option<&Path> {
         self.m_path.as_ref()
@@ -383,9 +383,9 @@ impl<T, M> KernCaller for ObjConfig<T, M>
  * Marker trait implemented for the objects that have meaning with concept
  * of resizable data, like [`File`], [`MMap`] and [`IpcChan`]
  *
- * [`File`]: crate::objs::impls::file::File
- * [`MMap`]: crate::objs::impls::mmap::MMap
- * [`IpcChan`]: crate::objs::impls::ipc_chan::IpcChan
+ * [`File`]: crate::objs::impls::File
+ * [`MMap`]: crate::objs::impls::MMap
+ * [`IpcChan`]: crate::objs::impls::IpcChan
  */
 pub trait SizeableData {
     /* No methods, just a marker trait */

@@ -76,7 +76,7 @@ impl<W, L> Logger<W, L>
     /** # Constructs an uninitialized `Logger`
      *
      * The returned instance must be initialized with
-     * [`Logger::enable_as_global()`](LE)
+     * [`Logger::enable_as_global()`][LE]
      *
      * [LE]: crate::logger::Logger::enable_as_global
      */
@@ -116,7 +116,7 @@ impl<W, L> Logger<W, L>
      * `keep_buffer` is `false`.
      *
      * If the buffer is kept, following calls to
-     * [`Logger::enable_buffering()`](LB) will re-use the existing buffer or
+     * [`Logger::enable_buffering()`][LB] will re-use the existing buffer or
      * simply re-allocates it
      *
      * [LB]: crate::logger::Logger::enable_buffering
@@ -326,7 +326,7 @@ impl LoggerBuffer {
     /** # Constructs a new `LoggerBuffer`
      *
      * The returned instance allocates a buffer of
-     * [`LoggerBuffer::SIZE`](BF)
+     * [`LoggerBuffer::SIZE`][BF]
      *
      * [BF]: crate::logger::LoggerBuffer::SIZE
      */

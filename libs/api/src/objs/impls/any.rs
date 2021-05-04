@@ -2,7 +2,7 @@
  *
  * Implements an holder that could contain any [`Object`] based type
  *
- * [`Object`]: crate::objs::object::Object
+ * [`Object`]: crate::objs::Object
  */
 
 use core::{
@@ -30,7 +30,7 @@ use crate::{
  *
  * The `Any` can be safely downcast to his real type with his methods
  *
- * [`Object`]: crate::objs::object::Object
+ * [`Object`]: crate::objs::Object
  */
 #[derive(Debug, Default)]
 pub struct Any(ObjId);
@@ -55,7 +55,7 @@ impl Any {
      *
      * If the given type mismatch the underling type throws a [`panic!()`]
      *
-     * [`panic!()`]: core::panic
+     * [`panic!()`]: core::panic!
      */
     pub unsafe fn downcast_panic<T: Object>(self) -> T {
         /* check for the static type, converts if the same, panic otherwise */
@@ -88,7 +88,7 @@ impl Any {
      * instance then performs an [`Any::recv()`] using the given
      * [`RecvMode`]
      *
-     * [`Any::recv()`]: crate::objs::impls::any::Any::recv
+     * [`Any::recv()`]: crate::objs::impls::Any::recv
      * [`RecvMode`]: crate::bits::obj::modes::RecvMode
      */
     pub fn recv_new(mode: RecvMode) -> Result<Self> {
@@ -106,7 +106,7 @@ impl Any {
 
     /** Returns whether this `Any` is a [`File`]
      *
-     * [`File`]: crate::objs::impls::file::File
+     * [`File`]: crate::objs::impls::File
      */
     pub fn is_file(&self) -> bool {
         self.real_type() == ObjType::File
@@ -114,7 +114,7 @@ impl Any {
 
     /** Returns whether this `Any` is a [`Dir`]
      *
-     * [`Dir`]: crate::objs::impls::dir::Dir
+     * [`Dir`]: crate::objs::impls::Dir
      */
     pub fn is_dir(&self) -> bool {
         self.real_type() == ObjType::Dir
@@ -122,7 +122,7 @@ impl Any {
 
     /** Returns whether this `Any` is a [`Link`]
      *
-     * [`Link`]: crate::objs::impls::link::Link
+     * [`Link`]: crate::objs::impls::Link
      */
     pub fn is_link(&self) -> bool {
         self.real_type() == ObjType::Link
@@ -130,7 +130,7 @@ impl Any {
 
     /** Returns whether this `Any` is a [`IpcChan`]
      *
-     * [`IpcChan`]: crate::objs::impls::ipc_chan::IpcChan
+     * [`IpcChan`]: crate::objs::impls::IpcChan
      */
     pub fn is_chan(&self) -> bool {
         self.real_type() == ObjType::IpcChan
@@ -138,7 +138,7 @@ impl Any {
 
     /** Returns whether this `Any` is a [`MMap`]
      *
-     * [`MMap`]: crate::objs::impls::mmap::MMap
+     * [`MMap`]: crate::objs::impls::MMap
      */
     pub fn is_mmap(&self) -> bool {
         self.real_type() == ObjType::MMap
@@ -146,7 +146,7 @@ impl Any {
 
     /** Returns whether this `Any` is a [`OsRawMutex`]
      *
-     * [`OsRawMutex`]: crate::objs::impls::mutex::OsRawMutex
+     * [`OsRawMutex`]: crate::objs::impls::OsRawMutex
      */
     pub fn is_raw_mutex(&self) -> bool {
         self.real_type() == ObjType::OsRawMutex
@@ -154,7 +154,7 @@ impl Any {
 
     /** Returns whether this `Any` is a [`KrnIterator`]
      *
-     * [`KrnIterator`]: crate::objs::impls::iter::KrnIterator
+     * [`KrnIterator`]: crate::objs::impls::KrnIterator
      */
     pub fn is_iterator(&self) -> bool {
         self.real_type() == ObjType::KrnIterator

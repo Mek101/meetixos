@@ -50,8 +50,8 @@ pub enum ErrorClass {
      * [`OSUser`]/[`OSGroup`]s have not enough grant to perform the
      * requested operation
      *
-     * [`OSUser`]: crate::ents::impls::user::OSUser
-     * [`OSGroup`]: crate::ents::impls::group::OSGroup
+     * [`OSUser`]: crate::ents::impls::OSUser
+     * [`OSGroup`]: crate::ents::impls::OSGroup
      */
     NotEnoughGrants,
 
@@ -76,7 +76,7 @@ pub enum ErrorClass {
     /** The previous system call was failed because the current [`Thread`]
      * have reached the limit of referencable resources a time
      *
-     * [`Thread`]: crate::tasks::impls::thread::Thread
+     * [`Thread`]: crate::tasks::impls::Thread
      */
     LimitReached,
 
@@ -91,7 +91,7 @@ pub enum ErrorClass {
     /** The previous system call was failed because a poll requested data was
      * not still available (i.e a [`Object::recv()`] in [`RecvMode::Poll`])
      *
-     * [`Object::recv()`]: crate::objs::object::Object::recv
+     * [`Object::recv()`]: crate::objs::Object::recv
      * [`RecvMode::Poll`]: crate::bits::obj::modes::RecvMode::Poll
      */
     NoDataAvailable,
@@ -100,16 +100,16 @@ pub enum ErrorClass {
      * operation not enabled by the builder (i.e a [`File::read()`]
      * without a previous [`ObjConfig::for_read()`] call)
      *
-     * [`File::read()`]: crate::objs::impls::file::File::read
-     * [`ObjConfig::for_read()`]: crate::objs::config::ObjConfig::for_read
+     * [`File::read()`]: crate::objs::impls::File::read
+     * [`ObjConfig::for_read()`]: crate::objs::ObjConfig::for_read
      */
     OperationNotEnabled,
 
     /** This is not properly an error, just indicates that the object have no
      * more data to read (i.e in [`File`] and [`Dir`])
      *
-     * [`File`]: crate::objs::impls::file::File
-     * [`Dir`]: crate::objs::impls::dir::Dir
+     * [`File`]: crate::objs::impls::File
+     * [`Dir`]: crate::objs::impls::Dir
      */
     EndOfDataReached,
 

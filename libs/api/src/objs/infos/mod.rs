@@ -2,7 +2,7 @@
  *
  * Exports the [`Object`] related infos sub-modules
  *
- * [`Object`]: crate::objs::object::Object
+ * [`Object`]: crate::objs::Object
  */
 
 pub use info::*;

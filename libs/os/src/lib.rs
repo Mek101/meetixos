@@ -18,6 +18,7 @@
 
 #![no_std]
 #![feature(asm)]
+#![allow(broken_intra_doc_links)]
 
 pub use arch::*;
 

@@ -49,29 +49,30 @@
  *
  * [`Objects`]: /api/objs/index.html
  * [`Tasks`]: /api/tasks/index.html
- * [`ObjId`]: crate::objs::object::ObjId
+ * [`ObjId`]: crate::objs::ObjId
  * [`RAII`]: https://en.wikipedia.org/wiki/Resource_acquisition_is_initialization
  * [`ObjId` based objects]: /api/objs/impls/index.html
  * [`Drop`]: core::ops::Drop
- * [`ObjConfig`]: crate::objs::config::ObjConfig
- * [`Object`]: crate::objs::object::Object
- * [delete the object]: crate::objs::object::Object::drop_name
- * [obtain informations]: crate::objs::object::Object::infos
+ * [`ObjConfig`]: crate::objs::ObjConfig
+ * [`Object`]: crate::objs::Object
+ * [delete the object]: crate::objs::Object::drop_name
+ * [obtain informations]: crate::objs::Object::infos
  * [`stat()`]: https://en.wikipedia.org/wiki/Stat_(system_call)
- * [watch it]: crate::objs::object::Object::watch
- * [sendable]: crate::objs::object::Object::send
- * [receivable]: crate::objs::object::Object::recv
- * [`File`]: crate::objs::impls::file::File
- * [`Mutex`]: crate::objs::impls::mutex::Mutex
- * [`MMap`]: crate::objs::impls::mmap::MMap
- * [`TaskId`]: crate::tasks::task::TaskId
+ * [watch it]: crate::objs::Object::watch
+ * [sendable]: crate::objs::Object::send
+ * [receivable]: crate::objs::Object::recv
+ * [`File`]: crate::objs::impls::File
+ * [`Mutex`]: crate::objs::impls::Mutex
+ * [`MMap`]: crate::objs::impls::MMap
+ * [`TaskId`]: crate::tasks::TaskId
  * [`pid_t`]: https://www.gnu.org/software/libc/manual/html_node/Process-Identification.html
  * [`pthread_t`]: https://www.man7.org/linux/man-pages/man3/pthread_self.3.html
- * [`TaskConfig`]: crate::tasks::config::TaskConfig
+ * [`TaskConfig`]: crate::tasks::TaskConfig
  */
 
 #![no_std]
 #![feature(asm, array_methods, min_specialization, core_intrinsics)]
+#![allow(broken_intra_doc_links, private_intra_doc_links)]
 
 pub mod bits;
 pub mod caller;

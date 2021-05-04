@@ -44,7 +44,7 @@ impl ObjUseInstant {
 
     /** Returns the [`Thread`] that have performed the usage
      *
-     * [`Thread`]: crate::tasks::impls::thread::Thread
+     * [`Thread`]: crate::tasks::impls::Thread
      */
     pub fn user(&self) -> Thread {
         self.m_user

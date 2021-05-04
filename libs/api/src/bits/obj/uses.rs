@@ -3,7 +3,7 @@
  * Implements the enum that list all the possible usages that a task can do
  * with an [`Object`] based struct
  *
- * [`Object`]: crate::objs::object::Object
+ * [`Object`]: crate::objs::Object
  */
 
 use num_enum::{
@@ -23,8 +23,8 @@ use num_enum::{
  * Otherwise are used as [`Object::watch()`]'s callback parameter to tell
  * the user which event is thrown
  *
- * [`Object`]: crate::objs::object::Object
- * [`Object::watch()`]: crate::objs::object::Object::watch
+ * [`Object`]: crate::objs::Object
+ * [`Object::watch()`]: crate::objs::Object::watch
  */
 #[repr(usize)]
 #[derive(Debug)]
@@ -43,7 +43,7 @@ pub enum ObjUse {
      * Let the watcher(s) task(s) notified about the successful
      * [`ObjConfig::apply_for()`] calls of the watched object
      *
-     * [`ObjConfig::apply_for()`]: crate::objs::config::ObjConfig::apply_for
+     * [`ObjConfig::apply_for()`]: crate::objs::ObjConfig::apply_for
      */
     Opening     = 1,
 
@@ -53,9 +53,9 @@ pub enum ObjUse {
      * read related operations of the watched object, i.e:
      * [`File::read()`], [`IpcChan::recv()`], [`MMap::get_ptr()`] and so on
      *
-     * [`File::read()`]: crate::objs::impls::file::File::read
-     * [`IpcChan::recv()`]: crate::objs::impls::ipc_chan::IpcChan::recv
-     * [`MMap::get_ptr()`]: crate::objs::impls::mmap::MMap::get_ptr
+     * [`File::read()`]: crate::objs::impls::File::read
+     * [`IpcChan::recv()`]: crate::objs::impls::IpcChan::recv
+     * [`MMap::get_ptr()`]: crate::objs::impls::MMap::get_ptr
      */
     ReadingData = 2,
 
@@ -66,9 +66,9 @@ pub enum ObjUse {
      * [`File::write()`], [`IpcChan::send()`], [`MMap::get_ptr_mut()`]
      * and so on
      *
-     * [`File::write()`]: crate::objs::impls::file::File::write
-     * [`IpcChan::send()`]: crate::objs::impls::ipc_chan::IpcChan::send
-     * [`MMap::get_ptr_mut()`]: crate::objs::impls::mmap::MMap::get_ptr_mut
+     * [`File::write()`]: crate::objs::impls::File::write
+     * [`IpcChan::send()`]: crate::objs::impls::IpcChan::send
+     * [`MMap::get_ptr_mut()`]: crate::objs::impls::MMap::get_ptr_mut
      */
     WritingData = 4,
 
@@ -77,7 +77,7 @@ pub enum ObjUse {
      * Let the watcher(s) task(s) notified about the successful
      * [`Object::infos()`] (and related) calls of the watched object
      *
-     * [`Object::infos()`]: crate::objs::object::Object::infos
+     * [`Object::infos()`]: crate::objs::Object::infos
      */
     ReadingInfo = 8,
 
@@ -86,7 +86,7 @@ pub enum ObjUse {
      * Let the watcher(s) task(s) notified about the successful
      * [`ObjInfo::update()`] calls of the watched object
      *
-     * [`ObjInfo::update()`]: /api/objs/struct.ObjInfo.html#method.update
+     * [`ObjInfo::update()`]: crate::objs::infos::ObjInfo::update
      */
     WritingInfo = 16,
 
@@ -95,7 +95,7 @@ pub enum ObjUse {
      * Let the watcher(s) task(s) notified about the successful
      * [`Object::send()`] calls of the watched object
      *
-     * [`Object::send()`]: crate::objs::object::Object::send
+     * [`Object::send()`]: crate::objs::Object::send
      */
     Sending     = 32,
 
@@ -104,7 +104,7 @@ pub enum ObjUse {
      * Let the watcher(s) task(s) notified about the successful
      * [`Object::recv()`] calls of the watched object
      *
-     * [`Object::recv()`]: crate::objs::object::Object::recv
+     * [`Object::recv()`]: crate::objs::Object::recv
      */
     Receiving   = 64,
 
@@ -113,7 +113,7 @@ pub enum ObjUse {
      * Let the watcher(s) task(s) notified about the successful
      * [`Object::watch()`] calls of the watched object
      *
-     * [`Object::watch()`]: crate::objs::object::Object::watch
+     * [`Object::watch()`]: crate::objs::Object::watch
      */
     Watching    = 128,
 
@@ -134,7 +134,7 @@ pub enum ObjUse {
      * The watched object remains alive until the last owner task
      * keeps it opened
      *
-     * [`Object::drop_name()`]: crate::objs::object::Object::drop_name
+     * [`Object::drop_name()`]: crate::objs::Object::drop_name
      */
     Deleting    = 512
 }

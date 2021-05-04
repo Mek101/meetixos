@@ -3,7 +3,7 @@
  * Implements the variants that identifies the various [`ObjId`]
  * implementations
  *
- * [`ObjId`]: crate::objs::object::ObjId
+ * [`ObjId`]: crate::objs::ObjId
  */
 
 use core::fmt;
@@ -17,7 +17,7 @@ use num_enum::{
  *
  * Lists the available object types represented by an [`ObjId`]
  *
- * [`ObjId`]: crate::objs::object::ObjId
+ * [`ObjId`]: crate::objs::ObjId
  */
 #[repr(usize)]
 #[derive(Debug)]
@@ -31,43 +31,43 @@ pub enum ObjType {
 
     /** Identifies a [`File`] object
      *
-     * [`File`]: crate::objs::impls::file::File
+     * [`File`]: crate::objs::impls::File
      */
     File,
 
     /** Identifies a [`Dir`] object
      *
-     * [`Dir`]: crate::objs::impls::dir::Dir
+     * [`Dir`]: crate::objs::impls::Dir
      */
     Dir,
 
     /** Identifies a [`Link`] object
      *
-     * [`Link`]: crate::objs::impls::link::Link
+     * [`Link`]: crate::objs::impls::Link
      */
     Link,
 
     /** Identifies a [`MMap`] object
      *
-     * [`MMap`]: crate::objs::impls::mmap::MMap
+     * [`MMap`]: crate::objs::impls::MMap
      */
     MMap,
 
     /** Identifies an [`IpcChan`] object
      *
-     * [`IpcChan`]: crate::objs::impls::mmap::MMap
+     * [`IpcChan`]: crate::objs::impls::MMap
      */
     IpcChan,
 
     /** Identifies an [`OsRawMutex`] object
      *
-     * [`OsRawMutex`]: crate::objs::impls::mutex::OsRawMutex
+     * [`OsRawMutex`]: crate::objs::impls::OsRawMutex
      */
     OsRawMutex,
 
     /** Identifies an [`KrnIterator`] object
      *
-     * [`KrnIterator`]: crate::objs::impls::iter::KrnIterator
+     * [`KrnIterator`]: crate::objs::impls::KrnIterator
      */
     KrnIterator
 }

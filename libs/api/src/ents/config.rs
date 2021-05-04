@@ -3,7 +3,7 @@
  * Implements the standard and unique way to find existing [`OSEntity`]s or
  * create new one
  *
- * [`OSEntity`]: crate::ents::entity::OSEntity
+ * [`OSEntity`]: crate::ents::OSEntity
  */
 
 use core::marker::PhantomData;
@@ -42,7 +42,7 @@ use crate::{
  * Implements a function standard interface to find existing [`OSEntity`] or
  * create new one.
  *
- * [`OSEntity`]: crate::ents::entity::OSEntity
+ * [`OSEntity`]: crate::ents::OSEntity
  */
 #[derive(Debug)]
 pub struct OSEntConfig<T, M>
@@ -74,7 +74,7 @@ impl<T> OSEntConfig<T, CreatMode> where T: OSEntity {
      *
      * Makes the resultant [`OSEntity`] an administrative account
      *
-     * [`OSEntity`]: crate::ents::entity::OSEntity
+     * [`OSEntity`]: crate::ents::OSEntity
      */
     pub fn make_admin(&mut self) -> &mut Self {
         self.m_flags.set_bit(Self::CFG_ADMIN_BIT, true);
@@ -91,7 +91,7 @@ impl<T> OSEntConfig<T, CreatMode> where T: OSEntity {
      * ensures that the allocated id is not the same of the existing
      * one.
      *
-     * [`OSEntity`]: crate::ents::entity::OSEntity
+     * [`OSEntity`]: crate::ents::OSEntity
      */
     pub fn apply(mut self, name: &str) -> Result<T> {
         let mut buf = [0; ENTITY_NAME_LEN_MAX];
@@ -151,8 +151,8 @@ impl<T> OSEntConfig<T, FindMode> where T: OSEntity {
      * ([`OSUser`] or [`OSGroup`])
      *
      * [`Iterator`]: core::iter::Iterator
-     * [`OSUser`]: crate::ents::impls::user::OSUser
-     * [`OSGroup`]: crate::ents::impls::group::OSGroup
+     * [`OSUser`]: crate::ents::impls::OSUser
+     * [`OSGroup`]: crate::ents::impls::OSGroup
      */
     pub fn search(self) -> Result<impl Iterator<Item = T>> {
         self.kern_call_1(KernFnPath::OSEntConfig(KernOSEntConfigFnId::InitFind),
@@ -177,7 +177,7 @@ impl<T, M> OSEntConfig<T, M>
      * Or tells exactly which identifier the searched OSEntity have in
      * [`FindMode`]
      *
-     * [`OSEntity`]: crate::ents::entity::OSEntity
+     * [`OSEntity`]: crate::ents::OSEntity
      * [`CreatMode`]: crate::config::CreatMode
      * [`FindMode`]: crate::config::FindMode
      */

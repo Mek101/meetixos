@@ -3,7 +3,7 @@
  * Implements the metadata descriptor common to all the implementor of
  * [`Object`]
  *
- * [`Object`]: crate::objs::object::Object
+ * [`Object`]: crate::objs::Object
  */
 
 use core::str;
@@ -45,7 +45,7 @@ use crate::{
  * * Using [RAII] the informations are updated when the struct goes out of
  *   scope or when called explicitly [`ObjInfo::update()`]
  *
- * [`Object`]: crate::objs::object::Object
+ * [`Object`]: crate::objs::Object
  * [`stat struct`]: https://man7.org/linux/man-pages/man2/stat.2.html
  * [RAII]: https://en.wikipedia.org/wiki/Resource_acquisition_is_initialization
  * [`ObjInfo::update()`]: crate::objs::infos::info::ObjInfo::update
@@ -114,7 +114,7 @@ impl<T> ObjInfo<T> where T: Object {
 
     /** Overwrites the stored [`ObjId`] cloning the given one
      *
-     * [`ObjId`]: crate::objs::object::ObjId
+     * [`ObjId`]: crate::objs::ObjId
      */
     pub(crate) fn set_obj(&mut self, obj: &ObjId) {
         self.m_obj = obj.clone()
@@ -166,7 +166,7 @@ impl<T> ObjInfo<T> where T: Object {
 
     /** Returns the [`OSUser`] that owns the object
      *
-     * [`OSUser`]: crate::ents::impls::user::OSUser
+     * [`OSUser`]: crate::ents::impls::OSUser
      */
     pub fn os_user(&self) -> OSUser {
         self.m_os_user
@@ -174,7 +174,7 @@ impl<T> ObjInfo<T> where T: Object {
 
     /** Updates the owner [`OSUser`] of the object
      *
-     * [`OSUser`]: crate::ents::impls::user::OSUser
+     * [`OSUser`]: crate::ents::impls::OSUser
      */
     pub fn set_os_user(&mut self, os_user: OSUser) {
         self.m_to_update.set_bit(Self::UPDATE_USER_BIT, true);
@@ -183,7 +183,7 @@ impl<T> ObjInfo<T> where T: Object {
 
     /** Returns the [`OSGroup`] that owns the object
      *
-     * [`OSGroup`]: crate::ents::impls::group::OSGroup
+     * [`OSGroup`]: crate::ents::impls::OSGroup
      */
     pub fn os_group(&self) -> OSGroup {
         self.m_os_group
@@ -191,7 +191,7 @@ impl<T> ObjInfo<T> where T: Object {
 
     /** Updates the owner [`OSGroup`] of the object
      *
-     * [`OSGroup`]: crate::ents::impls::group::OSGroup
+     * [`OSGroup`]: crate::ents::impls::OSGroup
      */
     pub fn set_os_group(&mut self, os_group: OSGroup) {
         self.m_to_update.set_bit(Self::UPDATE_GROUP_BIT, true);
@@ -201,9 +201,9 @@ impl<T> ObjInfo<T> where T: Object {
     /** Returns the [`Grants`] descriptor related to the owner [`OSUser`] and
      * [`OSGroup`]
      *
-     * [`Grants`]: crate::bits::obj::grants::Grants
-     * [`OSUser`]: crate::ents::impls::user::OSUser
-     * [`OSGroup`]: crate::ents::impls::group::OSGroup
+     * [`Grants`]: crate::bits::obj::Grants
+     * [`OSUser`]: crate::ents::impls::OSUser
+     * [`OSGroup`]: crate::ents::impls::OSGroup
      */
     pub fn grants(&self) -> Grants<T> {
         self.m_grants
@@ -211,7 +211,7 @@ impl<T> ObjInfo<T> where T: Object {
 
     /** Returns an updatable reference to the [`Grants`] instance
      *
-     * [`Grants`]: crate::bits::obj::grants::Grants
+     * [`Grants`]: crate::bits::obj::Grants
      */
     pub fn set_grants(&mut self) -> &mut Grants<T> {
         self.m_to_update.set_bit(Self::UPDATE_GRANTS_BIT, true);
@@ -347,7 +347,7 @@ impl<T> Drop for ObjInfo<T> where T: Object {
  * Contains various informations that are related to the VFS representation
  * of an [`Object`] based type
  *
- * [`Object`]: crate::objs::object::Object
+ * [`Object`]: crate::objs::Object
  */
 #[derive(Debug, Copy, Clone)]
 pub struct ObjNameInfo {
@@ -400,7 +400,7 @@ impl ObjNameInfo {
 
     /** Returns the number of [`Link`]s that refers this object
      *
-     * [`Link`]: crate::objs::impls::link::Link
+     * [`Link`]: crate::objs::impls::Link
      */
     pub fn links_count(&self) -> u32 {
         self.m_links

@@ -35,9 +35,9 @@ use crate::{
  * methods are private, but exposed via the [`OSEntity`] trait and
  * implemented by the [`OSUser`] and the [`OSGroup`]
  *
- * [`OSEntity`]: crate::ents::entity::OSEntity
- * [`OSUser`]: crate::ents::impls::user::OSUser
- * [`OSGroup`]: crate::ents::impls::group::OSGroup
+ * [`OSEntity`]: crate::ents::OSEntity
+ * [`OSUser`]: crate::ents::impls::OSUser
+ * [`OSGroup`]: crate::ents::impls::OSGroup
  */
 #[derive(Debug, Default, Copy, Clone)]
 pub struct OSEntityId(u16);
@@ -99,7 +99,7 @@ impl KernCaller for OSEntityId {
  * It mainly exposes the private methods of the [`OSEntityId`] for safe
  * calling.
  *
- * [`OSEntityId`]: crate::ents::entity::OSEntityId
+ * [`OSEntityId`]: crate::ents::OSEntityId
  */
 pub trait OSEntity: From<OSEntityId> + Default {
     /** The value of the [`OSEntityType`] that matches the implementation
@@ -111,14 +111,14 @@ pub trait OSEntity: From<OSEntityId> + Default {
     /** Returns the immutable reference to the underling [`OSEntityId`]
      * instance
      *
-     * [`OSEntityId`]: crate::ents::entity::OSEntityId
+     * [`OSEntityId`]: crate::ents::OSEntityId
      */
     fn os_entity_handle(&self) -> &OSEntityId;
 
     /** Returns an uninitialized [`OSEntConfig`] to create a new [`OSEntity`]
      *
-     * [`OSEntConfig`]: crate::ents::config::OSEntConfig
-     * [`OSEntity`]: crate::ents::entity::OSEntity
+     * [`OSEntConfig`]: crate::ents::OSEntConfig
+     * [`OSEntity`]: crate::ents::OSEntity
      */
     fn creat() -> OSEntConfig<Self, CreatMode> {
         OSEntConfig::<Self, CreatMode>::new()
@@ -127,8 +127,8 @@ pub trait OSEntity: From<OSEntityId> + Default {
     /** Returns an uninitialized [`OSEntConfig`] to find existing
      * [`OSEntity`]
      *
-     * [`OSEntConfig`]: crate::ents::config::OSEntConfig
-     * [`OSEntity`]: crate::ents::entity::OSEntity
+     * [`OSEntConfig`]: crate::ents::OSEntConfig
+     * [`OSEntity`]: crate::ents::OSEntity
      */
     fn find() -> OSEntConfig<Self, FindMode> {
         OSEntConfig::<Self, FindMode>::new()
@@ -138,7 +138,7 @@ pub trait OSEntity: From<OSEntityId> + Default {
      *
      * Puts into `buf` the name of this [`OSEntity`]
      *
-     * [`OSEntity`]: crate::ents::entity::OSEntity
+     * [`OSEntity`]: crate::ents::OSEntity
      */
     fn name<'a>(&self, buf: &'a mut [u8]) -> Result<&'a str> {
         self.os_entity_handle().name(buf)

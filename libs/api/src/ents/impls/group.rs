@@ -27,8 +27,8 @@ use crate::{
  * in common a class of permissions over the VFS objects that owns as a
  * group
  *
- * [`OSEntityId`]: crate::ents::entity::OSEntityId
- * [`OSUser`]: crate::ents::impls::user::OSUser
+ * [`OSEntityId`]: crate::ents::OSEntityId
+ * [`OSUser`]: crate::ents::impls::OSUser
  */
 #[derive(Debug, Default, Copy, Clone)]
 pub struct OSGroup(OSEntityId);
@@ -52,7 +52,7 @@ impl OSGroup {
 impl KernCaller for OSGroup {
     /** Returns the raw identifier of the underling [`OSEntityId`]
      *
-     * [`OSEntityId`]: crate::ents::entity::OSEntityId
+     * [`OSEntityId`]: crate::ents::OSEntityId
      */
     fn caller_handle_bits(&self) -> u32 {
         self.0.caller_handle_bits()
@@ -77,7 +77,7 @@ impl OSEntity for OSGroup {
     /** Returns the immutable reference to the underling [`OSEntityId`]
      * instance
      *
-     * [`OSEntityId`]: crate::ents::entity::OSEntityId
+     * [`OSEntityId`]: crate::ents::OSEntityId
      */
     fn os_entity_handle(&self) -> &OSEntityId {
         &self.0

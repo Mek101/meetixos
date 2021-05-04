@@ -25,18 +25,20 @@ use crate::{
     time::Duration
 };
 
-impl_task_id_task! {
-    /** # Running `Thread`
-     *
-     * Represents a reference to an execution flow inside a running
-     * [`Proc`]ess.
-     *
-     * This represents the execution entity on which the kernel's scheduler
-     * operates
-     *
-     * [`Proc`]: crate::tasks::impls::proc::Proc
-     */
-    pub struct Thread(TaskType::Thread);
+/** # Running `Thread`
+ *
+ * Represents a reference to an execution flow inside a running
+ * [`Proc`]ess.
+ *
+ * This represents the execution entity on which the kernel's scheduler
+ * operates
+ *
+ * [`Proc`]: crate::tasks::impls::Proc
+ */
+#[repr(transparent)]
+#[derive(Debug, Default, Clone, Copy, Eq, PartialEq)]
+pub struct Thread {
+    m_handle: TaskId
 }
 
 impl Thread {
@@ -50,8 +52,8 @@ impl Thread {
      * will stop for the given [`Duration`].
      *
      * [`Duration`]: crate::time::Duration
-     * [`Proc`]: crate::tasks::impls::proc::Proc
-     * [`Thread::this()`]: crate::tasks::task::Task::this
+     * [`Proc`]: crate::tasks::impls::Proc
+     * [`Thread::this()`]: crate::tasks::Task::this
      */
     pub fn sleep(&self, duration: Duration) -> Result<()> {
         self.wait_for(WaitFor::Quantum(duration))
@@ -67,7 +69,7 @@ impl Thread {
      * `target Thread` must not be same as returned by
      * [`Thread::this()`]
      *
-     * [`Thread::this()`]: crate::tasks::task::Task::this
+     * [`Thread::this()`]: crate::tasks::Task::this
      */
     pub fn join(&self, target: Thread) -> Result<()> {
         self.wait_for(WaitFor::Join(target))
@@ -81,7 +83,7 @@ impl Thread {
      * It is denied to call this method with a `Thread` reference that is
      * not the one returned by [`Thread::this()`]
      *
-     * [`Thread::this()`]: crate::tasks::task::Task::this
+     * [`Thread::this()`]: crate::tasks::Task::this
      */
     pub fn wait_irq(&self, irq: u32) -> Result<()> {
         self.wait_for(WaitFor::Irq(irq))
@@ -112,11 +114,11 @@ impl Thread {
      * [`OSUser`]/[`OSGroup`] must be the same or the administrator.
      *
      * [`LIFO`]: https://en.wikipedia.org/wiki/Stack_(abstract_data_type)
-     * [`Thread`]: crate::tasks::impls::thread::Thread
-     * [`Thread::terminate(true)`]: crate::tasks::task::Task::terminate
-     * [`Thread::this()`]: crate::tasks::task::Task::this
-     * [`OSUser`]: crate::ents::impls::user::OSUser
-     * [`OSGroup`]: crate::ents::impls::group::OSGroup
+     * [`Thread`]: crate::tasks::impls::Thread
+     * [`Thread::terminate(true)`]: crate::tasks::Task::terminate
+     * [`Thread::this()`]: crate::tasks::Task::this
+     * [`OSUser`]: crate::ents::impls::OSUser
+     * [`OSGroup`]: crate::ents::impls::OSGroup
      */
     pub fn add_cleaner(&self, cleanup_fn: fn()) -> Result<()> {
         let thread_entry_data = ThreadEntryData::new_cleaner_callback(cleanup_fn);
@@ -159,5 +161,45 @@ impl Thread {
             .map_err(|_| ())
             .map(|_| entry_data)
             .unwrap()
+    }
+}
+
+impl Task for Thread {
+    /** The value of the [`TaskType`] that matches the implementation
+     *
+     * [`TaskType`]: crate::bits::task::types::TaskType
+     */
+    const TASK_TYPE: TaskType = TaskType::Thread;
+
+    /** Returns the immutable reference to the underling [`TaskId`] instance
+     *
+     * [`TaskId`]: crate::tasks::TaskId
+     */
+    fn task_handle(&self) -> &TaskId {
+        &self.m_handle
+    }
+
+    /** Returns the mutable reference to the underling [`TaskId`] instance
+     *
+     * [`TaskId`]: crate::tasks::TaskId
+     */
+    fn task_handle_mut(&mut self) -> &mut TaskId {
+        &mut self.m_handle
+    }
+}
+
+impl From<TaskId> for Thread {
+    /** Performs the conversion
+     */
+    fn from(id: TaskId) -> Self {
+        Self { m_handle: id }
+    }
+}
+
+impl KernCaller for Thread {
+    /** Returns the upper 32bits of the 64bit identifier of a system call
+     */
+    fn caller_handle_bits(&self) -> u32 {
+        self.task_handle().caller_handle_bits()
     }
 }

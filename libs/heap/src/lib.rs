@@ -4,20 +4,18 @@
  * kernel and user spaces.
  *
  * The crate implements a concurrency safe [`Heap`] for the userspace called
- * [`LockedHeap`] that is simply an [`Heap`] instance wrapped in a [`Mutex`]
+ * [`OsLockedHeap`] that is simply an [`Heap`] instance wrapped in a
+ * [`Mutex`]
  *
  * [`no_std`]: https://doc.rust-lang.org/1.7.0/book/no-stdlib.html
- * [`LockedHeap`]: crate::locked::LockedHeap
+ * [`OsLockedHeap`]: crate::locked::os::OsLockedHeap
  * [`Heap`]: crate::Heap
  * [`Mutex`]: api::objs::impls::mutex::Mutex
  */
 
 #![no_std]
-#![feature(const_fn)]
-#![feature(fn_traits)]
-#![feature(unboxed_closures)]
-#![feature(const_fn_fn_ptr_basics)]
-#![feature(once_cell)]
+#![feature(const_fn, fn_traits, unboxed_closures, const_fn_fn_ptr_basics, once_cell)]
+#![allow(broken_intra_doc_links)]
 
 use core::{
     alloc::Layout,
@@ -224,10 +222,10 @@ pub struct Heap {
 impl Heap {
     /** # Constructs a new `Heap`
      *
-     * It will manage the memory returned by the [`HeapMemoryGiver`]
+     * It will manage the memory returned by the [`HeapMemorySupplier`]
      * callback given.
      *
-     * [`HeapMemoryGiver`]: crate::HeapMemoryGiver
+     * [`HeapMemorySupplier`]: crate::HeapMemorySupplier
      */
     pub unsafe fn new(mem_supplier: HeapMemorySupplier) -> Self {
         /* immediately ask to the given supplier the minimum amount of memory to make
@@ -322,7 +320,7 @@ impl Heap {
      * [`Err`]: core::result::Result::Err
      * [`NonNull<u8>`]: core::ptr::NonNull
      * [`Allocator::LinkedList`]: crate::Allocator::LinkedList
-     * [`layout_to_allocator()`]: crate::Allocator::layout_to_allocator
+     * [`layout_to_allocator()`]: crate::Allocator::for_layout
      */
     pub fn allocate(&mut self, layout: Layout) -> Result<NonNull<u8>, ()> {
         let allocator = Allocator::for_layout(layout);
@@ -375,7 +373,7 @@ impl Heap {
      * To know which allocator will be used call [`layout_to_allocator()`].
      *
      * [`Allocator::LinkedList`]: crate::Allocator::LinkedList
-     * [`layout_to_allocator()`]: crate::Allocator::layout_to_allocator
+     * [`layout_to_allocator()`]: crate::Allocator::for_layout
      */
     pub unsafe fn deallocate(&mut self, ptr: NonNull<u8>, layout: Layout) {
         match Allocator::for_layout(layout) {

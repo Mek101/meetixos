@@ -35,9 +35,9 @@ use crate::{
  *
  * [`pid_t`]: https://www.gnu.org/software/libc/manual/html_node/Process-Identification.html
  * [`pthread_t`]: https://www.man7.org/linux/man-pages/man3/pthread_self.3.html
- * [`Task`]: crate::tasks::task::Task
+ * [`Task`]: crate::tasks::Task
  * [`implementations`]: /api/tasks/impls/index.html
- * [`TaskId`]: crate::tasks::task::TaskId
+ * [`TaskId`]: crate::tasks::TaskId
  * [here]: /api/index.html#tasks
  */
 #[repr(transparent)]
@@ -71,8 +71,8 @@ impl TaskId {
      * registered cleanup function (if any) before definitively
      * terminate the target
      *
-     * [`OSUser`]: crate::ents::impls::user::OSUser
-     * [`OSGroup`]: crate::ents::impls::group::OSGroup
+     * [`OSUser`]: crate::ents::impls::OSUser
+     * [`OSGroup`]: crate::ents::impls::OSGroup
      */
     fn terminate(&self, call_cleanup: bool) -> Result<()> {
         self.kern_call_1(KernFnPath::Task(KernTaskFnId::Terminate), call_cleanup as usize)
@@ -82,9 +82,9 @@ impl TaskId {
     /** # Yields the execution
      *
      * Preempts the remaining CPU quantum of this `TaskId` if it was spawner
-     * with [`SchedPolicy::Preemptive`](SP), or to release the CPU for the
+     * with [`SchedPolicy::Preemptive`][SP], or to release the CPU for the
      * other tasks if it was spawner with
-     * [`SchedPolicy::Cooperative`](SC)
+     * [`SchedPolicy::Cooperative`][SC]
      *
      * [SP]: crate::bits::task::modes::SchedPolicy::Preemptive
      * [SC]: crate::bits::task::modes::SchedPolicy::Cooperative
@@ -104,7 +104,7 @@ impl TaskId {
 
     /** Returns the raw identifier of this [`TaskId`]
      *
-     * [`TaskId`]: crate::tasks::task::TaskId
+     * [`TaskId`]: crate::tasks::TaskId
      */
     pub fn id(&self) -> u32 {
         self.0
@@ -112,7 +112,7 @@ impl TaskId {
 
     /** Returns the raw identifier of this [`TaskId`] as `usize`
      *
-     * [`TaskId`]: crate::tasks::task::TaskId
+     * [`TaskId`]: crate::tasks::TaskId
      */
     pub fn id_usize(&self) -> usize {
         self.id() as usize
@@ -152,7 +152,7 @@ impl KernCaller for TaskId {
  * and provides convenient methods to easily perform works that normally
  * implies more than one call
  *
- * [`TaskId`]: crate::tasks::task::TaskId
+ * [`TaskId`]: crate::tasks::TaskId
  */
 pub trait Task: From<TaskId> + Sync + Send {
     /** The value of the [`TaskType`] that matches the implementation
@@ -163,20 +163,20 @@ pub trait Task: From<TaskId> + Sync + Send {
 
     /** Returns the immutable reference to the underling [`TaskId`] instance
      *
-     * [`TaskId`]: crate::tasks::task::TaskId
+     * [`TaskId`]: crate::tasks::TaskId
      */
     fn task_handle(&self) -> &TaskId;
 
     /** Returns the mutable reference to the underling [`TaskId`] instance
      *
-     * [`TaskId`]: crate::tasks::task::TaskId
+     * [`TaskId`]: crate::tasks::TaskId
      */
     fn task_handle_mut(&mut self) -> &mut TaskId;
 
     /** Returns an uninitialized [`TaskConfig`] to spawn a new [`Task`]
      *
-     * [`TaskConfig`]: crate::tasks::config::TaskConfig
-     * [`Task`]: crate::tasks::task::Task
+     * [`TaskConfig`]: crate::tasks::TaskConfig
+     * [`Task`]: crate::tasks::Task
      */
     fn spawn() -> TaskConfig<Self, CreatMode> {
         TaskConfig::new()
@@ -184,8 +184,8 @@ pub trait Task: From<TaskId> + Sync + Send {
 
     /** Returns an uninitialized [`TaskConfig`] to find an existing [`Task`]
      *
-     * [`TaskConfig`]: crate::tasks::config::TaskConfig
-     * [`Task`]: crate::tasks::task::Task
+     * [`TaskConfig`]: crate::tasks::TaskConfig
+     * [`Task`]: crate::tasks::Task
      */
     fn find() -> TaskConfig<Self, FindMode> {
         TaskConfig::new()
@@ -196,9 +196,9 @@ pub trait Task: From<TaskId> + Sync + Send {
      * Obtains the current [`Task`] reference according to the wrapping type
      * (i.e [`Proc`] or [`Thread`])
      *
-     * [`Task`]: crate::tasks::task::Task
-     * [`Proc`]: crate::tasks::impls::proc::Proc
-     * [`Thread`]: crate::tasks::impls::thread::Thread
+     * [`Task`]: crate::tasks::Task
+     * [`Proc`]: crate::tasks::impls::Proc
+     * [`Thread`]: crate::tasks::impls::Thread
      */
     fn this() -> Self {
         Self::from(TaskId::this(Self::TASK_TYPE))
@@ -207,7 +207,7 @@ pub trait Task: From<TaskId> + Sync + Send {
     /**
      * * Returns the numeric identifier of this [`Task`]
      *
-     * [`Task`]: crate::tasks::task::Task
+     * [`Task`]: crate::tasks::Task
      */
     fn id(&self) -> u32 {
         self.task_handle().id()
@@ -227,9 +227,9 @@ pub trait Task: From<TaskId> + Sync + Send {
      * [`Thread`] the kernel first terminates them all, then terminates
      * the [`Proc`]
      *
-     * [`Task`]: crate::tasks::task::Task
-     * [`Proc`]: crate::tasks::impls::proc::Proc
-     * [`Thread`]: crate::tasks::impls::thread::Thread
+     * [`Task`]: crate::tasks::Task
+     * [`Proc`]: crate::tasks::impls::Proc
+     * [`Thread`]: crate::tasks::impls::Thread
      */
     fn terminate(&self, call_cleanup: bool) -> Result<()> {
         self.task_handle().terminate(call_cleanup)
@@ -238,11 +238,11 @@ pub trait Task: From<TaskId> + Sync + Send {
     /** # Yields the execution
      *
      * Preempts the remaining CPU quantum of this [`Task`] if it was spawned
-     * with [`SchedPolicy::Preemptive`](SP), or to release the CPU for the
+     * with [`SchedPolicy::Preemptive`][SP], or to release the CPU for the
      * other tasks if it was spawner with
-     * [`SchedPolicy::Cooperative`](SC)
+     * [`SchedPolicy::Cooperative`][SC]
      *
-     * [`Task`]: crate::tasks::task::Task
+     * [`Task`]: crate::tasks::Task
      * [SP]: crate::bits::task::modes::SchedPolicy::Preemptive
      * [SC]: crate::bits::task::modes::SchedPolicy::Cooperative
      */
@@ -252,45 +252,9 @@ pub trait Task: From<TaskId> + Sync + Send {
 
     /** Returns whether the referenced [`Task`] is alive
      *
-     * [`Task`]: crate::tasks::task::Task
+     * [`Task`]: crate::tasks::Task
      */
     fn is_alive(&self) -> bool {
         self.task_handle().is_alive()
-    }
-}
-
-macro_rules! impl_task_id_task {
-    {
-        $(#[$Comments:meta])*
-        pub struct $TaskTypeName:ident($TaskType:path);
-    } => {
-        $(#[$Comments])*
-        #[repr(transparent)]
-        #[derive(Debug, Default, Clone, Copy, Eq, PartialEq)]
-        pub struct $TaskTypeName(TaskId);
-
-        impl Task for $TaskTypeName {
-            const TASK_TYPE: TaskType = $TaskType;
-
-            fn task_handle(&self) -> &TaskId {
-                &self.0
-            }
-
-            fn task_handle_mut(&mut self) -> &mut TaskId {
-                &mut self.0
-            }
-        }
-
-        impl From<TaskId> for $TaskTypeName {
-            fn from(id: TaskId) -> Self {
-                Self(id)
-            }
-        }
-
-        impl KernCaller for $TaskTypeName {
-            fn caller_handle_bits(&self) -> u32 {
-                self.task_handle().caller_handle_bits()
-            }
-        }
     }
 }

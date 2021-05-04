@@ -45,7 +45,7 @@ impl InterruptManager {
     /** # Constructs an uninitialized `InterruptManager`
      *
      * The returned instance must be loaded with
-     * [`InterruptManager::enable_as_global()`](IG)
+     * [`InterruptManager::enable_as_global()`][IG]
      *
      * [IG]: crate::hal::interrupt::manager::InterruptManager::
      * enable_as_global
@@ -71,8 +71,8 @@ impl InterruptManager {
 
     /** # Registers an `InterruptManagerException` callback
      *
-     * Registers the given [`ExceptionHandler`](EH) as callback for the
-     * given [`InterruptManagerException`](IM).
+     * Registers the given [`ExceptionHandler`][EH] as callback for the
+     * given [`InterruptManagerException`][IM].
      *
      * Note that each registered callback may be called to handle more than
      * one hardware exception type (of the same domain of course), due to
@@ -92,7 +92,7 @@ impl InterruptManager {
 
     /** # Registers an interrupt callback
      *
-     * Registers the given [`InterruptHandler`](IH) as callback for the
+     * Registers the given [`InterruptHandler`][IH] as callback for the
      * given interrupt number.
      *
      * Each call overwrites previously registered handlers
@@ -203,7 +203,7 @@ impl InterruptManagerStats {
                m_intr_throws: [ATOMIC_ZERO; HwInterruptManager::INTR_COUNT] }
     }
 
-    /** Returns how many [`InterruptManagerException::MathDomain`](MD) was
+    /** Returns how many [`InterruptManagerException::MathDomain`][MD] was
      * handled
      *
      * [MD]: crate::hal::interrupt::manager::InterruptManagerException::
@@ -213,8 +213,8 @@ impl InterruptManagerStats {
         self.m_math_domain_faults.load(Ordering::SeqCst)
     }
 
-    /** Returns how many [`InterruptManagerException::MathDomain`](MD) was
-     * solved (i.e the [`ExceptionHandler`](EH) have returned `true`)
+    /** Returns how many [`InterruptManagerException::MathDomain`][MD] was
+     * solved (i.e the [`ExceptionHandler`][EH] have returned `true`)
      *
      * [MD]: crate::hal::interrupt::manager::InterruptManagerException::
      * MathDomain [EH]: crate::hal::interrupt::manager::ExceptionHandler

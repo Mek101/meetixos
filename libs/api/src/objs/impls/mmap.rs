@@ -36,33 +36,31 @@ use crate::{
     }
 };
 
-impl_obj_id_object! {
-    /** # Memory Mapping
-     *
-     * Represents a reference to a mapped piece of the owner's address
-     * space.
-     *
-     * `MMap` acts like a simple [`Box`] that instead references memory
-     * directly returned by the kernel (not by an userspace allocator)
-     * for a more direct use.
-     *
-     * The memory referenced by a `MMap` can be shared among different
-     * processes and securely accessed via [`MMap::get_ptr()`] and
-     * [`MMap::get_ptr_mut()`] because the kernel manages accesses via
-     * `RWLock`, so multiple threads can read, but only one can write.
-     *
-     * When the `MMap` object goes out of scope the memory is unmapped
-     * from the caller process
-     *
-     * [`Box`]: alloc::boxed::Box
-     * [`MMap::get_ptr()`]: crate::objs::impls::mmap::MMap::get_ptr
-     * [`MMap::get_ptr_mut()`]: crate::objs::impls::mmap::MMap::get_ptr_mut
-     */
-    pub struct MMap : impl WithExecutableDataObject,
-                           SizeableData,
-                           UserCreatable {
-        where TYPE = ObjType::MMap;
-    }
+/** # Memory Mapping
+ *
+ * Represents a reference to a mapped piece of the owner's address
+ * space.
+ *
+ * `MMap` acts like a simple [`Box`] that instead references memory
+ * directly returned by the kernel (not by an userspace allocator)
+ * for a more direct use.
+ *
+ * The memory referenced by a `MMap` can be shared among different
+ * processes and securely accessed via [`MMap::get_ptr()`] and
+ * [`MMap::get_ptr_mut()`] because the kernel manages accesses via
+ * `RWLock`, so multiple threads can read, but only one can write.
+ *
+ * When the `MMap` object goes out of scope the memory is unmapped
+ * from the caller process
+ *
+ * [`Box`]: alloc::boxed::Box
+ * [`MMap::get_ptr()`]: crate::objs::impls::MMap::get_ptr
+ * [`MMap::get_ptr_mut()`]: crate::objs::impls::MMap::get_ptr_mut
+ */
+#[repr(transparent)]
+#[derive(Debug, Default, Clone, Eq, PartialEq)]
+pub struct MMap {
+    m_handle: ObjId
 }
 
 impl MMap {
@@ -74,7 +72,7 @@ impl MMap {
      * If the `MMap` have reached the maximum amount of readers or there is
      * already a writer the thread waits until someone releases the memory
      *
-     * [`ConstMMapBox`]: crate::objs::impls::mmap::ConstMMapBox
+     * [`ConstMMapBox`]: crate::objs::impls::ConstMMapBox
      */
     pub fn get_ptr<T>(&self) -> Result<ConstMMapBox<T>> {
         self.get(MMapPtrMode::Readable).map(|(raw_ptr, size)| {
@@ -91,7 +89,7 @@ impl MMap {
      * If the `MMap` already have a writer or have at least one reader the
      * thread waits until all releases the memory
      *
-     * [`MutMMapBox`]: crate::objs::impls::mmap::MutMMapBox
+     * [`MutMMapBox`]: crate::objs::impls::MutMMapBox
      */
     pub fn get_ptr_mut<T>(&self) -> Result<MutMMapBox<T>> {
         self.get(MMapPtrMode::Writeable)
@@ -116,8 +114,8 @@ impl MMap {
      * The method consumes the instance and [forget] about it, so the kernel
      * will not close this object
      *
-     * [`File backed MMap`]: crate::objs::impls::file::File::map_to_memory
-     * [`File`]: crate::objs::impls::file::File
+     * [`File backed MMap`]: crate::objs::impls::File::map_to_memory
+     * [`File`]: crate::objs::impls::File
      * [forget]: core::mem::forget
      */
     pub fn leak_ptr<T>(self) -> &'static mut [T] {
@@ -132,9 +130,9 @@ impl MMap {
     }
 
     /** Returns whether this `MMap` instance originates from a
-     * [`File::map_to_memory()`](MM) call
+     * [`File::map_to_memory()`][MM] call
      *
-     * [MM]: crate::objs::impls::file::File::map_to_memory
+     * [MM]: crate::objs::impls::File::map_to_memory
      */
     pub fn is_file_backed(&self) -> bool {
         self.kern_call_0(KernFnPath::MMap(KernMMapFnId::IsFile))
@@ -163,6 +161,58 @@ impl MMap {
     }
 }
 
+impl Object for MMap {
+    /** The value of the [`ObjType`] that matches the implementation
+     *
+     * [`ObjType`]: crate::bits::obj::types::ObjType
+     */
+    const TYPE: ObjType = ObjType::MMap;
+
+    /** Returns the immutable reference to the underling [`ObjId`] instance
+     *
+     * [`ObjId`]: crate::objs::ObjId
+     */
+    fn obj_handle(&self) -> &ObjId {
+        &self.m_handle
+    }
+
+    /** Returns the mutable reference to the underling [`ObjId`] instance
+     *
+     * [`ObjId`]: crate::objs::ObjId
+     */
+    fn obj_handle_mut(&mut self) -> &mut ObjId {
+        &mut self.m_handle
+    }
+}
+
+impl From<ObjId> for MMap {
+    /** Performs the conversion
+     */
+    fn from(id: ObjId) -> Self {
+        Self { m_handle: id }
+    }
+}
+
+impl KernCaller for MMap {
+    /** Returns the upper 32bits of the 64bit identifier of a system call
+     */
+    fn caller_handle_bits(&self) -> u32 {
+        self.obj_handle().caller_handle_bits()
+    }
+}
+
+impl SizeableData for MMap {
+    /* No methods to implement */
+}
+
+impl WithExecutableDataObject for MMap {
+    /* No methods to implement */
+}
+
+impl UserCreatable for MMap {
+    /* No methods to implement */
+}
+
 /** # Immutable `MMap` Box
  *
  * Scoped box that holds the immutable reference to the [`MMap`]'s memory
@@ -170,8 +220,8 @@ impl MMap {
  *
  * This object is obtainable calling [`MMap::get_ptr()`]
  *
- * [`MMap`]: crate::objs::impls::mmap::MMap
- * [`MMap::get_ptr()`]: crate::objs::impls::mmap::MMap::get_ptr
+ * [`MMap`]: crate::objs::impls::MMap
+ * [`MMap::get_ptr()`]: crate::objs::impls::MMap::get_ptr
  */
 pub struct ConstMMapBox<'a, T> {
     m_mmap: &'a MMap,
@@ -219,8 +269,8 @@ impl<'a, T> Drop for ConstMMapBox<'a, T> {
  *
  * This object is obtainable calling [`MMap::get_ptr_mut()`]
  *
- * [`MMap`]: crate::objs::impls::mmap::MMap
- * [`MMap::get_ptr_mut()`]: crate::objs::impls::mmap::MMap::get_ptr_mut
+ * [`MMap`]: crate::objs::impls::MMap
+ * [`MMap::get_ptr_mut()`]: crate::objs::impls::MMap::get_ptr_mut
  */
 pub struct MutMMapBox<'a, T> {
     m_mmap: &'a MMap,

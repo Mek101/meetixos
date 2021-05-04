@@ -134,8 +134,8 @@ impl CmdLineArg {
     }
 
     /** Returns the `-key` part of the `-key=value` if
-     * [`CmdLineArg::is_key_value()`](KV) returns true, same as
-     * [`CmdLineArg::as_str()`](AS) otherwise
+     * [`CmdLineArg::is_key_value()`][KV] returns true, same as
+     * [`CmdLineArg::as_str()`][AS] otherwise
      *
      * [KV]: crate::infos::args::CmdLineArg::is_key_value
      * [AS]: crate::infos::args::CmdLineArg::as_str
@@ -149,8 +149,8 @@ impl CmdLineArg {
     }
 
     /** Returns the `value` part of the `-key=value` if
-     * [`CmdLineArg::is_key_value()`](KV) returns true, same as
-     * [`CmdLineArg::as_str()`](AS) otherwise
+     * [`CmdLineArg::is_key_value()`][KV] returns true, same as
+     * [`CmdLineArg::as_str()`][AS] otherwise
      *
      * [KV]: crate::infos::args::CmdLineArg::is_key_value
      * [AS]: crate::infos::args::CmdLineArg::as_str

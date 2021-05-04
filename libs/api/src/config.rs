@@ -3,9 +3,9 @@
  * Implements various markers useful for the various configurations like the
  * [`ObjConfig`], [`TaskConfig`] and [`OSEntityConfig`]
  *
- * [`ObjConfig`]: crate::objs::config::ObjConfig
- * [`TaskConfig`]: crate::tasks::config::TaskConfig
- * [`OSEntityConfig`]: crate::ents::config::OSEntityConfig
+ * [`ObjConfig`]: crate::objs::ObjConfig
+ * [`TaskConfig`]: crate::tasks::TaskConfig
+ * [`OSEntityConfig`]: crate::ents::OSEntityConfig
  */
 
 use core::marker::PhantomData;
@@ -90,7 +90,7 @@ impl ConfigMode for FindMode {
  * Library internal wrapper for [`KrnIterator`] that iterates instances of
  * type `T` that inside contains handles of type `H`
  *
- * [`KrnIterator`]: crate::objs::impls::iter::KrnIterator
+ * [`KrnIterator`]: crate::objs::impls::KrnIterator
  */
 pub(crate) struct ConfigFinderIter<H, T>
     where H: From<usize>,

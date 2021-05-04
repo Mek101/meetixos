@@ -7,7 +7,7 @@
  * from the different external crates, keeping a single place where maintain
  * the version of the used crates
  *
- * [`lock_api`]: https://docs.rs/lock_api/0.4.3/lock_api/
+ * [`lock_api`]: https://docs.rs/lock_api/0.4.4/lock_api/
  * [`spinning_top`]: https://docs.rs/spinning_top/0.2.3/spinning_top/
  * [`std::sync`]: https://doc.rust-lang.org/stable/std/sync/
  */
@@ -15,13 +15,26 @@
 #![no_std]
 #![feature(const_fn, once_cell)]
 
-pub use core::lazy::{Lazy, OnceCell};
+pub use core::lazy::{
+    Lazy,
+    OnceCell
+};
 
 pub use lock_api::{
-    GuardNoSend, GuardSend, Mutex, MutexGuard, RawMutex, RawRwLock, RwLock,
-    RwLockReadGuard, RwLockUpgradableReadGuard, RwLockWriteGuard
+    GuardNoSend,
+    GuardSend,
+    Mutex,
+    MutexGuard,
+    RawMutex,
+    RawRwLock,
+    RwLock,
+    RwLockReadGuard,
+    RwLockUpgradableReadGuard,
+    RwLockWriteGuard
 };
 
 pub use spinning_top::{
-    RawSpinlock as RawSpinMutex, Spinlock as SpinMutex, SpinlockGuard as SpinMutexGuard
+    RawSpinlock as RawSpinMutex,
+    Spinlock as SpinMutex,
+    SpinlockGuard as SpinMutexGuard
 };

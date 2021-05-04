@@ -3,7 +3,7 @@
  * Implements the variants that identifies the various [`OSEntityId`]
  * based implementations
  *
- * [`OSEntityId`]: crate::ents::entity::OSEntityId
+ * [`OSEntityId`]: crate::ents::OSEntityId
  */
 
 use num_enum::{
@@ -15,7 +15,7 @@ use num_enum::{
  *
  * Lists the available object types represented by an [`OSEntityId`]
  *
- * [`OSEntityId`]: crate::ents::entity::OSEntityId
+ * [`OSEntityId`]: crate::ents::OSEntityId
  */
 #[repr(usize)]
 #[derive(Debug)]
@@ -29,13 +29,13 @@ pub enum OSEntityType {
 
     /** Identifies an [`OSUser`] entity
      *
-     * [`OSUser`]: crate::ents::impls::user::OSUser
+     * [`OSUser`]: crate::ents::impls::OSUser
      */
     User,
 
     /** Identifies an [`OSGroup`] entity
      *
-     * [`OSGroup`]: crate::ents::impls::group::OSGroup.html
+     * [`OSGroup`]: crate::ents::impls::OSGroup.html
      */
     Group
 }

@@ -2,7 +2,7 @@
  *
  * Exports the various [`Task`] implementations
  *
- * [`Task`]: crate::tasks::task::Task
+ * [`Task`]: crate::tasks::Task
  */
 
 pub use proc::*;

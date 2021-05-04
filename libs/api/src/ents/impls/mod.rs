@@ -2,7 +2,7 @@
  *
  * Exports the various implementations of the [`OSEntityId`] based objects
  *
- * [`OSEntityId`]: crate::ents::entity::OSEntityId
+ * [`OSEntityId`]: crate::ents::OSEntityId
  */
 
 pub use group::*;

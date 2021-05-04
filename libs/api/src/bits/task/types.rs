@@ -3,7 +3,7 @@
  * Implements the variants that identifies the various [`TaskId`]
  * implementations
  *
- * [`TaskId`]: crate::tasks::task::TaskId
+ * [`TaskId`]: crate::tasks::TaskId
  */
 
 use num_enum::{
@@ -15,7 +15,7 @@ use num_enum::{
  *
  * Lists the available object types represented by an [`TaskId`]
  *
- * [`TaskId`]: crate::tasks::task::TaskId
+ * [`TaskId`]: crate::tasks::TaskId
  */
 #[repr(usize)]
 #[derive(Debug)]
@@ -29,13 +29,13 @@ pub enum TaskType {
 
     /** Identifies a [`Thread`] task
      *
-     * [`Thread`]: crate::tasks::impls::thread::Thread
+     * [`Thread`]: crate::tasks::impls::Thread
      */
     Thread,
 
     /** Identifies a [`Proc`] task
      *
-     * [`Proc`]: crate::tasks::impls::proc::Proc
+     * [`Proc`]: crate::tasks::impls::Proc
      */
     Proc
 }

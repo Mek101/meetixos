@@ -32,28 +32,26 @@ use crate::{
     }
 };
 
-impl_obj_id_object! {
-    /** # Open File
-     *
-     * Represents a reference to an open file on the VFS.
-     *
-     * Exposes all the common operations that is expected to be present
-     * for a file, like [`read()`], [`write()`], [`seek()`] and many
-     * others.
-     *
-     * It is possible to map a `File` into a virtual memory region of
-     * the caller process like the Unix's [`mmap()`] system call
-     *
-     * [`read()`]: crate::objs::impls::file::File::read
-     * [`write()`]: crate::objs::impls::file::File::write
-     * [`seek()`]: crate::objs::impls::file::File::set_pos
-     * [`mmap()`]: https://man7.org/linux/man-pages/man2/mmap.2.html
-     */
-    pub struct File : impl WithExecutableDataObject,
-                           SizeableData,
-                           UserCreatable {
-        where TYPE = ObjType::File;
-    }
+/** # Open File
+ *
+ * Represents a reference to an open file on the VFS.
+ *
+ * Exposes all the common operations that is expected to be present
+ * for a file, like [`read()`], [`write()`], [`seek()`] and many
+ * others.
+ *
+ * It is possible to map a `File` into a virtual memory region of
+ * the caller process like the Unix's [`mmap()`] system call
+ *
+ * [`read()`]: crate::objs::impls::File::read
+ * [`write()`]: crate::objs::impls::File::write
+ * [`seek()`]: crate::objs::impls::File::set_pos
+ * [`mmap()`]: https://man7.org/linux/man-pages/man2/mmap.2.html
+ */
+#[repr(transparent)]
+#[derive(Debug, Default, Clone, Eq, PartialEq)]
+pub struct File {
+    m_handle: ObjId
 }
 
 impl File {
@@ -87,8 +85,8 @@ impl File {
      * optimizations like a better usage of the VFS cache and, if
      * available, FS copy on write, which reduces time and space usages
      *
-     * [`File::read()`]: crate::objs::impls::file::File::read
-     * [`File::write()`]: crate::objs::impls::file::File::write
+     * [`File::read()`]: crate::objs::impls::File::read
+     * [`File::write()`]: crate::objs::impls::File::write
      */
     pub fn copy_to(&self, dest: &Dir) -> Result<Self> {
         self.kern_call_1(KernFnPath::File(KernFileFnId::Copy),
@@ -103,9 +101,9 @@ impl File {
      * involves kernel optimizations, because it simply changes the
      * parent directory node of this file.
      *
-     * [`File::read()`]: crate::objs::impls::file::File::read
-     * [`File::write()`]: crate::objs::impls::file::File::write
-     * [`File::drop_name()`]: crate::objs::object::Object::drop_name
+     * [`File::read()`]: crate::objs::impls::File::read
+     * [`File::write()`]: crate::objs::impls::File::write
+     * [`File::drop_name()`]: crate::objs::Object::drop_name
      */
     pub fn move_to(&self, dest: &Dir) -> Result<()> {
         self.kern_call_1(KernFnPath::File(KernFileFnId::Move),
@@ -147,10 +145,10 @@ impl File {
      *      because ELF offsets are always page aligned (but into the file
      *      content too?)
      *
-     * [`MMap`]: crate::objs::impls::mmap::MMap
+     * [`MMap`]: crate::objs::impls::MMap
      * [`None`]: core::option::Option::None
      * [`Err`]: core::result::Result::Err
-     * [`ObjConfig::for_write()`]: crate::objs::config::ObjConfig::for_write
+     * [`ObjConfig::for_write()`]: crate::objs::ObjConfig::for_write
      */
     pub fn map_to_memory(&self,
                          addr: Option<NonNull<u8>>,
@@ -185,4 +183,56 @@ impl File {
     pub fn current_pos(&self) -> u64 {
         self.set_pos(SeekMode::Absolute(0)).unwrap_or(0)
     }
+}
+
+impl Object for File {
+    /** The value of the [`ObjType`] that matches the implementation
+     *
+     * [`ObjType`]: crate::bits::obj::types::ObjType
+     */
+    const TYPE: ObjType = ObjType::File;
+
+    /** Returns the immutable reference to the underling [`ObjId`] instance
+     *
+     * [`ObjId`]: crate::objs::ObjId
+     */
+    fn obj_handle(&self) -> &ObjId {
+        &self.m_handle
+    }
+
+    /** Returns the mutable reference to the underling [`ObjId`] instance
+     *
+     * [`ObjId`]: crate::objs::ObjId
+     */
+    fn obj_handle_mut(&mut self) -> &mut ObjId {
+        &mut self.m_handle
+    }
+}
+
+impl From<ObjId> for File {
+    /** Performs the conversion
+     */
+    fn from(id: ObjId) -> Self {
+        Self { m_handle: id }
+    }
+}
+
+impl KernCaller for File {
+    /** Returns the upper 32bits of the 64bit identifier of a system call
+     */
+    fn caller_handle_bits(&self) -> u32 {
+        self.obj_handle().caller_handle_bits()
+    }
+}
+
+impl WithExecutableDataObject for File {
+    /* No methods to implement */
+}
+
+impl SizeableData for File {
+    /* No methods to implement */
+}
+
+impl UserCreatable for File {
+    /* No methods to implement */
 }

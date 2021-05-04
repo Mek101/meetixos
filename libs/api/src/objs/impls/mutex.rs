@@ -29,7 +29,7 @@ use crate::{
  *
  * Refer to the [`sync::Mutex`] for complete documentation
  *
- * [`OsRawMutex`]: crate::objs::impls::mutex::OsRawMutex
+ * [`OsRawMutex`]: crate::objs::impls::OsRawMutex
  * [`sync::Mutex`]: sync::Mutex
  */
 pub type Mutex<T> = sync::Mutex<OsRawMutex, T>;
@@ -38,23 +38,23 @@ pub type Mutex<T> = sync::Mutex<OsRawMutex, T>;
  *
  * Scoped box that allow access to the data when the [`Mutex`] is locked
  *
- * [`Mutex`]: crate::objs::impls::mutex::Mutex
+ * [`Mutex`]: crate::objs::impls::Mutex
  */
 pub type MutexGuard<'a, T> = sync::MutexGuard<'a, OsRawMutex, T>;
 
-impl_obj_id_object! {
-    /** # Raw Mutex
-     *
-     * Represents a reference to an open mutex.
-     *
-     * It allows inter-process locking because, like all the other objects,
-     * is representable into the VFS tree; so if at least two different
-     * tasks tries to lock it, one of them acquire it, the other(s) will
-     * wait until the mutex will be unlocked
-     */
-    pub struct OsRawMutex : impl UserCreatable {
-        where TYPE = ObjType::OsRawMutex;
-    }
+/** # Raw Mutex
+ *
+ * Represents a reference to an open mutex.
+ *
+ * It allows inter-process locking because, like all the other objects,
+ * is representable into the VFS tree; so if at least two different
+ * tasks tries to lock it, one of them acquire it, the other(s) will
+ * wait until the mutex will be unlocked
+ */
+#[repr(transparent)]
+#[derive(Debug, Default, Clone, Eq, PartialEq)]
+pub struct OsRawMutex {
+    m_handle: ObjId
 }
 
 impl OsRawMutex {
@@ -66,7 +66,7 @@ impl OsRawMutex {
      * [`RawMutex`]: sync::RawMutex
      */
     const fn const_init_for_raw() -> Self {
-        Self(ObjId::const_new())
+        Self { m_handle: ObjId::const_new() }
     }
 
     /** # Constructs a `Mutex`
@@ -78,7 +78,7 @@ impl OsRawMutex {
      *
      * The method consumes the instance because move it into the [`Mutex`]
      *
-     * [`Mutex`]: crate::objs::impls::mutex::Mutex
+     * [`Mutex`]: crate::objs::impls::Mutex
      */
     pub const fn into_mutex<T>(self, value: T) -> Mutex<T> {
         Mutex::const_new(self, value)
@@ -89,8 +89,8 @@ unsafe impl RawMutex for OsRawMutex {
     /** Create [`Mutex`] with this constant will throw [`panic!()`] at first
      * call
      *
-     * [`Mutex`]: crate::objs::impls::mutex::Mutex
-     * [`panic!()`]: core::panic
+     * [`Mutex`]: crate::objs::impls::Mutex
+     * [`panic!()`]: core::panic!
      */
     const INIT: Self = Self::const_init_for_raw();
 
@@ -98,8 +98,8 @@ unsafe impl RawMutex for OsRawMutex {
      * primitives, because each thread have his own open object table, but
      * is obviously possible using [`Object::send()`] system call
      *
-     * [`Mutex`]: crate::objs::impls::mutex::Mutex
-     * [`Object::send()`]: crate::objs::object::Object::send
+     * [`Mutex`]: crate::objs::impls::Mutex
+     * [`Object::send()`]: crate::objs::Object::send
      */
     type GuardMarker = GuardNoSend;
 
@@ -132,4 +132,48 @@ unsafe impl RawMutex for OsRawMutex {
             .map(|res| res != 0)
             .unwrap_or(false)
     }
+}
+
+impl Object for OsRawMutex {
+    /** The value of the [`ObjType`] that matches the implementation
+     *
+     * [`ObjType`]: crate::bits::obj::types::ObjType
+     */
+    const TYPE: ObjType = ObjType::OsRawMutex;
+
+    /** Returns the immutable reference to the underling [`ObjId`] instance
+     *
+     * [`ObjId`]: crate::objs::ObjId
+     */
+    fn obj_handle(&self) -> &ObjId {
+        &self.m_handle
+    }
+
+    /** Returns the mutable reference to the underling [`ObjId`] instance
+     *
+     * [`ObjId`]: crate::objs::ObjId
+     */
+    fn obj_handle_mut(&mut self) -> &mut ObjId {
+        &mut self.m_handle
+    }
+}
+
+impl From<ObjId> for OsRawMutex {
+    /** Performs the conversion
+     */
+    fn from(id: ObjId) -> Self {
+        Self { m_handle: id }
+    }
+}
+
+impl KernCaller for OsRawMutex {
+    /** Returns the upper 32bits of the 64bit identifier of a system call
+     */
+    fn caller_handle_bits(&self) -> u32 {
+        self.obj_handle().caller_handle_bits()
+    }
+}
+
+impl UserCreatable for OsRawMutex {
+    /* No methods to implement */
 }

@@ -52,7 +52,7 @@ pub(crate) trait KernCaller {
     /** # Composes the `SysCallId`
      *
      * Instantiates a [`SysCallId`] with the given parameter, the value
-     * returned by the [`caller_handle_bits()`](HB) and the call class
+     * returned by the [`caller_handle_bits()`][HB] and the call class
      *
      * [`SysCallId`]: os::sysc::id::SysCallId
      * [HB]: crate::caller::KernCaller::caller_handle_bits

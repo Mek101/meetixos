@@ -2,7 +2,7 @@
  *
  * Exports the various [`Object`] implementations
  *
- * [`Object`]: crate::objs::object::Object
+ * [`Object`]: crate::objs::Object
  */
 
 pub use any::*;

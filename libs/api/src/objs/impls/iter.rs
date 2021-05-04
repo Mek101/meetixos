@@ -24,28 +24,28 @@ use crate::{
     }
 };
 
-impl_obj_id_object! {
-    /** # Kernel Iterator
-     *
-     * Represents a reference to a double linked kernel's iteration pool.
-     *
-     * The kernel iterator could iterate different object types, from object
-     * handles to more complex objects (like the [`DirEntry`]).
-     *
-     * This type of kernel's object is not creatable by the userspace, but
-     * only by the kernel as response of system calls which return more
-     * than one result (like the [`Task::find()`]).
-     *
-     * As consequence of the fact written above the `KrnIterator` is not
-     * either used directly, but always wrapped into another structure that
-     * ensures type validity
-     *
-     * [`DirEntry`]: crate::objs::impls::dir::DirEntry
-     * [`Task::find()`]: crate::tasks::task::Task::find
-     */
-    pub struct KrnIterator {
-        where TYPE = ObjType::KrnIterator;
-    }
+/** # Kernel Iterator
+ *
+ * Represents a reference to a double linked kernel's iteration pool.
+ *
+ * The kernel iterator could iterate different object types, from object
+ * handles to more complex objects (like the [`DirEntry`]).
+ *
+ * This type of kernel's object is not creatable by the userspace, but
+ * only by the kernel as response of system calls which return more
+ * than one result (like the [`Task::find()`]).
+ *
+ * As consequence of the fact written above the `KrnIterator` is not
+ * either used directly, but always wrapped into another structure that
+ * ensures type validity
+ *
+ * [`DirEntry`]: crate::objs::impls::DirEntry
+ * [`Task::find()`]: crate::tasks::Task::find
+ */
+#[repr(transparent)]
+#[derive(Debug, Default, Clone, Eq, PartialEq)]
+pub struct KrnIterator {
+    m_handle: ObjId
 }
 
 impl KrnIterator {
@@ -116,5 +116,45 @@ impl KrnIterator {
                     None
                 }
             })
+    }
+}
+
+impl Object for KrnIterator {
+    /** The value of the [`ObjType`] that matches the implementation
+     *
+     * [`ObjType`]: crate::bits::obj::types::ObjType
+     */
+    const TYPE: ObjType = ObjType::KrnIterator;
+
+    /** Returns the immutable reference to the underling [`ObjId`] instance
+     *
+     * [`ObjId`]: crate::objs::ObjId
+     */
+    fn obj_handle(&self) -> &ObjId {
+        &self.m_handle
+    }
+
+    /** Returns the mutable reference to the underling [`ObjId`] instance
+     *
+     * [`ObjId`]: crate::objs::ObjId
+     */
+    fn obj_handle_mut(&mut self) -> &mut ObjId {
+        &mut self.m_handle
+    }
+}
+
+impl From<ObjId> for KrnIterator {
+    /** Performs the conversion
+     */
+    fn from(id: ObjId) -> Self {
+        Self { m_handle: id }
+    }
+}
+
+impl KernCaller for KrnIterator {
+    /** Returns the upper 32bits of the 64bit identifier of a system call
+     */
+    fn caller_handle_bits(&self) -> u32 {
+        self.obj_handle().caller_handle_bits()
     }
 }

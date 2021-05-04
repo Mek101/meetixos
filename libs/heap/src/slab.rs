@@ -47,14 +47,13 @@ impl Slab {
      * [`Err`] when the used allocator runs out of memory.
      *
      * The operation is performed in `O(1)` because consists in a
-     * [`FreeList::pop()`]
+     * `FreeList::pop()`
      *
      * [`Layout`]: core::alloc::Layout
      * [`Result`]: core::result::Result
      * [`Ok`]: core::result::Result::Ok
      * [`Err`]: core::result::Result::Err
      * [`NonNull<u8>`]: core::ptr::NonNull
-     * [`FreeList::pop()`]: crate::slab::FreeList::pop
      */
     pub fn alloc_block(&mut self) -> Result<NonNull<u8>, ()> {
         match self.m_free_blocks.pop() {
@@ -68,9 +67,7 @@ impl Slab {
      * Makes the given block available again for further allocations.
      *
      * The request, as for allocation, happen in `O(1)` due to a
-     * [`FreeList::push()`]
-     *
-     * [`FreeList::push()`]: crate::slab::FreeList::push
+     * `FreeList::push()`
      */
     pub unsafe fn dealloc_block(&mut self, ptr: NonNull<u8>) {
         self.m_free_blocks.push(&mut *(ptr.as_ptr() as *mut Block));

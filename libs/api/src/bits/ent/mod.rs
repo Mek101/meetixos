@@ -3,7 +3,7 @@
  * Exports the sub modules that implements the bits for the [`OSEntityId`]
  * based objects
  *
- * [`OSEntityId`]: crate::ents::entity::OSEntityId
+ * [`OSEntityId`]: crate::ents::OSEntityId
  */
 
 pub use types::*;

@@ -26,7 +26,7 @@ use crate::{
  * Specializes the [`OSEntityId`] to act like a logged user with his class
  * of permissions over the VFS objects that owns
  *
- * [`OSEntityId`]: crate::ents::entity::OSEntityId
+ * [`OSEntityId`]: crate::ents::OSEntityId
  */
 #[derive(Debug, Default, Copy, Clone)]
 pub struct OSUser(OSEntityId);
@@ -37,7 +37,7 @@ impl OSUser {
      * Puts into the `groups` buffer the [`OSGroup`]s instances that this
      * `OSUser` joins
      *
-     * [`OSGroup`]: crate::ents::impls::group::OSGroup
+     * [`OSGroup`]: crate::ents::impls::OSGroup
      */
     pub fn groups<'a>(&self, groups: &'a mut [OSGroup]) -> Result<&'a [OSGroup]> {
         self.kern_call_2(KernFnPath::OSUser(KernOSUserFnId::Groups),
@@ -50,7 +50,7 @@ impl OSUser {
 impl KernCaller for OSUser {
     /** Returns the raw identifier of the underling [`OSEntityId`]
      *
-     * [`OSEntityId`]: crate::ents::entity::OSEntityId
+     * [`OSEntityId`]: crate::ents::OSEntityId
      */
     fn caller_handle_bits(&self) -> u32 {
         self.0.caller_handle_bits()
@@ -75,7 +75,7 @@ impl OSEntity for OSUser {
     /** Returns the immutable reference to the underling [`OSEntityId`]
      * instance
      *
-     * [`OSEntityId`]: crate::ents::entity::OSEntityId
+     * [`OSEntityId`]: crate::ents::OSEntityId
      */
     fn os_entity_handle(&self) -> &OSEntityId {
         &self.0

@@ -3,7 +3,7 @@
  * Implements various enumerations that are used for certain [`Object`]
  * related calls
  *
- * [`Object`]: crate::objs::object::Object
+ * [`Object`]: crate::objs::Object
  */
 
 use num_enum::{
@@ -15,7 +15,7 @@ use num_enum::{
  *
  * Lists the available modes for [`Object::recv()`]
  *
- * [`Object::recv()`]: crate::objs::object::Object::recv
+ * [`Object::recv()`]: crate::objs::Object::recv
  */
 #[repr(usize)]
 #[derive(Debug)]
@@ -25,7 +25,7 @@ use num_enum::{
 pub enum RecvMode {
     /** This mode simply asks to the kernel whether an object of the
      * requested type is already available into the object receiving
-     * queue, if not it returns an [`Err(NoDataAvailable)`](E) error
+     * queue, if not it returns an [`Err(NoDataAvailable)`][E] error
      *
      * [E]: crate::errors::ErrorClass::NoDataAvailable
      */
@@ -38,7 +38,7 @@ pub enum RecvMode {
      * will not fall into waiting state.
      *
      * If the kernel's wait queue is full the system call returns an
-     * [`Err(LimitReached)`](E) error
+     * [`Err(LimitReached)`][E] error
      *
      * [E]: crate::errors::ErrorClass::LimitReached
      */
@@ -50,7 +50,7 @@ pub enum RecvMode {
  * Lists the internally used modes to identify the direction of the
  * [`KrnIterator`] in use
  *
- * [`KrnIterator`]: crate::objs::impls::iter::KrnIterator
+ * [`KrnIterator`]: crate::objs::impls::KrnIterator
  */
 #[repr(usize)]
 #[derive(Debug)]
@@ -58,15 +58,15 @@ pub enum RecvMode {
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KrnIterDirection {
-    /** Internally used when called [`KrnIterator::find_next()`](L)
+    /** Internally used when called [`KrnIterator::find_next()`][L]
      *
-     * [L]: crate::objs::impls::iter::KrnIterator::find_next
+     * [L]: crate::objs::impls::KrnIterator::find_next
      */
     BeginToEnd,
 
-    /** Internally used when called [`KrnIterator::find_next_back()`](L)
+    /** Internally used when called [`KrnIterator::find_next_back()`][L]
      *
-     * [L]: crate::objs::impls::iter::KrnIterator::find_next_back
+     * [L]: crate::objs::impls::KrnIterator::find_next_back
      */
     EndToBegin
 }
@@ -76,7 +76,7 @@ pub enum KrnIterDirection {
  * Lists the internally used modes that are given to the kernel to manage
  * synchronization over the memory of a [`MMap`]
  *
- * [`MMap`]: crate::objs::impls::mmap::MMap
+ * [`MMap`]: crate::objs::impls::MMap
  */
 #[repr(usize)]
 #[derive(Debug)]
@@ -86,13 +86,13 @@ pub enum KrnIterDirection {
 pub enum MMapPtrMode {
     /** Internally used when called [`MMap::get_ptr()`]
      *
-     * [`MMap::get_ptr()`]: crate::objs::impls::mmap::MMap::get_ptr
+     * [`MMap::get_ptr()`]: crate::objs::impls::MMap::get_ptr
      */
     Readable,
 
     /** Internally used when called [`MMap::get_ptr_mut()`]
      *
-     * [`MMap::get_ptr_mut()`]: crate::objs::impls::mmap::MMap::get_ptr_mut
+     * [`MMap::get_ptr_mut()`]: crate::objs::impls::MMap::get_ptr_mut
      */
     Writeable
 }
@@ -102,8 +102,8 @@ pub enum MMapPtrMode {
  * Lists the available modes for [`File::set_pos()`] and
  * [`Dir::set_index()`]
  *
- * [`File::set_pos()`]: crate::objs::impls::file::File::set_pos
- * [`Dir::set_pos()`]: crate::objs::impls::dir::Dir::set_index
+ * [`File::set_pos()`]: crate::objs::impls::File::set_pos
+ * [`Dir::set_pos()`]: crate::objs::impls::Dir::set_index
  */
 #[derive(Debug)]
 #[derive(Clone, Copy)]

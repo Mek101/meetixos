@@ -27,18 +27,17 @@ use crate::{
     }
 };
 
-impl_obj_id_object! {
-    /** # Inter Process Communication Channel
-     *
-     * Represents a reference to an open communication channel.
-     *
-     * With this object it is possible to send and/or receive arbitrary sized
-     * binary messages between different processes/threads.
-     */
-    pub struct IpcChan : impl SizeableData,
-                              UserCreatable  {
-        where TYPE = ObjType::IpcChan;
-    }
+/** # Inter Process Communication Channel
+ *
+ * Represents a reference to an open communication channel.
+ *
+ * With this object it is possible to send and/or receive arbitrary sized
+ * binary messages between different processes/threads.
+ */
+#[repr(transparent)]
+#[derive(Debug, Default, Clone, Eq, PartialEq)]
+pub struct IpcChan {
+    m_handle: ObjId
 }
 
 impl IpcChan {
@@ -101,4 +100,52 @@ impl IpcChan {
                          msg.as_mut().len(),
                          id.map(|value| value.get()).unwrap_or(0))
     }
+}
+
+impl Object for IpcChan {
+    /** The value of the [`ObjType`] that matches the implementation
+     *
+     * [`ObjType`]: crate::bits::obj::types::ObjType
+     */
+    const TYPE: ObjType = ObjType::IpcChan;
+
+    /** Returns the immutable reference to the underling [`ObjId`] instance
+     *
+     * [`ObjId`]: crate::objs::ObjId
+     */
+    fn obj_handle(&self) -> &ObjId {
+        &self.m_handle
+    }
+
+    /** Returns the mutable reference to the underling [`ObjId`] instance
+     *
+     * [`ObjId`]: crate::objs::ObjId
+     */
+    fn obj_handle_mut(&mut self) -> &mut ObjId {
+        &mut self.m_handle
+    }
+}
+
+impl From<ObjId> for IpcChan {
+    /** Performs the conversion
+     */
+    fn from(id: ObjId) -> Self {
+        Self { m_handle: id }
+    }
+}
+
+impl KernCaller for IpcChan {
+    /** Returns the upper 32bits of the 64bit identifier of a system call
+     */
+    fn caller_handle_bits(&self) -> u32 {
+        self.obj_handle().caller_handle_bits()
+    }
+}
+
+impl SizeableData for IpcChan {
+    /* No methods to implement */
+}
+
+impl UserCreatable for IpcChan {
+    /* No methods to implement */
 }

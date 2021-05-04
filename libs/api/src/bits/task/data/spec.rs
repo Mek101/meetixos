@@ -2,7 +2,7 @@
  *
  * Implements a data enumeration with the [`Task`] specific data
  *
- * [`Task`]: crate::tasks::task::Task
+ * [`Task`]: crate::tasks::Task
  */
 
 use core::cmp::min;
@@ -34,7 +34,7 @@ pub const RAW_PROC_ARGS_INIT: RawProcArgs = [[0; PROC_ARG_LEN_MAX]; PROC_ARG_COU
  *
  * Identifies the raw type used to provide [`Proc`] arguments to the kernel
  *
- * [`Proc`]: crate::tasks::impls::proc::Proc
+ * [`Proc`]: crate::tasks::impls::Proc
  */
 pub type RawProcArgs = [[u8; PROC_ARG_LEN_MAX]; PROC_ARG_COUNT_MAX];
 
@@ -46,7 +46,7 @@ pub type RawProcArgs = [[u8; PROC_ARG_LEN_MAX]; PROC_ARG_COUNT_MAX];
 pub enum TaskSpecData {
     /** Contains the specific data to construct and execute a [`Thread`]
      *
-     * [`Thread`]: crate::tasks::impls::thread::Thread
+     * [`Thread`]: crate::tasks::impls::Thread
      */
     Thread {
         m_user_thread: ThreadEntryData,
@@ -55,7 +55,7 @@ pub enum TaskSpecData {
 
     /** Contains the specific data to construct and execute a [`Proc`]
      *
-     * [`Proc`]: crate::tasks::impls::proc::Proc
+     * [`Proc`]: crate::tasks::impls::Proc
      */
     Proc {
         m_executable: File,
@@ -72,7 +72,7 @@ impl TaskSpecData {
      *
      * Fills the [`Thread`] variant data with the given values
      *
-     * [`Thread`]: crate::tasks::impls::thread::Thread
+     * [`Thread`]: crate::tasks::impls::Thread
      */
     pub fn new_thread(entry_point: Option<RUserThreadEntry>,
                       arg: Option<usize>,
