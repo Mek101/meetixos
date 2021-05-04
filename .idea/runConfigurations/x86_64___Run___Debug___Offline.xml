@@ -1,8 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="x86_64 | Run | Debug | Offline" type="MAKEFILE_TARGET_RUN_CONFIGURATION" factoryName="Makefile">
-    <makefile filename="$PROJECT_DIR$/Makefile" target="run" workingDirectory="$PROJECT_DIR$/" arguments="ARCH=x86_64 OFFLINE=true">
-      <envs />
-    </makefile>
-    <method v="2" />
-  </configuration>
-</component>
