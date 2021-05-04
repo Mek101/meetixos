@@ -1,7 +1,7 @@
 /*! # Kernel Loader/Core Shared Code
  *
- * This crate contains wrappers, simplifications, and more in general all
- * the code which is in common to the hh_loader and the kernel's core
+ * This crate contains wrappers, conveniences, and more in general all
+ * the code which is in common with the hh_loader and the kernel's core
  */
 
 #![no_std]

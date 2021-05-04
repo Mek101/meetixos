@@ -816,20 +816,18 @@ pub(crate) trait HwPageDirSupportBase {
     unsafe fn activate_page_dir(phys_frame: PhysFrame<Page4KiB>);
 }
 
-c_handy_enum! {
-    /** # Page Directory Errors
-     *
-     * Enumerates the errors that could occur when using the [`PageDir`]
-     *
-     * [`PageDir`]: /hal/paging/struct.PageDir.html
-     */
-    pub enum PageDirErr : u8 {
-        PageNotMapped        = 0 => "The page requested is not mapped",
-        PageAlreadyMapped    = 1 => "Mapping overlaps an already mapped page",
-        EmptyRange           = 2 => "Mapping range empty",
-        PhysAllocFailed      = 3 => "Physical allocator have no more frames",
-        PartialHugePageUnmap = 4 => "Tried to unmap a piece of a huge frame",
-    }
+/** # Page Directory Errors
+ *
+ * Enumerates the errors that could occur when using the [`PageDir`]
+ *
+ * [`PageDir`]: /hal/paging/struct.PageDir.html
+ */
+pub enum PageDirErr {
+    PageNotMapped,
+    PageAlreadyMapped,
+    EmptyRange,
+    PhysAllocFailed,
+    PartialHugePageUnmap
 }
 
 impl From<PageTableEntryErr> for PageDirErr {

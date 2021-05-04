@@ -407,7 +407,7 @@ pub struct FrameNotAlignedErr;
 impl fmt::Display for FrameNotAlignedErr {
     /** Formats the value using the given formatter.
      */
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "The given frame address was not properly aligned")
     }
 }

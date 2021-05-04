@@ -4,15 +4,32 @@
  * kernel core
  */
 
-use core::{ops::Range, slice};
+use core::{
+    ops::Range,
+    slice
+};
 
-use bit_field::{BitArray, BitField};
+use bit_field::{
+    BitArray,
+    BitField
+};
 
-use sync::{Mutex, RawMutex};
+use sync::{
+    Mutex,
+    RawMutex
+};
 
 use crate::{
-    addr::{Address, PhysAddr},
-    mem::paging::{Page4KiB, PageSize, PhysFrame, PhysFrameRange}
+    addr::{
+        Address,
+        PhysAddr
+    },
+    mem::paging::{
+        Page4KiB,
+        PageSize,
+        PhysFrame,
+        PhysFrameRange
+    }
 };
 
 /** # Locked Bitmap Allocator

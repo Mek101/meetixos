@@ -379,16 +379,55 @@ ext_bitflags! {
  *
  * [`PageDir`]: /hal/paging/struct.PageDir.html
  */
-#[repr(usize)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
-#[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum PageTableLevel {
     Level4,
     Level3,
     Level2,
     Level1
+}
+
+impl PageTableLevel {
+    pub fn iter_until_this(&self) -> impl Iterator<Item = PageTableLevel> {
+        struct UntilIterator {
+            m_current: Option<PageTableLevel>,
+            m_after_last: PageTableLevel
+        }
+
+        impl Iterator for UntilIterator {
+            type Item = PageTableLevel;
+
+            fn next(&mut self) -> Option<Self::Item> {
+                let current = self.m_current;
+                if let Some(current) = current {
+                    /* obtain the next level of the table */
+                    let next_level = match current {
+                        PageTableLevel::Level4 => Some(PageTableLevel::Level3),
+                        PageTableLevel::Level3 => Some(PageTableLevel::Level2),
+                        PageTableLevel::Level2 => Some(PageTableLevel::Level1),
+                        PageTableLevel::Level1 => None
+                    };
+
+                    /* update the next-current value */
+                    self.m_current = if let Some(next_level) = next_level {
+                        if next_level != self.m_after_last {
+                            Some(next_level)
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    }
+                }
+                current
+            }
+        }
+
+        UntilIterator { m_current: Some(PageTableLevel::Level4),
+                        m_after_last: self.clone() }
+    }
 }
 
 /** # Page Table Entry Errors
@@ -411,7 +450,7 @@ pub enum PageTableEntryErr {
      * [`PTFlags::PRESENT`]:
      * /hal/paging/struct.PTFlags.html#associatedconstant.PRESENT
      */
-    PhysFrameNotPresent = 0,
+    PhysFrameNotPresent,
 
     /** Requested the [`PhysFrame`] of a smallest [`PageSize`] of the
      * currently stored (i.e requested a [`Page4KiB`] frame but
@@ -423,5 +462,5 @@ pub enum PageTableEntryErr {
      * [`Page2MiB`]: /hal/paging/struct.Page2MiB.html
      * [`Page1GiB`]: /hal/paging/struct.Page1GiB.html
      */
-    InUseForBigFrame    = 1
+    InUseForBigFrame
 }

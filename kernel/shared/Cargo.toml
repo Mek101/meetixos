@@ -8,6 +8,9 @@ authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
 # External Crates
 ##
 
+[dependencies.bit_field]
+version = "0.10.1"
+
 [dependencies.log]
 version = "0.4.14"
 
