@@ -26,17 +26,17 @@ MAKE_ARGS := REPO_ROOT="$(REPO_ROOT)" \
 
 install: build
 	$(V) echo "- Installing $(ARCH)/$(BUILD_MODE) Apps..."
-	$(V) cd apps && $(MAKE) $(MAKE_ARGS) install
+	$(V) $(MAKE) $(MAKE_ARGS) -C apps install
 
 	$(V) echo "- Installing $(ARCH)/$(BUILD_MODE) Binaries..."
-	$(V) cd bins && $(MAKE) $(MAKE_ARGS) install
+	$(V) $(MAKE) $(MAKE_ARGS) -C bins install
 
 build:
 	$(V) echo "- Building $(ARCH)/$(BUILD_MODE) Apps..."
-	$(V) cd apps && $(MAKE) $(MAKE_ARGS) build
+	$(V) $(MAKE) $(MAKE_ARGS) -C apps build
 
 	$(V) echo "- Building $(ARCH)/$(BUILD_MODE) Binaries..."
-	$(V) cd bins && $(MAKE) $(MAKE_ARGS) build
+	$(V) $(MAKE) $(MAKE_ARGS) -C bins build
 
 clean:
 	$(V) echo "- Cleaning $(ARCH)/$(BUILD_MODE) Userland..."
