@@ -13,6 +13,13 @@ SMP_CORES  ?= 1 # TODO support SMP in the kernel
 V          ?= @ # disable print of executed command, remove to print commands
 OFFLINE    ?= false
 
+#
+# -- -- -- -- -- -- -- -- -- -- -- Build Prefixes -- -- -- -- -- -- -- -- -- -- -- --
+#
+
+BUILD_PREFIX        ?= target/$(ARCH)
+TARGET_PREFIX       ?= targets/$(ARCH)
+DIST_SYSROOT_PREFIX ?= $(BUILD_PREFIX)/sysroot/$(BUILD_MODE)
 
 #
 # -- -- -- -- -- -- -- -- -- -- -- -- Rust Tools -- -- -- -- -- -- -- -- -- -- -- -- --
