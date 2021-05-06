@@ -1,11 +1,5 @@
-/*! # Operating System Entities
- *
- * Exports the operating system entities objects
- */
+/*! Operating System entities */
 
-pub use config::*;
-pub use entity::*;
-
-mod config;
-mod entity;
+pub mod config;
+pub mod entity;
 pub mod impls;

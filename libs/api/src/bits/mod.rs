@@ -1,7 +1,4 @@
-/*! # Bit Related Data
- *
- * Exports the bits related submodules
- */
+/*! Bit-related structures */
 
 pub mod ent;
 pub mod obj;

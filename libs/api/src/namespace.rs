@@ -1,8 +1,14 @@
 use crate::{
-    bits::obj::Grants,
-    caller::{KernCaller, Result},
-    errors::Error,
-    objs::{impls::Dir, ObjId}
+    bits::obj::grants::Grants,
+    caller::{
+        KernCaller,
+        Result
+    },
+    errors::error::Error,
+    objs::{
+        impls::dir::Dir,
+        object::ObjId
+    }
 };
 
 pub struct NameSpace(ObjId);

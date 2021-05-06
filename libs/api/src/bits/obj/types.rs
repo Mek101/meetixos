@@ -1,10 +1,4 @@
-/*! # `Object` Types
- *
- * Implements the variants that identifies the various [`ObjId`]
- * implementations
- *
- * [`ObjId`]: crate::objs::ObjId
- */
+/*! `Object` types */
 
 use core::fmt;
 
@@ -13,11 +7,8 @@ use num_enum::{
     TryFromPrimitive
 };
 
-/** # `Object` Types
- *
+/**
  * Lists the available object types represented by an [`ObjId`]
- *
- * [`ObjId`]: crate::objs::ObjId
  */
 #[repr(usize)]
 #[derive(Debug)]
@@ -25,64 +16,54 @@ use num_enum::{
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum ObjType {
-    /** No real uses, used as default value
+    /**
+     * Default value
      */
     Unknown,
 
-    /** Identifies a [`File`] object
-     *
-     * [`File`]: crate::objs::impls::File
+    /**
+     * Identifies a `File` object
      */
     File,
 
-    /** Identifies a [`Dir`] object
-     *
-     * [`Dir`]: crate::objs::impls::Dir
+    /**
+     * Identifies a `Dir` object
      */
     Dir,
 
-    /** Identifies a [`Link`] object
-     *
-     * [`Link`]: crate::objs::impls::Link
+    /**
+     * Identifies a `Link` object
      */
     Link,
 
-    /** Identifies a [`MMap`] object
-     *
-     * [`MMap`]: crate::objs::impls::MMap
+    /**
+     * Identifies a `MMap` object
      */
     MMap,
 
-    /** Identifies an [`IpcChan`] object
-     *
-     * [`IpcChan`]: crate::objs::impls::MMap
+    /**
+     * Identifies an `IpcChan` object
      */
     IpcChan,
 
-    /** Identifies an [`OsRawMutex`] object
-     *
-     * [`OsRawMutex`]: crate::objs::impls::OsRawMutex
+    /**
+     * Identifies an `OsRawMutex` object
      */
     OsRawMutex,
 
-    /** Identifies an [`KrnIterator`] object
-     *
-     * [`KrnIterator`]: crate::objs::impls::KrnIterator
+    /**
+     * Identifies an `KrnIterator` object
      */
     KrnIterator
 }
 
 impl Default for ObjType {
-    /** Returns the "default value" for a type
-     */
     fn default() -> Self {
         Self::Unknown
     }
 }
 
 impl fmt::Display for ObjType {
-    /** Formats the value using the given formatter
-     */
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Unknown => write!(f, "Unknown"),

@@ -1,10 +1,4 @@
-/*! # Task Modes Bits
- *
- * Implements various enumerations that are used for certain [`Task`]
- * related calls
- *
- * [`Task`]: crate::tasks::Task
- */
+/*! `Task` modes bits */
 
 use num_enum::{
     IntoPrimitive,
@@ -12,16 +6,13 @@ use num_enum::{
 };
 
 use crate::{
-    tasks::impls::Thread,
+    tasks::impls::thread::Thread,
     time::Duration
 };
 
-/** # `Task` Scheduling Policy
- *
+/**
  * Lists the available scheduling policies that can be given to
- * [`TaskConfig::with_sched_policy()`][TP]
- *
- * [TP]: crate::tasks::TaskConfig::with_sched_policy
+ * `TaskConfig::with_sched_policy()`
  */
 #[repr(u8)]
 #[derive(Debug)]
@@ -29,7 +20,8 @@ use crate::{
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum SchedPolicy {
-    /** The default policy when no other policy are specified.
+    /**
+     * The default policy when no other policy are specified.
      *
      * The use of this policy enables the default task scheduling
      * algorithm that works with a prioritized RR queue.
@@ -39,20 +31,18 @@ pub enum SchedPolicy {
      */
     Preemptive,
 
-    /** The use of this policy is recommended only for small and
+    /**
+     * The use of this policy is recommended only for small and
      * uninterruptible tasks that must have control on when they can
      * be interrupted (Real Time tasks).
      *
      * The tasks that use this policy must release the CPU with
-     * [`Task::yield_next()`]
-     *
-     * [`Task::yield_next()`]: crate::tasks::Task::yield_next
+     * `Task::yield_next()`
      */
     Cooperative
 }
 
-/** # `Task` Priority
- *
+/**
  * Lists the available classes of priorities for a task
  */
 #[repr(u8)]
@@ -70,23 +60,18 @@ pub enum TaskPrio {
     Max      = 6
 }
 
-/** # `Task` CPU Affinity
+/**
+ * Lists the available options for `TaskConfig::with_cpu()`.
  *
- * Allow the user to specify whether a [`Task`] must be affine to a
+ * Allow the user to specify whether a `Task` must be affine to a
  * restricted set of CPUs in an SMP environment or can be executed
- * on any of the available CPUs.
- *
- * The use of this enumeration is intended with [`TaskConfig::with_cpu()`]
- *
- * [`Task`]: crate::tasks::Task
- * [`TaskConfig::with_cpu()`]: crate::tasks::TaskConfig::with_cpu
+ * on any of the available CPUs
  */
 #[derive(Debug)]
 #[derive(Clone, Copy)]
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 pub enum TaskCpu {
-    /** # No CPU affinity
-     *
+    /**
      * The default affinity when no other are specified.
      *
      * The use of this variant tells to the kernel that the task can
@@ -95,8 +80,7 @@ pub enum TaskCpu {
      */
     Any,
 
-    /** # Deterministic CPU affinity
-     *
+    /**
      * Usable when the task must be executed by a deterministic subset of
      * the CPUs available (in SMP environment) for optimizations.
      *
@@ -113,7 +97,8 @@ pub enum TaskCpu {
 }
 
 impl TaskCpu {
-    /** Returns the variant cardinal value
+    /**
+     * Returns the variant cardinal value
      */
     pub fn option(&self) -> usize {
         match self {
@@ -122,9 +107,8 @@ impl TaskCpu {
         }
     }
 
-    /** Returns [`Some(bitmask)`] when `self` is `TaskCpu::Mask`
-     *
-     * [`Some(bitmask)`]: core::option::Option::Some
+    /**
+     * Returns `Some(bitmask)` when `self` is `TaskCpu::Mask`
      */
     pub fn mask_bits(&self) -> Option<u64> {
         match *self {
@@ -134,33 +118,26 @@ impl TaskCpu {
     }
 }
 
-/** # `Thread` Wait Reason
- *
- * Lists the available reasons for which a [`Thread`] can wait
- *
- * [`Thread`]: crate::tasks::impls::Thread
+/**
+ * Lists the available reasons for which a `Thread` can wait
  */
 pub enum WaitFor {
-    /** The current [`Thread`] sleeps for a precise quantum of time expressed
-     * by the given [`Duration`]
-     *
-     * [`Thread`]: crate::tasks::impls::Thread
-     * [`Duration`]: crate::time::Duration
+    /**
+     * The current `Thread` sleeps for a precise quantum of time expressed
+     * by the given `Duration`
      */
     Quantum(Duration),
 
-    /** The current [`Thread`] sleeps until the given one is not terminated.
+    /**
+     * The current `Thread` sleeps until the given one is not terminated.
      *
-     * The [`Thread`] must not be the same
-     *
-     * [`Thread`]: crate::tasks::impls::Thread
+     * The `Thread` must not be the same
      */
     Join(Thread),
 
-    /** The current [`Thread`] sleeps until the interrupt identified by the
+    /**
+     * The current `Thread` sleeps until the interrupt identified by the
      * given number not throws
-     *
-     * [`Thread`]: crate::tasks::impls::Thread
      */
     Irq(u32)
 }

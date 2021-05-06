@@ -1,10 +1,7 @@
-/** # Extended Bit Flags
- *
- * This macro relies on the original [`bitflags`] crate without any
- * modification, but extends it adding an `is_<lower_flags_name>(&)` method
- * for each flag that is simply a `self.contains(Self::FLAG_NAME)`
- *
- * [`bitflags`]: https://docs.rs/bitflags/1.2.1/bitflags/
+/**
+ * Extends `bitflags` macro adding, for each flag, an
+ * `is_<lower_flags_name>(&)` method that is simply a
+ * `self.contains(Self::FLAG_NAME)`
  */
 #[macro_export]
 macro_rules! ext_bitflags {

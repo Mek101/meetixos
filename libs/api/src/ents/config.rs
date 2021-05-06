@@ -1,10 +1,4 @@
-/*! # `Entity` Configuration
- *
- * Implements the standard and unique way to find existing [`OSEntity`]s or
- * create new one
- *
- * [`OSEntity`]: crate::ents::OSEntity
- */
+/*! `OSEntity` configuration */
 
 use core::marker::PhantomData;
 
@@ -20,7 +14,7 @@ use os::{
 };
 
 use crate::{
-    bits::ent::OSEntityType,
+    bits::ent::types::OSEntityType,
     caller::{
         KernCaller,
         Result
@@ -31,18 +25,15 @@ use crate::{
         CreatMode,
         FindMode
     },
-    ents::{
+    ents::entity::{
         OSEntity,
         OSEntityId
     }
 };
 
-/** # `OSEntity` Configuration
- *
- * Implements a function standard interface to find existing [`OSEntity`] or
- * create new one.
- *
- * [`OSEntity`]: crate::ents::OSEntity
+/**
+ * Common functional configuration interface to find or create `OSEntity`
+ * based objects
  */
 #[derive(Debug)]
 pub struct OSEntConfig<T, M>
@@ -57,9 +48,8 @@ pub struct OSEntConfig<T, M>
 }
 
 impl<T> OSEntConfig<T, CreatMode> where T: OSEntity {
-    /** # Constructs a new `OSEntConfig`
-     *
-     * The instance is initialized for creation
+    /**
+     * Constructs an empty `OSEntConfig` for creation
      */
     pub(crate) fn new() -> Self {
         Self { m_flags: 0.set_bit(Self::CFG_CREAT_BIT, true).clone(),
@@ -70,28 +60,22 @@ impl<T> OSEntConfig<T, CreatMode> where T: OSEntity {
                _unused2: Default::default() }
     }
 
-    /** # Enables admin flag
-     *
-     * Makes the resultant [`OSEntity`] an administrative account
-     *
-     * [`OSEntity`]: crate::ents::OSEntity
+    /**
+     * Makes the resultant `OSEntity` an administrative account
      */
     pub fn make_admin(&mut self) -> &mut Self {
         self.m_flags.set_bit(Self::CFG_ADMIN_BIT, true);
         self
     }
 
-    /** # Creates a new `OSEntity`
-     *
+    /**
      * Dispatches the configuration to the kernel and creates a new
-     * [`OSEntity`] with the given name, that is not necessarily unique (but
-     * the couple id and name must).
+     * `OSEntity` with the given name, which couldn't be unique (but
+     * the tuple `id, name` must be).
      *
-     * If the kernel finds another [`OSEntity`] with the same name it
+     * If the kernel finds another `OSEntity` with the same name it
      * ensures that the allocated id is not the same of the existing
-     * one.
-     *
-     * [`OSEntity`]: crate::ents::OSEntity
+     * one
      */
     pub fn apply(mut self, name: &str) -> Result<T> {
         let mut buf = [0; ENTITY_NAME_LEN_MAX];
@@ -105,9 +89,8 @@ impl<T> OSEntConfig<T, CreatMode> where T: OSEntity {
 }
 
 impl<T> OSEntConfig<T, FindMode> where T: OSEntity {
-    /** # Constructs a new `OSEntConfig`
-     *
-     * The returned instance is blank and zeroed
+    /**
+     * Constructs an empty `OSEntConfig` for finding
      */
     pub(crate) fn new() -> Self {
         Self { m_flags: 0,
@@ -118,8 +101,7 @@ impl<T> OSEntConfig<T, FindMode> where T: OSEntity {
                _unused2: Default::default() }
     }
 
-    /** # Specifies the name
-     *
+    /**
      * Enables the name filter to tell the kernel which name must be
      * selected
      */
@@ -131,8 +113,7 @@ impl<T> OSEntConfig<T, FindMode> where T: OSEntity {
         self
     }
 
-    /** # Specifies only admin `OSEntities`
-     *
+    /**
      * Enables the "only administrative" account filter
      */
     pub fn only_admin(&mut self) -> &mut Self {
@@ -140,19 +121,14 @@ impl<T> OSEntConfig<T, FindMode> where T: OSEntity {
         self
     }
 
-    /** # Searches for existing `OSEntities`
-     *
+    /**
      * Dispatches the configuration to the kernel to validate and initialize
-     * an iteration pool on which the returned [`Iterator`] will fetch
+     * an iteration pool on which the returned `Iterator` will fetch
      * the results.
      *
      * If the given configuration have no filters, the kernel initializes an
      * iteration pool with **ALL** the active entities of the `T` type
-     * ([`OSUser`] or [`OSGroup`])
-     *
-     * [`Iterator`]: core::iter::Iterator
-     * [`OSUser`]: crate::ents::impls::OSUser
-     * [`OSGroup`]: crate::ents::impls::OSGroup
+     * (`OSUser` or `OSGroup`)
      */
     pub fn search(self) -> Result<impl Iterator<Item = T>> {
         self.kern_call_1(KernFnPath::OSEntConfig(KernOSEntConfigFnId::InitFind),
@@ -168,18 +144,13 @@ impl<T, M> OSEntConfig<T, M>
     const CFG_CREAT_BIT: usize = 0;
     const CFG_ADMIN_BIT: usize = 1;
 
-    /** # Specifies an unique identifier
-     *
-     * Tells to the kernel which unique identifier the [`OSEntity`] must
-     * obtain in [`CreatMode`] (the entire operation will fail if the id is
+    /**
+     * Tells to the kernel which unique identifier the `OSEntity` must
+     * obtain in `CreatMode` (the entire operation will fail if the id is
      * already assigned).
      *
      * Or tells exactly which identifier the searched OSEntity have in
-     * [`FindMode`]
-     *
-     * [`OSEntity`]: crate::ents::OSEntity
-     * [`CreatMode`]: crate::config::CreatMode
-     * [`FindMode`]: crate::config::FindMode
+     * `FindMode`
      */
     pub fn with_id(&mut self, id: u16) -> &mut Self {
         self.m_id = Some(id);
@@ -189,33 +160,36 @@ impl<T, M> OSEntConfig<T, M>
 
 #[cfg(feature = "enable_kernel_methods")]
 impl<T: OSEntity, M: ConfigMode> OSEntConfig<T, M> {
-    /** Returns whether this configuration represents a creation request
+    /**
+     * Returns whether this configuration represents a creation request
      */
     pub fn is_creat(&self) -> bool {
         self.m_flags.get_bit(Self::CFG_CREAT_BIT)
     }
 
-    /** Returns whether the admin filter/flag is enabled
+    /**
+     * Returns whether the admin filter/flag is enabled
      */
     pub fn is_admin(&self) -> bool {
         self.m_flags.get_bit(Self::CFG_ADMIN_BIT)
     }
 
-    /** Returns the optional identifier given
+    /**
+     * Returns the optional identifier given
      */
     pub fn id(&self) -> Option<u16> {
         self.m_id
     }
 
-    /** Returns the optional name given
+    /**
+     * Returns the optional name given
      */
     pub fn name(&self) -> Option<&[u8; ENTITY_NAME_LEN_MAX]> {
         self.m_name.as_ref()
     }
 
-    /** Returns the [`OSEntityType`]
-     *
-     * [`OSEntityType`]: crate::bits::ent::types::OSEntityType
+    /**
+     * Returns the `OSEntityType`
      */
     pub fn ent_type(&self) -> OSEntityType {
         self.m_type

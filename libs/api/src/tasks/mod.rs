@@ -1,13 +1,5 @@
-/*! # Tasks Management
- *
- * Exports the submodules related to the tasking management
- */
+/*! Tasks management */
 
-pub use config::*;
-pub use task::*;
-
-#[macro_use]
-mod task;
-
-mod config;
+pub mod config;
 pub mod impls;
+pub mod task;

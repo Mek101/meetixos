@@ -1,7 +1,4 @@
-/*! # Locked Heap Manager
- *
- * Implements the thread safe heap management
- */
+/*! Thread-safe `Heap` wrappers */
 
 #[cfg(not(feature = "disable_locked"))]
 pub mod os;

@@ -1,9 +1,4 @@
-/*! # `Task` Specific Data
- *
- * Implements a data enumeration with the [`Task`] specific data
- *
- * [`Task`]: crate::tasks::Task
- */
+/*! `Task` implementation's specific data */
 
 use core::cmp::min;
 
@@ -11,68 +6,59 @@ use os::{
     limits::{
         PROC_ARG_COUNT_MAX,
         PROC_ARG_LEN_MAX,
-        TASK_NAME_LEN_MAX
+        THREAD_NAME_LEN_MAX
     },
     str_utils
 };
 
 use crate::{
-    bits::task::{
+    bits::task::data::thread::{
         RUserThreadEntry,
         ThreadEntryData
     },
-    objs::impls::File
+    objs::impls::file::File
 };
 
-/** Initializes a standard [`RawProcArgs`]
- *
- * [`RawProcArgs`]: crate::bits::task::data::RawProcArgs
+/**
+ * Initializes a standard `RawProcArgs`
  */
 pub const RAW_PROC_ARGS_INIT: RawProcArgs = [[0; PROC_ARG_LEN_MAX]; PROC_ARG_COUNT_MAX];
 
-/** # Raw `Proc` Arguments
- *
- * Identifies the raw type used to provide [`Proc`] arguments to the kernel
- *
- * [`Proc`]: crate::tasks::impls::Proc
+/**
+ * Raw process arguments collection
  */
 pub type RawProcArgs = [[u8; PROC_ARG_LEN_MAX]; PROC_ARG_COUNT_MAX];
 
-/** # `Task` Specific Data
- *
+/**
  * Lists the variants that contains the task implementation specific data
  */
 #[derive(Debug, Clone)]
 pub enum TaskSpecData {
-    /** Contains the specific data to construct and execute a [`Thread`]
-     *
-     * [`Thread`]: crate::tasks::impls::Thread
+    /**
+     * Contains the specific data to construct and execute a `Thread`
      */
     Thread {
         m_user_thread: ThreadEntryData,
-        m_name: Option<[u8; TASK_NAME_LEN_MAX]>
+        m_name: Option<[u8; THREAD_NAME_LEN_MAX]>
     },
 
-    /** Contains the specific data to construct and execute a [`Proc`]
-     *
-     * [`Proc`]: crate::tasks::impls::Proc
+    /**
+     * Contains the specific data to construct and execute a `Proc`
      */
     Proc {
         m_executable: File,
         m_args: Option<RawProcArgs>
     },
 
-    /** Default value usable only as uninitialized value
+    /**
+     * Default value usable only as uninitialized value
      */
     None
 }
 
 impl TaskSpecData {
-    /** # Constructs a new `TaskSpecData::Thread`
-     *
-     * Fills the [`Thread`] variant data with the given values
-     *
-     * [`Thread`]: crate::tasks::impls::Thread
+    /**
+     * Constructs a `TaskSpecData::Thread` filling with the given data
      */
     pub fn new_thread(entry_point: Option<RUserThreadEntry>,
                       arg: Option<usize>,
@@ -92,22 +78,18 @@ impl TaskSpecData {
                                         * the string slice with the name when given
                                         * with Option::Some
                                         */
-                                       let mut name_buf = [0; TASK_NAME_LEN_MAX];
+                                       let mut name_buf = [0; THREAD_NAME_LEN_MAX];
                                        str_utils::copy_str_to_u8_buf(&mut name_buf,
                                                                      str_name);
                                        name_buf
                                    }) }
     }
 
-    /** # Constructs a new `TaskSpecData::Proc`
+    /**
+     * Constructs a `TaskSpecData::Proc` filling with the given data.
      *
-     * Fills the `Proc` variant data with the given values.
-     *
-     * The arguments count and length are truncated when exceed the
-     * [`PROC_ARG_LEN_MAX`] and the [`PROC_ARG_COUNT_MAX`]
-     *
-     * [`PROC_ARG_LEN_MAX`]: os::limits::PROC_ARG_LEN_MAX
-     * [`PROC_ARG_COUNT_MAX`]: os::limits::PROC_ARG_COUNT_MAX
+     * Arguments that exceed `PROC_ARG_LEN_MAX` and the `PROC_ARG_COUNT_MAX`
+     * are truncated
      */
     pub fn new_proc(exe: File, args: Option<&[&str]>) -> Self {
         Self::Proc { m_executable: exe,

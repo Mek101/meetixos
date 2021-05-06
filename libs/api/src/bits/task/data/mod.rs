@@ -1,11 +1,4 @@
-/*! # `Task` Data
- *
- * Implements various data structures and constants used by the kernel and
- * the internals api to exchange informations about tasks
- */
+/*! Various `Task` data structures */
 
-pub use spec::*;
-pub use thread::*;
-
-mod spec;
-mod thread;
+pub mod spec;
+pub mod thread;

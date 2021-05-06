@@ -1,12 +1,5 @@
-/*! # Task Related Bits
- *
- * Exports the sub modules that implements the bits for the tasking
- */
+/*! `Task` related bits */
 
-pub use data::*;
-pub use modes::*;
-pub use types::*;
-
-mod data;
-mod modes;
-mod types;
+pub mod data;
+pub mod modes;
+pub mod types;

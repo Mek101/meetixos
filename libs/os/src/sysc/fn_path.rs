@@ -1,12 +1,9 @@
-/*! # Kernel Function Path
- *
- * Lists the system call classes and defines the kernel function path.
- *
- * This is used by the kernel to access the first layer of groups of system
- * call routines
- */
+/*! Kernel function call paths */
 
-use core::fmt;
+use core::{
+    convert::TryFrom,
+    fmt
+};
 
 use crate::sysc::codes::{
     KernDirFnId,
@@ -29,15 +26,14 @@ use crate::sysc::codes::{
     KernTimeInstFnId,
     KrnIteratorFnId
 };
-use core::convert::TryFrom;
 
-/** # Kernel Function Path
+/**
+ * Lists the callable kernel function paths.
  *
- * Defines the constructable path to a kernel's system call function.
- *
- * Each variant represents a class (the kernel map's key for the routine
- * array of the object referenced) that contains the related function
- * identifier
+ * Each variant represent a kernel call class, which is the primary key of
+ * the kernel's routines table, and each class contains the specific codes
+ * for the call class, which is the secondary key of the kernel's routines
+ * table
  */
 #[derive(Debug, Copy, Clone)]
 pub enum KernFnPath {
@@ -63,7 +59,8 @@ pub enum KernFnPath {
 }
 
 impl KernFnPath {
-    /** Returns the current function class as `u16`
+    /**
+     * Returns the current function class variant as `u16`
      */
     pub fn raw_fn_class(&self) -> u16 {
         match self {
@@ -89,7 +86,8 @@ impl KernFnPath {
         }
     }
 
-    /** Returns the current function id as `u16`
+    /**
+     * Returns the current function id as `u16`
      */
     pub fn raw_fn_id(&self) -> u16 {
         match *self {
@@ -117,12 +115,8 @@ impl KernFnPath {
 }
 
 impl TryFrom<(usize, usize)> for KernFnPath {
-    /** The type returned in the event of a conversion error
-     */
     type Error = ();
 
-    /** Performs the conversion
-     */
     fn try_from(value: (usize, usize)) -> Result<Self, Self::Error> {
         match value.0 {
             0 => {
@@ -264,8 +258,6 @@ impl TryFrom<(usize, usize)> for KernFnPath {
 }
 
 impl fmt::Display for KernFnPath {
-    /** Formats the value using the given formatter.
-     */
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::ObjConfig(code) => write!(f, "KernFnPath::ObjConfig({:?})", code),

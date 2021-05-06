@@ -1,10 +1,4 @@
-/*! # Error Codes
- *
- * Exports the errors modules divided by type
- */
-
-pub use class::*;
-pub use error::*;
+/*! Kernel call error management */
 
 pub mod class;
 pub mod error;

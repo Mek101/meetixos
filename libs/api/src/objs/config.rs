@@ -1,9 +1,4 @@
-/*! # `Object` builder
- *
- * Implements the standard and unique way to open or create [`Object`]s
- *
- * [`Object`]: crate::objs::Object
- */
+/*! `Object` configuration */
 
 use core::marker::PhantomData;
 
@@ -19,8 +14,8 @@ use os::{
 
 use crate::{
     bits::obj::{
-        Grants,
-        ObjType
+        grants::Grants,
+        types::ObjType
     },
     caller::{
         KernCaller,
@@ -31,7 +26,7 @@ use crate::{
         CreatMode,
         FindMode
     },
-    objs::{
+    objs::object::{
         ObjId,
         Object,
         UserCreatable
@@ -39,31 +34,9 @@ use crate::{
     path::Path
 };
 
-/** # Object Configuration
- *
- * Implements a functional standard interface to open or create [`Object`]
- * based objects.
- *
- * This object takes the place of the old style Unix's [`open()`] system
- * call providing a function-call-chain interface where each called method
- * enables a feature.
- *
- * i.e [`ObjConfig::for_read()`] enables data read operations (if
- * the caller have the permissions to do that) exactly as [`O_RDONLY`] for
- * Unix's [`open()`] do.
- *
- * The constructed configuration can be then applied with:
- * * [`ObjConfig::apply_for()`] - to open or create a named object (an
- *   object with a name into the VFS)
- * * [`ObjConfig::apply_for_anon()`][AN] - to create anonymous object that
- *   are local to the scope of the object and not represented into the VFS
- *
- * [`Object`]: crate::objs::Object
- * [`open()`]: https://man7.org/linux/man-pages/man2/open.2.html
- * [`ObjConfig::for_read()`]: crate::objs::ObjConfig::for_read
- * [`O_RDONLY`]: https://man7.org/linux/man-pages/man2/open.2.html
- * [`ObjConfig::apply_for()`]: crate::objs::ObjConfig::apply_for
- * [AN]: rate::objs::config::ObjConfig::apply_for_anon
+/**
+ * Common functional configuration interface to open or create `Object`
+ * based objects
  */
 #[derive(Debug)]
 pub struct ObjConfig<T, M>
@@ -79,9 +52,8 @@ pub struct ObjConfig<T, M>
 }
 
 impl<T> ObjConfig<T, CreatMode> where T: Object + UserCreatable {
-    /** # Constructs a new `ObjConfig`
-     *
-     * The instance is initialized for creation
+    /**
+     * Constructs an empty `ObjConfig` for creation
      */
     pub(crate) fn new() -> Self {
         Self { m_flags: 0.set_bit(Self::CFG_CREAT_BIT, true).clone(),
@@ -93,37 +65,27 @@ impl<T> ObjConfig<T, CreatMode> where T: Object + UserCreatable {
                _unused2: Default::default() }
     }
 
-    /** # Customizes the `Object`'s `Grants`
+    /**
+     * Sets custom `Grants` for the creation of the new object.
      *
-     * Sets custom [`Grants`] for the creation of the new object.
-     *
-     * The caller [`OSUser`] (or at least one of his joined [`OSGroup`]s)
+     * The caller `OSUser` (or at least one of his joined `OSGroup`s)
      * must have write grants for the parent directory
-     *
-     * [`Grants`]: crate::bits::obj::Grants
-     * [`OSUser`]: crate::ents::impls::OSUser
-     * [`OSGroup`]: crate::ents::impls::OSGroup
      */
     pub fn with_grants(&mut self, grants: Grants<T>) -> &mut Self {
         self.m_grants = grants;
         self
     }
 
-    /** # Creates an anonymous object
-     *
+    /**
      * Dispatches the configuration to the kernel that creates a new
      * anonymous object.
      *
-     * An anonymous object is an object that [`have no name`] but can be
-     * shared among other tasks with [`Object::send()`].
+     * An anonymous object is an object that have no name but can be
+     * shared among other tasks with `Object::send()`.
      *
      * The life of the objects created with this method is the scope that
      * contains the handle, when the object goes out of scope (from all the
      * tasks that owns it) it is definitely destroyed
-     *
-     * [`have no name`]: crate::objs::infos::info::ObjInfo::is_named
-     * [`Object::send()`]: crate::objs::Object::send
-     * [`ObjConfig::exclusive()`]: crate::objs::ObjConfig::exclusive
      */
     pub fn apply_for_anon(&self) -> Result<T> {
         self.apply_builder_config()
@@ -131,9 +93,8 @@ impl<T> ObjConfig<T, CreatMode> where T: Object + UserCreatable {
 }
 
 impl<T> ObjConfig<T, FindMode> where T: Object {
-    /** # Constructs a new `ObjConfig`
-     *
-     * The returned instance is blank and zeroed
+    /**
+     * Constructs an empty `ObjConfig` for opening
      */
     pub(crate) fn new() -> Self {
         Self { m_flags: 0,
@@ -145,8 +106,7 @@ impl<T> ObjConfig<T, FindMode> where T: Object {
                _unused2: Default::default() }
     }
 
-    /** # Enables exclusive open
-     *
+    /**
      * Fails to open the object if it is already open by someone else.
      *
      * The other tasks that tries to open the same object after a successful
@@ -162,22 +122,14 @@ impl<T, M> ObjConfig<T, M>
     where T: Object + SizeableData,
           M: ConfigMode
 {
-    /** # Gives a size to the object's data
-     *
-     * Allows to give a size to the object's data, both if it already exists
-     * or it must be created.
+    /**
+     * Give a size to the object's data, both if it already exists or it
+     * must be created.
      *
      * Like the exec bit this configuration is meaningless for certain type
-     * of objects (i.e [`Dir`]ectories, [`OsRawMutex`]s, [`Link`]s),
-     * optional for others (i.e [`File`]s, [`IpcChan`]nels) but
-     * mandatory for [`MMap`]s **when created**
-     *
-     * [`Dir`]: crate::objs::impls::Dir
-     * [`OsRawMutex`]: crate::objs::impls::OsRawMutex
-     * [`Link`]: crate::objs::impls::Link
-     * [`File`]: crate::objs::impls::File
-     * [`IpcChan`]: crate::objs::impls::IpcChan
-     * [`MMap`]: crate::objs::impls::MMap
+     * of objects (i.e `Dir`ectories, `OsRawMutex`s, `Link`s),
+     * optional for others (i.e `File`s, `IpcChan`nels) but
+     * mandatory for `MMap`s **when created**
      */
     pub fn with_size(&mut self, size: usize) -> &mut Self {
         self.m_flags.set_bit(Self::CFG_SET_SIZE_BIT, true);
@@ -197,7 +149,8 @@ impl<T, M> ObjConfig<T, M>
     const CFG_SET_SIZE_BIT: usize = 4;
     const CFG_EXCLUSIVE_BIT: usize = 5;
 
-    /** # Enables data read operations
+    /**
+     * Enables data read operations
      *
      * Data read operation can be performed (if the caller have the
      * permissions to do that)
@@ -207,7 +160,8 @@ impl<T, M> ObjConfig<T, M>
         self
     }
 
-    /** # Enables data write operations
+    /**
+     * Enables data write operations
      *
      * Data write operations can be performed (if the caller have the
      * permissions to do that)
@@ -217,54 +171,38 @@ impl<T, M> ObjConfig<T, M>
         self
     }
 
-    /** # Enables data executable operations
+    /**
+     * Enables data executable operations
      *
-     * As written [here] the exec bit have different meaning among the
-     * different [`Object`] implementations.
+     * The exec bit have different meaning among the different `Object`
+     * implementations.
      *
-     * Only for the [`File`]s and [`MMap`]s enable this configuration bit
-     * changes the behaviours (i.e [`File`]s can be run as executable via
-     * [`TaskConfig<Proc>::run()`] and [`MMap`]'s pages are mapped without
-     * [`NO_EXECUTE`] bit).
+     * Only for the `File`s and `MMap`s enable this configuration bit
+     * changes the behaviours (i.e `File`s can be run as executable via
+     * `TaskConfig<Proc>::run()` and `MMap`'s pages are mapped without
+     * `PTFlags::NO_EXECUTE` bit).
      *
      * Calling this method for the other object types only tell to the
      * kernel to ensure the caller user have the data execution
      * permissions for the object to open
-     *
-     * [here]: crate::bits::obj::Grants::set_data_executable
-     * [`Object`]: crate::objs::Object
-     * [`File`]: crate::objs::impls::File
-     * [`MMap`]: crate::objs::impls::MMap
-     * [`TaskConfig<Proc>::run()`]: crate::tasks::TaskConfig::run-1
-     * [`NO_EXECUTE`]: shared::mem::paging::table::PTFlags::NO_EXECUTE
      */
     pub fn for_exec(&mut self) -> &mut Self {
         self.m_flags.set_bit(Self::CFG_EXEC_BIT, true);
         self
     }
 
-    /** # Opens/Creates a named object
-     *
+    /**
      * Dispatches the configuration to the kernel that opens (or creates if
-     * [`ObjConfig::creat()`] was called) the object referenced by `path`.
+     * [`Object::creat()`] was called) the object referenced by `path`.
      *
      * The life of the objects created with this method varies by type:
-     * Permanent objects, like [`File`]s, [`Dir`]ectories, [`Link`]s and
-     * [`OsRawMutex`]es, persists until they are explicitly destroyed with
-     * [`Object::drop_name()`].
+     * Permanent objects, like `File`s, `Dir`ectories, `Link`s and
+     * `OsRawMutex`es, persists until they are explicitly destroyed with
+     * `Object::drop_name()`.
      *
-     * The other kind of objects, like [`MMap`]s and [`IpcChan`]nels, live
+     * The other kind of objects, like `MMap`s and `IpcChan`nels, live
      * until there is a reference to them. When the references reaches the 0
      * they are definitely destroyed
-     *
-     * [`ObjConfig::creat()`]: crate::objs::ObjConfig::creat
-     * [`File`]: crate::objs::impls::File
-     * [`Dir`]: crate::objs::impls::Dir
-     * [`Link`]: crate::objs::impls::Link
-     * [`OsRawMutex`]: crate::objs::impls::OsRawMutex
-     * [`Object::drop_name()`]: crate::objs::Object::drop_name
-     * [`MMap`]: crate::objs::impls::MMap
-     * [`IpcChan`]: crate::objs::impls::IpcChan
      */
     pub fn apply_for<P>(&mut self, path: P) -> Result<T>
         where P: AsRef<[u8]> {
@@ -272,8 +210,7 @@ impl<T, M> ObjConfig<T, M>
         self.apply_builder_config()
     }
 
-    /** # Dispatches the configuration to the kernel
-     *
+    /**
      * Requests to the kernel to apply the given configuration
      */
     fn apply_builder_config(&self) -> Result<T> {
@@ -288,83 +225,71 @@ impl<T, M> ObjConfig<T, M>
     where T: Object,
           M: ConfigMode
 {
-    /** Returns whether [`ObjConfig::for_read()`] was called
-     *
-     * [`ObjConfig::for_read()`]: crate::objs::ObjConfig::for_read
+    /**
+     * Returns whether `ObjConfig::for_read()` was called
      */
     pub fn is_read(&self) -> bool {
         self.m_flags.get_bit(Self::CFG_READ_BIT)
     }
 
-    /** Returns whether [`ObjConfig::for_write()`] was called
-     *
-     * [`ObjConfig::for_write()`]: crate::objs::ObjConfig::for_write
+    /**
+     * Returns whether `ObjConfig::for_write()` was called
      */
     pub fn is_write(&self) -> bool {
         self.m_flags.get_bit(Self::CFG_WRITE_BIT)
     }
 
-    /** Returns whether [`ObjConfig::for_exec()`] was called
-     *
-     * [`ObjConfig::for_exec()`]: crate::objs::ObjConfig::for_exec
+    /**
+     * Returns whether `ObjConfig::for_exec()` was called
      */
     pub fn is_exec(&self) -> bool {
         self.m_flags.get_bit(Self::CFG_EXEC_BIT)
     }
 
-    /** Returns whether [`ObjConfig::exclusive()`] was called
-     *
-     * [`ObjConfig::exclusive()`]: crate::objs::ObjConfig::exclusive
+    /**
+     * Returns whether `ObjConfig::exclusive()` was called
      */
     pub fn is_exclusive(&self) -> bool {
         self.m_flags.get_bit(Self::CFG_EXCLUSIVE_BIT)
     }
 
-    /** Returns whether [`ObjConfig::with_size()`] was called
-     *
-     * [`ObjConfig::with_size()`]: crate::objs::ObjConfig::with_size
+    /**
+     * Returns whether `ObjConfig::with_size()` was called
      */
     pub fn is_sized(&self) -> bool {
         self.m_flags.get_bit(Self::CFG_SET_SIZE_BIT)
     }
 
-    /** Returns whether [`ObjConfig::creat()`] was called
-     *
-     * [`ObjConfig::creat()`]: crate::objs::ObjConfig::creat
+    /**
+     * Returns whether `ObjConfig::creat()` was called
      */
     pub fn is_creat(&self) -> bool {
         self.m_flags.get_bit(Self::CFG_CREAT_BIT)
     }
 
-    /** Returns the [`Grants`] given with [`ObjConfig::creat()`]
-     *
-     * [`Grants`]: crate::bits::obj::Grants
-     * [`ObjConfig::creat()`]: crate::objs::ObjConfig::creat
+    /**
+     * Returns the `Grants` given with `ObjConfig::creat()`
      */
     pub fn grants(&self) -> Grants<T> {
         self.m_grants
     }
 
-    /** Returns the size in bytes given to [`ObjConfig::with_size()`]
-     *
-     * [`ObjConfig::with_size()`]: crate::objs::ObjConfig::with_size
+    /**
+     * Returns the size in bytes given to `ObjConfig::with_size()`
      */
     pub fn size(&self) -> usize {
         self.m_size
     }
 
-    /** Returns the [`ObjType`] given via generics
-     *
-     * [`ObjType`]: crate::bits::obj::types::ObjType
+    /**
+     * Returns the `ObjType` given via generics
      */
     pub fn obj_type(&self) -> ObjType {
         self.m_type
     }
 
-    /** Returns the [`Path`] given to [`ObjConfig::apply_for()`]
-     *
-     * [`Path`]: crate::path::Path
-     * [`ObjConfig::apply_for()`]: crate::objs::ObjConfig::apply_for
+    /**
+     * Returns the `Path` given to `ObjConfig::apply_for()`
      */
     pub fn path(&self) -> Option<&Path> {
         self.m_path.as_ref()
@@ -378,14 +303,9 @@ impl<T, M> KernCaller for ObjConfig<T, M>
     /* Nothing to implement */
 }
 
-/** # Sizeable Data Marker
- *
+/**
  * Marker trait implemented for the objects that have meaning with concept
- * of resizable data, like [`File`], [`MMap`] and [`IpcChan`]
- *
- * [`File`]: crate::objs::impls::File
- * [`MMap`]: crate::objs::impls::MMap
- * [`IpcChan`]: crate::objs::impls::IpcChan
+ * of resizable data, like `File`, `MMap` and `IpcChan`
  */
 pub trait SizeableData {
     /* No methods, just a marker trait */

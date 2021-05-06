@@ -1,4 +1,4 @@
-/*! # Architecture dependent code for x86_64
+/*! x86_64 kernel function call code
  *
  * Implements 64-bit x86_64 architecture-dependent functions to call the
  * kernel.
@@ -8,17 +8,14 @@
  * count/types/sizes and cause undefined behaviours into the kernel and into
  * the applications.
  *
- * Refer to the [`api`] crate to use high-level interfaces to the kernel,
+ * Refer to the `api` crate to use high-level interfaces to the kernel,
  * the following code is considered internal and may change in the future
- *
- * [`api`]: /api/index.html
  */
 
 use crate::sysc::id::SysCallId;
 
-/** # Raw syscall function
- *
- * Generates the `asm!` code to perform a system call
+/**
+ * Generates the `asm!` code to perform an `x86_64` system call
  */
 macro_rules! raw_syscall {
     ($id:expr, $( $reg:tt = $val:expr),*) => {{
@@ -66,30 +63,18 @@ macro_rules! raw_syscall {
     }};
 }
 
-/** # 0 argument system call
- *
- * Performs a switch to the kernel code to use a kernel service identified
- * by the given [`SysCallId`].
- *
- * No additional arguments than the [`SysCallId`] and the `err_ptr_value`
- * are given to the kernel
- *
- * [`SysCallId`]: crate::sysc::id::SysCallId
+/**
+ * Requests the kernel's service identified by the given `SysCallId` without
+ * additional arguments than `err_ptr_value`
  */
 #[inline(always)]
 pub unsafe fn syscall_0(id: SysCallId, err_ptr_value: *mut usize) -> Result<usize, ()> {
     raw_syscall!(id, "r10" = (err_ptr_value as usize))
 }
 
-/** # 1 argument system call
- *
- * Performs a switch to the kernel code to use a kernel service identified
- * by the given [`SysCallId`].
- *
- * One additional argument than the [`SysCallId`] and the `err_ptr_value`
- * is given to the kernel
- *
- * [`SysCallId`]: crate::sysc::id::SysCallId
+/**
+ * Requests the kernel's service identified by the given `SysCallId` with
+ * `1` additional argument than `err_ptr_value`
  */
 #[inline(always)]
 pub unsafe fn syscall_1(id: SysCallId,
@@ -99,15 +84,9 @@ pub unsafe fn syscall_1(id: SysCallId,
     raw_syscall!(id, "rdx" = a1, "r10" = (err_ptr_value as usize))
 }
 
-/** # 2 argument system call
- *
- * Performs a switch to the kernel code to use a kernel service identified
- * by the given [`SysCallId`].
- *
- * Two additional arguments than the [`SysCallId`] and the `err_ptr_value`
- * are given to the kernel
- *
- * [`SysCallId`]: crate::sysc::id::SysCallId
+/**
+ * Requests the kernel's service identified by the given `SysCallId` with
+ * `2` additional arguments than `err_ptr_value`
  */
 #[inline(always)]
 pub unsafe fn syscall_2(id: SysCallId,
@@ -118,15 +97,9 @@ pub unsafe fn syscall_2(id: SysCallId,
     raw_syscall!(id, "rdx" = a1, "rsi" = a2, "r10" = (err_ptr_value as usize))
 }
 
-/** # 3 argument system call
- *
- * Performs a switch to the kernel code to use a kernel service identified
- * by the given [`SysCallId`].
- *
- * Three additional arguments than the [`SysCallId`] and the `err_ptr_value`
- * are given to the kernel
- *
- * [`SysCallId`]: crate::sysc::id::SysCallId
+/**
+ * Requests the kernel's service identified by the given `SysCallId` with
+ * `3` additional arguments than `err_ptr_value`
  */
 #[inline(always)]
 pub unsafe fn syscall_3(id: SysCallId,
@@ -138,15 +111,9 @@ pub unsafe fn syscall_3(id: SysCallId,
     raw_syscall!(id, "rdx" = a1, "rsi" = a2, "rdi" = a3, "r10" = (err_ptr_value as usize))
 }
 
-/** # 4 argument system call
- *
- * Performs a switch to the kernel code to use a kernel service identified
- * by the given [`SysCallId`].
- *
- * Four additional arguments than the [`SysCallId`] and the `err_ptr_value`
- * are given to the kernel
- *
- * [`SysCallId`]: crate::sysc::id::SysCallId
+/**
+ * Requests the kernel's service identified by the given `SysCallId` with
+ * `4` additional arguments than `err_ptr_value`
  */
 #[inline(always)]
 pub unsafe fn syscall_4(id: SysCallId,
@@ -164,15 +131,9 @@ pub unsafe fn syscall_4(id: SysCallId,
                  "r10" = (err_ptr_value as usize))
 }
 
-/** # 5 argument system call
- *
- * Performs a switch to the kernel code to use a kernel service identified
- * by the given [`SysCallId`].
- *
- * Five additional arguments than the [`SysCallId`] and the `err_ptr_value`
- * are given to the kernel
- *
- * [`SysCallId`]: crate::sysc::id::SysCallId
+/**
+ * Requests the kernel's service identified by the given `SysCallId` with
+ * `5` additional arguments than `err_ptr_value`
  */
 #[inline(always)]
 pub unsafe fn syscall_5(id: SysCallId,

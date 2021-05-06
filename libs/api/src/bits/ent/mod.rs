@@ -1,11 +1,3 @@
-/*! # OS Entity Related Bits
- *
- * Exports the sub modules that implements the bits for the [`OSEntityId`]
- * based objects
- *
- * [`OSEntityId`]: crate::ents::OSEntityId
- */
+/*! `OSEntity` related bits */
 
-pub use types::*;
-
-mod types;
+pub mod types;

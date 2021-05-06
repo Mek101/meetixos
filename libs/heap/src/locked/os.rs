@@ -1,10 +1,4 @@
-/*! # Locked Heap Manager
- *
- * Implements a concurrency-safe heap manager usable as `global_alloc` in a
- * userspace environment and implements for it the [`GlobalAlloc`] trait
- *
- * [`GlobalAlloc`]: core::alloc::GlobalAlloc
- */
+/*! Userspace thread-safe `Heap` */
 
 use core::ops::Deref;
 
@@ -12,58 +6,47 @@ use linked_list_allocator::align_up;
 
 use api::objs::{
     impls::{
-        MMap,
-        OsRawMutex
+        mmap::MMap,
+        mutex::OsRawMutex
     },
-    UserCreatable
+    object::UserCreatable
 };
 
-use crate::{
-    consts::PAGE_SIZE,
-    locked::raw::RawLazyLockedHeap
-};
+use crate::locked::raw::RawLazyLockedHeap;
 
-/** # Locked Heap Manager
+/**
+ * Multi strategy heap manager capable of use as `global_allocator` in multi
+ * threaded environments.
  *
- * Defines a thread-safe multi-strategy heap manager that could be used as
- * `global_allocator` in a multi threaded environment.
- *
- * Internally uses a [`Mutex`] to ensure mutually exclusive access to an
- * [`Heap`] instance
- *
- * [`Mutex`]: api::objs::impls::mutex::Mutex
- * [`Heap`]: crate::Heap
+ * Internally uses an `api::objs::impls::Mutex` to ensure mutually exclusive
+ * access to the `Heap` instance
  */
 pub struct OsLockedHeap {
     m_locked_heap: RawLazyLockedHeap<OsRawMutex>
 }
 
 impl OsLockedHeap {
-    /** # Constructs a new `LockedHeap`
-     *
-     * If `mem_supplier` is [`None`] the object relies on an internal
-     * implementation that uses anonymous [`MMap`]s
-     *
-     * [`None`]: core::option::Option::None
-     * [`MMap`]: api::objs::impls::mmap::MMap
+    /**
+     * Constructs a new `OsLockedHeap` which relies on anonymous
+     * `api::objs::impls::MMap`s to obtain more system memory
      */
     pub const fn new() -> Self {
-        let raw_mutex_supplier =
-            || OsRawMutex::creat().for_read().for_write().apply_for_anon().ok();
         Self { m_locked_heap: unsafe {
-                   RawLazyLockedHeap::new(raw_mutex_supplier, Self::default_mem_supplier)
+                   RawLazyLockedHeap::new(|| {
+                                              OsRawMutex::creat().for_read()
+                                                                 .for_write()
+                                                                 .apply_for_anon()
+                                                                 .ok()
+                                          },
+                                          Self::default_mem_supplier)
                } }
     }
 
-    /** # User memory supplier
-     *
-     * Used as default [`HeapMemorySupplier`] for the underling [`Heap`]
-     *
-     * [`HeapMemorySupplier`]: crate::HeapMemorySupplier
-     * [`Heap`]: crate::Heap
+    /**
+     * Default `HeapMemorySupplier` for the underling `Heap`
      */
     fn default_mem_supplier(requested_size: usize) -> Option<(usize, usize)> {
-        let aligned_size = align_up(requested_size, PAGE_SIZE);
+        let aligned_size = align_up(requested_size, 4096);
 
         /* create an anonymous memory mapping, then leak it.
          *
@@ -83,12 +66,8 @@ impl OsLockedHeap {
 }
 
 impl Deref for OsLockedHeap {
-    /** The resulting type after dereference.    
-     */
     type Target = RawLazyLockedHeap<OsRawMutex>;
 
-    /** Dereferences the value.
-     */
     fn deref(&self) -> &Self::Target {
         &self.m_locked_heap
     }

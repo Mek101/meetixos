@@ -1,21 +1,15 @@
-/*! # Heap Manager
+/*! # Heap Management Library
  *
- * Implements a [`no_std`] heap manager library that could be used both in
+ * Implements a `no_std` heap management library that could be used both in
  * kernel and user spaces.
  *
- * The crate implements a concurrency safe [`Heap`] for the userspace called
- * [`OsLockedHeap`] that is simply an [`Heap`] instance wrapped in a
- * [`Mutex`]
- *
- * [`no_std`]: https://doc.rust-lang.org/1.7.0/book/no-stdlib.html
- * [`OsLockedHeap`]: crate::locked::os::OsLockedHeap
- * [`Heap`]: crate::Heap
- * [`Mutex`]: api::objs::impls::mutex::Mutex
+ * The crate implements a concurrency safe `Heap` for the userspace called
+ * `OsLockedHeap` that is simply an `Heap` instance wrapped in a
+ * `api::objs::impls::Mutex`
  */
 
 #![no_std]
 #![feature(const_fn, fn_traits, unboxed_closures, const_fn_fn_ptr_basics, once_cell)]
-#![allow(broken_intra_doc_links)]
 
 use core::{
     alloc::Layout,
@@ -39,24 +33,16 @@ pub mod consts;
 pub mod locked;
 pub mod slab;
 
-/** # Low Level Memory Supplier
- *
- * Represents the callback used by the [`Heap`] to obtain more memory from
- * the operating system (if the [`Heap`] is used in userspace) or from the
- * memory manager (if it is used into the kernel).
+/**
+ * Callback used by the `Heap` to obtain more memory when runs out.
  *
  * The function must return the starting address of the new virtual area
  * allocated and the aligned size of his minimum allocation block
- *
- * [`Heap`]: crate::Heap
  */
 pub type HeapMemorySupplier = fn(requested_size: usize) -> Option<(usize, usize)>;
 
-/** # Sub Allocators Identifier
- *
- * Lists the currently available allocators of the [`Heap`] manager.
- *
- * [`Heap`]: crate::Heap
+/**
+ * Lists the currently available allocators of the `Heap` manager
  */
 #[repr(u8)]
 #[derive(Debug)]
@@ -86,17 +72,13 @@ impl Allocator {
                                     Self::Slab8192Bytes,
                                     Self::LinkedList];
 
-    /** # Constructs an `Allocator` from a `Layout`
-     *
+    /**
      * Returns the best Allocator variant to serve the given request.
      *
-     * The associated function takes care that when is chosen a [`Slab`]
-     * allocator the difference between the [`layout.size()`] and the block
-     * size of the [`Slab`] doesn't exceed the [`SLAB_THRESHOLD`]
-     *
-     * [`layout.size()`]: core::alloc::Layout::size
-     * [`Slab`]: crate::slab::Slab
-     * [`SLAB_THRESHOLD`]: crate::consts::SLAB_THRESHOLD
+     * The function fallbacks to `Allocator::LinkedList` when a
+     * `Allocator::SlabXX` is chosen but the difference between the
+     * `layout.size()` and the block size of the `Slab` exceeds the
+     * `SLAB_THRESHOLD`
      */
     pub fn for_layout(layout: Layout) -> Allocator {
         let mut chosen = Allocator::LinkedList;
@@ -129,7 +111,8 @@ impl Allocator {
         chosen
     }
 
-    /** Returns the minimum allocation block size for the selected variant
+    /**
+     * Returns the minimum allocation block size for the selected variant
      */
     pub fn min_alloc_size(&self) -> usize {
         match self {
@@ -145,7 +128,8 @@ impl Allocator {
         }
     }
 
-    /** Returns the maximum allocation block size for the selected variant
+    /**
+     * Returns the maximum allocation block size for the selected variant
      */
     pub fn max_alloc_size(&self) -> usize {
         match self {
@@ -154,7 +138,8 @@ impl Allocator {
         }
     }
 
-    /** Returns the minimum amount of memory that each allocator wants as
+    /**
+     * Returns the minimum amount of memory that each allocator wants as
      * extension
      */
     pub fn min_managed_size(&self) -> usize {
@@ -166,12 +151,9 @@ impl Allocator {
         }
     }
 
-    /** # Cumulative minimum managed memory
-     *
-     * Calculates the minimum memory consumption requested by an [`Heap`]
-     * instance to become functional
-     *
-     * [`Heap`]: crate::Heap
+    /**
+     * Calculates the minimum memory consumption requested by an
+     * `heap::Heap` instance to become functional
      */
     pub fn cumulative_min_managed_size() -> usize {
         let mut size = 0;
@@ -180,29 +162,30 @@ impl Allocator {
         }
         size
     }
+
+    /**
+     * Returns an `Iterator` to the variants
+     */
+    pub fn iter() -> impl Iterator<Item = Self> {
+        Self::VARIANTS.iter()
+    }
 }
 
-/** # Heap Manager
+/**
+ * Multi strategy heap manager capable of use as `global_allocator` in
+ * single threaded environments.
  *
- * Defines a multi strategy heap manager that could be used as
- * `global_allocator` in single threaded environments.
+ * For thread-safe implementation use `OsLockedHeap`.
  *
- * For Thread safe implementation look [here]
- *
- * Internally two main allocation strategies area used:
+ * Internally two main allocation strategies are used:
  * * `Slab` - fixed size block allocation, used for little allocation
  *   requests (under 8KiB) and whenever the threshold doesn't exceed
- *   [`SLAB_THRESHOLD`].
+ *   `SLAB_THRESHOLD`.
  * * `LinkedList` - classic UNIX chunk allocation, used for allocation
  *   requests above the 8KiB and when slab allocation exceed the threshold.
  *
- * Slab allocator comes from the internal [`slab`] module, linked list
- * allocator comes from Philipp Oppermann's [`linked_list_allocator`] crate
- *
- * [here]: crate::locked::raw::RawLazyLockedHeap
- * [`SLAB_THRESHOLD`]: crate::consts::SLAB_THRESHOLD
- * [`slab`]: crate::slab::Slab
- * [`linked_list_allocator`]: linked_list_allocator::hole::HoleList
+ * Slab allocator comes from the internal `heap::slab` module, linked list
+ * allocator comes from Philipp Oppermann's `linked_list_allocator` crate
  */
 pub struct Heap {
     m_slab_64: Slab,
@@ -220,12 +203,9 @@ pub struct Heap {
 }
 
 impl Heap {
-    /** # Constructs a new `Heap`
-     *
-     * It will manage the memory returned by the [`HeapMemorySupplier`]
-     * callback given.
-     *
-     * [`HeapMemorySupplier`]: crate::HeapMemorySupplier
+    /**
+     * Constructs a new `Heap` which immediately uses the given
+     * `HeapMemorySupplier` to become operative
      */
     pub unsafe fn new(mem_supplier: HeapMemorySupplier) -> Self {
         /* immediately ask to the given supplier the minimum amount of memory to make
@@ -237,7 +217,7 @@ impl Heap {
             mem_supplier(Allocator::cumulative_min_managed_size()).unwrap();
 
         /* construct an Allocator iterator to construct the slabs in sequence */
-        let mut allocators = Allocator::iter_all();
+        let mut allocators = Allocator::iter();
 
         Self { m_slab_64: Self::construct_slab(&mut addr, allocators.next().unwrap()),
                m_slab_128: Self::construct_slab(&mut addr, allocators.next().unwrap()),
@@ -254,11 +234,8 @@ impl Heap {
                m_managed_mem: aligned_size }
     }
 
-    /** # Adds a new memory region
-     *
-     * The given memory region is dispatched to the given [`Allocator`].
-     *
-     * [`Allocator`]: crate::Allocator
+    /**
+     * Dispatches the given memory region to the given `Allocator`
      */
     pub unsafe fn add_region(&mut self, addr: usize, size: usize, allocator: Allocator) {
         /* check whether the caller wants to add memory to a slab allocator, in that
@@ -301,26 +278,17 @@ impl Heap {
         self.m_managed_mem += size;
     }
 
-    /** # Requests new memory
+    /**
+     * Allocates new memory that fits the given `Layout` request.
      *
-     * Allocates new memory that fits the given [`Layout`] request.
-     *
-     * Returns a [`Result`] variant with a [`NonNull<u8>`] when [`Ok`] or
-     * [`Err`] when the used allocator runs out of memory.
+     * Returns a `Result` variant with a `NonNull<u8>` pointer when `Ok` or
+     * `Err` when the used allocator runs out of memory.
      *
      * The allocation may be served by one of the slab sub-allocators, which
      * performs an allocation in `O(1)`, or by the
-     * [`Allocator::LinkedList`], which performs allocation in `O(n)`.
+     * `Allocator::LinkedList`, which performs allocation in `O(n)`.
      *
-     * To know which allocator will be used call [`layout_to_allocator()`].
-     *
-     * [`Layout`]: core::alloc::Layout
-     * [`Result`]: core::result::Result
-     * [`Ok`]: core::result::Result::Ok
-     * [`Err`]: core::result::Result::Err
-     * [`NonNull<u8>`]: core::ptr::NonNull
-     * [`Allocator::LinkedList`]: crate::Allocator::LinkedList
-     * [`layout_to_allocator()`]: crate::Allocator::for_layout
+     * To know which allocator will be used call `Allocator::for_layout()`
      */
     pub fn allocate(&mut self, layout: Layout) -> Result<NonNull<u8>, ()> {
         let allocator = Allocator::for_layout(layout);
@@ -361,19 +329,15 @@ impl Heap {
         }
     }
 
-    /** # Deallocates memory
-     *
+    /**
      * Makes the given memory available again for further allocations.
      *
      * The request, as for allocation, may be served by one of the slab
      * sub-allocators, which performs the operation in `O(1)`, or by the
-     * [`Allocator::LinkedList`], which performs the de-allocation in
+     * `Allocator::LinkedList`, which performs the de-allocation in
      * `O(n)`.
      *
-     * To know which allocator will be used call [`layout_to_allocator()`].
-     *
-     * [`Allocator::LinkedList`]: crate::Allocator::LinkedList
-     * [`layout_to_allocator()`]: crate::Allocator::for_layout
+     * To know which allocator will be used call `Allocator::for_layout()`
      */
     pub unsafe fn deallocate(&mut self, ptr: NonNull<u8>, layout: Layout) {
         match Allocator::for_layout(layout) {
@@ -394,30 +358,29 @@ impl Heap {
         self.m_allocated_mem -= layout.size();
     }
 
-    /** Returns the size of the current managed area in bytes
+    /**
+     * Returns the size of the current managed area in bytes
      */
     pub fn managed_mem(&self) -> usize {
         self.m_managed_mem
     }
 
-    /** Returns the currently allocated size in bytes
+    /**
+     * Returns the currently allocated size in bytes
      */
     pub fn allocated_mem(&self) -> usize {
         self.m_allocated_mem
     }
 
-    /** Returns the available memory amount
+    /**
+     * Returns the available memory amount
      */
     pub fn free_memory(&self) -> usize {
         self.m_managed_mem - self.m_allocated_mem
     }
 
-    /** # Constructs the next `Slab`
-     *
-     * Returns the [`Slab`] that allocates the next [`Allocator`] sizes
-     *
-     * [`Slab`]: crate::slab::Slab
-     * [`Allocator`]: crate::Allocator
+    /**
+     * Returns the `Slab` that allocates the next `Allocator` sizes
      */
     unsafe fn construct_slab(addr: &mut usize, allocator: Allocator) -> Slab {
         let slab =

@@ -1,12 +1,4 @@
-/*! # Configuration Trait
- *
- * Implements various markers useful for the various configurations like the
- * [`ObjConfig`], [`TaskConfig`] and [`OSEntityConfig`]
- *
- * [`ObjConfig`]: crate::objs::ObjConfig
- * [`TaskConfig`]: crate::tasks::TaskConfig
- * [`OSEntityConfig`]: crate::ents::OSEntityConfig
- */
+/*! Configuration Trait */
 
 use core::marker::PhantomData;
 
@@ -16,15 +8,12 @@ use num_enum::{
 };
 
 use crate::objs::{
-    impls::KrnIterator,
-    ObjId
+    impls::iter::KrnIterator,
+    object::ObjId
 };
 
-/** # Configuration Type
- *
- * Lists the available implementations for the [`ConfigMode`]
- *
- * [`ConfigMode`]: crate::config::ConfigMode
+/**
+ * Lists the available implementations for the `ConfigMode`
  */
 #[repr(u8)]
 #[derive(Debug)]
@@ -32,37 +21,33 @@ use crate::objs::{
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum ConfigModeType {
-    /** No real uses, used as default value
+    /**
+     * Used as default value
      */
     Unknown,
 
-    /** Identifies the [`CreatMode`]
-     *
-     * [`CreatMode`]: crate::config::CreatMode
+    /**
+     * Identifies the `CreatMode`
      */
     Create,
 
-    /** Identifies the [`FindMode`]
-     *
-     * [`FindMode`]: crate::config::FindMode
+    /**
+     * Identifies the `FindMode`
      */
     Find
 }
 
-/** # Config Mode Base
- *
+/**
  * Represents the base interface for the configuration modes
  */
 pub trait ConfigMode {
-    /** The [`ConfigModeType`] which the concrete type represents
-     *
-     * [`ConfigModeType`]: crate::config::ConfigModeType
+    /**
+     * The `ConfigModeType` which the concrete type represents
      */
     const TYPE: ConfigModeType;
 }
 
-/** # Creation Mode
- *
+/**
  * Enables methods useful to customize the creation of an item defined by
  * the used configurator
  */
@@ -73,8 +58,7 @@ impl ConfigMode for CreatMode {
     const TYPE: ConfigModeType = ConfigModeType::Create;
 }
 
-/** # Find Mode
- *
+/**
  * Enables methods useful to customize the search of an item defined by the
  * used configurator
  */
@@ -85,12 +69,9 @@ impl ConfigMode for FindMode {
     const TYPE: ConfigModeType = ConfigModeType::Find;
 }
 
-/** # Configuration Finder Iterator
- *
- * Library internal wrapper for [`KrnIterator`] that iterates instances of
+/**
+ * Library internal wrapper for `KrnIterator` that iterates instances of
  * type `T` that inside contains handles of type `H`
- *
- * [`KrnIterator`]: crate::objs::impls::KrnIterator
  */
 pub(crate) struct ConfigFinderIter<H, T>
     where H: From<usize>,
@@ -104,8 +85,6 @@ impl<H, T> From<usize> for ConfigFinderIter<H, T>
     where H: From<usize>,
           T: From<H>
 {
-    /** Performs the conversion
-     */
     fn from(iter_id: usize) -> Self {
         Self { m_iter: KrnIterator::from(ObjId::from(iter_id)),
                _handle_type: Default::default(),
@@ -117,12 +96,8 @@ impl<H, T> Iterator for ConfigFinderIter<H, T>
     where H: From<usize>,
           T: From<H>
 {
-    /** The type of the elements being iterated over.
-     */
     type Item = T;
 
-    /** Advances the iterator and returns the next value
-     */
     fn next(&mut self) -> Option<Self::Item> {
         self.m_iter
             .find_next::<usize>()
@@ -135,8 +110,6 @@ impl<H, T> DoubleEndedIterator for ConfigFinderIter<H, T>
     where H: From<usize>,
           T: From<H>
 {
-    /** Removes and returns an element from the end of the iterator.
-     */
     fn next_back(&mut self) -> Option<Self::Item> {
         self.m_iter
             .find_next_back()

@@ -1,7 +1,4 @@
-/*! # Operating System Users Group
- *
- * Implements the abstraction of the operating system users group
- */
+/*! `OSUser`'s Group */
 
 use os::sysc::{
     codes::KernOSGroupFnId,
@@ -9,35 +6,33 @@ use os::sysc::{
 };
 
 use crate::{
-    bits::ent::OSEntityType,
+    bits::ent::types::OSEntityType,
     caller::{
         KernCaller,
         Result
     },
     ents::{
-        impls::OSUser,
-        OSEntity,
-        OSEntityId
+        entity::{
+            OSEntity,
+            OSEntityId
+        },
+        impls::user::OSUser
     }
 };
 
-/** # Users Group
- *
- * Specializes the [`OSEntityId`] to act like a set of [`OSUser`]s that have
- * in common a class of permissions over the VFS objects that owns as a
- * group
- *
- * [`OSEntityId`]: crate::ents::OSEntityId
- * [`OSUser`]: crate::ents::impls::OSUser
+/**
+ * Group of `OSUser`s which have in common a class of permissions over the
+ * `Object`s that the group owns
  */
 #[derive(Debug, Default, Copy, Clone)]
 pub struct OSGroup(OSEntityId);
 
 impl OSGroup {
-    /** # Adds a `user` to this `OSGroup`
+    /**
+     * Adds the given `OSUser` to this `OSGroup`
      *
      * The inserted user will have group permissions too for resources owned
-     * by this group.
+     * by this `OSGroup`.
      *
      * This call affects only the runtime tables of the kernel, update the
      * `/MeetiX/Configs/users_groups.xml` file to make it permanent
@@ -50,35 +45,20 @@ impl OSGroup {
 }
 
 impl KernCaller for OSGroup {
-    /** Returns the raw identifier of the underling [`OSEntityId`]
-     *
-     * [`OSEntityId`]: crate::ents::OSEntityId
-     */
     fn caller_handle_bits(&self) -> u32 {
         self.0.caller_handle_bits()
     }
 }
 
 impl From<OSEntityId> for OSGroup {
-    /** Performs the conversion.
-     */
     fn from(ent: OSEntityId) -> Self {
         Self(ent)
     }
 }
 
 impl OSEntity for OSGroup {
-    /** The value of the [`OSEntityType`] that matches the implementation
-     *
-     * [`OSEntityType`]: crate::bits::ent::types::OSEntityType
-     */
     const TYPE: OSEntityType = OSEntityType::Group;
 
-    /** Returns the immutable reference to the underling [`OSEntityId`]
-     * instance
-     *
-     * [`OSEntityId`]: crate::ents::OSEntityId
-     */
     fn os_entity_handle(&self) -> &OSEntityId {
         &self.0
     }

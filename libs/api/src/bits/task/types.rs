@@ -1,21 +1,14 @@
-/*! # `Task` Types
- *
- * Implements the variants that identifies the various [`TaskId`]
- * implementations
- *
- * [`TaskId`]: crate::tasks::TaskId
- */
+/*! `Task` types */
+
+use core::fmt;
 
 use num_enum::{
     IntoPrimitive,
     TryFromPrimitive
 };
 
-/** # `Task` Types
- *
- * Lists the available object types represented by an [`TaskId`]
- *
- * [`TaskId`]: crate::tasks::TaskId
+/**
+ * Lists the available object types represented by an `TaskId`
  */
 #[repr(usize)]
 #[derive(Debug)]
@@ -23,19 +16,34 @@ use num_enum::{
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum TaskType {
-    /** No real uses, used as default value
+    /**
+     * Default value
      */
     Unknown,
 
-    /** Identifies a [`Thread`] task
-     *
-     * [`Thread`]: crate::tasks::impls::Thread
+    /**
+     * Identifies a `Thread` task
      */
     Thread,
 
-    /** Identifies a [`Proc`] task
-     *
-     * [`Proc`]: crate::tasks::impls::Proc
+    /**
+     * Identifies a `Proc` task
      */
     Proc
+}
+
+impl Default for TaskType {
+    fn default() -> Self {
+        Self::Unknown
+    }
+}
+
+impl fmt::Display for TaskType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Unknown => write!(f, "Unknown"),
+            Self::Thread => write!(f, "Thread"),
+            Self::Proc => write!(f, "Proc")
+        }
+    }
 }

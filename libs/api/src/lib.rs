@@ -1,4 +1,4 @@
-/*! # API library
+/*! # Kernel API library
  *
  * Implements an object oriented interface to interact with the MeetiX's
  * kernel.

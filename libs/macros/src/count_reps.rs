@@ -1,5 +1,4 @@
-/** # Counts the repetitions
- *
+/**
  * Counts the repetition of tokens given via argument and creates a list of
  * 1usize + 1usize + .. + 0usize for N times where N is the count of tokens
  */

@@ -1,78 +1,37 @@
-/*! # Thread Data
- *
- * Implements a [`Thread`] specific enumeration with the data used by the
- * various entry points
- *
- * [`Thread`]: crate::tasks::impls::Thread
- */
+/*! `Thread` specific data */
 
-use crate::{
-    objs::infos::ObjUseInstant,
-    tasks::{
-        impls::Thread,
-        Task
-    }
-};
+use crate::objs::infos::use_instant::ObjUseInstant;
 
-/** # C `Thread` Entry Point
- *
- * Identifies the function prototype of the [`Thread`]'s C entry point
- * accepted by the kernel
- *
- * [`Thread`]: crate::tasks::impls::Thread
+/**
+ * Internal C entry point prototype for `Thread`s
  */
 pub type CThreadEntry = extern "C" fn() -> !;
 
-/** # Rust User `Thread` Entry Point
- *
- * Identifies the function prototype of the [`Thread`]'s rust entry point
- * accepted by the kernel for the user [`Thread`]s
- *
- * [`Thread`]: crate::tasks::impls::Thread
+/**
+ * Rust `Thread`'s user entry point prototype
  */
 pub type RUserThreadEntry = fn(usize) -> bool;
 
-/** # Rust Watch Callback `Thread` Entry Point
- *
- * Identifies the function prototype of the [`Thread`]'s rust entry point
- * accepted by the kernel for the [watch callback]
- *
- * [`Thread`]: crate::tasks::impls::Thread
- * [watch callback]: crate::objs::Object::watch
+/**
+ * Rust `Thread`'s entry point for `Object::watch()` callbacks
  */
 pub type RWatchCBThreadEntry = fn(ObjUseInstant) -> bool;
 
-/** # Rust Cleaner Callback `Thread` Entry Point
- *
- * Identifies the function prototype of the [`Thread`]'s rust entry point
- * accepted by the kernel for the [cleaner callback]
- *
- * [`Thread`]: crate::tasks::impls::Thread
- * [cleaner callback]: crate::tasks::impls::Thread::add_cleaner
+/**
+ * Rust `Thread`'s entry point for `Thread::add_cleaner()` callbacks
  */
 pub type RCleanerCBThreadEntry = fn();
 
-/** # Thread Entry Point Data
+/**
+ * Context dependent `Thread`'s execution data.
  *
- * Represents a variable entry point information used by the user API to
- * spawn new [`Thread`]s, register [watch] and [cleanup] callbacks.
- *
- * This enumeration is used too by the kernel to return back to the
- * userspace [`c_thread_entry`] the rust entry point and eventual
- * additional informations for the execution
- *
- * [`Thread`]: crate::tasks::impls::Thread
- * [watch]: crate::objs::Object::watch
- * [cleanup]: crate::tasks::impls::Thread::add_cleaner
- * [`c_thread_entry`]: crate::bits::task::data::c_thread_entry
+ * Each variant contains the executable entry-point and the data needed by
+ * the context that represents
  */
 #[derive(Debug, Clone)]
 pub enum ThreadEntryData {
-    /** Contains the data to spawn/execute a new [`Thread`] using
-     * [`Thread::spawn()`]
-     *
-     * [`Thread`]: crate::tasks::impls::Thread
-     * [`Thread::spawn()`]: crate::tasks::impls::Thread::spawn
+    /**
+     * Data to spawn/execute a new user `Thread` using `Thread::spawn()`
      */
     User {
         m_rust_entry_point: RUserThreadEntry,
@@ -80,10 +39,8 @@ pub enum ThreadEntryData {
         m_c_entry_point: Option<CThreadEntry>
     },
 
-    /** Contains the data to register/execute a new [`Object::watch()`]
-     * callback
-     *
-     * [`Object::watch()`]: crate::objs::Object::watch
+    /**
+     * Data to register/execute a new `Object::watch()` callback
      */
     WatchCallback {
         m_rust_entry_point: RWatchCBThreadEntry,
@@ -91,27 +48,24 @@ pub enum ThreadEntryData {
         m_c_entry_point: Option<CThreadEntry>
     },
 
-    /** Contains the data to register/execute a new [`cleaner callback`]
-     *
-     * [cleaner callback]: crate::tasks::impls::Thread::add_cleaner
+    /**
+     * Data to register/execute a new `Thread::add_cleaner()` callback
      */
     CleanerCallback {
         m_rust_entry_point: RCleanerCBThreadEntry,
         m_c_entry_point: Option<CThreadEntry>
     },
 
-    /** Default value, usable only for un-initialized `ThreadEntryData`
+    /**
+     * Default value, usable only for un-initialized `ThreadEntryData`
      * instances
      */
     None
 }
 
 impl ThreadEntryData {
-    /** # Constructs a `ThreadEntryData::User`
-     *
-     * The returned instance is used by the user code and fills up the
-     * `m_c_entry_point` field with the private C entry point function in
-     * the module
+    /**
+     * Constructs a `ThreadEntryData::User` with the given data
      */
     pub fn new_user(entry_point: RUserThreadEntry, arg: usize) -> Self {
         Self::User { m_rust_entry_point: entry_point,
@@ -119,11 +73,8 @@ impl ThreadEntryData {
                      m_c_entry_point: Some(c_thread_entry) }
     }
 
-    /** # Constructs a `ThreadEntryData::WatchCallback`
-     *
-     * The returned instance is used by the user code and fills up the
-     * `m_c_entry_point` field with the private C entry point function in
-     * the module
+    /**
+     * Constructs a `ThreadEntryData::WatchCallback` with the given data
      */
     pub fn new_watch_callback(entry_point: RWatchCBThreadEntry) -> Self {
         Self::WatchCallback { m_rust_entry_point: entry_point,
@@ -131,11 +82,8 @@ impl ThreadEntryData {
                               m_c_entry_point: Some(c_thread_entry) }
     }
 
-    /** # Constructs a `ThreadEntryData::CleanerCallback`
-     *
-     * The returned instance is used by the user code and fills up the
-     * `m_c_entry_point` field with the private C entry point function in
-     * the module
+    /**
+     * Constructs a `ThreadEntryData::CleanerCallback` with the given data
      */
     pub fn new_cleaner_callback(entry_point: RCleanerCBThreadEntry) -> Self {
         Self::CleanerCallback { m_rust_entry_point: entry_point,
@@ -145,10 +93,8 @@ impl ThreadEntryData {
 
 #[cfg(feature = "enable_kernel_methods")]
 impl ThreadEntryData {
-    /** # Constructs a `ThreadEntryData::User`
-     *
-     * The returned instance is used by the kernel code and doesn't fills
-     * the `m_c_entry_point` field
+    /**
+     * Constructs a `ThreadEntryData::User` that not fills the C entry point
      */
     pub fn new_user_data(entry_point: RUserThreadEntry, arg: usize) -> Self {
         Self::User { m_rust_entry_point: entry_point,
@@ -156,10 +102,9 @@ impl ThreadEntryData {
                      m_c_entry_point: None }
     }
 
-    /** # Constructs a `ThreadEntryData::WatchCallback`
-     *
-     * The returned instance is used by the kernel code and doesn't fills
-     * the `m_c_entry_point` field
+    /**
+     * Constructs a `ThreadEntryData::WatchCallback` that not fills the C
+     * entry point
      */
     pub fn new_watch_data(entry_point: RWatchCBThreadEntry,
                           use_instant: ObjUseInstant)
@@ -169,10 +114,9 @@ impl ThreadEntryData {
                               m_c_entry_point: None }
     }
 
-    /** # Constructs a `ThreadEntryData::CleanerCallback`
-     *
-     * The returned instance is used by the kernel code and doesn't fills
-     * the `m_c_entry_point` field
+    /**
+     * Constructs a `ThreadEntryData::CleanerCallback` that not fills the C
+     * entry point
      */
     pub fn new_cleaner_data(entry_point: RCleanerCBThreadEntry) -> Self {
         Self::CleanerCallback { m_rust_entry_point: entry_point,
@@ -181,16 +125,13 @@ impl ThreadEntryData {
 }
 
 impl Default for ThreadEntryData {
-    /** Returns the "default value" for a type.
-     */
     fn default() -> Self {
         Self::None
     }
 }
 
-/** # Thread C entry point
- *
- * This C-compatible function ensures ABI compatibility among non plain rust
+/**
+ * C-compatible function ensures ABI compatibility among non plain rust
  * environments (like the user and the kernel, which traverse a little piece
  * of code that is not pure rust)
  */

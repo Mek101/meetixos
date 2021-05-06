@@ -1,8 +1,4 @@
-/*! # `Object` Handle
- *
- * Implements the base struct and the trait used as base for the kernel's
- * managed objects
- */
+/*! `Object` handle */
 
 use core::mem;
 
@@ -14,11 +10,11 @@ use os::sysc::{
 use crate::{
     bits::{
         obj::{
-            ObjType,
-            ObjUse,
-            RecvMode
+            modes::RecvMode,
+            types::ObjType,
+            uses::ObjUse
         },
-        task::{
+        task::data::thread::{
             RWatchCBThreadEntry,
             ThreadEntryData
         }
@@ -32,60 +28,37 @@ use crate::{
         FindMode
     },
     objs::{
-        impls::Any,
-        infos::ObjInfo,
-        ObjConfig
+        config::ObjConfig,
+        impls::any::Any,
+        infos::info::ObjInfo
     },
-    tasks::Task,
+    tasks::task::Task,
     time::Instant
 };
 
-/** # Object Handle
+/**
+ * Object opaque handle.
  *
- * Represents an opaque handle that takes place of the old style file
- * descriptor integer, used by all the Unix-like OS to keep reference to an
- * open resource.
- *
- * Itself the object doesn't have much utilities because most of his methods
- * are private, but exposed via the [`Object`] trait and implemented by the
- * various [implementations].
- *
- * Read more doc about [`Object`] and [`ObjId`] -> [here]
- *
- * [`Object`]: crate::objs::Object
- * [implementations]: /api/objs/impls/index.html
- * [`ObjId`]: crate::objs::ObjId
- * [here]: /api/index.html#objects
+ * This object that takes place of the old style file descriptor
+ * integer, used by all the Unix-like OS to keep reference to an
+ * open resource  
  */
 #[repr(transparent)]
 #[derive(Debug, Default, Eq, PartialEq)]
 pub struct ObjId(u32);
 
 impl ObjId {
-    /** # Constructs an un initialized `ObjId`
+    /**
+     * Constructs an un initialized `ObjId`.
      *
-     * Used only by the [`OsRawMutex`] to satisfy the constant
-     * initialization
-     *
-     * [`OsRawMutex`]: crate::objs::impls::OsRawMutex
+     * Used only by the `OsRawMutex` to satisfy the constant initialization
      */
     pub(crate) const fn const_new() -> Self {
         Self(0)
     }
 
-    /** # Share this `ObjId` with another `Task`
-     *
-     * Sends this object instance to another [`Task`] (a [`Thread`] or a
-     * [`Process`]) to share the same resource.
-     *
-     * The concurrency is managed internally by the kernel with two
-     * `RWLock`s (one for the data and one for the informations), so
-     * multiple tasks can read the data or the infos but only one a time
-     * can write them
-     *
-     * [`Task`]: crate::tasks::Task
-     * [`Thread`]: crate::tasks::impls::Thread
-     * [`Process`]: crate::tasks::impls::Proc
+    /**
+     * Shares this `ObjId` with another `Task`
      */
     fn send<T>(&self, receiver: &T) -> Result<()>
         where T: Task {
@@ -94,13 +67,8 @@ impl ObjId {
             .map(|_| ())
     }
 
-    /** # Accepts an incoming `ObjId`
-     *
-     * The previous handle is first released with [`Drop`] then overwritten
-     * with the new handle received according to the [`RecvMode`] given
-     *
-     * [`Drop`]: core::ops::Drop
-     * [`RecvMode`]: crate::bits::obj::modes::RecvMode
+    /**
+     * Accepts an incoming `ObjId`
      */
     pub(crate) fn recv(&mut self, obj_type: ObjType, mode: RecvMode) -> Result<()> {
         self.kern_call_2(KernFnPath::Object(KernObjectFnId::Recv),
@@ -112,11 +80,10 @@ impl ObjId {
             })
     }
 
-    /** # Updates the infos of this object
+    /**  
+     * Updates the infos of this object.
      *
-     * Internally used by [`ObjInfo::update()`]
-     *
-     * [`ObjInfo::update()`]: crate::objs::infos::info::ObjInfo::update
+     * Internally used by `ObjInfo::update()`
      */
     pub(crate) fn update_infos<T>(&self, infos: &ObjInfo<T>) -> Result<()>
         where T: Object {
@@ -125,37 +92,19 @@ impl ObjId {
             .map(|_| ())
     }
 
-    /** # Drops the object name
-     *
+    /**
      * Makes the object no longer reachable via the VFS.
      *
-     * When all the tasks, that already references it, drop it will be
+     * When all the tasks, that keep a reference to it, drop it, it will be
      * definitively destroyed by the kernel
      */
     fn drop_name(&self) -> Result<()> {
         self.kern_call_0(KernFnPath::Object(KernObjectFnId::DropName)).map(|_| ())
     }
 
-    /** # Enable `Object` watching
-     *
+    /**
      * Registers the given `callback` to be executed whenever one of the
-     * bitwise given [`ObjUse`] happen.
-     *
-     * The caller must have [information read grants](RG) to successfully
-     * call this method.
-     *
-     * The given `callback` must accept an [`ObjUseInstant`] as argument and
-     * must return a boolean that tells to the kernel whether the callback
-     * must be re-called for the next event given via `filter` or must
-     * be unregistered.
-     *
-     * Multiple `callback`s can be registered for different uses, but if the
-     * given filters overlaps a previously registered callback an error will
-     * be returned
-     *
-     * [`ObjUse`]: crate::bits::obj::uses::ObjUse
-     * [RG]: crate::bits::obj::Grants::set_info_readable
-     * [`ObjUseInstant`]: crate::objs::infos::use_instant::ObjUseInstant
+     * bitwise given `ObjUse` happen
      */
     fn watch(&self, filter: ObjUse, callback_fn: RWatchCBThreadEntry) -> Result<()> {
         let thread_entry_data = ThreadEntryData::new_watch_callback(callback_fn);
@@ -165,9 +114,8 @@ impl ObjId {
             .map(|_| ())
     }
 
-    /** Returns the [`ObjInfo`] of this object
-     *
-     * [`ObjInfo`]: crate::objs::infos::info::ObjInfo
+    /**
+     * Returns the `ObjInfo` of this object
      */
     pub(crate) fn infos<T>(&self) -> Result<ObjInfo<T>>
         where T: Object {
@@ -180,7 +128,8 @@ impl ObjId {
             })
     }
 
-    /** Returns whether this object instance references a still valid kernel
+    /**
+     * Returns whether this object instance references a still valid kernel
      * object
      */
     pub fn is_valid(&self) -> bool {
@@ -190,17 +139,15 @@ impl ObjId {
                .unwrap_or(false)
     }
 
-    /** Returns the raw identifier of this [`ObjId`]
-     *
-     * [`ObjId`]: crate::objs::ObjId
+    /**
+     * Returns the raw identifier of this `ObjId`
      */
     pub fn as_raw(&self) -> u32 {
         self.0
     }
 
-    /** Returns the raw identifier of this [`ObjId`] as `usize`
-     *
-     * [`ObjId`]: crate::objs::ObjId
+    /**
+     * Returns the raw identifier of this `ObjId` as `usize`
      */
     pub fn as_raw_usize(&self) -> usize {
         self.as_raw() as usize
@@ -208,13 +155,12 @@ impl ObjId {
 }
 
 impl Clone for ObjId {
-    /** Increases the references count to the object referenced.
+    /**
+     * Increases the references count to the object referenced.
      *
-     * The returned [`ObjId`] is a new instance but reference the same
+     * The returned `ObjId` is a new instance but reference the same
      * kernel's object, so changes on any of the cloned instances affect the
      * same kernel's object
-     *
-     * [`ObjId`]: crate::objs::ObjId
      */
     fn clone(&self) -> Self {
         self.kern_call_0(KernFnPath::Object(KernObjectFnId::AddRef))
@@ -224,26 +170,19 @@ impl Clone for ObjId {
 }
 
 impl Drop for ObjId {
-    /** Decreases by one the references count to the referenced kernel's
+    /**
+     * Decreases by one the references count to the referenced kernel's
      * object.
      *
      * The life of the objects varies by type:
      *
-     * Permanent objects, like [`File`]s, [`Dir`]ectories, [`Link`]s and
-     * [`OsRawMutex`]es, persists until they are explicitly destroyed with
-     * [`Object::drop_name()`].
+     * Permanent objects, like `File`s, `Dir`ectories, `Link`s and
+     * `OsRawMutex`es, persists until they are explicitly destroyed with
+     * `Object::drop_name()`.
      *
-     * The other kind of objects, like [`MMap`]s and [`IpcChan`]nels, live
+     * The other kind of objects, like `MMap`s and `IpcChan`nels, live
      * until there is a reference to them. When the references reaches the 0
      * they are definitely destroyed
-     *
-     * [`File`]: crate::objs::impls::File
-     * [`Dir`]: crate::objs::impls::Dir
-     * [`Link`]: crate::objs::impls::Link
-     * [`OsRawMutex`]: crate::objs::impls::OsRawMutex
-     * [`Object::drop_name()`]: crate::objs::Object::drop_name
-     * [`MMap`]: crate::objs::impls::MMap
-     * [`IpcChan`]: crate::objs::impls::IpcChan
      */
     fn drop(&mut self) {
         if self.is_valid() {
@@ -253,73 +192,55 @@ impl Drop for ObjId {
 }
 
 impl From<u32> for ObjId {
-    /** Performs the conversion
-     */
     fn from(raw_id: u32) -> Self {
         Self(raw_id)
     }
 }
 
 impl From<usize> for ObjId {
-    /** Performs the conversion
-     */
     fn from(raw_id: usize) -> Self {
         Self::from(raw_id as u32)
     }
 }
 
 impl KernCaller for ObjId {
-    /** Returns the raw identifier of the object
-     */
     fn caller_handle_bits(&self) -> u32 {
         self.as_raw()
     }
 }
 
-/** # `Object` Base Interface
+/**
+ * Common interface implemented by all the `ObjId` based objects.
  *
- * Defines a common interface implemented by all the [`ObjId`] based
- * objects.
- *
- * It mainly exposes the private methods of the [`ObjId`] for safe calling
+ * It mainly exposes the private methods of the `ObjId` for safe calling
  * and provides convenient methods to easily perform works that normally
- * implies more than one call.
- *
- * [`ObjId`]: crate::objs::ObjId
+ * implies more than one call
  */
 pub trait Object: From<ObjId> + Default + Clone + Sync + Send {
-    /** The value of the [`ObjType`] that matches the implementation
-     *
-     * [`ObjType`]: crate::bits::obj::types::ObjType
+    /**
+     * The value of the `ObjType` that matches the implementation
      */
     const TYPE: ObjType;
 
-    /** Returns the immutable reference to the underling [`ObjId`] instance
-     *
-     * [`ObjId`]: crate::objs::ObjId
+    /**
+     * Returns the immutable reference to the underling `ObjId` instance
      */
     fn obj_handle(&self) -> &ObjId;
 
-    /** Returns the mutable reference to the underling [`ObjId`] instance
-     *
-     * [`ObjId`]: crate::objs::ObjId
+    /**
+     * Returns the mutable reference to the underling `ObjId` instance
      */
     fn obj_handle_mut(&mut self) -> &mut ObjId;
 
-    /** Returns an uninitialized [`ObjConfig`] to open an existing [`Object`]
-     *
-     * [`ObjConfig`]: crate::objs::ObjConfig
-     * [`Object`]: crate::objs::Object
+    /**
+     * Returns an uninitialized `ObjConfig` to open an existing `Object`
      */
     fn open() -> ObjConfig<Self, FindMode> {
         ObjConfig::<Self, FindMode>::new()
     }
 
-    /** # Obtain the underling `ObjId`
-     *
-     * Consumes the object into his [`ObjId`] instance
-     *
-     * [`ObjId`]: crate::objs::ObjId
+    /**
+     * Consumes the object into his `ObjId` instance
      */
     fn into_id(self) -> ObjId {
         let raw_id = self.obj_handle().as_raw();
@@ -327,36 +248,31 @@ pub trait Object: From<ObjId> + Default + Clone + Sync + Send {
         ObjId::from(raw_id)
     }
 
-    /** # Upcast to `Any`
-     *
-     * Consumes the object upcasting it to an [`Any`] instance
-     *
-     * [`Any`]: crate::objs::impls::Any
+    /**
+     * Consumes the object upcasting it to an `Any` instance
      */
     fn into_any(self) -> Any {
         Any::from(self.into_id())
     }
 
-    /** # Drops the object name
-     *
+    /**
      * Makes the object no longer reachable via the VFS.
      *
-     * When all the tasks, that already references it, drop it will be
+     * When all the tasks, that keep a reference to it, drop it, it will be
      * definitively destroyed by the kernel
      */
     fn drop_name(&self) -> Result<()> {
         self.obj_handle().drop_name()
     }
 
-    /** # Enable `Object` watching
-     *
+    /**
      * Registers the given `callback` to be executed whenever one of the
-     * bitwise given [`ObjUse`] happen.
+     * bitwise given `ObjUse` happen.
      *
-     * The caller must have [information read grants](RG) to successfully
-     * call this method.
+     * The caller must have information read grants to successfully call
+     * this method.
      *
-     * The given `callback` must accept an [`ObjUseInstant`] as argument and
+     * The given `callback` must accept an `ObjUseInstant` as argument and
      * must return a boolean that tells to the kernel whether the callback
      * must be re-called for the next event given via `filter` or must
      * be unregistered.
@@ -364,10 +280,6 @@ pub trait Object: From<ObjId> + Default + Clone + Sync + Send {
      * Multiple `callback`s can be registered for different uses, but if the
      * given filters overlaps a previously registered callback an error will
      * be returned
-     *
-     * [`ObjUse`]: crate::bits::obj::uses::ObjUse
-     * [RG]: crate::bits::obj::Grants::set_info_readable
-     * [`ObjUseInstant`]: crate::objs::infos::use_instant::ObjUseInstant
      */
     fn watch(&self, filter: ObjUse, callback_fn: RWatchCBThreadEntry) -> Result<()> {
         self.obj_handle().watch(filter, callback_fn)
@@ -375,96 +287,78 @@ pub trait Object: From<ObjId> + Default + Clone + Sync + Send {
 
     /** # Share this `Object` with another `Task`
      *
-     * Sends this object instance to another [`Task`] (a [`Thread`] or a
-     * [`Process`]) to share the same resource.
+     * Sends this object instance to another `Task` to share the same
+     * resource.
      *
      * The concurrency is managed internally by the kernel with two
      * `RWLock`s (one for the data and one for the informations), so
      * multiple tasks can read the data or the infos but only one a time
      * can write them
-     *
-     * [`Task`]: crate::tasks::Task
-     * [`Thread`]: crate::tasks::impls::Thread
-     * [`Process`]: crate::tasks::impls::Proc
      */
     fn send<T>(&self, task: &T) -> Result<()>
         where T: Task {
         self.obj_handle().send(task)
     }
 
-    /** # Accepts an incoming `Object`
+    /**  
+     * Accepts an incoming `Object`
      *
-     * The previous handle is first released with [`Drop`] then overwritten
-     * with the new handle received according to the [`RecvMode`] given
-     *
-     * [`Drop`]: core::ops::Drop
-     * [`RecvMode`]: crate::bits::obj::modes::RecvMode
+     * The previous handle is first released with `Drop` then overwritten
+     * with the new handle received according to the `RecvMode` given
      */
     fn recv(&mut self, mode: RecvMode) -> Result<()> {
         self.obj_handle_mut().recv(Self::TYPE, mode)
     }
 
-    /** # Constructs a new `Object` from the incoming one
-     *
+    /**
      * Convenience method that internally creates an uninitialized object
-     * instance then performs an [`Object::recv()`] using the given
-     * [`RecvMode`]
-     *
-     * [`Object::recv()`]: crate::objs::Object::recv
-     * [`RecvMode`]: crate::bits::obj::modes::RecvMode
+     * instance then performs an `Object::recv()` using the given `RecvMode`
      */
     fn recv_new(mode: RecvMode) -> Result<Self> {
         let mut obj = Self::default();
         obj.recv(mode).map(|_| obj)
     }
 
-    /** Returns the [`ObjInfo`] of this object
-     *
-     * [`ObjInfo`]: crate::objs::infos::info::ObjInfo
+    /**
+     * Returns the `ObjInfo` of this object
      */
     fn infos(&self) -> Result<ObjInfo<Self>> {
         self.obj_handle().infos()
     }
 
-    /** Returns the [`ObjType`] of the object
-     *
-     * [`ObjType`]: crate::bits::obj::types::ObjType
+    /**
+     * Returns the `ObjType` of the object
      */
     fn obj_type(&self) -> ObjType {
         self.infos().unwrap_or_default().obj_type()
     }
 
-    /** Returns all the `Instant` timestamps ordered as
+    /**
+     * Returns all the `Instant` timestamps ordered as
      *
-     * 0. Creation [`Instant`]
-     * 1. Last access [`Instant`]
-     * 2. Last data modify [`Instant`]
-     * 3. Last info modify [`Instant`]
-     *
-     * [`Instant`]: crate::time::Instant
+     * 0. Creation `Instant`
+     * 1. Last access `Instant`
+     * 2. Last data modify `Instant`
+     * 3. Last info modify `Instant`
      */
     fn timestamps(&self) -> (Instant, Instant, Instant, Instant) {
         self.infos().unwrap_or_default().timestamps()
     }
 
-    /** Returns the [size] of the object
-     *
-     * [size]: crate::objs::infos::info::ObjInfo::size
+    /**
+     * Returns the size of the object's data in bytes
      */
     fn size(&self) -> usize {
         self.infos().unwrap_or_default().size()
     }
 }
 
-/** # User Creatable
- *
+/**
  * Interface implemented for all the user creatable objects
  */
 pub trait UserCreatable: Object {
-    /** Returns an uninitialized [`ObjConfig`] to create a new [`Object`]
-     *
-     * [`ObjConfig`]: crate::objs::ObjConfig
-     * [`Object`]: crate::objs::Object
+    /**
+     * Returns an uninitialized `ObjConfig` to create a new `Object`
      */
     fn creat() -> ObjConfig<Self, CreatMode> {
         ObjConfig::<Self, CreatMode>::new()

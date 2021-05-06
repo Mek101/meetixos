@@ -1,7 +1,4 @@
-/*! # Thread Management
- *
- * Implements the running thread reference
- */
+/*! Thread `Task` reference */
 
 use os::sysc::{
     codes::KernThreadFnId,
@@ -10,30 +7,26 @@ use os::sysc::{
 
 use crate::{
     bits::task::{
-        TaskType,
-        ThreadEntryData,
-        WaitFor
+        data::thread::ThreadEntryData,
+        modes::WaitFor,
+        types::TaskType
     },
     caller::{
         KernCaller,
         Result
     },
-    tasks::{
+    tasks::task::{
         Task,
         TaskId
     },
     time::Duration
 };
 
-/** # Running `Thread`
- *
- * Represents a reference to an execution flow inside a running
- * [`Proc`]ess.
+/**
+ * Reference to an execution flow inside a running `Proc`.
  *
  * This represents the execution entity on which the kernel's scheduler
  * operates
- *
- * [`Proc`]: crate::tasks::impls::Proc
  */
 #[repr(transparent)]
 #[derive(Debug, Default, Clone, Copy, Eq, PartialEq)]
@@ -42,59 +35,45 @@ pub struct Thread {
 }
 
 impl Thread {
-    /** # Sleeps for a time quantum
-     *
+    /**
      * Puts the `Thread` into the wait state for the given non-zero
-     * [`Duration`].
+     * `Duration`.
      *
      * It is possible to call this method for another `Thread` of the same
-     * [`Proc`] that executes this; in that case the referenced `Thread`
-     * will stop for the given [`Duration`].
-     *
-     * [`Duration`]: crate::time::Duration
-     * [`Proc`]: crate::tasks::impls::Proc
-     * [`Thread::this()`]: crate::tasks::Task::this
+     * `Proc` that executes this; in that case the referenced `Thread`
+     * will stop for the given `Duration`
      */
     pub fn sleep(&self, duration: Duration) -> Result<()> {
         self.wait_for(WaitFor::Quantum(duration))
     }
 
-    /** # Join a `Thread` execution
-     *
+    /**
      * Puts this `Thread` into the wait state until the given `target`
      * doesn't terminate.
      *
      * It is denied to call this method with a `Thread` reference that is
-     * not the one returned by [`Thread::this()`] and obviously the
+     * not the one returned by `Thread::this()` and obviously the
      * `target Thread` must not be same as returned by
-     * [`Thread::this()`]
-     *
-     * [`Thread::this()`]: crate::tasks::Task::this
+     * `Thread::this()`
      */
     pub fn join(&self, target: Thread) -> Result<()> {
         self.wait_for(WaitFor::Join(target))
     }
 
-    /** # Wait an IRQ throw
-     *
+    /**
      * Puts this `Thread` into the wait state until the given `irq` doesn't
      * throw.
      *
      * It is denied to call this method with a `Thread` reference that is
-     * not the one returned by [`Thread::this()`]
-     *
-     * [`Thread::this()`]: crate::tasks::Task::this
+     * not the one returned by `Thread::this()`
      */
     pub fn wait_irq(&self, irq: u32) -> Result<()> {
         self.wait_for(WaitFor::Irq(irq))
     }
 
-    /** # Wait for an event
-     *
+    /**
      * Puts the `Thread` into the waiting state for an amount of time
-     * according to the [`WaitFor`] mode given
-     *
-     * [`WaitFor`]: crate::bits::task::modes::WaitFor
+     * according to the `WaitFor` mode given
      */
     pub fn wait_for(&self, wait_reason: WaitFor) -> Result<()> {
         self.kern_call_1(KernFnPath::Thread(KernThreadFnId::WaitFor),
@@ -102,23 +81,15 @@ impl Thread {
             .map(|_| ())
     }
 
-    /** # Prepends a cleanup callback
+    /**
+     * Adds a cleanup callback that will be executed using a [`LIFO`] queue.
      *
-     * The given callback(s) is/are executed using a [`LIFO`] queue.
-     *
-     * They are executed when the [`Thread`] terminates (naturally or
-     * because explicitly called [`Thread::terminate(true)`]).
+     * They are executed when the `Thread` terminates (naturally or
+     * because explicitly called `Thread::terminate(true)`).
      *
      * It is possible to register a cleanup callback to for a `Thread` that
-     * is different from [`Thread::this()`], but the caller
-     * [`OSUser`]/[`OSGroup`] must be the same or the administrator.
-     *
-     * [`LIFO`]: https://en.wikipedia.org/wiki/Stack_(abstract_data_type)
-     * [`Thread`]: crate::tasks::impls::Thread
-     * [`Thread::terminate(true)`]: crate::tasks::Task::terminate
-     * [`Thread::this()`]: crate::tasks::Task::this
-     * [`OSUser`]: crate::ents::impls::OSUser
-     * [`OSGroup`]: crate::ents::impls::OSGroup
+     * is different from `Thread::this()`, but the caller
+     * `OSUser`/`OSGroup` must be the same or the administrator
      */
     pub fn add_cleaner(&self, cleanup_fn: fn()) -> Result<()> {
         let thread_entry_data = ThreadEntryData::new_cleaner_callback(cleanup_fn);
@@ -127,8 +98,7 @@ impl Thread {
             .map(|_| ())
     }
 
-    /** # Callback exit point
-     *
+    /**
      * Called by the internal C binding of the cleaner entry point to
      * restore the previous situation
      */
@@ -141,12 +111,9 @@ impl Thread {
             .unwrap()
     }
 
-    /** # Thread entry point data
-     *
-     * Returns the right [`ThreadEntryData`] variant for the situation that
+    /**
+     * Returns the right `ThreadEntryData` variant for the situation that
      * calls this
-     *
-     * [`ThreadEntryData`]: crate::bits::task::data::thread::ThreadEntryData
      */
     pub(crate) fn get_entry_data(&self) -> ThreadEntryData {
         let mut entry_data = ThreadEntryData::default();
@@ -165,40 +132,24 @@ impl Thread {
 }
 
 impl Task for Thread {
-    /** The value of the [`TaskType`] that matches the implementation
-     *
-     * [`TaskType`]: crate::bits::task::types::TaskType
-     */
     const TASK_TYPE: TaskType = TaskType::Thread;
 
-    /** Returns the immutable reference to the underling [`TaskId`] instance
-     *
-     * [`TaskId`]: crate::tasks::TaskId
-     */
     fn task_handle(&self) -> &TaskId {
         &self.m_handle
     }
 
-    /** Returns the mutable reference to the underling [`TaskId`] instance
-     *
-     * [`TaskId`]: crate::tasks::TaskId
-     */
     fn task_handle_mut(&mut self) -> &mut TaskId {
         &mut self.m_handle
     }
 }
 
 impl From<TaskId> for Thread {
-    /** Performs the conversion
-     */
     fn from(id: TaskId) -> Self {
         Self { m_handle: id }
     }
 }
 
 impl KernCaller for Thread {
-    /** Returns the upper 32bits of the 64bit identifier of a system call
-     */
     fn caller_handle_bits(&self) -> u32 {
         self.task_handle().caller_handle_bits()
     }

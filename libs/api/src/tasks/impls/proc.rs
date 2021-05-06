@@ -1,7 +1,4 @@
-/*! # Process Management
- *
- * Implements the running process reference
- */
+/*! Process `Task` reference */
 
 use os::sysc::{
     codes::KernProcFnId,
@@ -9,24 +6,23 @@ use os::sysc::{
 };
 
 use crate::{
-    bits::task::TaskType,
+    bits::task::types::TaskType,
     caller::{
         KernCaller,
         Result
     },
     tasks::{
-        impls::Thread,
-        Task,
-        TaskId
+        impls::thread::Thread,
+        task::{
+            Task,
+            TaskId
+        }
     }
 };
 
-/** # Running `Process`
- *
- * Represents a reference to context that is being executing at least
- * one [`Thread`]
- *
- * [`Thread`]: crate::tasks::impls::Thread
+/**
+ * Reference to a context that is being executing at least one `Thread`, if
+ * alive
  */
 #[repr(transparent)]
 #[derive(Debug, Default, Clone, Copy, Eq, PartialEq)]
@@ -35,9 +31,8 @@ pub struct Proc {
 }
 
 impl Proc {
-    /** Returns the main [`Thread`] of this process
-     *
-     * [`Thread`]: crate::tasks::impls::Thread
+    /**
+     * Returns the main `Thread` of this process
      */
     pub fn main_thread(&self) -> Result<Thread> {
         self.kern_call_0(KernFnPath::Proc(KernProcFnId::MainThread))
@@ -46,40 +41,24 @@ impl Proc {
 }
 
 impl Task for Proc {
-    /** The value of the [`TaskType`] that matches the implementation
-     *
-     * [`TaskType`]: crate::bits::task::types::TaskType
-     */
     const TASK_TYPE: TaskType = TaskType::Proc;
 
-    /** Returns the immutable reference to the underling [`TaskId`] instance
-     *
-     * [`TaskId`]: crate::tasks::TaskId
-     */
     fn task_handle(&self) -> &TaskId {
         &self.m_handle
     }
 
-    /** Returns the mutable reference to the underling [`TaskId`] instance
-     *
-     * [`TaskId`]: crate::tasks::TaskId
-     */
     fn task_handle_mut(&mut self) -> &mut TaskId {
         &mut self.m_handle
     }
 }
 
 impl From<TaskId> for Proc {
-    /** Performs the conversion
-     */
     fn from(id: TaskId) -> Self {
         Self { m_handle: id }
     }
 }
 
 impl KernCaller for Proc {
-    /** Returns the upper 32bits of the 64bit identifier of a system call
-     */
     fn caller_handle_bits(&self) -> u32 {
         self.task_handle().caller_handle_bits()
     }

@@ -1,21 +1,14 @@
-/*! # `OSEntity` Types
- *
- * Implements the variants that identifies the various [`OSEntityId`]
- * based implementations
- *
- * [`OSEntityId`]: crate::ents::OSEntityId
- */
+/*! `OSEntity` types */
+
+use core::fmt;
 
 use num_enum::{
     IntoPrimitive,
     TryFromPrimitive
 };
 
-/** # `OSEntity` Types
- *
- * Lists the available object types represented by an [`OSEntityId`]
- *
- * [`OSEntityId`]: crate::ents::OSEntityId
+/**
+ * Lists the available object types represented by an `OSEntityId`
  */
 #[repr(usize)]
 #[derive(Debug)]
@@ -23,19 +16,34 @@ use num_enum::{
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum OSEntityType {
-    /** No real uses, used as default or error value
+    /**
+     * Default value
      */
     Unknown,
 
-    /** Identifies an [`OSUser`] entity
-     *
-     * [`OSUser`]: crate::ents::impls::OSUser
+    /**
+     * Identifies an `OSUser` entity
      */
     User,
 
-    /** Identifies an [`OSGroup`] entity
-     *
-     * [`OSGroup`]: crate::ents::impls::OSGroup.html
+    /**
+     * Identifies an `OSGroup` entity
      */
     Group
+}
+
+impl Default for OSEntityType {
+    fn default() -> Self {
+        Self::Unknown
+    }
+}
+
+impl fmt::Display for OSEntityType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Unknown => write!(f, "Unknown"),
+            Self::User => write!(f, "User"),
+            Self::Group => write!(f, "Group")
+        }
+    }
 }

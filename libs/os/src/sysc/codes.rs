@@ -1,22 +1,12 @@
-/*! # System Call Codes
- *
- * Lists the system call codes enumerations.
- *
- * A system call code is an identifier of 16 bits used by the kernel in
- * conjunction with the corresponding class to access the second layer of
- * system call routines and identify the proper system call to call
- */
+/*! Kernel function call codes */
 
 use num_enum::{
     IntoPrimitive,
     TryFromPrimitive
 };
 
-/** # `ObjConfig` System Calls Codes
- *
- * Lists the system call codes for the [`ObjConfig`] struct
- *
- * [`ObjConfig`]: api::objs::config::ObjConfig
+/**
+ * Lists the system call codes for the `api::objs::ObjConfig` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -27,11 +17,8 @@ pub enum KernObjConfigFnId {
     ApplyConfig
 }
 
-/** # `TaskConfig` System Calls Codes
- *
- * Lists the system call codes for the [`TaskConfig`] struct
- *
- * [`TaskConfig`]: api::tasks::config::TaskConfig
+/**
+ * Lists the system call codes for the `api::tasks::TaskConfig` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -43,11 +30,8 @@ pub enum KernTaskConfigFnId {
     InitFind
 }
 
-/** # `OSEntConfig` System Calls Codes
- *
- * Lists the system call codes for the [`OSEntConfig`] struct
- *
- * [`OSEntConfig`]: api::ents::config::OSEntConfig
+/**
+ * Lists the system call codes for the `api::ents::OSEntConfig` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -59,11 +43,8 @@ pub enum KernOSEntConfigFnId {
     InitFind
 }
 
-/** # `Object` System Calls Codes
- *
- * Lists the system call codes for the [`Object`] trait
- *
- * [`Object`]: api::objs::object::Object
+/**
+ * Lists the system call codes for the `api::objs::Object` trait
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -82,11 +63,8 @@ pub enum KernObjectFnId {
     IsValid
 }
 
-/** # `Task` System Calls Codes
- *
- * Lists the system call codes for the [`Task`] trait
- *
- * [`Task`]: api::tasks::task::Task
+/**
+ * Lists the system call codes for the `api::tasks::Task` trait
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -100,11 +78,8 @@ pub enum KernTaskFnId {
     IsAlive
 }
 
-/** # `Dir` System Calls Codes
- *
- * Lists the system call codes for the [`Dir`] struct
- *
- * [`Dir`]: api::objs::impls::dir::Dir
+/**
+ * Lists the system call codes for the `api::objs::impls::Dir` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -115,11 +90,8 @@ pub enum KernDirFnId {
     InitIter
 }
 
-/** # `File` System Calls Codes
- *
- * Lists the system call codes for the [`File`] struct
- *
- * [`File`]: api::objs::impls::file::File
+/**
+ * Lists the system call codes for the `api::objs::impls::File` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -135,11 +107,8 @@ pub enum KernFileFnId {
     MapToMem
 }
 
-/** # `IpcChan` System Calls Codes
- *
- * Lists the system call codes for the [`IpcChan`] struct
- *
- * [`IpcChan`]: api::objs::impls::ipc_chan::IpcChan
+/**
+ * Lists the system call codes for the `api::objs::impls::IpcChan` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -151,11 +120,9 @@ pub enum KernIpcChanFnId {
     Recv
 }
 
-/** # `Iterator` System Calls Codes
- *
- * Lists the system call codes for the [`KrnIterator`] struct
- *
- * [`KrnIterator`]: api::objs::impls::iter::KrnIterator
+/**
+ * Lists the system call codes for the `api::objs::impls::KrnIterator`
+ * struct
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -168,11 +135,8 @@ pub enum KrnIteratorFnId {
     SetEndToBeginPos
 }
 
-/** # `Link` System Calls Codes
- *
- * Lists the system call codes for the [`Link`] struct
- *
- * [`Link`]: api::objs::impls::link::Link
+/**
+ * Lists the system call codes for the `api::objs::impls::Link` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -184,11 +148,8 @@ pub enum KernLinkFnId {
     ReferTo
 }
 
-/** # `MMap` System Calls Codes
- *
- * Lists the system call codes for the [`MMap`] struct
- *
- * [`MMap`]: api::objs::impls::mmap::MMap
+/**
+ * Lists the system call codes for the `api::objs::impls::MMap` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -201,11 +162,8 @@ pub enum KernMMapFnId {
     IsFile
 }
 
-/** # `Mutex` System Calls Codes
- *
- * Lists the system call codes for the [`Mutex`] struct
- *
- * [`Mutex`]: api::objs::impls::mutex::Mutex
+/**
+ * Lists the system call codes for the `api::objs::impls::Mutex` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -219,11 +177,8 @@ pub enum KernMutexFnId {
     IsLocked
 }
 
-/** # `Instant` System Calls Codes
- *
- * Lists the system call codes for the [`Instant`] struct
- *
- * [`Instant`]: api::time::Instant
+/**
+ * Lists the system call codes for the `api::time::Instant` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -234,11 +189,8 @@ pub enum KernTimeInstFnId {
     Now
 }
 
-/** # `Path` System Calls Codes
- *
- * Lists the system call codes for the [`Path`] struct
- *
- * [`Path`]: api::path::Path
+/**
+ * Lists the system call codes for the `api::path::Path` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -249,11 +201,8 @@ pub enum KernPathFnId {
     Exists
 }
 
-/** # `OSEntity` System Calls Codes
- *
- * Lists the system call codes for the [`OSEntity`] trait
- *
- * [`OSEntity`]: api::ents::entity::OSEntity
+/**
+ * Lists the system call codes for the `api::ents::OSEntity` trait
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -264,11 +213,8 @@ pub enum KernOSEntFnId {
     Name
 }
 
-/** # `OSUser` System Calls Codes
- *
- * Lists the system call codes for the [`OSUser`] struct
- *
- * [`OSUser`]: api::ents::impls::user::OSUser
+/**
+ * Lists the system call codes for the `api::ents::impls::OSUser` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -279,11 +225,8 @@ pub enum KernOSUserFnId {
     Groups
 }
 
-/** # `OSGroup` System Calls Codes
- *
- * Lists the system call codes for the [`OSGroup`] struct
- *
- * [`OSGroup`]: api::ents::impls::group::OSGroup
+/**
+ * Lists the system call codes for the `api::ents::impls::OSGroup` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -294,11 +237,8 @@ pub enum KernOSGroupFnId {
     AddUser
 }
 
-/** # `Proc` System Calls Codes
- *
- * Lists the system call codes for the [`Proc`] struct
- *
- * [`Proc`]: api::tasks::impls::proc::Proc
+/**
+ * Lists the system call codes for the `api::tasks::impls::Proc` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -309,11 +249,8 @@ pub enum KernProcFnId {
     MainThread
 }
 
-/** # `Thread` System Calls Codes
- *
- * Lists the system call codes for the [`Thread`] struct
- *
- * [`Thread`]: api::tasks::impls::thread::Thread
+/**
+ * Lists the system call codes for the `api::tasks::impls::Thread` struct
  */
 #[repr(u16)]
 #[derive(Debug)]

@@ -1,7 +1,4 @@
-/*! # System Call Classes & System Call Codes
- *
- * Exports the system call codes divided by class
- */
+/*! Kernel call identifier, classes & codes */
 
 pub mod codes;
 pub mod fn_path;

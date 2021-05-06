@@ -1,12 +1,4 @@
-/*! # `Task` Implementations
- *
- * Exports the various [`Task`] implementations
- *
- * [`Task`]: crate::tasks::Task
- */
+/*! `Task` implementations */
 
-pub use proc::*;
-pub use thread::*;
-
-mod proc;
-mod thread;
+pub mod proc;
+pub mod thread;
