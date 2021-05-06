@@ -5,8 +5,5 @@
  * specific interrupts are thrown
  */
 
-pub use manager::*;
-pub use stack_frame::*;
-
-mod manager;
-mod stack_frame;
+pub mod manager;
+pub mod stack_frame;

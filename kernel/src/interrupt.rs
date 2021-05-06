@@ -3,7 +3,11 @@
  * Implements the kernel interrupt manager
  */
 
-use hal::interrupt::{InterruptManager, InterruptManagerException, InterruptStackFrame};
+use hal::interrupt::{
+    InterruptManager,
+    InterruptManagerException,
+    InterruptStackFrame
+};
 use logger::info;
 
 static mut INTERRUPT_MANAGER: InterruptManager = InterruptManager::new_uninitialized();

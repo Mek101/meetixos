@@ -1,13 +1,4 @@
-/*! # HAL Frames
- *
- * Implements a wrapper for the [`PhysAddr`] and the [`VirtAddr`] that
- * always ensure [`PAGE_SIZE`] alignment and consequently give a size to the
- * wrapped virtual/physical addresses
- *
- * [`PhysAddr`]: /hal/addr/struct.PhysAddr.html
- * [`VirtAddr`]: crate::addr:virt::VirtAddr
- * [`PAGE_SIZE`]: /hal/paging/constant.PAGE_SIZE.html
- */
+/*! Address frames */
 
 use core::{
     fmt,
@@ -25,60 +16,44 @@ use core::{
 
 use crate::{
     addr::{
-        Address,
-        PhysAddr,
-        VirtAddr
+        phys::PhysAddr,
+        virt::VirtAddr,
+        Address
     },
     mem::paging::{
+        table::{
+            PageTableIndex,
+            PageTableLevel
+        },
         Page1GiB,
         Page2MiB,
         Page4KiB,
-        PageSize,
-        PageTableIndex,
-        PageTableLevel
+        PageSize
     }
 };
 
-/** # Virtual Memory Frame
- *
- * [`Frame`]<[`VirtAddr`]> alias.
- *
- * Applies the [`Frame`] logic to virtual addresses, it's expected to be
- * used as allocation unit for virtual page allocators
- *
- * [`Frame`]: crate::mem::paging::frame::Frame
- * [`VirtAddr`]: crate::addr:virt::VirtAddr
+/**
+ * `Frame<VirtAddr>` alias
  */
 pub type VirtFrame<S> = Frame<VirtAddr, S>;
 pub type VirtFrameRange<S> = Range<VirtFrame<S>>;
 pub type VirtFrameRangeIncl<S> = RangeInclusive<VirtFrame<S>>;
 
-/** # Physical Memory Frame
- *
- * [`Frame`]<[`PhysAddr`]> alias.
- *
- * Applies the [`Frame`] logic to physical addresses, it's expected to be
- * used as allocation unit for physical page allocators
- *
- * [`Frame`]: crate::mem::paging::frame::Frame
- * [`PhysAddr`]: /hal/addr/struct.PhysAddr.html
+/**
+ * `Frame<PhysAddr>` alias
  */
 pub type PhysFrame<S> = Frame<PhysAddr, S>;
 pub type PhysFrameRange<S> = Range<PhysFrame<S>>;
 pub type PhysFrameRangeIncl<S> = RangeInclusive<PhysFrame<S>>;
 
-/** # Memory Frame
- *
- * Represents a generic frame of memory, that is simply an [`Address`] based
- * pointer which is surely aligned with [`PAGE_SIZE`] and have the same
- * size.
+/**
+ * Generic frame of memory, that is simply an `Address` based
+ * pointer which is surely aligned with the `S: PageSize` chosen and have
+ * the same size.
  *
  * It is used as unit for physical and virtual allocation to have a type
  * assurance of the alignment and the size and not on the allocator
  * implementation
- *
- * [`Address`]: /hal/addr/trait.Address.html
- * [`PAGE_SIZE`]: /hal/paging/constant.PAGE_SIZE.html
  */
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Frame<T, S>
@@ -92,20 +67,16 @@ impl<T, S> Frame<T, S>
     where T: Address,
           S: PageSize
 {
-    /** # Constructs an unchecked `Frame`
-     *
-     * This function is used only internally by the module
+    /**  
+     * Constructs an unchecked `Frame`
      */
     fn new_unchecked(addr: T) -> Self {
         Self { m_addr_impl: addr,
                _unused: PhantomData::default() }
     }
 
-    /** # Constructs a `Frame`
-     *
-     * The returned instance will be valid only if aligned with [`S::SIZE`]
-     *
-     * [`S::SIZE`]: /hal/paging/trait.PageSize.html#associatedconstant.SIZE
+    /**
+     * Constructs a `Frame` if it is aligned with S::SIZE
      */
     pub fn new(addr: T) -> Result<Self, FrameNotAlignedErr> {
         if addr.is_aligned(S::SIZE) {
@@ -115,34 +86,29 @@ impl<T, S> Frame<T, S>
         }
     }
 
-    /** # Constructs `addr`'s containing `Frame`
-     *
-     * The returned instance is down-aligned to the nearest [`S::SIZE`]
-     *
-     * [`S::SIZE`]: /hal/paging/trait.PageSize.html#associatedconstant.SIZE
+    /**
+     * Returns the `Frame` which is down-aligned to the nearest `S::SIZE`
      */
     pub fn of_addr(addr: T) -> Self {
         Self::new_unchecked(addr.align_down(S::SIZE).unwrap())
     }
 
-    /** Returns the starting [`Address`] of this `Frame`
-     *
-     * [`Address`]: /hal/addr/trait.Address.html
+    /**
+     * Returns the starting `Address` of this `Frame`
      */
     pub fn start_addr(&self) -> T {
         self.m_addr_impl
     }
 
-    /** Returns the size of this `Frame`
+    /**
+     * Returns the size of this `Frame`
      */
     pub fn size(&self) -> usize {
         S::SIZE
     }
 
-    /** # Converts the `Frame` to a generic `PageSize`
-     *
-     * Useful when must return a concrete `Frame` from a generic sized
-     * method
+    /**
+     * Converts the `Frame` to a generic `PageSize`
      */
     pub fn into_generic_sized_frame<ST>(self) -> Frame<T, ST>
         where ST: PageSize {
@@ -150,11 +116,8 @@ impl<T, S> Frame<T, S>
                 _unused: Default::default() }
     }
 
-    /** # Converts the `Frame` into a `Range` of `Frame`s
-     *
-     * The custom [`PageSize`] must be a multiple of the current page size
-     *
-     * [`PageSize`]: /hal/paging/trait.PageSize.html
+    /**  
+     * Converts the `Frame` into a `Range` of `Frame`s
      */
     pub fn into_range_of<ST>(self) -> Range<Frame<T, ST>>
         where ST: PageSize {
@@ -164,12 +127,9 @@ impl<T, S> Frame<T, S>
                 end: new_sized_frame + S::SIZE / ST::SIZE }
     }
 
-    /** # Constructs a `Range` of `Frame`s
-     *
-     * Returns an end exclusive [`Range`] that starts from the given
+    /**
+     * Returns an end exclusive `Range` that starts from the given
      * `start_frame` and steps until the previous `end_frame`
-     *
-     * [`Range`]: https://doc.rust-lang.org/std/ops/struct.Range.html
      */
     pub fn range_of(start_frame: Frame<T, S>,
                     end_frame: Frame<T, S>)
@@ -178,23 +138,17 @@ impl<T, S> Frame<T, S>
                 end: end_frame }
     }
 
-    /** # Constructs a `Range` of `Frame`s
-     *
-     * Returns an end exclusive [`Range`] that starts from the given
+    /**
+     * Returns an end exclusive `Range` that starts from the given
      * `start_frame` and steps for `count` frames
-     *
-     * [`Range`]: https://doc.rust-lang.org/std/ops/struct.Range.html
      */
     pub fn range_of_count(start_frame: Frame<T, S>, count: usize) -> Range<Frame<T, S>> {
         Self::range_of(start_frame, start_frame + count)
     }
 
-    /** # Constructs a `RangeInclusive` of `Frame`
-     *
-     * Returns an end exclusive [`RangeInclusive`] that starts from the
+    /**
+     * Returns an end exclusive `RangeInclusive` that starts from the
      * given `start_frame` and steps until the given `end_frame`
-     *
-     * [`RangeInclusive`]: https://doc.rust-lang.org/std/ops/struct.RangeInclusive.html
      */
     pub fn range_incl_of(start_frame: Frame<T, S>,
                          end_frame: Frame<T, S>)
@@ -202,12 +156,9 @@ impl<T, S> Frame<T, S>
         RangeInclusive::new(start_frame, end_frame)
     }
 
-    /** # Constructs a `RangeInclusive` of `Frame`
-     *
-     * Returns an end exclusive [`RangeInclusive`] that starts from the
+    /**
+     * Returns an end exclusive `RangeInclusive` that starts from the
      * given `start_frame` and steps for `count` frames
-     *
-     * [`RangeInclusive`]: https://doc.rust-lang.org/std/ops/struct.RangeInclusive.html
      */
     pub fn range_incl_of_count(start_frame: Frame<T, S>,
                                count: usize)
@@ -217,42 +168,36 @@ impl<T, S> Frame<T, S>
 }
 
 impl<S> Frame<VirtAddr, S> where S: PageSize {
-    /** Returns the fourth level [`PageTableIndex`]
-     *
-     * [`PageTableIndex`]: crate::mem::paging::table::PageTableIndex
+    /**
+     * Returns the fourth level `PageTableIndex`
      */
     pub fn level_4_index(&self) -> PageTableIndex {
         self.m_addr_impl.level_4_index()
     }
 
-    /** Returns the third level [`PageTableIndex`]
-     *
-     * [`PageTableIndex`]: crate::mem::paging::table::PageTableIndex
+    /**
+     * Returns the third level `PageTableIndex`
      */
     pub fn level_3_index(&self) -> PageTableIndex {
         self.m_addr_impl.level_3_index()
     }
 
-    /** Returns the second level [`PageTableIndex`]
-     *
-     * [`PageTableIndex`]: crate::mem::paging::table::PageTableIndex
+    /**
+     * Returns the second level `PageTableIndex`
      */
     pub fn level_2_index(&self) -> PageTableIndex {
         self.m_addr_impl.level_2_index()
     }
 
-    /** Returns the first level [`PageTableIndex`]
-     *
-     * [`PageTableIndex`]: crate::mem::paging::table::PageTableIndex
+    /**
+     * Returns the first level `PageTableIndex`
      */
     pub fn level_1_index(&self) -> PageTableIndex {
         self.m_addr_impl.level_1_index()
     }
 
-    /** Returns the [`PageTableLevel`]th [`PageTableIndex`]
-     *
-     * [`PageTableLevel`]: /hal/paging/enum.PageTableLevel.html
-     * [`PageTableIndex`]: crate::mem::paging::table::PageTableIndex
+    /**
+     * Returns the `PageTableLevel`th `PageTableIndex`
      */
     pub fn index_for_level(&self, pt_level: PageTableLevel) -> PageTableIndex {
         match pt_level {
@@ -265,10 +210,8 @@ impl<S> Frame<VirtAddr, S> where S: PageSize {
 }
 
 impl Frame<VirtAddr, Page4KiB> {
-    /** # Constructs the `VirtFrame` from the indices
-     *
-     * The returned instance is the down-aligned virtual frame of the
-     * composed one
+    /**
+     * Constructs the `VirtFrame` from the given indices
      */
     pub fn from_table_indexes(l4_index: PageTableIndex,
                               l3_index: PageTableIndex,
@@ -280,10 +223,8 @@ impl Frame<VirtAddr, Page4KiB> {
 }
 
 impl Frame<VirtAddr, Page2MiB> {
-    /** # Constructs the `VirtFrame` from the indices
-     *
-     * The returned instance is the down-aligned virtual frame of the
-     * composed one
+    /**
+     * Constructs the `VirtFrame` from the given indices
      */
     pub fn from_table_indexes(l4_index: PageTableIndex,
                               l3_index: PageTableIndex,
@@ -294,10 +235,8 @@ impl Frame<VirtAddr, Page2MiB> {
 }
 
 impl Frame<VirtAddr, Page1GiB> {
-    /** # Constructs the `VirtFrame` from the indices
-     *
-     * The returned instance is the down-aligned virtual frame of the
-     * composed one
+    /**
+     * Constructs the `VirtFrame` from the given indices
      */
     pub fn from_table_indexes(l4_index: PageTableIndex,
                               l3_index: PageTableIndex)
@@ -310,8 +249,6 @@ impl<T, S> fmt::Debug for Frame<T, S>
     where T: Address,
           S: PageSize
 {
-    /** Formats the value using the given formatter
-     */
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:?}", self.m_addr_impl)
     }
@@ -321,23 +258,14 @@ unsafe impl<T, S> Step for Frame<T, S>
     where T: Address,
           S: PageSize
 {
-    /** Returns the number of *successor* steps required to get from `start`
-     * to `end`.
-     */
     fn steps_between(start: &Self, end: &Self) -> Option<usize> {
         Some((end.start_addr().as_usize() - start.start_addr().as_usize()) / S::SIZE)
     }
 
-    /** Returns the value that would be obtained by taking the *successor* of
-     * `self` `count` times.
-     */
     fn forward_checked(start: Self, count: usize) -> Option<Self> {
         Some(start + count)
     }
 
-    /** Returns the value that would be obtained by taking the *predecessor*
-     * of `self` `count` times.
-     */
     fn backward_checked(start: Self, count: usize) -> Option<Self> {
         Some(start - count)
     }
@@ -347,12 +275,8 @@ impl<T, S> Add<usize> for Frame<T, S>
     where T: Address,
           S: PageSize
 {
-    /** The resulting type after applying the `+` operator.
-     */
     type Output = Self;
 
-    /** Performs the `+` operation.
-     */
     fn add(self, rhs: usize) -> Self::Output {
         Self::of_addr(self.start_addr() + rhs * S::SIZE)
     }
@@ -362,8 +286,6 @@ impl<T, S> AddAssign<usize> for Frame<T, S>
     where T: Address,
           S: PageSize
 {
-    /** Performs the `+=` operation.
-     */
     fn add_assign(&mut self, rhs: usize) {
         *self = self.add(rhs);
     }
@@ -373,12 +295,8 @@ impl<T, S> Sub<usize> for Frame<T, S>
     where T: Address,
           S: PageSize
 {
-    /** The resulting type after applying the `-` operator.
-     */
     type Output = Self;
 
-    /** Performs the `-` operation.
-     */
     fn sub(self, rhs: usize) -> Self::Output {
         Self::of_addr(self.start_addr() - rhs * S::SIZE)
     }
@@ -388,18 +306,13 @@ impl<T, S> SubAssign<usize> for Frame<T, S>
     where T: Address,
           S: PageSize
 {
-    /** Performs the `-=` operation.
-     */
     fn sub_assign(&mut self, rhs: usize) {
         *self = self.sub(rhs);
     }
 }
 
-/** # Frame Alignment Error
- *
- * Represents a [`Frame`] creation error
- *
- * [`Frame`]: crate::mem::paging::frame::Frame
+/**
+ * `Frame` alignment error
  */
 #[derive(Debug)]
 pub struct FrameNotAlignedErr;

@@ -1,18 +1,20 @@
-/*! # x86_64 Page Directory
- *
- * Implements the page table flags for the x86_64 architecture
- */
+/*! x86_64 page directory support */
 
 use crate::{
-    addr::{Address, PhysAddr},
-    mem::paging::{HwPageDirSupportBase, Page4KiB, PageTableLevel, PhysFrame}
+    addr::{
+        phys::PhysAddr,
+        Address
+    },
+    mem::paging::{
+        dir::HwPageDirSupportBase,
+        frame::PhysFrame,
+        table::PageTableLevel,
+        Page4KiB
+    }
 };
 
-/** # x86_64 Page Dir Mapping Flags
- *
- * Implements the [`HwPdMapFlagsBase`] for the x86_64 architecture
- *
- * [`HwPdMapFlagsBase`]: /hal/paging/trait.HwPdMapFlagsBase.html
+/**
+ * Implements the `HwPageDirSupportBase` for the x86_64 architecture
  */
 pub struct X64PageDirSupport;
 
@@ -40,45 +42,25 @@ impl HwPageDirSupportBase for X64PageDirSupport {
     const PT_LEVEL_2MB: PageTableLevel = PageTableLevel::Level2;
     const PT_LEVEL_4KB: PageTableLevel = PageTableLevel::Level1;
 
-    /** Returns the current [`PageDir`]'s [`PhysFrame`]
-     *
-     * [`PageDir`]: /hal/paging/struct.PageDir.html
-     * [`PhysFrame`]: /hal/paging/type.PhysFrame.html
-     */
     unsafe fn active_page_dir_frame() -> PhysFrame<Page4KiB> {
         use x86_64::registers::control::Cr3;
 
-        /* read the current CR3 value */
-        let (phys_frame, ..) = Cr3::read();
-
-        /* return back the PhysFrame */
-        let phys_addr =
-            PhysAddr::new_unchecked(phys_frame.start_address().as_u64() as usize);
-        PhysFrame::of_addr(phys_addr)
+        PhysAddr::new(Cr3::read().0.start_address().as_u64() as usize).containing_frame()
     }
 
-    /** Activates the given [`PhysFrame`] as current [`PageDir`]
-     *
-     * [`PhysFrame`]: /hal/paging/type.PhysFrame.html
-     * [`PageDir`]: /hal/paging/struct.PageDir.html
-     */
     unsafe fn activate_page_dir(phys_frame: PhysFrame<Page4KiB>) {
         use x86_64::{
-            registers::control::Cr3, structures::paging::PhysFrame as X64PhysFrame,
+            registers::control::Cr3,
+            structures::paging::PhysFrame as X64PhysFrame,
             PhysAddr as X64PhysAddr
         };
-
-        /* read the previous CR3 content to obtain the active flags */
-        let (_, cr3_flags) = Cr3::read();
 
         /* construct the x86_64 PhysAddr */
         let x64_phys_addr =
             X64PhysAddr::new_unsafe(phys_frame.start_addr().as_usize() as u64);
 
-        /* construct the x86_64 PhysFrame */
-        let x64_phys_frame = X64PhysFrame::from_start_address_unchecked(x64_phys_addr);
-
         /* update the CR3 content */
-        Cr3::write(x64_phys_frame, cr3_flags);
+        Cr3::write(X64PhysFrame::from_start_address_unchecked(x64_phys_addr),
+                   Cr3::read().1);
     }
 }

@@ -4,11 +4,19 @@
  */
 
 use x86_64::{
-    instructions::{interrupts, segmentation::set_cs, tables::load_tss},
+    instructions::{
+        interrupts,
+        segmentation::set_cs,
+        tables::load_tss
+    },
     structures::{
-        gdt::{Descriptor, GlobalDescriptorTable},
+        gdt::{
+            Descriptor,
+            GlobalDescriptorTable
+        },
         idt::{
-            InterruptDescriptorTable, InterruptStackFrame as X64IntrStackFrame,
+            InterruptDescriptorTable,
+            InterruptStackFrame as X64IntrStackFrame,
             PageFaultErrorCode
         },
         tss::TaskStateSegment
@@ -18,7 +26,9 @@ use x86_64::{
 use crate::{
     arch::x86_64::hal::interrupt::HwInterruptStackFrame,
     hal::interrupt::{
-        HwInterruptManagerBase, InterruptManagerException, InterruptManagerHandlers,
+        HwInterruptManagerBase,
+        InterruptManagerException,
+        InterruptManagerHandlers,
         InterruptStackFrame
     }
 };

@@ -1,8 +1,4 @@
-/*! # Virtual & Physical Address
- *
- * Implements the abstraction of the memory addresses into his two different
- * kinds: physical and virtual
- */
+/*! Virtual & Physical address wrappers */
 
 use core::{
     convert::TryFrom,
@@ -22,21 +18,17 @@ use core::{
     }
 };
 
-pub use phys::*;
-pub use virt::*;
-
 use crate::mem::paging::{
-    Frame,
+    frame::Frame,
     PageSize
 };
 
-mod phys;
-mod virt;
+pub mod phys;
+pub mod virt;
 
-/** # Address Base
- *
- * Defines a base interface of methods and dependencies common to all the
- * addresses implementations (both virtual and physical)
+/**
+ * Base interface of methods and dependencies common to all the addresses
+ * implementations (both virtual and physical)
  */
 pub trait Address:
     Default
@@ -61,100 +53,87 @@ pub trait Address:
     + PartialEq
     + Ord
     + PartialOrd {
-    /** # Constructs an unchecked `Address`
-     *
-     * The returned address implementation may be invalid
+    /**
+     * Constructs a validated `Address`
      */
-    unsafe fn new_unchecked(addr: usize) -> Self;
+    fn new(addr: usize) -> Self;
 
-    /** Returns the inner contained address as `usize`
+    /**
+     * Returns the inner contained address as `usize`
      */
     fn as_usize(&self) -> usize;
 
-    /** # Constructs a null `Address`
-     *
-     * The returned address is null
+    /**
+     * Constructs a null `Address`
      */
     fn new_zero() -> Self {
-        unsafe { Self::new_unchecked(0) }
+        Self::new(0)
     }
 
-    /** # Aligns up this `Address`
-     *
-     * Returns on [`Ok`] the aligned up address using the given `align`
-     *
-     * [`Ok`]: core::result::Result::Ok
+    /**
+     * Returns on `Ok` the aligned up address using the given `align`
      */
     fn align_up<A>(self, align: A) -> Result<Self, AddressErr>
         where A: Into<usize> {
         Self::try_from(align_up(self.into(), align.into()))
     }
 
-    /** # Aligns down this `Address`
-     *
-     * Returns on [`Ok`] the aligned down address using the given `align`
-     *
-     * [`Ok`]: core::result::Result::Ok
+    /**
+     * Returns on `Ok` the aligned down address using the given `align`
      */
     fn align_down<A>(self, align: A) -> Result<Self, AddressErr>
         where A: Into<usize> {
         Self::try_from(align_down(self.into(), align.into()))
     }
 
-    /** Returns the containing [`Frame`] for this `Address`
-     *
-     * [`Frame`]: crate::mem::paging::frame::Frame
+    /**
+     * Returns the containing `Frame` for this `Address`
      */
     fn containing_frame<S>(&self) -> Frame<Self, S>
         where S: PageSize {
-        Frame::of_addr(*self)
+        Frame::of_addr(self.clone())
     }
 
-    /** Returns whether this `Address` is aligned with `align`
+    /**
+     * Returns whether this `Address` is aligned with `align`
      */
     fn is_aligned<A>(&self, align: A) -> bool
         where A: Into<usize> {
-        Self::from(*self).align_down(align)
-                         .map(|aligned| aligned == *self)
-                         .unwrap_or(false)
+        Self::from(self.clone()).align_down(align)
+                                .map(|aligned| aligned == self.clone())
+                                .unwrap_or(false)
     }
 
-    /** Returns whether this `Address` contains a zero value
+    /**
+     * Returns whether this `Address` contains a zero value
      */
     fn is_null(&self) -> bool {
         self.as_usize() == 0
     }
 }
 
-/** # Address Error
- *
- * Represents an [`Address`] creation error.
+/**
+ * `Address` creation error.
  *
  * Internally contains a raw address `usize` with the error value given
- *
- * [`Address`]: crate::addr::Address
  */
 #[derive(Debug, Copy, Clone)]
 pub struct AddressErr(pub(crate) usize);
 
 impl fmt::Display for AddressErr {
-    /** Formats the value using the given formatter.
-     */
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "The given address was not properly aligned ({:#X})", self.0)
     }
 }
 
-/** # Align the raw address down
- *
+/**
  * Returns the `addr` align down to the nearest value multiple of `align`
  */
 pub const fn align_down(addr: usize, align: usize) -> usize {
     addr & !(align - 1)
 }
 
-/** # Align the raw address up
- *
+/**
  * Returns the `addr` align up to the nearest value multiple of `align`
  */
 pub const fn align_up(addr: usize, align: usize) -> usize {
@@ -166,34 +145,21 @@ pub const fn align_up(addr: usize, align: usize) -> usize {
     }
 }
 
-/** # Hardware Address Base
- *
- * Defines the interface on which the [`Address`] trait relies to use the
- * hardware implementation of the addresses
- *
- * [`Address`]: crate::addr::Address
+/**
+ * Interface on which the `Address` trait relies to use the hardware
+ * implementation of the addresses
  */
 pub(crate) trait HwAddrBase: TryFrom<usize, Error = AddressErr> {
-    /** # Constructs an unchecked `HwAddrBase` based `Address`
+    /**  
+     * Constructs a validated `HwAddrBase` based `Address`
      *
-     * The returned instance could be invalid for the underling
-     * architecture, no validity check must be performed inside this
-     * method
+     * The returned instance can be a truncated/normalized version of the
+     * `raw_addr` for the underling architecture
      */
-    unsafe fn new_unchecked(raw_addr: usize) -> Self;
+    fn new(raw_addr: usize) -> Self;
 
-    /** # Validate this HW address
-     *
-     * The instance must be made valid in if it doesn't for the underling
-     * hardware architecture
-     */
-    fn validate(&mut self);
-
-    /** Returns this hardware address as `usize`
+    /**
+     * Returns this hardware address as `usize`
      */
     fn as_usize(&self) -> usize;
-
-    /** Returns whether this hardware address is valid
-     */
-    fn is_valid(&self) -> bool;
 }

@@ -1,7 +1,4 @@
-/*! # HAL Page Directory Management
- *
- * Implements an high level abstraction for the page directory management
- */
+/*! Page directory management */
 
 use core::{
     fmt,
@@ -13,45 +10,47 @@ use core::{
 
 use crate::{
     addr::{
-        Address,
-        VirtAddr
+        virt::VirtAddr,
+        Address
     },
     arch::mem::paging::HwPageDirSupport,
     mem::paging::{
-        FrameAllocator,
-        MapFlush,
-        MapFlusher,
-        MapRangeFlush,
-        PTFlags,
+        allocator::FrameAllocator,
+        flush::{
+            MapFlush,
+            MapFlusher,
+            MapRangeFlush
+        },
+        frame::{
+            PhysFrame,
+            VirtFrame,
+            VirtFrameRange
+        },
+        table::{
+            PTFlags,
+            PageTable,
+            PageTableEntry,
+            PageTableEntryErr,
+            PageTableIndex,
+            PageTableLevel
+        },
         Page1GiB,
         Page2MiB,
         Page4KiB,
-        PageSize,
-        PageTable,
-        PageTableEntry,
-        PageTableEntryErr,
-        PageTableIndex,
-        PageTableLevel,
-        PhysFrame,
-        VirtFrame,
-        VirtFrameRange
+        PageSize
     }
 };
 
-/** # Page Directory
- *
- * Implements a "middle" level address space manager.
+/**
+ * "Middle" level address space manager.
  *
  * Middle level because allows the user to abstract from the complications
- * of the raw [`PageTable`]s and [`PageTableEntries`] and the inner flags,
+ * of the raw `PageTable`s and `PageTableEntries` and the inner flags,
  * but must be used with consciousness because allows too to map reserved
  * addresses, remap stuffs with undefined consequences.
  *
  * So this is only an hardware abstraction layer to the paging manager, but
  * must be managed by an high level virtual memory manager into the kernel
- *
- * [`PageTable`]: /hal/paging/struct.PageTable.html
- * [`PageTableEntries`]: /hal/paging/struct.PageTableEntries.html
  */
 pub struct PageDir {
     m_root_frame: PhysFrame<Page4KiB>,
@@ -59,41 +58,28 @@ pub struct PageDir {
 }
 
 impl PageDir {
-    /** # Construct a `PageDir`
-     *
-     * The returned instance is able to perform mapping and unmapping
+    /**
+     * Construct a `PageDir` which maps physical addresses from the given
+     * `phys_offset`
      */
     pub fn new(root_phys_frame: PhysFrame<Page4KiB>, phys_offset: VirtAddr) -> Self {
         Self { m_root_frame: root_phys_frame,
                m_phys_offset: PhysOffset::new(phys_offset) }
     }
 
-    /** # Maps a single `VirtFrame`
-     *
+    /**
      * Creates a new mapping into this page directory at the specified
-     * [`VirtFrame`] address.
+     * `VirtFrame` address.
      *
-     * This method also creates all the missing intermediate [`PageTable`]s
-     * for the mapping using [`FrameAllocator::alloc_page_table()`].
+     * This method also creates all the missing intermediate `PageTable`s
+     * for the mapping using `FrameAllocator::alloc_page_table()`.
      *
-     * Bigger are the requested [`PageSize`] less intermediate page tables
-     * must be created/used, from 1 for [`Page1GiB`] to 3 for [`Page4KiB`].
+     * Bigger are the requested `PageSize` less intermediate page tables
+     * must be created/used, from 1 for `Page1GiB` to 3 for `Page4KiB`.
      *
-     * The mapping frame (the [`PhysFrame`] that maps the [`VirtFrame`]
-     * given) is not allocated when the given [`PTFlags`] not contains
-     * [`PTFlags::PRESENT`] (useful for demand paging)
-     *
-     * [`VirtFrame`]: /hal/paging/type.VirtFrame.html
-     * [`PageTable`]: /hal/paging/struct.PageTable.html
-     * [`FrameAllocator::alloc_page_table()`]:
-     * /hal/paging/trait.FrameAllocator.html#method.alloc_page_table
-     * [`PageSize`]: /hal/paging/trait.PageSize.html
-     * [`Page1GiB`]: /hal/paging/struct.Page1GiB.html
-     * [`Page4KiB`]: /hal/paging/struct.Page4KiB.html
-     * [`PhysFrame`]: /hal/paging/type.PhysFrame.html
-     * [`PTFlags`]: /hal/paging/struct.PTFlags.html
-     * [`PTFlags::PRESENT`]:
-     * /hal/paging/struct.PTFlags.html#associatedconstant.PRESENT
+     * The mapping frame (the `PhysFrame` that maps the `VirtFrame`
+     * given) is not allocated when the given `PTFlags` not contains
+     * `PTFlags::PRESENT` (useful for demand paging)
      */
     pub fn map_single<S, A>(&mut self,
                             virt_frame: VirtFrame<S>,
@@ -104,9 +90,7 @@ impl PageDir {
               A: FrameAllocator<S> {
         #[cfg(debug_assertions)]
         {
-            /* in DEBUG mode ensure that the caller have not made mistakes with the
-             * flags and the page mapping sizes
-             */
+            /* ensure logical correctness in DEBUG mode */
             if !S::IS_BIG {
                 assert!(!flags.is_huge_page());
             }
@@ -139,30 +123,17 @@ impl PageDir {
             .map(|_| MapFlush::new(virt_frame))
     }
 
-    /** # Maps a `Range` of `VirtFrame`s
-     *
+    /**
      * Creates a new range of mappings into this page directory starting
-     * from the first [`VirtFrame`] address of the given [`VirtFrameRange`].
+     * from the first `VirtFrame` address of the given `VirtFrameRange`.
      *
-     * Like [`PageDir::map_single()`], this method also creates all the
-     * missing intermediate [`PageTable`]s for all the mappings using
-     * [`FrameAllocator::alloc_page_table()`].
+     * Like `PageDir::map_single()`, this method also creates all the
+     * missing intermediate `PageTable`s for all the mappings using
+     * `FrameAllocator::alloc_page_table()`.
      *
-     * As [`PageDir::map_single()`] do, this method will not allocate
-     * mapping [`PhysFrame`]s if the given [`PTFlags`] not contain
-     * [`PTFlags::PRESENT`]
-     *
-     * [`VirtFrame`]: /hal/paging/type.VirtFrame.html
-     * [`VirtFrameRange`]: /hal/paging/type.VirtFrameRange.html
-     * [`PageDir::map_single()`]:
-     * /hal/paging/struct.PageDir.html#method.map_single
-     * [`PageTable`]: /hal/paging/struct.PageTable.html
-     * [`FrameAllocator::alloc_page_table()`]:
-     * /hal/paging/trait.FrameAllocator.html#method.alloc_page_table
-     * [`PhysFrame`]: /hal/paging/type.PhysFrame.html
-     * [`PTFlags`]: /hal/paging/struct.PTFlags.html
-     * [`PTFlags::PRESENT`]:
-     * /hal/paging/struct.PTFlags.html#associatedconstant.PRESENT
+     * As `PageDir::map_single()` do, this method will not allocate
+     * mapping `PhysFrame`s if the given `PTFlags` not contain
+     * `PTFlags::PRESENT`
      */
     pub fn map_range<S, A>(&mut self,
                            virt_range: VirtFrameRange<S>,
@@ -220,29 +191,20 @@ impl PageDir {
                                                        original_range.end - 1)))
     }
 
-    /** # Unmaps a single `VirtFrame`
+    /**
+     * Removes the mapping for the given `VirtFrame` inside this page
+     * directory and frees the mapping's `PhysFrame` if present.
      *
-     * Removes the mapping for the given [`VirtFrame`] inside this page
-     * directory and frees the mapping's [`PhysFrame`] if present.
-     *
-     * It could also collect empty intermediate [`PageTable`]s if
+     * It could also collect empty intermediate `PageTable`s if
      * `collect_empty_page_tables = true` using
-     * [`FrameAllocator::free_page_table()`].
+     * `FrameAllocator::free_page_table()`.
      *
      * Please keep in mind that the same not collected intermediate
-     * [`PageTable`]s because of `collect_empty_page_tables = false` could
+     * `PageTable`s because of `collect_empty_page_tables = false` could
      * be collected by a following `collect_empty_page_tables = true` call
-     * that unmaps a [`VirtFrame`] that resides into the same
-     * [`PageTable`]s, so if you want to keep allocated a set of page tables
-     * be sure to NOT unmap near [`VirtFrame`]s with
-     * `collect_empty_page_tables = true`
-     *
-     * [`VirtFrame`]: /hal/paging/type.VirtFrame.html
-     * [`PhysFrame`]: /hal/paging/type.PhysFrame.html
-     * [`PageTable`]: /hal/paging/struct.PageTable.html
-     * [`PageTableEntry`]: /hal/paging/struct.PageTableEntry.html
-     * [`FrameAllocator::free_page_table()`]:
-     * /hal/paging/trait.FrameAllocator.html#method.free_page_table
+     * that unmaps a `VirtFrame` that resides into the same `PageTable`s, so
+     * if you want to keep allocated a set of page tables be sure to NOT
+     * unmap near `VirtFrame`s with `collect_empty_page_tables = true`
      */
     pub fn unmap_single<S, A>(&mut self,
                               virt_frame: VirtFrame<S>,
@@ -263,25 +225,14 @@ impl PageDir {
             })
     }
 
-    /** # Unmaps a `Range` of `VirtFrame`s
-     *
+    /**
      * Removes a existing range of mappings into this page directory
-     * starting from the first [`VirtFrame`] address of the given
-     * [`VirtFrameRange`] and frees all the present mapping's [`PhysFrame`].
+     * starting from the first `VirtFrame` address of the given
+     * `VirtFrameRange` and frees all the present mapping's `PhysFrame`.
      *
-     * Like [`PageDir::unmap_single()`], this method could also collect
-     * empty intermediate [`PageTable`]s if
-     * `collect_empty_page_tables = true` using
-     * [`FrameAllocator::free_page_table()`].
-     *
-     * [`VirtFrame`]: /hal/paging/type.VirtFrame.html
-     * [`VirtFrameRange`]: /hal/paging/type.VirtFrameRange.html
-     * [`PhysFrame`]: /hal/paging/type.PhysFrame.html
-     * [`PageDir::unmap_single()`]:
-     * /hal/paging/struct.PageDir.html#method.unmap_single
-     * [`PageTable`]: /hal/paging/struct.PageTable.html
-     * [`FrameAllocator::free_page_table()`]:
-     * /hal/paging/trait.FrameAllocator.html#method.free_page_table
+     * Like `PageDir::unmap_single()`, this method could also collect
+     * empty intermediate `PageTable`s if `collect_empty_page_tables = true`
+     * using `FrameAllocator::free_page_table()`
      */
     pub fn unmap_range<S, A>(&mut self,
                              virt_range: VirtFrameRange<S>,
@@ -321,10 +272,8 @@ impl PageDir {
                                                        original_range.end - 1)))
     }
 
-    /** Returns the [`PTFlags`] of the given [`VirtFrame`]
-     *
-     * [`PTFlags`]: /hal/paging.struct.PTFlags.html
-     * [`VirtFrame`]: /hal/paging.struct.VirtFrame.html
+    /**
+     * Returns the `PTFlags` of the given `VirtFrame`
      */
     pub fn flags_of<S>(&self, virt_frame: VirtFrame<S>) -> Result<PTFlags, PageDirErr>
         where S: PageSize {
@@ -341,42 +290,38 @@ impl PageDir {
         Ok(table[virt_frame.index_for_level(S::MAP_LEVEL)].flags())
     }
 
-    /** Makes this `PageDir` the active one
+    /**
+     * Makes this `PageDir` the active one
      */
     pub unsafe fn activate(&self) {
         HwPageDirSupport::activate_page_dir(self.m_root_frame);
     }
 
-    /** Returns the root [`PhysFrame`] of this `PageDir`
-     *
-     * [`PhysFrame`]: /hal/paging/type.PhysFrame.html
+    /**
+     * Returns the root `PhysFrame` of this `PageDir`
      */
     pub fn root_phys_frame(&self) -> PhysFrame<Page4KiB> {
         self.m_root_frame
     }
 
-    /** Returns the virtual to physical memory offset [`VirtAddr`]
-     *
-     * [`VirtAddr`]: crate::addr:virt::VirtAddr
+    /**
+     * Returns the virtual to physical memory offset `VirtAddr`
      */
     pub fn phys_mem_offset(&self) -> VirtAddr {
         self.m_phys_offset.m_offset
     }
 
-    /** Returns the active page directory
+    /**
+     * Returns the active page directory
      */
     pub unsafe fn active_page_dir(phys_offset: usize) -> PageDir {
         PageDir::new(HwPageDirSupport::active_page_dir_frame(),
-                     VirtAddr::new_unchecked(phys_offset))
+                     VirtAddr::new(phys_offset))
     }
 
-    /** # Actually maps a `VirtFrame`
-     *
-     * Performs the operations to actually map the given [`VirtFrame`] to
-     * this page directory according to the given [`PTFlags`]
-     *
-     * [`VirtFrame`]: /hal/paging/type.VirtFrame.html
-     * [`PTFlags`]: /hal/paging/struct.PTFlags.html
+    /**
+     * Performs the operations to actually map the given `VirtFrame` to
+     * this page directory according to the given `PTFlags`
      */
     fn map_frame<S, A>(&mut self,
                        virt_frame: VirtFrame<S>,
@@ -436,13 +381,9 @@ impl PageDir {
         }
     }
 
-    /** # Actually unmaps a `VirtFrame`
-     *
-     * Performs the operations to actually unmap the given [`VirtFrame`]
+    /**
+     * Performs the operations to actually unmap the given `VirtFrame`
      * from this page directory
-     *
-     * [`VirtFrame`]: /hal/paging/type.VirtFrame.html
-     * [`PTFlags`]: /hal/paging/struct.PTFlags.html
      */
     fn unmap_frame<S, A>(&mut self,
                          virt_frame: VirtFrame<S>,
@@ -495,14 +436,10 @@ impl PageDir {
         unmap_res
     }
 
-    /** # Ensures the next `PageTable`
-     *
-     * Ensures that the [`PageTable`] referenced by the given
-     * [`PageTableEntry`] exists (it will be created otherwise) and doesn't
+    /**
+     * Ensures that the `PageTable` referenced by the given
+     * `PageTableEntry` exists (it will be created otherwise) and doesn't
      * contain a mapping to a bigger physical frame
-     *
-     * [`PageTable`]: /hal/paging/struct.PageTable.html
-     * [`PageTableEntry`]: /hal/paging/struct.PageTableEntry.html
      */
     fn ensure_next_pt<'b, S, A>(&self,
                                 entry: &'b mut PageTableEntry,
@@ -560,13 +497,8 @@ impl PageDir {
         Ok(next_page_table)
     }
 
-    /** # Calculates the virtual address to the next `PageTable`
-     *
-     * Calculates the reference to the next [`PageTable`] from the given
-     * [`PageTableEntry`]
-     *
-     * [`PageTable`]: /hal/paging/struct.PageTable.html
-     * [`PageTableEntry`]: /hal/paging/struct.PageTableEntry.html
+    /**
+     * Calculates the virtual address to the next `PageTable`
      */
     fn next_page_table<'b, S>(&self,
                               entry: &'b mut PageTableEntry)
@@ -577,15 +509,10 @@ impl PageDir {
         })
     }
 
-    /** # Collects unused `PageTable`s
-     *
-     * Recursively checks whether the [`PageTable`]s that was used to map
-     * the given [`VirtFrame`] are empty, in that case deallocates them
-     * returning to the [`FrameAllocator`] given
-     *
-     * [`PageTable`]: /hal/paging/struct.PageTable.html
-     * [`VirtFrame`]: /hal/paging/type.VirtFrame.html
-     * [`FrameAllocator`]: /hal/paging/trait.FrameAllocator.html
+    /**
+     * Recursively checks whether the `PageTable`s that was used to map
+     * the given `VirtFrame` are empty, in that case deallocates them
+     * returning to the `FrameAllocator` given
      */
     fn collect_unused_page_tables<S, A>(&self,
                                         virt_frame: VirtFrame<S>,
@@ -634,9 +561,8 @@ impl PageDir {
         }
     }
 
-    /** Returns the mutable reference to the Level4 [`PageTable`]
-     *
-     * [`PageTable`]: /hal/paging/struct.PageTable.html
+    /**
+     * Returns the mutable reference to the Level4 `PageTable`
      */
     fn root_page_table(&self) -> &mut PageTable {
         unsafe { &mut *self.m_phys_offset.next_table_pointer(self.m_root_frame) }
@@ -644,8 +570,6 @@ impl PageDir {
 }
 
 impl Debug for PageDir {
-    /** Formats the value using the given formatter
-     */
     #[rustfmt::skip]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for (l4_index, l4_entry) in self.root_page_table().iter_mut().enumerate() {
@@ -731,36 +655,28 @@ impl Debug for PageDir {
     }
 }
 
-/** # Physical Memory Offset
+/**
+ * Wrapper for the virtual memory offset of the `PageDir`.
  *
- * Simple object that keeps the value of the virtual address on which the
- * kernel maps the physical memory
+ * It is responsible to calculate the pointers to the next level page tables
  */
 struct PhysOffset {
     m_offset: VirtAddr
 }
 
 impl PhysOffset {
-    /** # Constructs a `PhysOffset`
-     *
-     * The constructs asserts the well alignment of the given [`VirtAddr`]
-     * to the [`Page4KiB`]
-     *
-     * [`VirtAddr`]: crate::addr:virt::VirtAddr
-     * [`Page4KiB`]: /hal/paging/struct.Page4kib.html
+    /**
+     * Constructs a `PhysOffset` which asserts the well alignment of the
+     * given `VirtAddr` to the `Page4KiB`
      */
     fn new(offset: VirtAddr) -> Self {
         assert!(offset.is_aligned(Page4KiB::SIZE));
         Self { m_offset: offset }
     }
 
-    /** # Calculates next `PageTable`'s virtual address
-     *
+    /**
      * Using the stored virtual offset returns the virtual pointer to the
-     * next [`PageTable`] on which the given [`PhysFrame`] points
-     *
-     * [`PageTable`]: /hal/paging/struct.PageTable.html
-     * [`PhysFrame`]: /hal/paging/type.PhysFrame.html
+     * next `PageTable` on which the given `PhysFrame` points
      */
     unsafe fn next_table_pointer<S>(&self, phys_frame: PhysFrame<S>) -> *mut PageTable
         where S: PageSize {
@@ -768,16 +684,14 @@ impl PhysOffset {
     }
 }
 
-/** # Hardware Page Directory Support Base Interface
- *
- * Defines a little amount of constants and methods to support the main
- * [`PageDir`] object to perform architecture specific operations or apply
- * architecture specific values
+/**
+ * Interface of utilities, implemented by the architecture dependent code to
+ * support the `PageDir` implementation
  */
 pub(crate) trait HwPageDirSupportBase {
     /* The following values are assigned with the real page table (entry)
      * flags expected by the hardware architecture, they will be used by the
-     * for his published internal flags
+     * `PageDir` for his published internal flags
      */
     const PTE_PRESENT: usize;
     const PTE_READABLE: usize;
@@ -801,26 +715,19 @@ pub(crate) trait HwPageDirSupportBase {
     const PT_LEVEL_2MB: PageTableLevel;
     const PT_LEVEL_4KB: PageTableLevel;
 
-    /** Returns the current [`PageDir`]'s [`PhysFrame`]
-     *
-     * [`PageDir`]: /hal/paging/struct.PageDir.html
-     * [`PhysFrame`]: /hal/paging/type.PhysFrame.html
+    /**
+     * Returns the current `PageDir`'s `PhysFrame`
      */
     unsafe fn active_page_dir_frame() -> PhysFrame<Page4KiB>;
 
-    /** Activates the given [`PhysFrame`] as current [`PageDir`]
-     *
-     * [`PhysFrame`]: /hal/paging/type.PhysFrame.html
-     * [`PageDir`]: /hal/paging/struct.PageDir.html
+    /**
+     * Activates the given `PhysFrame` as current `PageDir`
      */
     unsafe fn activate_page_dir(phys_frame: PhysFrame<Page4KiB>);
 }
 
-/** # Page Directory Errors
- *
- * Enumerates the errors that could occur when using the [`PageDir`]
- *
- * [`PageDir`]: /hal/paging/struct.PageDir.html
+/**
+ * Lists the errors that could occur when using the `PageDir`
  */
 pub enum PageDirErr {
     PageNotMapped,
@@ -831,8 +738,6 @@ pub enum PageDirErr {
 }
 
 impl From<PageTableEntryErr> for PageDirErr {
-    /** Performs the conversion
-     */
     fn from(pte_err: PageTableEntryErr) -> Self {
         match pte_err {
             PageTableEntryErr::PhysFrameNotPresent => Self::PageNotMapped,

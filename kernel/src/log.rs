@@ -6,10 +6,20 @@
  *      hh_loader, implement a `FileWriter` when filesystem become reality
  */
 
-use core::{fmt, str::FromStr};
+use core::{
+    fmt,
+    str::FromStr
+};
 
-use hal::{boot_infos::BootInfos, uart::Uart};
-use logger::{LevelFilter, Logger, LoggerWriter};
+use hal::{
+    boot_infos::BootInfos,
+    uart::Uart
+};
+use logger::{
+    LevelFilter,
+    Logger,
+    LoggerWriter
+};
 use sync::RawSpinMutex;
 
 /** Global kernel logger instance, is initialized by the

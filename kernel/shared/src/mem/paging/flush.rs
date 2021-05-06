@@ -1,37 +1,31 @@
-/*! # HAL Map Flusher
- *
- * The module implements the mapping flusher structures
- */
+/*! Map flusher */
 
 use core::mem;
 
 use crate::{
-    addr::VirtAddr,
+    addr::virt::VirtAddr,
     arch::mem::paging::HwMapFlusher,
     mem::paging::{
-        PageSize,
-        VirtFrame,
-        VirtFrameRangeIncl
+        frame::{
+            VirtFrame,
+            VirtFrameRangeIncl
+        },
+        PageSize
     }
 };
 
-/** # Map Flush
- *
- * Implements the map flusher for a single frame.
+/**
+ * Map flusher for a single frame.
  *
  * It tells to the hardware TLB to remove the page table entry that
- * references the given [`VirtFrame`] because is changed.
+ * references the given `VirtFrame` because is changed.
  *
  * The next access to the same virtual location will throw a TLB cache miss
  * and will force the CPU to perform a page dir lookup to read the new
  * address
  *
- * Ensures at compile time that [`MapFlush::flush()`] or
- * [`MapFlush::ignore()`] is called or the compiler will trow a warning
- *
- * [`VirtFrame`]: /hal/paging/type.VirtFrame.html
- * [`MapFlush::flush()`]: /hal/paging/struct.MapFlush.html#method.flush
- * [`MapFlush::ignore()`]: /hal/paging/struct.MapFlush.html#method.ignore
+ * Ensures at compile time that `MapFlush::flush()` or
+ * `MapFlush::ignore()` is called or the compiler will trow a warning
  */
 #[must_use = "The page table must be flushed or ignored"]
 pub struct MapFlush<S>
@@ -41,12 +35,9 @@ pub struct MapFlush<S>
 }
 
 impl<S> MapFlush<S> where S: PageSize {
-    /** # Constructs a new `MapFlush`
-     *
-     * The returned instance will flush the given [`VirtFrame`]'s containing
-     * page table in TLB
-     *
-     * [`VirtFrame`]: /hal/paging/type.VirtFrame.html
+    /**
+     * Constructs a new `MapFlush` which will flush the TLB entry for the
+     * given `VirtFrame`
      */
     pub fn new(virt_frame: VirtFrame<S>) -> Self {
         Self { m_virt: virt_frame,
@@ -55,32 +46,23 @@ impl<S> MapFlush<S> where S: PageSize {
 }
 
 impl<S> MapFlusher for MapFlush<S> where S: PageSize {
-    /** Flushes the [`VirtFrame`]'s containing page table in TLB
-     *
-     * [`VirtFrame`]: /hal/paging/type.VirtFrame.html
-     */
     fn flush(self) {
         self.m_inner.flush_addr(self.m_virt)
     }
 }
 
-/** # Map Range Flush
- *
- * Implements the map flusher for an inclusive range of frames.
+/**
+ * Map flusher for an inclusive range of frames.
  *
  * It tells to the hardware TLB to remove the page table entries that
- * references the contiguous given [`VirtFrame`]s because they are changed.
+ * references the contiguous given `VirtFrame`s because they are changed.
  *
  * The next access to the same virtual locations will throw a TLB cache miss
  * and will force the CPU to perform a page dir lookup to read the new
  * addresses
  *
- * Ensures at compile time that [`MapFlush::flush()`] or
- * [`MapFlush::ignore()`] is called or the compiler will trow a warning
- *
- * [`VirtFrame`]: /hal/paging/type.VirtFrame.html
- * [`MapFlush::flush()`]: /hal/paging/struct.MapFlush.html#method.flush
- * [`MapFlush::ignore()`]: /hal/paging/struct.MapFlush.html#method.ignore
+ * Ensures at compile time that `MapRangeFlush::flush()` or
+ * `MapRangeFlush::ignore()` is called or the compiler will trow a warning
  */
 #[must_use = "The page table must be flushed or ignored"]
 pub struct MapRangeFlush<S>
@@ -90,17 +72,17 @@ pub struct MapRangeFlush<S>
 }
 
 impl<S> MapRangeFlush<S> where S: PageSize {
-    /** # Constructs a `MapRangeFlush`
-     *
-     * The returned range flushes the inclusive range of virtual frames
-     * given
+    /**
+     * Constructs a `MapRangeFlush` which will flush the TLB entries for the
+     * given `VirtFrameRangeIncl`
      */
     pub fn new(frame_range: VirtFrameRangeIncl<S>) -> Self {
         Self { m_frame_range: frame_range,
                m_inner: MapFlusherInner::new() }
     }
 
-    /** Returns whether the given range flusher is empty
+    /**
+     * Returns whether the given range flusher is empty
      */
     pub fn is_empty(&self) -> bool {
         self.m_frame_range.is_empty()
@@ -108,10 +90,6 @@ impl<S> MapRangeFlush<S> where S: PageSize {
 }
 
 impl<S> MapFlusher for MapRangeFlush<S> where S: PageSize {
-    /** Flushes the [`VirtFrame`]s containing page tables in TLB
-     *
-     * [`VirtFrame`]: /hal/paging/type.VirtFrame.html
-     */
     fn flush(self) {
         if !self.m_frame_range.is_empty() {
             for virt_frame in self.m_frame_range {
@@ -121,9 +99,8 @@ impl<S> MapFlusher for MapRangeFlush<S> where S: PageSize {
     }
 }
 
-/** # Page Directory Flusher
- *
- * Implements the flusher for the entire TLB.
+/**
+ * Flusher for the entire TLB.
  *
  * It tells to the hardware TLB to remove all the cached entries and restart
  * with a blank page.
@@ -132,12 +109,8 @@ impl<S> MapFlusher for MapRangeFlush<S> where S: PageSize {
  * and will force the CPU to perform a page dir lookup to read the virtual
  * to physical conversion
  *
- * Ensures at compile time that [`MapFlushAll::flush()`] or
- * [`MapFlushAll::ignore()`] is called or the compiler will trow a warning
- *
- * [`MapFlushAll::flush()`]:
- * /hal/paging/struct.MapFlushAll.html#method.flush [`MapFlushAll::
- * ignore()`]: /hal/paging/struct.MapFlushAll.html#method.ignore
+ * Ensures at compile time that `MapFlushAll::flush()` or
+ * `MapFlushAll::ignore()` is called or the compiler will trow a warning
  */
 #[must_use = "The page directory must be flushed or ignored"]
 pub struct MapFlushAll {
@@ -145,9 +118,8 @@ pub struct MapFlushAll {
 }
 
 impl MapFlushAll {
-    /** # Constructs a new `MapFlushAll`
-     *
-     * The returned instance will flush the entire TLB
+    /**
+     * Constructs a new `MapFlushAll` which will flush the entire TLB
      */
     pub fn new() -> Self {
         Self { m_inner: MapFlusherInner::new() }
@@ -155,15 +127,12 @@ impl MapFlushAll {
 }
 
 impl MapFlusher for MapFlushAll {
-    /** Flushes the entire Translation Lookaside Buffer
-     */
     fn flush(self) {
         self.m_inner.flush_all()
     }
 }
 
-/** # Inner Map Flusher
- *
+/**
  * Encapsulates the hardware implementation of the map flusher and makes it
  * safe to use
  */
@@ -173,28 +142,22 @@ struct MapFlusherInner<T>
 }
 
 impl<T> MapFlusherInner<T> where T: HwMapFlusherBase {
-    /** # Constructs a new `MapFlusherInner`
-     *
-     * The returned instance contains a valid hardware implementation
-     * instance of the flusher
+    /**
+     * Constructs a new `MapFlusherInner`
      */
     fn new() -> Self {
         Self { m_hw_inner: T::new() }
     }
 
-    /** # Flush a `VirtFrame`
-     *
-     * Flushes only the given [`VirtFrame`] table entry into the TLB
-     *
-     * [`VirtFrame`]: /hal/paging/type.VirtFrame.html
+    /**
+     * Flushes only the given `VirtFrame` table entry into the TLB
      */
     fn flush_addr<S>(&self, virt_frame: VirtFrame<S>)
         where S: PageSize {
         unsafe { self.m_hw_inner.flush_addr(virt_frame.start_addr()) }
     }
 
-    /** # Flush the entire TLB
-     *
+    /**
      * Flushes the entire TLB
      */
     fn flush_all(&self) {
@@ -202,21 +165,17 @@ impl<T> MapFlusherInner<T> where T: HwMapFlusherBase {
     }
 }
 
-/** # Map Flusher Common Interface
- *
+/**
  * Common method interface for the map flusher
  */
 pub trait MapFlusher {
-    /** # Flush the mapping
-     *
+    /**
      * It must flush the mapping for which the flusher was created
      */
     fn flush(self);
 
-    /** # Ignore the flusher
-     *
-     * Forgets about this flusher and unsafely not invalidates the TLB,
-     * which could read false positive physical addresses
+    /**
+     * Forgets about this flusher and unsafely skips the TLB shot down
      */
     fn ignore(self)
         where Self: Sized {
@@ -224,31 +183,24 @@ pub trait MapFlusher {
     }
 }
 
-/** # Hardware Map Flusher Interface
- *
- * Common interface on which [`MapFlusherInner`] relies to use the hardware
+/**
+ * Common interface on which `MapFlusherInner` relies to use the hardware
  * implementation of the flusher
  */
 pub(crate) trait HwMapFlusherBase {
-    /** # Constructs a `HwMapFlusherBase` based object
-     *
-     * The returned instance must be able to already perform the following
-     * operations
+    /**  
+     * Constructs a `HwMapFlusherBase` based object
      */
     fn new() -> Self;
 
-    /** # Flush a `VirtAddr`
-     *
+    /**
      * The hardware implementation must inform the hardware TLB that the
-     * page table entry for the given [`VirtAddr`] is not more valid
+     * page table entry for the given `VirtAddr` is not more valid
      * because changed
-     *
-     * [`VirtAddr`]: crate::addr:virt::VirtAddr
      */
     unsafe fn flush_addr(&self, addr: VirtAddr);
 
-    /** # Flush the TLB
-     *
+    /**
      * The hardware implementation must inform the hardware TLB that all the
      * cached entries must become invalid after this call
      */

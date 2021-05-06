@@ -3,10 +3,20 @@
  * Implements a simple logging sub-system used by the loader
  */
 
-use core::{fmt, str::FromStr};
+use core::{
+    fmt,
+    str::FromStr
+};
 
-use hal::{boot_infos::BootInfos, uart::Uart};
-use logger::{LevelFilter, Logger, LoggerWriter};
+use hal::{
+    boot_infos::BootInfos,
+    uart::Uart
+};
+use logger::{
+    LevelFilter,
+    Logger,
+    LoggerWriter
+};
 use sync::RawSpinMutex;
 
 /** Global kernel loader logger instance, is initialized by the

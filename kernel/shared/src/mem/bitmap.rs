@@ -1,8 +1,4 @@
-/*! # Bitmap Allocator
- *
- * Implements a simple bitmap allocator used both by the hh_loader and the
- * kernel core
- */
+/*! Bitmap allocator */
 
 use core::{
     ops::Range,
@@ -21,27 +17,25 @@ use sync::{
 
 use crate::{
     addr::{
-        Address,
-        PhysAddr
+        phys::PhysAddr,
+        Address
     },
     mem::paging::{
+        frame::{
+            PhysFrame,
+            PhysFrameRange
+        },
         Page4KiB,
-        PageSize,
-        PhysFrame,
-        PhysFrameRange
+        PageSize
     }
 };
 
-/** # Locked Bitmap Allocator
+/**
+ * Simple allocator that relies on a bitmap to keep track of the allocated
+ * `PhysFrame` and ensures thread safety through a lock.
  *
- * Implements a simple allocator that relies on a bitmap to keep track of
- * the allocated [`PhysFrame`] and ensures thread safety through a lock.
- *
- * Each bit represents a [`PhysFrame`]<[`Page4KiB`]> so the allocations (and
+ * Each bit represents a `PhysFrame<Page4KiB>` so the allocations (and
  * deallocations happen with this granularity)
- *
- * [`PhysFrame`]: /hal/paging/type.PhysFrame.html
- * [`Page4KiB`]: /hal/paging/struct.Page4KiB.html
  */
 pub struct LockedBitMapAllocator<'a, L>
     where L: RawMutex {
@@ -49,85 +43,67 @@ pub struct LockedBitMapAllocator<'a, L>
 }
 
 impl<'a, L> LockedBitMapAllocator<'a, L> where L: RawMutex {
-    /** # Constructs an uninitialized `LockedBitMapAllocator`
-     *
-     * The returned instance must be initialized with the
-     * [`LockedBitMapAllocator::init()`]
-     *
-     * [`LockedBitMapAllocator::init()`]:
-     * /kernel/mem/phys/struct.LockedBitMapAllocator.html#method.init
+    /**
+     * Constructs an uninitialized `LockedBitMapAllocator`, which must be
+     * initialized with `LockedBitMapAllocator::init()`
      */
     pub const fn new_uninitialized() -> Self {
         Self { m_inner: Mutex::new(None) }
     }
 
-    /** # Initializes the `LockedBitMapAllocator`
-     *
-     * Construct the [`BitMapAllocatorInner`] to become ready to free frames
-     *
-     * [`BitMapAllocatorInner`]:
-     * /kernel/mem/phys/struct.BitMapAllocatorInner.html
+    /**
+     * Construct the `BitMapAllocatorInner` to become ready to free frames
      */
     pub unsafe fn init(&mut self, bitmap_area_ptr: *mut u8, bytes_count: usize) {
         *self.m_inner.lock() =
             Some(BitMapAllocatorInner::new(bitmap_area_ptr, bytes_count))
     }
 
-    /** # Allocates a single `PhysFrame<Page4KiB>`
-     *
+    /**
      * Finds the first available bit and maps the returned bit-index to a
-     * [`PhysFrame`]<[`Page4KiB`]>
-     *
-     * [`PhysFrame`]: /hal/paging/type.PhysFrame.html
-     * [`Page4KiB`]: /hal/paging/struct.Page4KiB.html
+     * `PhysFrame<Page4KiB>`
      */
     pub fn allocate_one(&self) -> Option<PhysFrame<Page4KiB>> {
         if let Some(ref mut inner) = *self.m_inner.lock() {
             inner.allocate_bit().map(|bit_index| {
-                                    PhysFrame::of_addr(unsafe {
-                                        PhysAddr::new_unchecked(bit_index
-                                                                * Page4KiB::SIZE)
-                                    })
+                                    let raw_addr = bit_index * Page4KiB::SIZE;
+                                    PhysAddr::new(raw_addr).containing_frame()
                                 })
         } else {
             None
         }
     }
 
-    /** # Allocates a `Range` of `PhysFrame<Page4KiB>`
-     *
+    /**
      * Finds the first available byte-aligned block of bits and maps them
-     * into a [`PhysFrameRange`]<[`Page4KiB`]>
-     *
-     * [`PhysFrameRange`]: /hal/paging/type.PhysFrameRange.html
-     * [`Page4KiB`]: /hal/paging/struct.Page4KiB.html
+     * into a `PhysFrameRange<Page4KiB>`
      */
     pub fn allocate_contiguous(&self,
                                frames_count: usize)
                                -> Option<PhysFrameRange<Page4KiB>> {
         if let Some(ref mut inner) = *self.m_inner.lock() {
-            inner.allocate_bits(frames_count).map(|range| {
-                let start_frame = PhysFrame::of_addr(unsafe {
-                    PhysAddr::new_unchecked(range.start * Page4KiB::SIZE)
-                });
-                let end_frame = PhysFrame::of_addr(unsafe {
-                    PhysAddr::new_unchecked(range.end * Page4KiB::SIZE)
-                });
+            inner.allocate_bits(frames_count)
+                 .map(|range| {
+                     let start_frame = {
+                         let raw_addr = range.start * Page4KiB::SIZE;
+                         PhysAddr::new(raw_addr).containing_frame()
+                     };
 
-                PhysFrame::range_of(start_frame, end_frame)
-            })
+                     let end_frame = {
+                         let raw_addr = range.end * Page4KiB::SIZE;
+                         PhysAddr::new(raw_addr).containing_frame()
+                     };
+
+                     PhysFrame::range_of(start_frame, end_frame)
+                 })
         } else {
             None
         }
     }
 
-    /** # Frees a single `PhysFrame<Page4KiB>`
-     *
+    /**
      * Sets as available the bit that corresponds to the given
-     * [`PhysFrame`]<[`Page4KiB`]>
-     *
-     * [`PhysFrame`]: /hal/paging/type.PhysFrame.html
-     * [`Page4KiB`]: /hal/paging/struct.Page4KiB.html
+     * `PhysFrame<Page4KiB>`
      */
     pub fn free_one(&self, phys_frame: PhysFrame<Page4KiB>) {
         if let Some(ref mut inner) = *self.m_inner.lock() {
@@ -135,13 +111,9 @@ impl<'a, L> LockedBitMapAllocator<'a, L> where L: RawMutex {
         }
     }
 
-    /** # Frees a `Range` of `PhysFrame<Page4KiB>`
-     *
+    /**
      * Sets as available the bits that correspond to the given
-     * [`PhysFrameRange`]<[`Page4KiB`]>
-     *
-     * [`PhysFrameRange`]: /hal/paging/type.PhysFrameRange.html
-     * [`Page4KiB`]: /hal/paging/struct.Page4KiB.html
+     * `PhysFrameRange<Page4KiB>`
      */
     pub fn free_contiguous(&self, frames_range: PhysFrameRange<Page4KiB>) {
         if let Some(ref mut inner) = *self.m_inner.lock() {
@@ -154,13 +126,11 @@ impl<'a, L> LockedBitMapAllocator<'a, L> where L: RawMutex {
         }
     }
 
-    /** # Adds the given `PhysFrame<Page4KiB>` as available
+    /**
+     * Makes the given `PhysFrame<Page4KiB>` available for further
+     * allocations.
      *
-     * Makes the given [`PhysFrame`]<[`Page4KiB`]> available for further
-     * allocations
-     *
-     * [`PhysFrame`]: /hal/paging/type.PhysFrame.html
-     * [`Page4KiB`]: /hal/paging/struct.Page4KiB.html
+     * Used for initializations
      */
     pub fn add_frame(&self, phys_frame: PhysFrame<Page4KiB>) {
         if let Some(ref mut inner) = *self.m_inner.lock() {
@@ -168,7 +138,8 @@ impl<'a, L> LockedBitMapAllocator<'a, L> where L: RawMutex {
         }
     }
 
-    /** Returns the total amount of memory allocated
+    /**
+     * Returns the total amount of memory allocated
      */
     pub fn allocated_mem(&self) -> usize {
         if let Some(ref inner) = *self.m_inner.lock() {
@@ -179,8 +150,7 @@ impl<'a, L> LockedBitMapAllocator<'a, L> where L: RawMutex {
     }
 }
 
-/** # Bitmap Allocator Inner
- *
+/**
  * Implements the bitmap allocator algorithm.
  *
  * It doesn't threat frames but only bit-indexes, and allows to allocate
@@ -194,8 +164,7 @@ struct BitMapAllocatorInner<'a> {
 }
 
 impl<'a> BitMapAllocatorInner<'a> {
-    /** # Constructs a new `BitMapAllocatorInner`
-     *
+    /**
      * Constructs a mutable slice from the given raw parameters and sets
      * every byte to 0
      */
@@ -208,8 +177,7 @@ impl<'a> BitMapAllocatorInner<'a> {
                m_allocated_bits: 0 }
     }
 
-    /** # Allocates a bit index
-     *
+    /**
      * Returns the first available bit index and increases the counter of
      * the allocated bits
      */
@@ -235,8 +203,7 @@ impl<'a> BitMapAllocatorInner<'a> {
         None
     }
 
-    /** # Allocates a contiguous `Range` of bit indexes
-     *
+    /**
      * Returns the Range of bit-indexes that are contiguous and respects
      */
     fn allocate_bits(&mut self, bits_count: usize) -> Option<Range<usize>> {
@@ -257,8 +224,7 @@ impl<'a> BitMapAllocatorInner<'a> {
                                         })
     }
 
-    /** # Free a single bit-index
-     *
+    /**
      * Makes available again the bit given
      */
     fn free_bit(&mut self, bit_index: usize) {
@@ -268,8 +234,7 @@ impl<'a> BitMapAllocatorInner<'a> {
         self.m_allocated_bits -= 1;
     }
 
-    /** # Free a `Range` of bit-indexes
-     *
+    /**
      * Makes available again the bits given
      */
     fn free_bits(&mut self, range_to_free: Range<usize>) {
@@ -279,21 +244,22 @@ impl<'a> BitMapAllocatorInner<'a> {
         }
     }
 
-    /** # Adds an available bit
-     *
+    /**
      * Makes the given bit as available for allocations
      */
     fn add_bit(&mut self, bit_index: usize) {
         self.m_bits.set_bit(bit_index, true);
     }
 
-    /** Returns the current amount of allocated bits
+    /**
+     * Returns the current amount of allocated bits
      */
     fn allocated_bits(&self) -> usize {
         self.m_allocated_bits
     }
 
-    /** # Finds the first block available of the requested size
+    /**
+     * Finds the first block available of the requested size
      *
      * The bits count aligned must be aligned to the byte size (8 bits)
      */
@@ -310,7 +276,8 @@ impl<'a> BitMapAllocatorInner<'a> {
         None
     }
 
-    /** Returns whether the given slice is available
+    /**
+     * Returns whether the given slice is available
      */
     fn is_slice_all_available(slice_to_check: &[u8]) -> bool {
         for byte in slice_to_check {

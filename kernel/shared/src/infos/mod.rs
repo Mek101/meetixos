@@ -4,14 +4,8 @@
  * used by all the architectures
  */
 
-pub use args::*;
-pub use info::*;
+pub mod args;
+pub mod info;
 #[cfg(feature = "loader_stage")]
-pub use mem_area::*;
-pub use vm_layout::*;
-
-mod args;
-mod info;
-#[cfg(feature = "loader_stage")]
-mod mem_area;
-mod vm_layout;
+pub mod mem_area;
+pub mod vm_layout;

@@ -1,6 +1,15 @@
-use hal::paging::{FrameAllocator, Page4KiB, PageSize, PhysFrame, PhysFrameRange};
+use hal::paging::{
+    FrameAllocator,
+    Page4KiB,
+    PageSize,
+    PhysFrame,
+    PhysFrameRange
+};
 
-use crate::mem::phys::{phys_mem_alloc_frame, phys_mem_free_frame};
+use crate::mem::phys::{
+    phys_mem_alloc_frame,
+    phys_mem_free_frame
+};
 
 macro_rules! impl_hal_frame_allocator {
     ($AllocatorName:ident : $PageSize:ident) => {
