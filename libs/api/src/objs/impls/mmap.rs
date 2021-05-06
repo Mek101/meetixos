@@ -35,8 +35,7 @@ use crate::{
     }
 };
 
-/** # Memory Mapping
- *
+/**
  * Reference to a mapped region of the user's address space.
  *
  * `MMap` acts like a simple `Box` that instead references memory directly

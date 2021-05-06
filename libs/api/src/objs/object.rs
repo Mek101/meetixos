@@ -45,7 +45,9 @@ use crate::{
  */
 #[repr(transparent)]
 #[derive(Debug, Default, Eq, PartialEq)]
-pub struct ObjId(u32);
+pub struct ObjId {
+    m_raw: u32
+}
 
 impl ObjId {
     /**
@@ -54,7 +56,7 @@ impl ObjId {
      * Used only by the `OsRawMutex` to satisfy the constant initialization
      */
     pub(crate) const fn const_new() -> Self {
-        Self(0)
+        Self { m_raw: 0 }
     }
 
     /**
@@ -133,7 +135,7 @@ impl ObjId {
      * object
      */
     pub fn is_valid(&self) -> bool {
-        self.0 != 0
+        self.m_raw != 0
         && self.kern_call_0(KernFnPath::Object(KernObjectFnId::IsValid))
                .map(|_| true)
                .unwrap_or(false)
@@ -143,7 +145,7 @@ impl ObjId {
      * Returns the raw identifier of this `ObjId`
      */
     pub fn as_raw(&self) -> u32 {
-        self.0
+        self.m_raw
     }
 
     /**
@@ -164,7 +166,7 @@ impl Clone for ObjId {
      */
     fn clone(&self) -> Self {
         self.kern_call_0(KernFnPath::Object(KernObjectFnId::AddRef))
-            .map(|_| Self::from(self.0))
+            .map(|_| Self::from(self.m_raw))
             .unwrap()
     }
 }
@@ -193,7 +195,7 @@ impl Drop for ObjId {
 
 impl From<u32> for ObjId {
     fn from(raw_id: u32) -> Self {
-        Self(raw_id)
+        Self { m_raw: raw_id }
     }
 }
 

@@ -30,8 +30,7 @@ pub type Mutex<T> = sync::Mutex<OsRawMutex, T>;
  */
 pub type MutexGuard<'a, T> = sync::MutexGuard<'a, OsRawMutex, T>;
 
-/** # Raw Mutex
- *
+/**
  * Reference to an open mutex on the VFS.
  *
  * It allows inter-process locking because, like all the other objects,

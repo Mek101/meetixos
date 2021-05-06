@@ -20,8 +20,7 @@ use crate::{
     }
 };
 
-/** # Any Object Holder
- *
+/**
  * Wrapper that can contains any type of `Object` based object.
  *
  * The `Any` can be safely downcast to his real type with his methods

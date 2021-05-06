@@ -26,7 +26,9 @@ use crate::{
  */
 #[repr(transparent)]
 #[derive(Debug, Default, Copy, Clone, Eq, PartialEq)]
-pub struct TaskId(u32);
+pub struct TaskId {
+    m_raw: u32
+}
 
 impl TaskId {
     /**
@@ -36,7 +38,7 @@ impl TaskId {
         let mut task = Self::default();
         task.kern_call_1(KernFnPath::Task(KernTaskFnId::This), task_type.into())
             .map(|task_id| {
-                task.0 = task_id as u32;
+                task.m_raw = task_id as u32;
                 task
             })
             .unwrap()
@@ -61,7 +63,7 @@ impl TaskId {
      * Returns whether the referenced task is alive
      */
     fn is_alive(&self) -> bool {
-        self.0 != 0
+        self.m_raw != 0
         && self.kern_call_0(KernFnPath::Task(KernTaskFnId::IsAlive))
                .map(|res| res != 0)
                .unwrap_or(false)
@@ -71,7 +73,7 @@ impl TaskId {
      * Returns the raw identifier of this `TaskId`
      */
     pub fn id(&self) -> u32 {
-        self.0
+        self.m_raw
     }
 
     /**
@@ -84,7 +86,7 @@ impl TaskId {
 
 impl From<u32> for TaskId {
     fn from(raw_id: u32) -> Self {
-        Self(raw_id)
+        Self { m_raw: raw_id }
     }
 }
 
