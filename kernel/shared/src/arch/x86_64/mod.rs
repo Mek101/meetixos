@@ -7,7 +7,7 @@
 
 pub mod addr;
 #[cfg(feature = "loader_stage")]
-pub mod boot;
-pub mod hal;
+pub mod infos;
+pub mod interrupt;
 pub mod mem;
 pub mod uart;

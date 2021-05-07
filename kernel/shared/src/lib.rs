@@ -12,17 +12,18 @@
            step_trait_ext,
            abi_x86_interrupt,
            const_fn_fn_ptr_basics,
-           const_mut_refs)]
+           const_mut_refs,
+           const_fn_trait_bound)]
 
 #[macro_use]
 extern crate macros;
 
 pub mod addr;
 pub mod dbg;
-pub mod hal;
 pub mod infos;
+pub mod interrupt;
 pub mod logger;
 pub mod mem;
+pub mod uart;
 
 mod arch;
-pub mod uart;

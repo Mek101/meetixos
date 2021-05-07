@@ -4,11 +4,7 @@
 extern crate alloc;
 
 #[cfg(not(feature = "loader_stage"))]
-use core::{
-    alloc::Layout,
-    fmt::Error,
-    slice
-};
+use core::fmt::Error;
 use core::{
     fmt,
     fmt::Write,
@@ -16,14 +12,7 @@ use core::{
 };
 
 #[cfg(not(feature = "loader_stage"))]
-use alloc::{
-    alloc::{
-        alloc_zeroed,
-        dealloc,
-        realloc
-    },
-    vec::Vec
-};
+use alloc::vec::Vec;
 
 /* re-export logging macros */
 pub use log::{
@@ -269,23 +258,26 @@ struct LoggerBuffer {
 #[cfg(not(feature = "loader_stage"))]
 impl LoggerBuffer {
     /**
-     * Size of the buffer in bytes
+     * Initial size of the buffer in bytes
      */
-    const SIZE: usize = 512;
+    const INITIAL_SIZE: usize = 512;
 
     /**
      * Constructs a new `LoggerBuffer` of `LoggerBuffer::SIZE` bytes
      */
     fn new() -> Self {
-        Self { m_buffer: Vec::with_capacity(Self::SIZE) }
+        Self { m_buffer: Vec::with_capacity(Self::INITIAL_SIZE) }
     }
 
     /**
      * Fills the buffer with the given `str_chunk` and calls
      * `flush_callback` when encounters ASCII `\n`
      */
-    fn write_str_chunk<F>(&mut self, str_chunk: &str, flush_callback: F) -> fmt::Result
-        where F: Fn(&[u8]) -> fmt::Result {
+    fn write_str_chunk<F>(&mut self,
+                          str_chunk: &str,
+                          mut flush_callback: F)
+                          -> fmt::Result
+        where F: FnMut(&[u8]) -> fmt::Result {
         /* extend the buffer if the remaining capacity doesn't suffice */
         if !self.can_store(str_chunk) {
             self.m_buffer.reserve(str_chunk.len());
@@ -304,7 +296,6 @@ impl LoggerBuffer {
                 } else {
                     /* reset the buffer */
                     self.m_buffer.truncate(0);
-                    Ok(())
                 }
             }
         }

@@ -1,29 +1,17 @@
-/*! # HAL Kernel Virtual Memory Layout
- *
- * Implements a descriptor which contains the virtual layout for the kernel,
- * prepared by the higher half loader. It is provided via [`BootInfos`]
- * instead of using static constants to use dynamic kernel layout (Meltdown
- * mitigation)
- *
- * [`BootInfos`]: struct.BootInfos.html
- */
+/*! Kernel virtual memory layout */
 
 use core::fmt;
 
+#[cfg(feature = "loader_stage")]
+use crate::addr::Address;
 use crate::{
-    addr::{
-        Address,
-        VirtAddr
-    },
+    addr::virt::VirtAddr,
     dbg::dbg_display_size
 };
 
-/** # Kernel Virtual Memory Layout
- *
- * Stores the collection of [`VMLayoutArea`] which defines the kernel core's
+/**
+ * Fixed collection of `VMLayoutArea` which defines the kernel core's
  * virtual memory layout
- *
- * [`VMLayoutArea`]: crate::infos::vm_layout::VMLayoutArea
  */
 #[derive(Debug, Clone)]
 pub struct VMLayout {
@@ -36,12 +24,10 @@ pub struct VMLayout {
 }
 
 impl VMLayout {
-    /** # Constructs a `VMLayout`
-     *
-     * The returned instance is filled with the given [`VMLayoutArea`]s
-     *
-     * [`VMLayoutArea`]: crate::infos::vm_layout::VMLayoutArea
+    /**
+     * Constructs a `VMLayout` filled with the given `VMLayoutArea`s
      */
+    #[cfg(feature = "loader_stage")]
     pub const fn new(kern_text_area: VMLayoutArea,
                      kern_heap_area: VMLayoutArea,
                      phys_mem_bitmap_area: VMLayoutArea,
@@ -57,10 +43,10 @@ impl VMLayout {
                m_tmp_map_area: tmp_map_area }
     }
 
-    /** # Constructs a zero-filled `VMLayout`
-     *
-     * The returned instance is zero-filled
+    /**
+     * Constructs a zero-filled `VMLayout`
      */
+    #[cfg(feature = "loader_stage")]
     pub fn new_zero() -> Self {
         Self { m_kern_heap_area: VMLayoutArea::new_zero(),
                m_kern_text_area: VMLayoutArea::new_zero(),
@@ -70,51 +56,44 @@ impl VMLayout {
                m_tmp_map_area: VMLayoutArea::new_zero() }
     }
 
-    /** Returns the reference to the [`VMLayoutArea`] of kernel's text
-     *
-     * [`VMLayoutArea`]: crate::infos::vm_layout::VMLayoutArea
+    /**
+     * Returns the reference to the `VMLayoutArea` of kernel's text
      */
     pub fn kern_text_area(&self) -> &VMLayoutArea {
         &self.m_kern_text_area
     }
 
-    /** Returns the reference to the [`VMLayoutArea`] of kernel's heap
-     *
-     * [`VMLayoutArea`]: crate::infos::vm_layout::VMLayoutArea
+    /**
+     * Returns the reference to the `VMLayoutArea` of kernel's heap
      */
     pub fn kern_heap_area(&self) -> &VMLayoutArea {
         &self.m_kern_heap_area
     }
 
-    /** Returns the reference to the [`VMLayoutArea`] of physical memory
-     * bitmap
-     *
-     * [`VMLayoutArea`]: crate::infos::vm_layout::VMLayoutArea
+    /**
+     * Returns the reference to the `VMLayoutArea` of physical memory bitmap
      */
     pub fn phys_mem_bitmap_area(&self) -> &VMLayoutArea {
         &self.m_phys_mem_bitmap_area
     }
 
-    /** Returns the reference to the [`VMLayoutArea`] of physical memory
+    /**
+     * Returns the reference to the `VMLayoutArea` of physical memory
      * mapping
-     *
-     * [`VMLayoutArea`]: crate::infos::vm_layout::VMLayoutArea
      */
     pub fn phys_mem_mapping_area(&self) -> &VMLayoutArea {
         &self.m_phys_mem_mapping_area
     }
 
-    /** Returns the reference to the [`VMLayoutArea`] of page cache
-     *
-     * [`VMLayoutArea`]: crate::infos::vm_layout::VMLayoutArea
+    /**
+     * Returns the reference to the `VMLayoutArea` of page cache
      */
     pub fn page_cache_area(&self) -> &VMLayoutArea {
         &self.m_page_cache_area
     }
 
-    /** Returns the reference to the [`VMLayoutArea`] of temporary mapping
-     *
-     * [`VMLayoutArea`]: crate::infos::vm_layout::VMLayoutArea
+    /**
+     * Returns the reference to the `VMLayoutArea` of temporary mapping
      */
     pub fn tmp_map_area(&self) -> &VMLayoutArea {
         &self.m_tmp_map_area
@@ -122,8 +101,6 @@ impl VMLayout {
 }
 
 impl fmt::Display for VMLayout {
-    /** Formats the value using the given formatter
-     */
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f,
                "Kernel Text:       {}\nKernel Heap:       {}\nPhysMem Bitmap:    \
@@ -137,9 +114,8 @@ impl fmt::Display for VMLayout {
     }
 }
 
-/** # Virtual Memory Layout Area
- *
- * Represents a virtual memory area for the kernel's layout
+/**
+ * Virtual memory area for the kernel's layout
  */
 #[derive(Debug, Clone)]
 pub struct VMLayoutArea {
@@ -148,41 +124,40 @@ pub struct VMLayoutArea {
 }
 
 impl VMLayoutArea {
-    /** # Constructs a `VMLayoutArea`
-     *
-     * The returned instance is filled with the given data
+    /**  
+     * Constructs a `VMLayoutArea` filled with the given data
      */
+    #[cfg(feature = "loader_stage")]
     pub const fn new(start_addr: VirtAddr, size: usize) -> Self {
         Self { m_start_addr: start_addr,
                m_size: size }
     }
 
-    /** # Constructs a zero-filled `VMLayoutArea`
-     *
-     * The returned instance is zero-filled
+    /**
+     * Constructs a zero-filled `VMLayoutArea`
      */
+    #[cfg(feature = "loader_stage")]
     pub fn new_zero() -> Self {
         Self { m_start_addr: VirtAddr::new_zero(),
                m_size: 0 }
     }
 
-    /** Returns the start [`VirtAddr`]
-     *
-     * [`VirtAddr`]: struct.VirtAddr.html
+    /**
+     * Returns the start `VirtAddr`
      */
     pub fn start_addr(&self) -> VirtAddr {
         self.m_start_addr
     }
 
-    /** Returns the size of the area in bytes
+    /**
+     * Returns the size of the area in bytes
      */
     pub fn size(&self) -> usize {
         self.m_size
     }
 
-    /** Returns the end [`VirtAddr`]
-     *
-     * [`VirtAddr`]: struct.VirtAddr.html
+    /**
+     * Returns the end `VirtAddr`
      */
     pub fn end_addr(&self) -> VirtAddr {
         self.m_start_addr + self.m_size
@@ -190,8 +165,6 @@ impl VMLayoutArea {
 }
 
 impl fmt::Display for VMLayoutArea {
-    /** Formats the value using the given formatter
-     */
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f,
                "{:?}..{:?} ({})",

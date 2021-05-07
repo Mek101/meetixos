@@ -318,8 +318,6 @@ impl<T, S> SubAssign<usize> for Frame<T, S>
 pub struct FrameNotAlignedErr;
 
 impl fmt::Display for FrameNotAlignedErr {
-    /** Formats the value using the given formatter.
-     */
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "The given frame address was not properly aligned")
     }

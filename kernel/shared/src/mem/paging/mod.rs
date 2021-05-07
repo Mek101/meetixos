@@ -10,7 +10,10 @@ use core::fmt::Debug;
 
 use crate::{
     arch::mem::paging::HwPageDirSupport,
-    mem::paging::table::PageTableLevel
+    mem::paging::{
+        dir::HwPageDirSupportBase,
+        table::PageTableLevel
+    }
 };
 
 /**

@@ -5,7 +5,7 @@
 
 use x86_64::structures::idt::InterruptStackFrame;
 
-use crate::hal::interrupt::HwInterruptStackFrameBase;
+use crate::interrupt::stack_frame::HwInterruptStackFrameBase;
 
 pub struct X64InterruptStackFrame<'a> {
     m_inner: &'a InterruptStackFrame

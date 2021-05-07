@@ -1,8 +1,4 @@
-/*! # HAL Boot Informations
- *
- * Implements the structures that contains common bootloader's informations
- * used by all the architectures
- */
+/*! Boot informations */
 
 pub mod args;
 pub mod info;

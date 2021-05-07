@@ -1,33 +1,30 @@
-/*! # HAL Boot Informations
- *
- * Implements the bootloader independent informations structure
- */
+/*! Boot informations */
 
+#[cfg(feature = "loader_stage")]
 use os::str_utils;
 
 #[cfg(feature = "loader_stage")]
-use crate::arch::boot::HwBootInfos;
-#[cfg(feature = "loader_stage")]
-use crate::infos::BootMemAreas;
-use crate::infos::{
-    CmdLineArgs,
-    VMLayout
+use crate::{
+    arch::infos::HwBootInfos,
+    infos::mem_area::BootMemAreas
 };
 
-/** Size in bytes of the bootloader name store into [`BootInfosInner`]
- *
- * [`BootInfosInner`]: crate::infos::info::BootInfosInner
+use crate::infos::{
+    args::CmdLineArgs,
+    vm_layout::VMLayout
+};
+
+/**
+ * Size in bytes of the bootloader name store into `BootInfosInner`
  */
 pub(crate) const BOOTLOADER_NAME_LEN_MAX: usize = 64;
 
-/** It is initialized by the [`BootInfos::from()`] implementation
- *
- * [`BootInfos::from()`]: crate::infos::info::BootInfos::from
+/**
+ * It is initialized by the `BootInfos::from()` implementation
  */
 static mut BOOT_INFOS_INNER: Option<BootInfosInner> = None;
 
-/** # Common Bootloader Informations
- *
+/**
  * Stores an immutable reference to the common bootloader's informations
  */
 #[repr(transparent)]
@@ -37,36 +34,34 @@ pub struct BootInfos {
 }
 
 impl BootInfos {
-    /** # Constructs a `BootInfos`
-     *
-     * The returned instance is already filled and valid
+    /**
+     * Constructs a `BootInfos` filled with the global `BootInfosInner`
      */
     pub fn obtain() -> Self {
         unsafe {
             assert!(BOOT_INFOS_INNER.is_some(),
                     "HAL haven't initialized boot informations");
-            Self { m_inner: BOOT_INFOS_INNER.as_mut().unwrap() }
+            Self { m_inner: BOOT_INFOS_INNER.as_ref().unwrap() }
         }
     }
 
-    /** Returns the slice to the kernel's command line
+    /**
+     * Returns the slice to the kernel's command line
      */
     pub fn cmdline_args(&self) -> &'static CmdLineArgs {
         &self.m_inner.m_cmdline_args
     }
 
-    /** Returns the [`BootMemAreas`] collection
-     *
-     * [`BootMemAreas`]: crate::infos::mem_area::BootMemAreas
+    /**
+     * Returns the `BootMemAreas` collection
      */
     #[cfg(feature = "loader_stage")]
     pub fn mem_areas(&self) -> &'static BootMemAreas {
         &self.m_inner.m_mem_areas
     }
 
-    /** Returns the [`VMLayout`] collection
-     *
-     * [`VMLayout`]: crate::infos::vm_layout::VMLayout
+    /**
+     * Returns the `VMLayout` collection
      */
     pub fn vm_layout(&self) -> &'static VMLayout {
         &self.m_inner.m_vm_layout
@@ -75,7 +70,8 @@ impl BootInfos {
 
 #[cfg(feature = "loader_stage")]
 impl From<*const u8> for BootInfos {
-    /** Initializes the global inner informations from the given raw
+    /**
+     * Initializes the global inner informations from the given raw
      * information pointer then constructs the `BootInfos` instance.
      *
      * Used by the higher half loader to initialize his instance of the
@@ -99,7 +95,8 @@ impl From<*const u8> for BootInfos {
 
 #[cfg(not(feature = "loader_stage"))]
 impl From<&Self> for BootInfos {
-    /** Initializes the global inner informations cloning the given instance
+    /**
+     * Initializes the global inner informations cloning the given instance
      * then constructs the `BootInfos` instance.
      *
      * Used by the kernel core to clone the higher half loader's instance of
@@ -120,10 +117,9 @@ impl From<&Self> for BootInfos {
     }
 }
 
-/** # Boot Informations Inner
- *
- * Defines the container of the common infos informations that is
- * initialized and instantiated once across all the HAL/kernel instance
+/**
+ * Container of the common infos informations that is initialized and
+ * instantiated once across all the HAL/kernel instance
  */
 #[derive(Debug)]
 pub(crate) struct BootInfosInner {
@@ -136,16 +132,15 @@ pub(crate) struct BootInfosInner {
 
 #[cfg(feature = "loader_stage")]
 impl BootInfosInner {
-    /** # Constructs a `BootInfosInner`
-     *
-     * The returned instance copies the given buffers into his
+    /**
+     * Constructs a `BootInfosInner` with the given arguments
      */
     pub(crate) fn new(raw_cmdline: &str,
                       mem_areas: BootMemAreas,
                       bootloader_name: &str)
                       -> Self {
         let mut name_buffer = [0; BOOTLOADER_NAME_LEN_MAX];
-        str_utils::copy_str_to_u8_buf(&name_buffer, bootloader_name);
+        str_utils::copy_str_to_u8_buf(&mut name_buffer, bootloader_name);
 
         Self { m_cmdline_args: CmdLineArgs::new(raw_cmdline),
                m_mem_areas: mem_areas,
@@ -163,16 +158,12 @@ impl Clone for BootInfosInner {
     }
 }
 
-/** # Hardware Boot Informations Base Interface
- *
- * Defines the method that is required by the [`BootInfosInner`]
- *
- * [`BootInfosInner`]: crate::infos::info::BootInfosInner
+/**
+ * Interface of methods that is required by the `BootInfosInner`
  */
 #[cfg(feature = "loader_stage")]
 pub(crate) trait HwBootInfosBase {
-    /** # Constructs a `BootInfosInner`
-     *
+    /**
      * The instance returned is expected to be filled by the architecture
      * dependent code using the bootloaders informations given via raw
      * pointer

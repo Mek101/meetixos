@@ -1,7 +1,4 @@
-/*! # x86_64 Interrupt Manager
- *
- * Implements the x86_64 interrupt manager
- */
+/*! x86_64 interrupt management implementation */
 
 use x86_64::{
     instructions::{
@@ -24,98 +21,77 @@ use x86_64::{
 };
 
 use crate::{
-    arch::x86_64::hal::interrupt::HwInterruptStackFrame,
-    hal::interrupt::{
-        HwInterruptManagerBase,
-        InterruptManagerException,
-        InterruptManagerHandlers,
-        InterruptStackFrame
+    arch::x86_64::interrupt::HwInterruptStackFrame,
+    interrupt::{
+        manager::{
+            HwInterruptManagerBase,
+            InterruptManagerException,
+            InterruptManagerHandlers,
+            InterruptReason
+        },
+        stack_frame::InterruptStackFrame
     }
 };
 
-/** Global static mutable reference to the global [`InterruptManager`]'s
- * [`InterruptManagerHandlers`], enabled when called
- * [`InterruptManager::enable_as_global()`]
- *
- * [`InterruptManager`]: /hal/interrupt/struct.InterruptManager.html
- * [`InterruptManagerHandlers`]:
- * /hal/interrupt/struct.InterruptManagerHandlers.html
- * [`InterruptManager::enable_as_global()`]:
- * /hal/interrupt/struct.InterruptManager.html#method.enable_as_global
+/**
+ * Global static mutable reference to the global `InterruptManager`'s
+ * `InterruptManagerHandlers`, enabled when called
+ * `InterruptManager::enable_as_global()`
  */
 static mut INTERRUPT_HANDLERS: Option<&'static mut InterruptManagerHandlers> = None;
 
 static mut BSP_INIT_TSS: TaskStateSegment = TaskStateSegment::new();
 static mut BSP_INIT_GDT: GlobalDescriptorTable = GlobalDescriptorTable::new();
 
-/** # x86_64 Interrupt Manager
- *
- * Wraps the loaded [`InterruptDescriptorTable`]
- *
- * [`InterruptDescriptorTable`]:
- * https://docs.rs/x86_64/0.14.0/x86_64/structures/idt/struct.InterruptDescriptorTable.html
+/**
+ * x86_64 `HwInterruptManagerBase` implementation
  */
 pub struct X64InterruptManager {
     m_idt: InterruptDescriptorTable
 }
 
 impl X64InterruptManager {
-    /** # Constructs an `X64InterruptManager`
-     *
-     * The returned instance contains all empty entries
+    /**
+     * Constructs an empty `X64InterruptManager`
      */
     const fn new() -> Self {
         Self { m_idt: InterruptDescriptorTable::new() }
     }
 
-    /** # Handles the hardware exception
-     *
-     * Handles the hardware exception given calling the corresponding Rust
-     * callback
+    /**  
+     * Handles the hardware exception
      */
     fn hw_except_handler(stack_frame: &X64IntrStackFrame,
                          exception: InterruptManagerException) {
         if let Some(intr_handlers) = unsafe { INTERRUPT_HANDLERS.as_mut() } {
             let mut hw_stack_frame = HwInterruptStackFrame::from(stack_frame);
             let stack_frame = InterruptStackFrame::new(&mut hw_stack_frame);
-            intr_handlers.handle_hw_intr_callback(stack_frame, Some(exception), None);
+            intr_handlers.handle_hw_intr_callback(stack_frame,
+                                                  InterruptReason::Exception(exception));
         }
     }
 
-    /** # Handles the interrupt exception
-     *
-     * Handles the hardware interrupt given calling the corresponding Rust
-     * callback
+    /**
+     * Handles the hardware interrupt
      */
     fn hw_intr_handler(stack_frame: &X64IntrStackFrame, intr_num: usize) {
         if let Some(intr_handlers) = unsafe { INTERRUPT_HANDLERS.as_mut() } {
             let mut hw_stack_frame = HwInterruptStackFrame::from(stack_frame);
             let stack_frame = InterruptStackFrame::new(&mut hw_stack_frame);
-            intr_handlers.handle_hw_intr_callback(stack_frame, None, Some(intr_num));
+            intr_handlers.handle_hw_intr_callback(stack_frame,
+                                                  InterruptReason::Interrupt(intr_num));
         }
     }
 }
 
 impl HwInterruptManagerBase for X64InterruptManager {
-    /** Constructs a `HwInterruptManagerBase` implementation
-     */
     const CONST_NEW: Self = X64InterruptManager::new();
-
-    /** Number of interrupts without exceptions
-     */
     const INTR_COUNT: usize = 256 - Self::INTR_OFFSET;
-
-    /** Offset of the first interrupt after the reserved exceptions
-     */
     const INTR_OFFSET: usize = 32;
 
-    /** Enables the instance as global
-     */
     unsafe fn enable_as_global(&'static mut self,
                                intr_handlers: &'static mut InterruptManagerHandlers) {
-        /* store the given interrupt handler and make sure that this call it is not
-         * already called
-         */
+        /* store the given interrupt handler */
         if INTERRUPT_HANDLERS.is_none() {
             INTERRUPT_HANDLERS = Some(intr_handlers);
         } else {
@@ -397,20 +373,14 @@ impl HwInterruptManagerBase for X64InterruptManager {
         self.m_idt.load_unsafe();
     }
 
-    /** Enables the hardware interrupts
-     */
     fn enable_intr(&self) {
         interrupts::enable()
     }
 
-    /** Disables the hardware interrupts
-     */
     fn disable_intr(&self) {
         interrupts::disable()
     }
 
-    /** Returns whether the hardware interrupts are enabled
-     */
     fn intr_are_enabled(&self) -> bool {
         interrupts::are_enabled()
     }

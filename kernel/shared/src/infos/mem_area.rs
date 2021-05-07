@@ -1,37 +1,28 @@
-/*! # HAL Boot Physical Memory Area
- *
- * Implements the simple descriptor of physical memory region given to the
- * kernel through the [`BootInfos`]
- *
- * [`BootInfos`]: crate::infos::info::BootInfos
- */
+/*! Boot physical memory area */
 
 use core::cmp::Ordering;
 
 use crate::{
     addr::{
-        Address,
-        PhysAddr
+        phys::PhysAddr,
+        Address
     },
     mem::paging::{
-        PageSize,
-        PhysFrame,
-        PhysFrameRange
+        frame::{
+            PhysFrame,
+            PhysFrameRange
+        },
+        PageSize
     }
 };
 
-/** Maximum amount of [`BootMemArea`]s storable into a [`BootMemAreas`]
- *
- * [`BootMemArea`]: crate::infos::mem_area::BootMemArea
- * [`BootMemAreas`]: crate::infos::mem_area::BootMemAreas
+/**
+ * Maximum amount of `BootMemArea`s storable into a `BootMemAreas`
  */
 pub const BOOT_MEM_AREAS_COUNT_MAX: usize = 64;
 
-/** # Boot Memory Area Collection
- *
- * Represents a fixed collection of ordered [`BootMemArea`]s
- *
- * [`BootMemArea`]: crate::infos::mem_area::BootMemArea
+/**
+ * Fixed collection of address ordered  `BootMemArea`s
  */
 #[derive(Debug, Clone)]
 pub struct BootMemAreas {
@@ -40,28 +31,24 @@ pub struct BootMemAreas {
 }
 
 impl BootMemAreas {
-    /** # Constructs a `BootMemAreas`
-     *
-     * The returned instance is empty
+    /**
+     * Constructs an empty `BootMemAreas`
      */
     pub fn new() -> Self {
         Self { m_areas: [None; BOOT_MEM_AREAS_COUNT_MAX],
                m_next_usable: 0 }
     }
 
-    /** # Inserts a new sorted `BootMemArea`
-     *
-     * The new area is pushed into this collection and placed at the right
-     * sorting place
+    /**  
+     * Inserts a new sorted `BootMemArea`
      */
     pub fn insert(&mut self, new_area: BootMemArea) {
         self.push(new_area);
         self.sort_areas();
     }
 
-    /** # Pushes a new `BootMemArea`
-     *
-     * The new area is pushed at the end of this collection
+    /**  
+     * Pushes a new `BootMemArea`
      */
     pub fn push(&mut self, new_area: BootMemArea) {
         assert!(self.m_next_usable < BOOT_MEM_AREAS_COUNT_MAX);
@@ -71,7 +58,8 @@ impl BootMemAreas {
         self.m_next_usable += 1;
     }
 
-    /** # Sort the `BootMemAreas`
+    /**  
+     * Sort the `BootMemAreas`
      *
      * Places the valid areas at the beginning and the null at the end
      */
@@ -101,9 +89,8 @@ impl BootMemAreas {
                     })
     }
 
-    /** Returns the iterator to the valid [`BootMemArea`]s
-     *
-     * [`BootMemArea`]: crate::infos::mem_area::BootMemArea
+    /**
+     * Returns the iterator to the valid `BootMemArea`s
      */
     pub fn iter(&self) -> impl Iterator<Item = &BootMemArea> {
         self.m_areas
@@ -113,9 +100,8 @@ impl BootMemAreas {
     }
 }
 
-/** # Boot Memory Area
- *
- * Represents a simple descriptor for a valid physical memory area
+/**
+ * Simple descriptor for a valid physical memory area
  */
 #[derive(Debug, Copy, Clone)]
 pub struct BootMemArea {
@@ -124,43 +110,42 @@ pub struct BootMemArea {
 }
 
 impl BootMemArea {
-    /** # Constructs a `BootMemArea`
-     *
-     * The returned instance is filled with the given data
+    /**
+     * Constructs a `BootMemArea` filled with the given arguments
      */
     pub fn new(phys_addr: PhysAddr, size: usize) -> Self {
         Self { m_start_phys_addr: phys_addr,
                m_size: size }
     }
 
-    /** Returns whether the given [`PhysAddr`] belongs to this `BootMemArea`
-     *
-     * [`PhysAddr`]: crate::addr::phys::PhysAddr
+    /**
+     * Returns whether the given `PhysAddr` belongs to this `BootMemArea`
      */
     pub fn contains(&self, phys_addr: PhysAddr) -> bool {
         phys_addr >= self.m_start_phys_addr
         && phys_addr < self.m_start_phys_addr + self.m_size
     }
 
-    /** Returns this `BootMemArea` as [`PhysFrameRange`]
-     *
-     * [`PhysFrameRange`]: crate::mem::paging::frame::PhysFrameRange
+    /**
+     * Returns this `BootMemArea` as `PhysFrameRange`
      */
     pub fn as_frame_range<S>(&self) -> PhysFrameRange<S>
         where S: PageSize {
         assert_eq!(self.m_size & S::MASK, 0);
 
-        let start_frame = PhysFrame::of_addr(self.m_start_phys_addr);
+        let start_frame = self.start_phys_addr().containing_frame();
         PhysFrame::range_of(start_frame, start_frame + self.m_size / S::SIZE)
     }
 
-    /** Returns the starting physical address of the area
+    /**
+     * Returns the starting physical address of the area
      */
     pub fn start_phys_addr(&self) -> PhysAddr {
         self.m_start_phys_addr
     }
 
-    /** Returns the size in bytes of the area
+    /**
+     * Returns the size in bytes of the area
      */
     pub fn size(&self) -> usize {
         self.m_size

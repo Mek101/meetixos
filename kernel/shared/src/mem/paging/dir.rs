@@ -2,10 +2,7 @@
 
 use core::{
     fmt,
-    fmt::{
-        Debug,
-        Formatter
-    }
+    fmt::Debug
 };
 
 use crate::{
@@ -531,7 +528,7 @@ impl PageDir {
 
             /* recurse to the next level page table */
             if let Ok(next_page_table) = next_table_res {
-                if let Some(next_table_level) = pt_level.iter_from_this().next() {
+                if let Some(next_table_level) = pt_level.next_level() {
                     self.collect_unused_page_tables(virt_frame,
                                                     next_page_table,
                                                     next_table_level,
