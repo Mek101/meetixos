@@ -27,6 +27,13 @@ HHL_CORE_MOD ?= $(KRN_BUILT_DIR)/kernel_bin.rs
 MX_KERNEL ?= $(HHL_BUILT_DIR)/mx_kernel
 
 #
+# -- -- -- -- -- -- -- -- -- -- -- -- -- Sources -- -- -- ----  -- -- -- -- -- -- -- --
+#
+
+KRN_SOURCES ?= $(shell find src -name *.rs)
+HHL_SOURCES ?= $(shell find hh_loader/src -name *.rs)
+
+#
 # -- -- -- -- -- -- -- -- -- -- -- -- -- Make Targets -- -- -- -- -- -- -- -- -- -- --
 #
 
@@ -43,7 +50,7 @@ $(MX_KERNEL): $(BUILT_HHL)
 	$(V) echo "- Linking '$(basename $(MX_KERNEL))'"
 	$(V) $(CP) -f $(BUILT_HHL) $(MX_KERNEL)
 
-$(BUILT_HHL): $(HHL_CORE_MOD)
+$(BUILT_HHL): $(HHL_CORE_MOD) $(HHL_SOURCES)
 	$(V) echo "- Building Kernel Loader..."
 	$(V) RUSTFLAGS="$(RUSTC_FLAGS)"                        \
          KERNEL_BIN=$(HHL_CORE_MOD)                  \
@@ -52,14 +59,12 @@ $(BUILT_HHL): $(HHL_CORE_MOD)
                       --manifest-path hh_loader/Cargo.toml \
                       --target hh_loader/$(TARGET_PREFIX)/hh_loader.json
 
-$(HHL_CORE_MOD): #$(BUILT_KRN)
+$(HHL_CORE_MOD): $(BUILT_KRN)
 	$(V) echo "- Writing Kernel Core Module..."
-	$(V) echo "const KERNEL_SIZE: usize = 16;" >$(HHL_CORE_MOD)
-	$(V) echo "const KERNEL_BYTES: [u8; KERNEL_SIZE] = [0; KERNEL_SIZE];" >>$(HHL_CORE_MOD)
-	$(V) #echo "const KERNEL_SIZE: usize = $$(stat --format %s $(BUILT_KERN_CORE));" >$(HHL_CORE_MOD)
-	$(V) #echo "const KERNEL_BYTES: [u8; KERNEL_SIZE] = *include_bytes!(r\"$(BUILT_KRN)\");" >>$(HHL_CORE_MOD)
+	$(V) echo "const KERNEL_SIZE: usize = $$(stat --format %s $(BUILT_KRN));" >$(HHL_CORE_MOD)
+	$(V) echo "const KERNEL_BYTES: [u8; KERNEL_SIZE] = *include_bytes!(r\"$(BUILT_KRN)\");" >>$(HHL_CORE_MOD)
 
-$(BUILT_KRN):
+$(BUILT_KRN): $(KRN_SOURCES)
 	$(V) echo "- Building Kernel Core..."
 	$(V) RUSTFLAGS="$(RUSTC_FLAGS)"      \
          CARGO_TARGET_DIR="$(BUILD_DIR)" \

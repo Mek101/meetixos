@@ -20,7 +20,7 @@
 extern crate alloc;
 
 use shared::{
-    infos::BootInfos,
+    infos::info::BootInfos,
     logger::info
 };
 
@@ -104,7 +104,7 @@ pub unsafe extern "C" fn kern_start(boot_infos: BootInfos) {
 /** # Kernel initialization
  */
 fn kern_debug_and_tests() -> ! {
-    fn test_4kib_alloc() {
+    /*fn test_4kib_alloc() {
         use crate::mem::phys::phys_mem_alloc_frame;
         use shared::mem::paging::Page4KiB;
 
@@ -137,13 +137,13 @@ fn kern_debug_and_tests() -> ! {
         for (i, value) in boxed_int.iter().enumerate() {
             info!("\tvalue ({}, {})", i, value);
         }
-    }
+    }*/
 
     /* dump some informations in debug mode, this block of code is not compiled
      * when the kernel is compiled in release mode but displays many useful debug
      * informations
      */
-    #[cfg(debug_assertions)]
+    /*#[cfg(debug_assertions)]
     {
         use core::mem::size_of;
 
@@ -205,7 +205,7 @@ fn kern_debug_and_tests() -> ! {
     }
     for _ in 0..8 {
         test_heap_alloc_free()
-    }
+    }*/
 
     loop {}
 }

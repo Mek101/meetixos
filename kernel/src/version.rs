@@ -1,6 +1,3 @@
-/*! # Kernel Version
- *
- * Lists the kernel version
- */
+/*! Kernel version */
 
 pub const KERN_VERSION: &'static str = env!("CARGO_PKG_VERSION");

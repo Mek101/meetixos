@@ -5,22 +5,26 @@
 
 use core::alloc::Layout;
 
-use hal::{
+use heap::locked::raw::RawLazyLockedHeap;
+use shared::{
     addr::{
         align_up,
-        Address,
-        VirtAddr
+        virt::VirtAddr,
+        Address
     },
-    paging::{
-        MapFlusher,
-        PTFlags,
+    dbg::dbg_display_size,
+    logger::{
+        debug,
+        info
+    },
+    mem::paging::{
+        flush::MapFlusher,
+        frame::VirtFrame,
+        table::PTFlags,
         Page4KiB,
-        PageSize,
-        VirtFrame
+        PageSize
     }
 };
-use heap::locked::raw::RawLazyLockedHeap;
-use logger::info;
 use sync::{
     RawMutex,
     RawSpinMutex
@@ -106,8 +110,10 @@ fn heap_mem_supplier(requested_size: usize) -> Option<(usize, usize)> {
 
     #[cfg(debug_assertions)]
     {
-        use dbg_utils::dbg_display_size;
-        use logger::debug;
+        use shared::{
+            dbg::dbg_display_size,
+            logger::debug
+        };
 
         debug!("Supplying additional {} to the heap allocator",
                dbg_display_size(page_aligned_size));
@@ -119,10 +125,9 @@ fn heap_mem_supplier(requested_size: usize) -> Option<(usize, usize)> {
     }
 
     /* construct the frame range to map */
-    let mapping_frame_range = {
-        let current_heap_end_addr = unsafe {
-            VirtAddr::new_unchecked(KRN_HEAP_START + HEAP_PAGES * Page4KiB::SIZE)
-        };
+    let mapping_frame_range = unsafe {
+        let current_heap_end_addr =
+            VirtAddr::new(KRN_HEAP_START + HEAP_PAGES * Page4KiB::SIZE);
         VirtFrame::range_of_count(VirtFrame::of_addr(current_heap_end_addr),
                                   requested_pages)
     };

@@ -1,11 +1,8 @@
-/*! # Kernel Panic Handler
- *
- * Implements the kernel panic handler
- */
+/*! Kernel panic handler implementation */
 
 use core::panic::PanicInfo;
 
-use logger::error;
+use shared::logger::error;
 
 use crate::write_video;
 

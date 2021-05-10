@@ -1,15 +1,13 @@
-/*! # Kernel Debugging Utils
- *
- * Implements dump & debug utility functions
- */
+/*! Kernel debugging */
 
-use dbg_utils::dbg_display_size;
-use hal::boot_infos::BootInfos;
-use logger::debug;
+use shared::{
+    infos::info::BootInfos,
+    logger::debug
+};
 
 /** # Dumps `BootInfos`
  *
- * Prints using the `log` module the [`BootInfos`] given by the [`HAL`]
+ * Prints using the `log` module the `BootInfos` given by the [`HAL`]
  *
  * [`BootInfos`]: /hal/infos/struct.BootInfos.html
  * [`HAL`]: /hal/

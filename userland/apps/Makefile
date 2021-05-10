@@ -23,6 +23,12 @@ APPS         := $(APPS:%/=%) # removes the last slash from the name
 BUILT_APPS   := $(addprefix $(BUILD_DIR)/userland/$(BUILD_MODE)/,$(APPS))
 
 #
+# -- -- -- -- -- -- -- -- -- -- -- -- -- Sources -- -- -- ----  -- -- -- -- -- -- -- --
+#
+
+APPS_SOURCES ?= $(shell find $(APPS) -name *.rs)
+
+#
 # -- -- -- -- -- -- -- -- -- -- -- -- -- Make Targets -- -- -- -- -- -- -- -- -- -- -- --
 #
 
@@ -33,7 +39,7 @@ install: $(BUILT_APPS)
 build: $(BUILT_APPS)
 	$(V) echo "- Userland Apps Build completed..."
 
-$(BUILT_APPS): $(APP_PROJECTS)
+$(BUILT_APPS): $(APP_PROJECTS) $(APPS_SOURCES)
 	$(V) echo "- Compiling $(dir $<)..."
 	$(V) RUSTFLAGS="$(RUSTC_FLAGS)"      \
          CARGO_TARGET_DIR="$(BUILD_DIR)" \

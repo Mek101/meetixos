@@ -311,9 +311,8 @@ impl PageDir {
     /**
      * Returns the active page directory
      */
-    pub unsafe fn active_page_dir(phys_offset: usize) -> PageDir {
-        PageDir::new(HwPageDirSupport::active_page_dir_frame(),
-                     VirtAddr::new(phys_offset))
+    pub unsafe fn active_page_dir(phys_offset: VirtAddr) -> PageDir {
+        PageDir::new(HwPageDirSupport::active_page_dir_frame(), phys_offset)
     }
 
     /**
@@ -739,6 +738,20 @@ impl From<PageTableEntryErr> for PageDirErr {
         match pte_err {
             PageTableEntryErr::PhysFrameNotPresent => Self::PageNotMapped,
             PageTableEntryErr::InUseForBigFrame => Self::PageAlreadyMapped
+        }
+    }
+}
+
+impl fmt::Display for PageDirErr {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            PageDirErr::PageNotMapped => write!(f, "Page not mapped"),
+            PageDirErr::PageAlreadyMapped => write!(f, "Virtual address already mapped"),
+            PageDirErr::EmptyRange => write!(f, "Empty range given"),
+            PageDirErr::PhysAllocFailed => write!(f, "Failed to allocate frame"),
+            PageDirErr::PartialHugePageUnmap => {
+                write!(f, "Tried to partially unmap an HUGE frame")
+            },
         }
     }
 }

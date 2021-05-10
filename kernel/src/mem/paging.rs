@@ -4,21 +4,23 @@
  * that are used across the kernel
  */
 
-use hal::{
+use shared::{
     addr::{
-        Address,
-        VirtAddr
+        virt::VirtAddr,
+        Address
     },
-    boot_infos::BootInfos,
-    paging::{
-        MapFlusher,
-        PTFlags,
+    infos::info::BootInfos,
+    mem::paging::{
+        dir::PageDir,
+        flush::MapFlusher,
+        frame::{
+            PhysFrame,
+            VirtFrame,
+            VirtFrameRange
+        },
+        table::PTFlags,
         Page4KiB,
-        PageDir,
-        PageSize,
-        PhysFrame,
-        VirtFrame,
-        VirtFrameRange
+        PageSize
     }
 };
 
@@ -48,9 +50,11 @@ static mut UNMNG_AREA_ALLOCATOR: UnmngAreaLockedAllocator =
  * [`PageDir`]: /hal/paging/struct.PageDir.html
  */
 pub fn paging_active_page_dir() -> PageDir {
-    let phys_offset =
-        BootInfos::obtain().vm_layout().phys_mem_mapping_area().start_addr().as_usize();
-    unsafe { PageDir::active_page_dir(phys_offset) }
+    unsafe {
+        PageDir::active_page_dir(BootInfos::obtain().vm_layout()
+                                                    .phys_mem_mapping_area()
+                                                    .start_addr())
+    }
 }
 
 /** # Makes accessible the given `PhysFrame` range
@@ -121,18 +125,6 @@ pub fn paging_map_unmanaged<T>(start_phys_frame: Option<PhysFrame<Page4KiB>>,
     virt_map_range.start.start_addr().as_ptr_mut()
 }
 
-/** # Converts an amount of bytes into pages amount
- *
- * Calculates how many pages of the given [`PageSize`] are necessary to
- * store `bytes_count`
- *
- * [`PageSize`]: /hal/paging/trait.PageSize.html
- */
-pub fn bytes_to_pages_count<S>(bytes_count: usize) -> usize
-    where S: PageSize {
-    (bytes_count + S::MASK) >> S::USED_BITS
-}
-
 /** # Unmanaged Area Locked Allocator
  *
  * Very simple allocator that returns consecutive ranges of pages that are
@@ -149,9 +141,7 @@ impl UnmngAreaLockedAllocator {
      */
     const fn new() -> Self {
         Self { m_inner: Lazy::new(|| {
-                   SpinMutex::new(VirtFrame::of_addr(unsafe {
-                                      VirtAddr::new_unchecked(KRN_UNMNG_AREA_START)
-                                  }))
+                   SpinMutex::new(VirtAddr::new(KRN_UNMNG_AREA_START).containing_frame())
                }) }
     }
 

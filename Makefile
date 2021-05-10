@@ -20,7 +20,7 @@ TARGET   ?= $(shell pwd)/userland/$(TARGET_PREFIX)/userland.json
 
 run: image
 	$(V) echo "- Running QEMU $(VIRT_ACCEL)"
-	$(V) $(QEMU) $(VIRT_ACCEL) -m 64M -serial stdio -cdrom $(BUILD_PREFIX)/$(BUILD_MODE)/meetixos.iso
+	$(V) $(QEMU) $(VIRT_ACCEL) $(QEMU_ARGS) -cdrom $(BUILD_PREFIX)/$(BUILD_MODE)/meetixos.iso
 
 image: install
 ifeq ($(ARCH),x86_64)

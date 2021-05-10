@@ -23,6 +23,12 @@ BINS         := $(BINS:%/=%) # removes the last slash from the name
 BUILT_BINS   := $(addprefix $(BUILD_DIR)/userland/$(BUILD_MODE)/,$(BINS))
 
 #
+# -- -- -- -- -- -- -- -- -- -- -- -- -- Sources -- -- -- ----  -- -- -- -- -- -- -- --
+#
+
+BINS_SOURCES ?= $(shell find $(BINS) -name *.rs)
+
+#
 # -- -- -- -- -- -- -- -- -- -- -- -- -- Make Targets -- -- -- -- -- -- -- -- -- -- -- --
 #
 
@@ -33,7 +39,7 @@ install: $(BUILT_BINS)
 build: $(BUILT_BINS)
 	$(V) echo "- Userland Bins Build completed..."
 
-$(BUILT_BINS): $(BIN_PROJECTS)
+$(BUILT_BINS): $(BIN_PROJECTS) $(BINS_SOURCES)
 	$(V) echo "- Compiling $(dir $<)..."
 	$(V) RUSTFLAGS="$(RUSTC_FLAGS)"      \
          CARGO_TARGET_DIR="$(BUILD_DIR)" \

@@ -13,34 +13,22 @@ use bit_field::{
     BitField
 };
 
-use bitmap_allocator::LockedBitMapAllocator;
-use dbg_utils::dbg_display_size;
-use hal::{
-    addr::{
-        Address,
-        PhysAddr
-    },
-    boot_infos::BootInfos,
-    paging::{
-        Page2MiB,
-        Page4KiB,
-        PageSize,
-        PhysFrame,
-        PhysFrameRange
+use shared::{
+    logger::info,
+    mem::{
+        bitmap::LockedBitMapAllocator,
+        paging::{
+            frame::PhysFrame,
+            Page2MiB,
+            Page4KiB,
+            PageSize
+        }
     }
 };
-#[cfg(debug_assertions)]
-use logger::debug;
-use logger::{
-    info,
-    warn
-};
+
 use sync::RawSpinMutex;
 
-use crate::mem::paging::{
-    bytes_to_pages_count,
-    paging_map_unmanaged
-};
+use crate::mem::paging::paging_map_unmanaged;
 
 /* bitmap allocator */
 static mut BITMAP_ALLOCATOR: LockedBitMapAllocator<RawSpinMutex> =

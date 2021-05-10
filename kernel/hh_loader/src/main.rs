@@ -3,6 +3,10 @@
 #![feature(global_asm, option_result_unwrap_unchecked)]
 
 use shared::{
+    addr::{
+        virt::VirtAddr,
+        Address
+    },
     dbg::dbg_display_size,
     infos::info::BootInfos,
     logger::info,
@@ -61,7 +65,7 @@ pub unsafe extern "C" fn hhl_rust_entry(raw_info_ptr: *const u8) -> ! {
                                           dbg_display_size(mem_area.size()))
                                 });
 
-    let page_dir = PageDir::active_page_dir(0);
+    let page_dir = PageDir::active_page_dir(VirtAddr::new_zero());
     info!("\n{:?}", page_dir);
 
     loop { /* loop forever here */ }

@@ -1,14 +1,15 @@
-/*! # Kernel Interrupt Manager
- *
- * Implements the kernel interrupt manager
- */
+/*! Kernel interrupt manager */
 
-use hal::interrupt::{
-    InterruptManager,
-    InterruptManagerException,
-    InterruptStackFrame
+use shared::{
+    interrupt::{
+        manager::{
+            InterruptManager,
+            InterruptManagerException
+        },
+        stack_frame::InterruptStackFrame
+    },
+    logger::info
 };
-use logger::info;
 
 static mut INTERRUPT_MANAGER: InterruptManager = InterruptManager::new_uninitialized();
 

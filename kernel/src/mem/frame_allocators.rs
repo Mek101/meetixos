@@ -1,9 +1,11 @@
-use hal::paging::{
-    FrameAllocator,
+use shared::mem::paging::{
+    allocator::FrameAllocator,
+    frame::{
+        PhysFrame,
+        PhysFrameRange
+    },
     Page4KiB,
-    PageSize,
-    PhysFrame,
-    PhysFrameRange
+    PageSize
 };
 
 use crate::mem::phys::{
@@ -28,22 +30,6 @@ macro_rules! impl_hal_frame_allocator {
 
             fn free_page_table(&mut self, frame: PhysFrame<Page4KiB>) {
                 self.alloc_stats_mut().free_table(|| phys_mem_free_frame(frame))
-            }
-
-            fn allocated_pages(&self) -> usize {
-                self.alloc_stats().m_allocated_pages
-            }
-
-            fn freed_pages(&self) -> usize {
-                self.alloc_stats().m_freed_pages
-            }
-
-            fn allocated_page_tables(&self) -> usize {
-                self.alloc_stats().m_allocated_tables
-            }
-
-            fn freed_page_tables(&self) -> usize {
-                self.alloc_stats().m_freed_tables
             }
         }
     };
