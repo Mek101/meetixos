@@ -1,9 +1,4 @@
-/*! # x86_64 Architecture Module
- *
- * This module implements and exposes the necessary data
- * structures/functions names internally targeted for the x86_64
- * architecture
- */
+/*! x86_64 implementation code */
 
 pub mod addr;
 #[cfg(feature = "loader_stage")]

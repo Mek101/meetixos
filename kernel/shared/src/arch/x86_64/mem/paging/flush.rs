@@ -9,7 +9,7 @@ use crate::{
 };
 
 /**
- * Implements the `HwMapFlusherBase` for the x86_64 architecture
+ * x86_64 `HwMapFlusherBase` implementation
  */
 pub struct X64MapFlusher;
 

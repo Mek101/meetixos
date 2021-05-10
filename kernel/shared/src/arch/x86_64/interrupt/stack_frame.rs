@@ -1,28 +1,39 @@
-/*! # x86_64 Interrupt Stack Frame
- *
- * Implements the x86_64 interrupt stack frame
- */
+/*! x86_64 stack frame implementation */
+
+use core::mem;
 
 use x86_64::structures::idt::InterruptStackFrame;
 
 use crate::interrupt::stack_frame::HwInterruptStackFrameBase;
 
-pub struct X64InterruptStackFrame<'a> {
-    m_inner: &'a InterruptStackFrame
+/**
+ * x86_64 `HwInterruptStackFrameBase` implementation
+ */
+#[repr(transparent)]
+pub struct X64InterruptStackFrame {
+    m_inner: InterruptStackFrame
 }
 
-impl<'a> HwInterruptStackFrameBase for X64InterruptStackFrame<'a> {
+impl X64InterruptStackFrame {
+    pub fn wrap_ptr(frame_ptr: &mut InterruptStackFrame) -> &mut Self {
+        unsafe { mem::transmute(frame_ptr) }
+    }
+}
+
+impl HwInterruptStackFrameBase for X64InterruptStackFrame {
     fn instruction_ptr(&self) -> usize {
         self.m_inner.instruction_pointer.as_u64() as usize
+    }
+
+    unsafe fn set_instruction_ptr(&mut self, _raw_addr: usize) {
+        todo!()
     }
 
     fn stack_ptr(&self) -> usize {
         self.m_inner.stack_pointer.as_u64() as usize
     }
-}
 
-impl<'a> From<&'a InterruptStackFrame> for X64InterruptStackFrame<'a> {
-    fn from(raw_intr_stack_frame: &'a InterruptStackFrame) -> Self {
-        Self { m_inner: raw_intr_stack_frame }
+    unsafe fn set_stack_ptr(&mut self, _raw_addr: usize) {
+        todo!()
     }
 }

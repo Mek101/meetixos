@@ -18,7 +18,7 @@ use crate::uart::HwUartBase;
 const SERIAL_COM1_PORT_BASE: u16 = 0x3F8;
 
 /**
- * x86_64 UART implementation based on `uart_16550::SerialPort`
+ * x86_64 `HwUartBase` implementation based on `uart_16550::SerialPort`
  */
 pub struct X64Uart {
     m_serial_port: SerialPort

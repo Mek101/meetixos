@@ -61,12 +61,11 @@ impl X64InterruptManager {
     /**  
      * Handles the hardware exception
      */
-    fn hw_except_handler(stack_frame: &X64IntrStackFrame,
+    fn hw_except_handler(stack_frame: &mut X64IntrStackFrame,
                          exception: InterruptManagerException) {
         if let Some(intr_handlers) = unsafe { INTERRUPT_HANDLERS.as_mut() } {
-            let mut hw_stack_frame = HwInterruptStackFrame::from(stack_frame);
-            let stack_frame = InterruptStackFrame::new(&mut hw_stack_frame);
-            intr_handlers.handle_hw_intr_callback(stack_frame,
+            let hw_stack_frame = HwInterruptStackFrame::wrap_ptr(stack_frame);
+            intr_handlers.handle_hw_intr_callback(InterruptStackFrame::new(hw_stack_frame),
                                                   InterruptReason::Exception(exception));
         }
     }
@@ -74,11 +73,10 @@ impl X64InterruptManager {
     /**
      * Handles the hardware interrupt
      */
-    fn hw_intr_handler(stack_frame: &X64IntrStackFrame, intr_num: usize) {
+    fn hw_intr_handler(stack_frame: &mut X64IntrStackFrame, intr_num: usize) {
         if let Some(intr_handlers) = unsafe { INTERRUPT_HANDLERS.as_mut() } {
-            let mut hw_stack_frame = HwInterruptStackFrame::from(stack_frame);
-            let stack_frame = InterruptStackFrame::new(&mut hw_stack_frame);
-            intr_handlers.handle_hw_intr_callback(stack_frame,
+            let hw_stack_frame = HwInterruptStackFrame::wrap_ptr(stack_frame);
+            intr_handlers.handle_hw_intr_callback(InterruptStackFrame::new(hw_stack_frame),
                                                   InterruptReason::Interrupt(intr_num));
         }
     }
@@ -342,11 +340,10 @@ impl HwInterruptManagerBase for X64InterruptManager {
 
             const DOUBLE_FAULT_STACK_SIZE: usize = 4096 * 4;
 
-            /** The stack for double faults is allocated into the BSS to
-             * avoid usage of FrameAllocator and because this should be not
-             * really necessary.
-             * TODO the HAL or the HH_Loader should already load a valid GDT
-             *      or TSS?
+            /* The stack for double faults is allocated into the BSS to avoid usage of
+             * FrameAllocator and because this should be not really necessary.
+             *
+             * TODO the HAL or the HH_Loader should already load a valid GDT or TSS?
              */
             static mut STACK_SPACE: [u8; DOUBLE_FAULT_STACK_SIZE] =
                 [0; DOUBLE_FAULT_STACK_SIZE];
@@ -363,10 +360,8 @@ impl HwInterruptManagerBase for X64InterruptManager {
         /* load the global descriptor table */
         BSP_INIT_GDT.load_unsafe();
 
-        /* reload code segment register */
+        /* reload code segment and TSS register */
         set_cs(kern_code_seg);
-
-        /* load the task state segment */
         load_tss(tss_seg);
 
         /* then load the interrupt descriptor table */
@@ -386,1149 +381,1153 @@ impl HwInterruptManagerBase for X64InterruptManager {
     }
 }
 
+/*
+ * x86 INTERRUPTS HANDLERS
+ */
+
 extern "x86-interrupt" fn except_double_fault(stack_frame: X64IntrStackFrame,
                                               error_value: u64)
                                               -> ! {
     panic!("Kernel BUG: Double fault occurred: {}\n{:#?}", error_value, stack_frame);
 }
 
-extern "x86-interrupt" fn except_divide_error(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_except_handler(&stack_frame,
+extern "x86-interrupt" fn except_divide_error(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_except_handler(&mut stack_frame,
                                            InterruptManagerException::MathDomain);
 }
 
-extern "x86-interrupt" fn except_invalid_op(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_except_handler(&stack_frame,
+extern "x86-interrupt" fn except_invalid_op(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_except_handler(&mut stack_frame,
                                            InterruptManagerException::InvalidInstr);
 }
 
-extern "x86-interrupt" fn except_page_fault(stack_frame: X64IntrStackFrame,
+extern "x86-interrupt" fn except_page_fault(mut stack_frame: X64IntrStackFrame,
                                             _error_code: PageFaultErrorCode) {
-    X64InterruptManager::hw_except_handler(&stack_frame,
+    X64InterruptManager::hw_except_handler(&mut stack_frame,
                                            InterruptManagerException::PageFault);
 }
 
-extern "x86-interrupt" fn except_floating_point(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_except_handler(&stack_frame,
+extern "x86-interrupt" fn except_floating_point(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_except_handler(&mut stack_frame,
                                            InterruptManagerException::FloatingPoint);
 }
 
-extern "x86-interrupt" fn intr_handler_0(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_0(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 0);
 }
 
-extern "x86-interrupt" fn intr_handler_1(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_1(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 1);
 }
 
-extern "x86-interrupt" fn intr_handler_2(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_2(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 2);
 }
 
-extern "x86-interrupt" fn intr_handler_3(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_3(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 3);
 }
 
-extern "x86-interrupt" fn intr_handler_4(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_4(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 4);
 }
 
-extern "x86-interrupt" fn intr_handler_5(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_5(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 5);
 }
 
-extern "x86-interrupt" fn intr_handler_6(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_6(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 6);
 }
 
-extern "x86-interrupt" fn intr_handler_7(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_7(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 7);
 }
 
-extern "x86-interrupt" fn intr_handler_8(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_8(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 8);
 }
 
-extern "x86-interrupt" fn intr_handler_9(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_9(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 9);
 }
 
-extern "x86-interrupt" fn intr_handler_10(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_10(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 10);
 }
 
-extern "x86-interrupt" fn intr_handler_11(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_11(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 11);
 }
 
-extern "x86-interrupt" fn intr_handler_12(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_12(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 12);
 }
 
-extern "x86-interrupt" fn intr_handler_13(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_13(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 13);
 }
 
-extern "x86-interrupt" fn intr_handler_14(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_14(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 14);
 }
 
-extern "x86-interrupt" fn intr_handler_15(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_15(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 15);
 }
 
-extern "x86-interrupt" fn intr_handler_16(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_16(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 16);
 }
 
-extern "x86-interrupt" fn intr_handler_17(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_17(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 17);
 }
 
-extern "x86-interrupt" fn intr_handler_18(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_18(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 18);
 }
 
-extern "x86-interrupt" fn intr_handler_19(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_19(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 19);
 }
 
-extern "x86-interrupt" fn intr_handler_20(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_20(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 20);
 }
 
-extern "x86-interrupt" fn intr_handler_21(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_21(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 21);
 }
 
-extern "x86-interrupt" fn intr_handler_22(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_22(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 22);
 }
 
-extern "x86-interrupt" fn intr_handler_23(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_23(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 23);
 }
 
-extern "x86-interrupt" fn intr_handler_24(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_24(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 24);
 }
 
-extern "x86-interrupt" fn intr_handler_25(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_25(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 25);
 }
 
-extern "x86-interrupt" fn intr_handler_26(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_26(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 26);
 }
 
-extern "x86-interrupt" fn intr_handler_27(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_27(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 27);
 }
 
-extern "x86-interrupt" fn intr_handler_28(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_28(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 28);
 }
 
-extern "x86-interrupt" fn intr_handler_29(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_29(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 29);
 }
 
-extern "x86-interrupt" fn intr_handler_30(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_30(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 30);
 }
 
-extern "x86-interrupt" fn intr_handler_31(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_31(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 31);
 }
 
-extern "x86-interrupt" fn intr_handler_32(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_32(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 32);
 }
 
-extern "x86-interrupt" fn intr_handler_33(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_33(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 33);
 }
 
-extern "x86-interrupt" fn intr_handler_34(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_34(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 34);
 }
 
-extern "x86-interrupt" fn intr_handler_35(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_35(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 35);
 }
 
-extern "x86-interrupt" fn intr_handler_36(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_36(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 36);
 }
 
-extern "x86-interrupt" fn intr_handler_37(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_37(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 37);
 }
 
-extern "x86-interrupt" fn intr_handler_38(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_38(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 38);
 }
 
-extern "x86-interrupt" fn intr_handler_39(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_39(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 39);
 }
 
-extern "x86-interrupt" fn intr_handler_40(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_40(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 40);
 }
 
-extern "x86-interrupt" fn intr_handler_41(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_41(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 41);
 }
 
-extern "x86-interrupt" fn intr_handler_42(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_42(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 42);
 }
 
-extern "x86-interrupt" fn intr_handler_43(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_43(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 43);
 }
 
-extern "x86-interrupt" fn intr_handler_44(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_44(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 44);
 }
 
-extern "x86-interrupt" fn intr_handler_45(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_45(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 45);
 }
 
-extern "x86-interrupt" fn intr_handler_46(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_46(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 46);
 }
 
-extern "x86-interrupt" fn intr_handler_47(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_47(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 47);
 }
 
-extern "x86-interrupt" fn intr_handler_48(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_48(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 48);
 }
 
-extern "x86-interrupt" fn intr_handler_49(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_49(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 49);
 }
 
-extern "x86-interrupt" fn intr_handler_50(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_50(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 50);
 }
 
-extern "x86-interrupt" fn intr_handler_51(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_51(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 51);
 }
 
-extern "x86-interrupt" fn intr_handler_52(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_52(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 52);
 }
 
-extern "x86-interrupt" fn intr_handler_53(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_53(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 53);
 }
 
-extern "x86-interrupt" fn intr_handler_54(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_54(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 54);
 }
 
-extern "x86-interrupt" fn intr_handler_55(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_55(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 55);
 }
 
-extern "x86-interrupt" fn intr_handler_56(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_56(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 56);
 }
 
-extern "x86-interrupt" fn intr_handler_57(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_57(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 57);
 }
 
-extern "x86-interrupt" fn intr_handler_58(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_58(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 58);
 }
 
-extern "x86-interrupt" fn intr_handler_59(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_59(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 59);
 }
 
-extern "x86-interrupt" fn intr_handler_60(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_60(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 60);
 }
 
-extern "x86-interrupt" fn intr_handler_61(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_61(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 61);
 }
 
-extern "x86-interrupt" fn intr_handler_62(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_62(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 62);
 }
 
-extern "x86-interrupt" fn intr_handler_63(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_63(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 63);
 }
 
-extern "x86-interrupt" fn intr_handler_64(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_64(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 64);
 }
 
-extern "x86-interrupt" fn intr_handler_65(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_65(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 65);
 }
 
-extern "x86-interrupt" fn intr_handler_66(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_66(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 66);
 }
 
-extern "x86-interrupt" fn intr_handler_67(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_67(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 67);
 }
 
-extern "x86-interrupt" fn intr_handler_68(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_68(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 68);
 }
 
-extern "x86-interrupt" fn intr_handler_69(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_69(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 69);
 }
 
-extern "x86-interrupt" fn intr_handler_70(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_70(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 70);
 }
 
-extern "x86-interrupt" fn intr_handler_71(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_71(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 71);
 }
 
-extern "x86-interrupt" fn intr_handler_72(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_72(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 72);
 }
 
-extern "x86-interrupt" fn intr_handler_73(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_73(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 73);
 }
 
-extern "x86-interrupt" fn intr_handler_74(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_74(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 74);
 }
 
-extern "x86-interrupt" fn intr_handler_75(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_75(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 75);
 }
 
-extern "x86-interrupt" fn intr_handler_76(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_76(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 76);
 }
 
-extern "x86-interrupt" fn intr_handler_77(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_77(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 77);
 }
 
-extern "x86-interrupt" fn intr_handler_78(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_78(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 78);
 }
 
-extern "x86-interrupt" fn intr_handler_79(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_79(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 79);
 }
 
-extern "x86-interrupt" fn intr_handler_80(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_80(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 80);
 }
 
-extern "x86-interrupt" fn intr_handler_81(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_81(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 81);
 }
 
-extern "x86-interrupt" fn intr_handler_82(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_82(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 82);
 }
 
-extern "x86-interrupt" fn intr_handler_83(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_83(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 83);
 }
 
-extern "x86-interrupt" fn intr_handler_84(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_84(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 84);
 }
 
-extern "x86-interrupt" fn intr_handler_85(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_85(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 85);
 }
 
-extern "x86-interrupt" fn intr_handler_86(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_86(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 86);
 }
 
-extern "x86-interrupt" fn intr_handler_87(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_87(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 87);
 }
 
-extern "x86-interrupt" fn intr_handler_88(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_88(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 88);
 }
 
-extern "x86-interrupt" fn intr_handler_89(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_89(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 89);
 }
 
-extern "x86-interrupt" fn intr_handler_90(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_90(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 90);
 }
 
-extern "x86-interrupt" fn intr_handler_91(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_91(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 91);
 }
 
-extern "x86-interrupt" fn intr_handler_92(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_92(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 92);
 }
 
-extern "x86-interrupt" fn intr_handler_93(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_93(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 93);
 }
 
-extern "x86-interrupt" fn intr_handler_94(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_94(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 94);
 }
 
-extern "x86-interrupt" fn intr_handler_95(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_95(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 95);
 }
 
-extern "x86-interrupt" fn intr_handler_96(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_96(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 96);
 }
 
-extern "x86-interrupt" fn intr_handler_97(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_97(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 97);
 }
 
-extern "x86-interrupt" fn intr_handler_98(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_98(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 98);
 }
 
-extern "x86-interrupt" fn intr_handler_99(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_99(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 99);
 }
 
-extern "x86-interrupt" fn intr_handler_100(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_100(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 100);
 }
 
-extern "x86-interrupt" fn intr_handler_101(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_101(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 101);
 }
 
-extern "x86-interrupt" fn intr_handler_102(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_102(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 102);
 }
 
-extern "x86-interrupt" fn intr_handler_103(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_103(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 103);
 }
 
-extern "x86-interrupt" fn intr_handler_104(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_104(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 104);
 }
 
-extern "x86-interrupt" fn intr_handler_105(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_105(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 105);
 }
 
-extern "x86-interrupt" fn intr_handler_106(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_106(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 106);
 }
 
-extern "x86-interrupt" fn intr_handler_107(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_107(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 107);
 }
 
-extern "x86-interrupt" fn intr_handler_108(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_108(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 108);
 }
 
-extern "x86-interrupt" fn intr_handler_109(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_109(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 109);
 }
 
-extern "x86-interrupt" fn intr_handler_110(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_110(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 110);
 }
 
-extern "x86-interrupt" fn intr_handler_111(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_111(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 111);
 }
 
-extern "x86-interrupt" fn intr_handler_112(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_112(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 112);
 }
 
-extern "x86-interrupt" fn intr_handler_113(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_113(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 113);
 }
 
-extern "x86-interrupt" fn intr_handler_114(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_114(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 114);
 }
 
-extern "x86-interrupt" fn intr_handler_115(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_115(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 115);
 }
 
-extern "x86-interrupt" fn intr_handler_116(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_116(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 116);
 }
 
-extern "x86-interrupt" fn intr_handler_117(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_117(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 117);
 }
 
-extern "x86-interrupt" fn intr_handler_118(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_118(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 118);
 }
 
-extern "x86-interrupt" fn intr_handler_119(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_119(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 119);
 }
 
-extern "x86-interrupt" fn intr_handler_120(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_120(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 120);
 }
 
-extern "x86-interrupt" fn intr_handler_121(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_121(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 121);
 }
 
-extern "x86-interrupt" fn intr_handler_122(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_122(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 122);
 }
 
-extern "x86-interrupt" fn intr_handler_123(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_123(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 123);
 }
 
-extern "x86-interrupt" fn intr_handler_124(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_124(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 124);
 }
 
-extern "x86-interrupt" fn intr_handler_125(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_125(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 125);
 }
 
-extern "x86-interrupt" fn intr_handler_126(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_126(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 126);
 }
 
-extern "x86-interrupt" fn intr_handler_127(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_127(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 127);
 }
 
-extern "x86-interrupt" fn intr_handler_128(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_128(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 128);
 }
 
-extern "x86-interrupt" fn intr_handler_129(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_129(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 129);
 }
 
-extern "x86-interrupt" fn intr_handler_130(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_130(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 130);
 }
 
-extern "x86-interrupt" fn intr_handler_131(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_131(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 131);
 }
 
-extern "x86-interrupt" fn intr_handler_132(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_132(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 132);
 }
 
-extern "x86-interrupt" fn intr_handler_133(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_133(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 133);
 }
 
-extern "x86-interrupt" fn intr_handler_134(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_134(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 134);
 }
 
-extern "x86-interrupt" fn intr_handler_135(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_135(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 135);
 }
 
-extern "x86-interrupt" fn intr_handler_136(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_136(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 136);
 }
 
-extern "x86-interrupt" fn intr_handler_137(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_137(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 137);
 }
 
-extern "x86-interrupt" fn intr_handler_138(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_138(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 138);
 }
 
-extern "x86-interrupt" fn intr_handler_139(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_139(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 139);
 }
 
-extern "x86-interrupt" fn intr_handler_140(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_140(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 140);
 }
 
-extern "x86-interrupt" fn intr_handler_141(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_141(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 141);
 }
 
-extern "x86-interrupt" fn intr_handler_142(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_142(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 142);
 }
 
-extern "x86-interrupt" fn intr_handler_143(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_143(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 143);
 }
 
-extern "x86-interrupt" fn intr_handler_144(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_144(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 144);
 }
 
-extern "x86-interrupt" fn intr_handler_145(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_145(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 145);
 }
 
-extern "x86-interrupt" fn intr_handler_146(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_146(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 146);
 }
 
-extern "x86-interrupt" fn intr_handler_147(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_147(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 147);
 }
 
-extern "x86-interrupt" fn intr_handler_148(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_148(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 148);
 }
 
-extern "x86-interrupt" fn intr_handler_149(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_149(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 149);
 }
 
-extern "x86-interrupt" fn intr_handler_150(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_150(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 150);
 }
 
-extern "x86-interrupt" fn intr_handler_151(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_151(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 151);
 }
 
-extern "x86-interrupt" fn intr_handler_152(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_152(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 152);
 }
 
-extern "x86-interrupt" fn intr_handler_153(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_153(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 153);
 }
 
-extern "x86-interrupt" fn intr_handler_154(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_154(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 154);
 }
 
-extern "x86-interrupt" fn intr_handler_155(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_155(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 155);
 }
 
-extern "x86-interrupt" fn intr_handler_156(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_156(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 156);
 }
 
-extern "x86-interrupt" fn intr_handler_157(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_157(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 157);
 }
 
-extern "x86-interrupt" fn intr_handler_158(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_158(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 158);
 }
 
-extern "x86-interrupt" fn intr_handler_159(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_159(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 159);
 }
 
-extern "x86-interrupt" fn intr_handler_160(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_160(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 160);
 }
 
-extern "x86-interrupt" fn intr_handler_161(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_161(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 161);
 }
 
-extern "x86-interrupt" fn intr_handler_162(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_162(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 162);
 }
 
-extern "x86-interrupt" fn intr_handler_163(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_163(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 163);
 }
 
-extern "x86-interrupt" fn intr_handler_164(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_164(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 164);
 }
 
-extern "x86-interrupt" fn intr_handler_165(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_165(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 165);
 }
 
-extern "x86-interrupt" fn intr_handler_166(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_166(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 166);
 }
 
-extern "x86-interrupt" fn intr_handler_167(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_167(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 167);
 }
 
-extern "x86-interrupt" fn intr_handler_168(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_168(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 168);
 }
 
-extern "x86-interrupt" fn intr_handler_169(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_169(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 169);
 }
 
-extern "x86-interrupt" fn intr_handler_170(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_170(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 170);
 }
 
-extern "x86-interrupt" fn intr_handler_171(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_171(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 171);
 }
 
-extern "x86-interrupt" fn intr_handler_172(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_172(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 172);
 }
 
-extern "x86-interrupt" fn intr_handler_173(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_173(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 173);
 }
 
-extern "x86-interrupt" fn intr_handler_174(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_174(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 174);
 }
 
-extern "x86-interrupt" fn intr_handler_175(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_175(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 175);
 }
 
-extern "x86-interrupt" fn intr_handler_176(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_176(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 176);
 }
 
-extern "x86-interrupt" fn intr_handler_177(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_177(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 177);
 }
 
-extern "x86-interrupt" fn intr_handler_178(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_178(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 178);
 }
 
-extern "x86-interrupt" fn intr_handler_179(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_179(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 179);
 }
 
-extern "x86-interrupt" fn intr_handler_180(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_180(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 180);
 }
 
-extern "x86-interrupt" fn intr_handler_181(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_181(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 181);
 }
 
-extern "x86-interrupt" fn intr_handler_182(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_182(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 182);
 }
 
-extern "x86-interrupt" fn intr_handler_183(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_183(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 183);
 }
 
-extern "x86-interrupt" fn intr_handler_184(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_184(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 184);
 }
 
-extern "x86-interrupt" fn intr_handler_185(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_185(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 185);
 }
 
-extern "x86-interrupt" fn intr_handler_186(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_186(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 186);
 }
 
-extern "x86-interrupt" fn intr_handler_187(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_187(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 187);
 }
 
-extern "x86-interrupt" fn intr_handler_188(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_188(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 188);
 }
 
-extern "x86-interrupt" fn intr_handler_189(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_189(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 189);
 }
 
-extern "x86-interrupt" fn intr_handler_190(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_190(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 190);
 }
 
-extern "x86-interrupt" fn intr_handler_191(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_191(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 191);
 }
 
-extern "x86-interrupt" fn intr_handler_192(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_192(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 192);
 }
 
-extern "x86-interrupt" fn intr_handler_193(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_193(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 193);
 }
 
-extern "x86-interrupt" fn intr_handler_194(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_194(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 194);
 }
 
-extern "x86-interrupt" fn intr_handler_195(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_195(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 195);
 }
 
-extern "x86-interrupt" fn intr_handler_196(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_196(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 196);
 }
 
-extern "x86-interrupt" fn intr_handler_197(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_197(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 197);
 }
 
-extern "x86-interrupt" fn intr_handler_198(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_198(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 198);
 }
 
-extern "x86-interrupt" fn intr_handler_199(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_199(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 199);
 }
 
-extern "x86-interrupt" fn intr_handler_200(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_200(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 200);
 }
 
-extern "x86-interrupt" fn intr_handler_201(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_201(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 201);
 }
 
-extern "x86-interrupt" fn intr_handler_202(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_202(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 202);
 }
 
-extern "x86-interrupt" fn intr_handler_203(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_203(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 203);
 }
 
-extern "x86-interrupt" fn intr_handler_204(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_204(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 204);
 }
 
-extern "x86-interrupt" fn intr_handler_205(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_205(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 205);
 }
 
-extern "x86-interrupt" fn intr_handler_206(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_206(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 206);
 }
 
-extern "x86-interrupt" fn intr_handler_207(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_207(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 207);
 }
 
-extern "x86-interrupt" fn intr_handler_208(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_208(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 208);
 }
 
-extern "x86-interrupt" fn intr_handler_209(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_209(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 209);
 }
 
-extern "x86-interrupt" fn intr_handler_210(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_210(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 210);
 }
 
-extern "x86-interrupt" fn intr_handler_211(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_211(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 211);
 }
 
-extern "x86-interrupt" fn intr_handler_212(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_212(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 212);
 }
 
-extern "x86-interrupt" fn intr_handler_213(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_213(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 213);
 }
 
-extern "x86-interrupt" fn intr_handler_214(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_214(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 214);
 }
 
-extern "x86-interrupt" fn intr_handler_215(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_215(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 215);
 }
 
-extern "x86-interrupt" fn intr_handler_216(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_216(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 216);
 }
 
-extern "x86-interrupt" fn intr_handler_217(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_217(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 217);
 }
 
-extern "x86-interrupt" fn intr_handler_218(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_218(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 218);
 }
 
-extern "x86-interrupt" fn intr_handler_219(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_219(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 219);
 }
 
-extern "x86-interrupt" fn intr_handler_220(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_220(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 220);
 }
 
-extern "x86-interrupt" fn intr_handler_221(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_221(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 221);
 }
 
-extern "x86-interrupt" fn intr_handler_222(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_222(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 222);
 }
 
-extern "x86-interrupt" fn intr_handler_223(stack_frame: X64IntrStackFrame) {
-    X64InterruptManager::hw_intr_handler(&stack_frame,
+extern "x86-interrupt" fn intr_handler_223(mut stack_frame: X64IntrStackFrame) {
+    X64InterruptManager::hw_intr_handler(&mut stack_frame,
                                          X64InterruptManager::INTR_OFFSET + 223);
 }

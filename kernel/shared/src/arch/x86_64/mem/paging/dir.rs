@@ -14,7 +14,7 @@ use crate::{
 };
 
 /**
- * Implements the `HwPageDirSupportBase` for the x86_64 architecture
+ * x86_64 `HwPageDirSupportBase` implementation
  */
 pub struct X64PageDirSupport;
 

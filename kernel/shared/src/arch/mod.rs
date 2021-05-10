@@ -1,12 +1,4 @@
-/*! # Architecture Dependent Switch
- *
- * This module exports at (and only at) the crate level the architecture
- * dependent code, which internally exposes well defined name for the upside
- * layer.
- *
- * Many of these data structures/functions are exported as is, the others
- * are wrapped by an HAL structure/function in the upper level
- */
+/*! Architecture dependent code switch */
 
 /* self:: is used to avoid crate name ambiguity */
 #[cfg(target_arch = "aarch64")]
