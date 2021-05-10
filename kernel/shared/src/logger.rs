@@ -204,10 +204,13 @@ impl<W> LoggerInner<W> where W: LoggerWriter {
      */
     #[cfg(not(feature = "loader_stage"))]
     fn write_in_buffer(&mut self, s: &str) -> fmt::Result {
+        let writer = &mut self.m_writer;
+
+        /* write the given chunk to the buffer and flush to the writer if needed */
         if let Some(ref mut buffer) = self.m_buffer {
             buffer.write_str_chunk(s, |buffer| {
                       if let Ok(utf8_str) = str::from_utf8(buffer) {
-                          self.m_writer.write_str(utf8_str)
+                          writer.write_str(utf8_str)
                       } else {
                           Err(Error)
                       }
