@@ -72,7 +72,7 @@ CP    ?= $(shell which cp)
 MKDIR ?= $(shell which mkdir)
 
 ifeq ($(ARCH), x86_64)
-    MAKE_RESQUE ?= $(shell which grub-mkresque)
+    MAKE_RESQUE ?= $(shell which grub-mkrescue)
 endif
 
 #
@@ -80,3 +80,9 @@ endif
 #
 
 QEMU ?= qemu-system-$(ARCH)
+
+#
+# -- -- -- -- -- -- -- -- -- -- -- -- Make Arguments -- -- -- -- -- -- -- -- -- -- -- -- --
+#
+
+MAKE_ARGS = --no-print-directory

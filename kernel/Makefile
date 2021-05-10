@@ -8,10 +8,10 @@ include ../config.mk
 # -- -- -- -- -- -- -- -- -- -- -- Project Variables -- -- -- -- -- -- -- -- -- -- --
 #
 
-REPO_ROOT    ?= $(realpath ../..)
+REPO_ROOT    ?= $(realpath ..)
 BUILD_DIR    ?= $(REPO_ROOT)/$(BUILD_PREFIX)
 BUILD_TARGET ?= $(realpath $(TARGET_PREFIX)/kernel.json)
-DIST_DIR     ?= $(DIST_SYSROOT_PREFIX)/MeetiX
+DIST_DIR     ?= ../$(DIST_SYSROOT_PREFIX)/MeetiX
 
 #
 # -- -- -- -- -- -- -- -- -- -- -- -- Kernel Paths -- -- -- -- -- -- -- -- -- -- -- --
@@ -52,10 +52,12 @@ $(BUILT_HHL): $(HHL_CORE_MOD)
                       --manifest-path hh_loader/Cargo.toml \
                       --target hh_loader/$(TARGET_PREFIX)/hh_loader.json
 
-$(HHL_CORE_MOD): $(BUILT_KRN)
+$(HHL_CORE_MOD): #$(BUILT_KRN)
 	$(V) echo "- Writing Kernel Core Module..."
-	$(V) echo "const KERNEL_SIZE: usize = $$(stat --format %s $(BUILT_KERN_CORE));" >$(HHL_CORE_MOD)
-	$(V) echo "const KERNEL_BYTES: [u8; KERNEL_SIZE] = *include_bytes!(r\"$(BUILT_KRN)\");" >>$(HHL_CORE_MOD)
+	$(V) echo "const KERNEL_SIZE: usize = 16;" >$(HHL_CORE_MOD)
+	$(V) echo "const KERNEL_BYTES: [u8; KERNEL_SIZE] = [0; KERNEL_SIZE];" >>$(HHL_CORE_MOD)
+	$(V) #echo "const KERNEL_SIZE: usize = $$(stat --format %s $(BUILT_KERN_CORE));" >$(HHL_CORE_MOD)
+	$(V) #echo "const KERNEL_BYTES: [u8; KERNEL_SIZE] = *include_bytes!(r\"$(BUILT_KRN)\");" >>$(HHL_CORE_MOD)
 
 $(BUILT_KRN):
 	$(V) echo "- Building Kernel Core..."

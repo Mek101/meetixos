@@ -1,20 +1,19 @@
 #![no_std]
 #![no_main]
-#![feature(global_asm)]
-#![feature(option_result_unwrap_unchecked)]
+#![feature(global_asm, option_result_unwrap_unchecked)]
 
-use dbg_utils::dbg_display_size;
-use hal::{
-    boot_infos::BootInfos,
-    paging::PageDir
+use shared::{
+    dbg::dbg_display_size,
+    infos::info::BootInfos,
+    logger::info,
+    mem::paging::dir::PageDir
 };
-use logger::info;
 
 use crate::{
     log::init_logger,
     phys_mem::init_phys_mem,
     version::HHL_VERSION,
-    vm_layout::organize_kernel_vm_layout
+    vm_layout::randomize_vm_layout_for_core
 };
 
 mod arch;
@@ -48,15 +47,11 @@ pub unsafe extern "C" fn hhl_rust_entry(raw_info_ptr: *const u8) -> ! {
     info!("\tKernel code: {}{}{}", KERNEL_BYTES[0], KERNEL_BYTES[1], KERNEL_BYTES[2]);
 
     /* organize the VM layout for the kernel */
-    info!("Organizing Kernel Core's VM Layout...");
-    let _vm_layout = organize_kernel_vm_layout();
+    info!("Randomizing Kernel Core's VM Layout...");
+    let _vm_layout = randomize_vm_layout_for_core();
 
     /*  */
     init_phys_mem();
-
-    info!("MeetiX Kernel Loader v{}", HHL_VERSION);
-    info!("Kernel size: {}", dbg_display_size(KERNEL_SIZE));
-    info!("Kernel code: {}{}{}", KERNEL_BYTES[0], KERNEL_BYTES[1], KERNEL_BYTES[2]);
 
     info!("Raw info ptr: {:#x}", raw_info_ptr as usize);
     boot_info.cmdline_args().iter().for_each(|arg| info!("Arg: {}", arg.as_str()));

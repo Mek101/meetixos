@@ -1,4 +1,4 @@
-/*! Kernel land logger */
+/*! Kernel land logger implementation */
 
 #[cfg(not(feature = "loader_stage"))]
 extern crate alloc;
@@ -14,14 +14,8 @@ use core::{
 #[cfg(not(feature = "loader_stage"))]
 use alloc::vec::Vec;
 
-/* re-export logging macros */
-pub use log::{
-    debug,
-    error,
-    info,
-    warn,
-    LevelFilter
-};
+/* re-export log macros */
+pub use log::LevelFilter;
 
 use log::{
     set_logger,

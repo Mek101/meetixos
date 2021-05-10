@@ -10,6 +10,7 @@ authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
 
 [dependencies.shared]
 path = "../shared"
+features = ["loader_stage"]
 
 ##
 # MeetiX Libraries Crates

@@ -16,7 +16,7 @@ BUILD_TARGET ?= $(realpath $(TARGET_PREFIX)/userland.json)
 # -- -- -- -- -- -- -- -- -- -- -- -- Make Arguments -- -- -- -- -- -- -- -- -- -- --
 #
 
-MAKE_ARGS := REPO_ROOT="$(REPO_ROOT)" \
+MAKE_ARGS += REPO_ROOT="$(REPO_ROOT)" \
              BUILD_DIR="$(BUILD_DIR)" \
              BUILD_TARGET="$(BUILD_TARGET)"
 

@@ -20,14 +20,14 @@ TARGET   ?= $(shell pwd)/userland/$(TARGET_PREFIX)/userland.json
 
 run: image
 	$(V) echo "- Running QEMU $(VIRT_ACCEL)"
-	$(V) $(QEMU) $(VIRT_ACCEL) -m 64M -serial stdio -cdrom $(BUILD_DIR)/$(BUILD_MODE)/meetixos.iso
+	$(V) $(QEMU) $(VIRT_ACCEL) -m 64M -serial stdio -cdrom $(BUILD_PREFIX)/$(BUILD_MODE)/meetixos.iso
 
 image: install
 ifeq ($(ARCH),x86_64)
 	$(V) echo "- Building GRUB bootable image..."
 	$(V) $(MAKE_RESQUE) -d /usr/lib/grub/i386-pc/                     \
 	                    -o $(BUILD_PREFIX)/$(BUILD_MODE)/meetixos.iso \
-	                    $(BUILD_DIR)/sysroot/$(BUILD_MODE)
+	                    $(DIST_SYSROOT_PREFIX)
 endif
 
 install: build
@@ -37,21 +37,21 @@ install: build
 	$(V) $(RSYNC) -a boot/$(ARCH)/* $(DIST_SYSROOT_PREFIX)
 
 	$(V) echo "- Installing Kernel..."
-	$(V) $(MAKE) -C kernel install
+	$(V) $(MAKE) $(MAKE_ARGS) -C kernel install
 
 	$(V) echo "- Installing Userland..."
-	$(V) $(MAKE) -C userland install
+	$(V) $(MAKE) $(MAKE_ARGS) -C userland install
 
 build: build_kernel build_userland
 	$(V) echo "- MeetiX OS Successfully Built..."
 
 build_userland:
 	$(V) echo "- Building $(ARCH)/$(BUILD_MODE) Userland..."
-	$(V) $(MAKE) -C userland build
+	$(V) $(MAKE) $(MAKE_ARGS) -C userland build
 
 build_kernel:
 	$(V) echo "- Building $(ARCH)/$(BUILD_MODE) Kernel..."
-	$(V) $(MAKE) -C kernel build
+	$(V) $(MAKE) $(MAKE_ARGS) -C kernel build
 
 doc: format_build_src
 	$(V) echo "- Documenting Code..."
@@ -80,8 +80,8 @@ $(DOC_DIR):
 
 clean:
 	$(V) echo "- Cleaning $(ARCH)/$(BUILD_MODE)..."
-	$(V) cd kernel && $(MAKE) clean
-	$(V) cd userland && $(MAKE) clean
+	$(V) $(MAKE) $(MAKE_ARGS) -C kernel clean
+	$(V) $(MAKE) $(MAKE_ARGS) -C userland clean
 
 clean_all:
 	$(V) echo "- Cleaning All..."

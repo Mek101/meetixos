@@ -11,7 +11,7 @@ include ../../config.mk
 REPO_ROOT    ?= $(realpath ../..)
 BUILD_DIR    ?= $(REPO_ROOT)/$(BUILD_PREFIX)
 BUILD_TARGET ?= $(realpath ../$(TARGET_PREFIX)/userland.json)
-DIST_DIR     ?= $(DIST_SYSROOT_PREFIX)/Bins
+DIST_DIR     ?= $(REPO_ROOT)/$(DIST_SYSROOT_PREFIX)/Bins
 
 #
 # -- -- -- -- -- -- -- -- -- -- -- Application Projects -- -- -- -- -- -- -- -- -- -- --
@@ -20,7 +20,7 @@ DIST_DIR     ?= $(DIST_SYSROOT_PREFIX)/Bins
 BIN_PROJECTS := $(wildcard */Cargo.toml)
 BINS         := $(dir $(BIN_PROJECTS))
 BINS         := $(BINS:%/=%) # removes the last slash from the name
-BUILT_BINS   := $(addprefix $(BUILD_DIR)/,$(BINS))
+BUILT_BINS   := $(addprefix $(BUILD_DIR)/userland/$(BUILD_MODE)/,$(BINS))
 
 #
 # -- -- -- -- -- -- -- -- -- -- -- -- -- Make Targets -- -- -- -- -- -- -- -- -- -- -- --

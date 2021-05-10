@@ -1,11 +1,15 @@
 #![no_std]
 #![no_main]
 
-use api::objs::{
-    impls::File,
-    UserCreatable
-};
 use core::panic::PanicInfo;
+
+use api::objs::{
+    impls::file::File,
+    object::{
+        Object,
+        UserCreatable
+    }
+};
 
 #[no_mangle]
 pub unsafe extern "C" fn _start() {
@@ -14,8 +18,13 @@ pub unsafe extern "C" fn _start() {
                          .apply_for("/Users/Marco/Docs/example.txt")
                          .unwrap();
 
-    let mut _read_buf = [0u8; 512];
-    f.read(&mut _read_buf).unwrap();
+    let mmap = f.map_to_memory(None, 0, f.size() as u64, true)
+                .expect("Failed to map file to memory");
+
+    let mut ptr_box = mmap.get_ptr_mut::<u8>().expect("Failed to obtain MMap pointer");
+    for byte in ptr_box.iter_mut() {
+        *byte = 0;
+    }
 
     /* cannot do anything for now :-( */
 }

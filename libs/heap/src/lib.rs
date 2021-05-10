@@ -9,7 +9,12 @@
  */
 
 #![no_std]
-#![feature(const_fn, fn_traits, unboxed_closures, const_fn_fn_ptr_basics, once_cell)]
+#![feature(const_fn,
+           const_fn_trait_bound,
+           const_fn_fn_ptr_basics,
+           fn_traits,
+           unboxed_closures,
+           once_cell)]
 
 use core::{
     alloc::Layout,
@@ -62,15 +67,15 @@ pub enum Allocator {
 }
 
 impl Allocator {
-    const VARIANTS: [Allocator] = *[Self::Slab64Bytes,
-                                    Self::Slab128Bytes,
-                                    Self::Slab256Bytes,
-                                    Self::Slab512Bytes,
-                                    Self::Slab1024Bytes,
-                                    Self::Slab2048Bytes,
-                                    Self::Slab4096Bytes,
-                                    Self::Slab8192Bytes,
-                                    Self::LinkedList];
+    const VARIANTS: [Allocator; 9] = [Self::Slab64Bytes,
+                                      Self::Slab128Bytes,
+                                      Self::Slab256Bytes,
+                                      Self::Slab512Bytes,
+                                      Self::Slab1024Bytes,
+                                      Self::Slab2048Bytes,
+                                      Self::Slab4096Bytes,
+                                      Self::Slab8192Bytes,
+                                      Self::LinkedList];
 
     /**
      * Returns the best Allocator variant to serve the given request.
@@ -166,7 +171,7 @@ impl Allocator {
     /**
      * Returns an `Iterator` to the variants
      */
-    pub fn iter() -> impl Iterator<Item = Self> {
+    pub fn iter() -> impl Iterator<Item = &'static Self> {
         Self::VARIANTS.iter()
     }
 }
@@ -382,7 +387,7 @@ impl Heap {
     /**
      * Returns the `Slab` that allocates the next `Allocator` sizes
      */
-    unsafe fn construct_slab(addr: &mut usize, allocator: Allocator) -> Slab {
+    unsafe fn construct_slab(addr: &mut usize, allocator: &Allocator) -> Slab {
         let slab =
             Slab::new(*addr, allocator.min_managed_size(), allocator.min_alloc_size());
         *addr += allocator.min_managed_size();

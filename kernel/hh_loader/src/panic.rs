@@ -1,6 +1,6 @@
 use core::panic::PanicInfo;
 
-use logger::info;
+use shared::logger::info;
 
 #[panic_handler]
 fn panic_handler(_: &PanicInfo) -> ! {

@@ -1,11 +1,12 @@
 #![no_std]
 #![no_main]
 
-use api::objs::{
-    impls::File,
-    UserCreatable
-};
 use core::panic::PanicInfo;
+
+use api::objs::{
+    impls::file::File,
+    object::UserCreatable
+};
 
 #[no_mangle]
 pub unsafe extern "C" fn _start() {

@@ -1,6 +1,12 @@
 /*! `Thread` specific data */
 
-use crate::objs::infos::use_instant::ObjUseInstant;
+use crate::{
+    objs::infos::use_instant::ObjUseInstant,
+    tasks::{
+        impls::thread::Thread,
+        task::Task
+    }
+};
 
 /**
  * Internal C entry point prototype for `Thread`s

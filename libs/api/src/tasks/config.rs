@@ -21,6 +21,7 @@ use crate::{
         Result
     },
     config::{
+        ConfigFinderIter,
         ConfigMode,
         CreatMode,
         FindMode
@@ -35,7 +36,10 @@ use crate::{
             proc::Proc,
             thread::Thread
         },
-        task::Task
+        task::{
+            Task,
+            TaskId
+        }
     }
 };
 
