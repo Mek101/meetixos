@@ -80,7 +80,7 @@ endif
 #
 
 QEMU      ?= qemu-system-$(ARCH)
-QEMU_ARGS ?= -m 12M -serial stdio
+QEMU_ARGS ?= -m 64M -serial stdio
 
 #
 # -- -- -- -- -- -- -- -- -- -- -- -- Make Arguments -- -- -- -- -- -- -- -- -- -- -- -- --

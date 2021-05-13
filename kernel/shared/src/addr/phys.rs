@@ -74,7 +74,7 @@ impl Into<usize> for PhysAddr {
 
 impl Debug for PhysAddr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "PhysAddr({:#x})", self.as_usize())
+        write!(f, "PhysAddr({:#018x})", self.as_usize())
     }
 }
 
@@ -92,13 +92,13 @@ impl Octal for PhysAddr {
 
 impl UpperHex for PhysAddr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        UpperHex::fmt(&self.as_usize(), f)
+        write!(f, "{:#018X}", self.as_usize())
     }
 }
 
 impl LowerHex for PhysAddr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        LowerHex::fmt(&self.as_usize(), f)
+        write!(f, "{:#018x}", self.as_usize())
     }
 }
 

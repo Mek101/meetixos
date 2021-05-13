@@ -19,8 +19,7 @@ use shared::{
             VirtFrameRange
         },
         table::PTFlags,
-        Page4KiB,
-        PageSize
+        Page4KiB
     }
 };
 
@@ -29,15 +28,9 @@ use sync::{
     SpinMutex
 };
 
-use crate::mem::{
-    frame_allocators::{
-        KernAllocator,
-        RangeAllocator
-    },
-    layout::{
-        KRN_UNMNG_AREA_END,
-        KRN_UNMNG_AREA_START
-    }
+use crate::mem::layout::{
+    KRN_UNMNG_AREA_END,
+    KRN_UNMNG_AREA_START
 };
 
 /** Simple allocator used to manage the kernel's unmanaged area
@@ -95,7 +88,7 @@ pub fn paging_map_unmanaged<T>(start_phys_frame: Option<PhysFrame<Page4KiB>>,
     /* if given use the physical frame and a RangeAllocator, otherwise use a
      * kernel allocator
      */
-    let result = if let Some(start_frame) = start_phys_frame {
+    /*let result = if let Some(start_frame) = start_phys_frame {
         page_dir.map_range(virt_map_range.clone(),
                            &mut RangeAllocator::new(PhysFrame::range_of_count(start_frame, count)),
                            PTFlags::PRESENT
@@ -111,15 +104,15 @@ pub fn paging_map_unmanaged<T>(start_phys_frame: Option<PhysFrame<Page4KiB>>,
                            | PTFlags::READABLE
                            | PTFlags::WRITEABLE
                            | PTFlags::NO_EXECUTE)
-    };
+    };*/
 
     /* flush the new created entries if success, panic otherwise */
-    match result {
+    /*match result {
         Ok(map_flusher) => map_flusher.flush(),
         Err(err) => {
             panic!("Failed to map {:?} to kernel's free area: {}", virt_map_range, err)
         }
-    }
+    }*/
 
     /* return the pointer to the mapped virtual range */
     virt_map_range.start.start_addr().as_ptr_mut()

@@ -66,8 +66,7 @@ hhl_page_tables_end:
 
 .section .rodata
 
-/** # Protected 32bit GDT table
- *
+/**
  * The loader loads this GDT to switch from real mode to protected mode
  */
 .align 4
@@ -98,8 +97,7 @@ hhl_prot_mode_gdt:
      .byte      0xff, 0xff, 0, 0, 0, 0x92, 0xcf, 0x00
 hhl_prot_mode_gdt_end:
 
-/** # Protected 64bit GDT table
- *
+/**
  * The loader loads this GDT to switch from protected mode to protected 64bit mode
  */
 .align 4
@@ -134,8 +132,7 @@ hhl_long_mode_gdt_end:
 
 .section .text
 
-/** # Higher Half Loader entry point
- *
+/**
  * Here is where the higher half loader starts his execution
  */
 .global hhl_start
@@ -154,26 +151,35 @@ hhl_start:
     mov         %ax,   %gs
     mov         %ax,   %ss
 
+hhl_construct_page_table:
     /* put into the first L4's slot the L3 page table with PTE_PRESENT, PTE_WRITEABLE and PTE_GLOBAL */
-    mov         $hhl_l3_page_table,     %eax
+    mov         $hhl_l3_page_table, %eax
     or          $(1 | 1 << 1 | 1 << 8), %eax
-    mov         %eax,                   (hhl_l4_page_table)
+    mov         %eax, (hhl_l4_page_table)
 
     /* put into the first L3's slot the L2 page table with PTE_PRESENT, PTE_WRITEABLE and PTE_GLOBAL */
-    mov         $hhl_l2_page_table,     %eax
+    mov         $hhl_l2_page_table, %eax
     or          $(1 | 1 << 1 | 1 << 8), %eax
-    mov         %eax,                   (hhl_l3_page_table)
+    mov         %eax, (hhl_l3_page_table)
 
-    /* identity map the first 16MiB of memory with PTE_PRESENT, PTE_WRITEABLE, PTE_HUGE and PTE_GLOBAL */
-    mov         $hhl_l2_page_table,     %eax
-    movl        $(0x00000000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),   (%eax)
-    movl        $(0x00200000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  8(%eax)
-    movl        $(0x00400000 | 1 | 1 << 1 | 1 << 7 | 1 << 8), 16(%eax)
-    movl        $(0x00600000 | 1 | 1 << 1 | 1 << 7 | 1 << 8), 24(%eax)
-    movl        $(0x00800000 | 1 | 1 << 1 | 1 << 7 | 1 << 8), 32(%eax)
-    movl        $(0x00A00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8), 40(%eax)
-    movl        $(0x00C00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8), 48(%eax)
-    movl        $(0x00E00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8), 56(%eax)
+    /* identity map the first 32MiB of memory using 2MiB pages PTE_PRESENT, PTE_WRITEABLE, PTE_HUGE and PTE_GLOBAL */
+    mov         $hhl_l2_page_table, %eax
+    movl        $(0x00000000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),    (%eax)
+    movl        $(0x00200000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),   8(%eax)
+    movl        $(0x00400000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  16(%eax)
+    movl        $(0x00600000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  24(%eax)
+    movl        $(0x00800000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  32(%eax)
+    movl        $(0x00A00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  40(%eax)
+    movl        $(0x00C00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  48(%eax)
+    movl        $(0x00E00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  56(%eax)
+    movl        $(0x01000000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  64(%eax)
+    movl        $(0x01200000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  72(%eax)
+    movl        $(0x01400000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  80(%eax)
+    movl        $(0x01600000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  88(%eax)
+    movl        $(0x01800000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  96(%eax)
+    movl        $(0x01A00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8), 104(%eax)
+    movl        $(0x01C00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8), 112(%eax)
+    movl        $(0x01E00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8), 120(%eax)
 
 hhl_enable_paging:
     /* setup the long mode GDT now */
@@ -181,12 +187,12 @@ hhl_enable_paging:
 
     /* setup as current the static page directory */
     mov         $hhl_l4_page_table, %eax
-    mov         %eax,               %cr3
+    mov         %eax, %cr3
 
     /* enable PAGE_SIZE_EXTENSION, PAE and PAGE_GLOBAL */
-    mov         %cr4,                        %eax
+    mov         %cr4, %eax
     or          $(1 << 4 | 1 << 5 | 1 << 7), %eax
-    mov         %eax,                        %cr4
+    mov         %eax, %cr4
 
     /* enable LONG_MODE and NO_EXECUTE in EFER model specific register */
     mov         $0xC0000080, %ecx
@@ -195,9 +201,9 @@ hhl_enable_paging:
     wrmsr
 
     /* finally enable the Ring0 WRITE_PROTECT and PAGING */
-    mov         %cr0,                 %eax
+    mov         %cr0, %eax
     or          $(1 << 16 | 1 << 31), %eax
-    mov         %eax,                 %cr0
+    mov         %eax, %cr0
 
     /* jump to the protected mapped area */
     ljmp        $0x08, $hhl_identity_mapped_text
@@ -209,14 +215,12 @@ hhl_enable_paging:
 hhl_identity_mapped_text:
     /* setup the initial stack and the base pointer */
     mov         $hhl_stack_bottom, %rsp
-    mov         %rsp,              %rbp
+    mov         %rsp, %rbp
 
-    /* put into the first argument register (%rdi for x86_64)
-     * the pointer to the MultiBoot2 struct then jump into the
-     * rust code
-     */
+    /* put Multiboot2 pointer into <rdi> (x86_64 first argument) and call rust */
     mov         %rbx, %rdi
     call        hhl_rust_entry
 
 hhl_halt:
+    /* we should never reach this point */
     jmp hhl_halt

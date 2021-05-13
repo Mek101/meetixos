@@ -1,63 +1,80 @@
+/*! # Higher Half Loader
+ *
+ * Implements the kernel stage after the bootloader but before the kernel
+ * core.
+ *
+ * This binary is responsible to initialize the architecture, randomize the
+ * kernel layout, initialize the physical memory bitmap, load and map the
+ * kernel core into the higher half and jump into it.
+ *
+ * The kernel core is statically linked into the `.data` section of the
+ * loader and loaded as ELF executable by the loader
+ */
+
 #![no_std]
 #![no_main]
-#![feature(global_asm, option_result_unwrap_unchecked)]
+#![feature(global_asm, iter_advance_by, panic_info_message, min_type_alias_impl_trait)]
 
 use shared::{
-    addr::{
-        virt::VirtAddr,
-        Address
-    },
+    addr::virt::VirtAddr,
     dbg::dbg_display_size,
     infos::info::BootInfos,
-    logger::info,
-    mem::paging::dir::PageDir
+    logger::info
 };
 
 use crate::{
-    log::init_logger,
-    phys_mem::init_phys_mem,
-    version::HHL_VERSION,
-    vm_layout::randomize_vm_layout_for_core
+    loader::{
+        loader_kernel_core_size,
+        loader_load_core
+    },
+    log::log_init,
+    mem::{
+        paging::paging_current_page_dir,
+        phys::{
+            phys_init,
+            phys_pre_init
+        },
+        vm_layout::vml_randomize_core_layout
+    },
+    version::HHL_VERSION
 };
 
 mod arch;
+mod loader;
 mod log;
+mod mem;
 mod panic;
-mod phys_mem;
 mod version;
-mod vm_layout;
 
-/* includes the module which links the kernel core binary */
-include!(env!("KERNEL_BIN"));
-
-/** # Higher half loader rust entry point
- *
- * Here is where the 64bit rust code starts his execution
+/**
+ * Rust entrypoint, here is where the 64bit rust code starts his execution
  */
 #[no_mangle]
 pub unsafe extern "C" fn hhl_rust_entry(raw_info_ptr: *const u8) -> ! {
-    /* initialize the higher half loader's instance of the BootInfos, it uses the
-     * "loader_stage" <From> implementation, which interprets the raw pointer
-     * given as the supported bootloader's info for the architecture compiled in
-     */
-    let boot_info = BootInfos::from(raw_info_ptr);
+    /* interpret the raw pointer given to fill the <BootInfos> */
+    let boot_info = BootInfos::from_raw(raw_info_ptr);
 
-    /* initialize the logger, to be able to print formatted */
-    init_logger();
+    /* initialize the logger, to be able to print in a formatted way */
+    log_init();
 
-    /* print the hh_loader header */
+    /* print the hh_loader's header */
     info!("MeetiX Kernel Loader v{}", HHL_VERSION);
-    info!("\tKernel size: {}", dbg_display_size(KERNEL_SIZE));
-    info!("\tKernel code: {}{}{}", KERNEL_BYTES[0], KERNEL_BYTES[1], KERNEL_BYTES[2]);
+    info!("\tKernel size: {}", dbg_display_size(loader_kernel_core_size()));
+
+    /* pre initialize physical memory, obtain how many bitmap pages are necessary */
+    let necessary_bitmap_pages = phys_pre_init();
 
     /* organize the VM layout for the kernel */
     info!("Randomizing Kernel Core's VM Layout...");
-    let _vm_layout = randomize_vm_layout_for_core();
+    vml_randomize_core_layout(necessary_bitmap_pages);
 
-    /*  */
-    init_phys_mem();
+    /* initialize the physical memory allocator */
+    phys_init();
 
-    info!("Raw info ptr: {:#x}", raw_info_ptr as usize);
+    /* load the kernel core now */
+    loader_load_core();
+
+    info!("Raw info ptr: {:#x}", VirtAddr::from(raw_info_ptr));
     boot_info.cmdline_args().iter().for_each(|arg| info!("Arg: {}", arg.as_str()));
     boot_info.mem_areas().iter().for_each(|mem_area| {
                                     info!("{:?}, {}",
@@ -65,7 +82,7 @@ pub unsafe extern "C" fn hhl_rust_entry(raw_info_ptr: *const u8) -> ! {
                                           dbg_display_size(mem_area.size()))
                                 });
 
-    let page_dir = PageDir::active_page_dir(VirtAddr::new_zero());
+    let page_dir = paging_current_page_dir();
     info!("\n{:?}", page_dir);
 
     loop { /* loop forever here */ }

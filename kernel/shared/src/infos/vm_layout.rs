@@ -2,11 +2,19 @@
 
 use core::fmt;
 
-#[cfg(feature = "loader_stage")]
-use crate::addr::Address;
 use crate::{
-    addr::virt::VirtAddr,
-    dbg::dbg_display_size
+    addr::{
+        virt::VirtAddr,
+        Address
+    },
+    dbg::dbg_display_size,
+    mem::paging::{
+        frame::{
+            VirtFrame,
+            VirtFrameRange
+        },
+        PageSize
+    }
 };
 
 /**
@@ -162,12 +170,23 @@ impl VMLayoutArea {
     pub fn end_addr(&self) -> VirtAddr {
         self.m_start_addr + self.m_size
     }
+
+    /**
+     * Returns this `VMLayoutArea` as `VirtFrameRange`
+     */
+    pub fn as_frame_range<S>(&self) -> VirtFrameRange<S>
+        where S: PageSize {
+        assert_eq!(self.m_size & S::MASK, 0);
+
+        let start_frame = self.start_addr().containing_frame();
+        VirtFrame::range_of(start_frame, start_frame + self.m_size / S::SIZE)
+    }
 }
 
 impl fmt::Display for VMLayoutArea {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f,
-               "{:?}..{:?} ({})",
+               "{:x}..{:x} ({})",
                self.start_addr(),
                self.end_addr(),
                dbg_display_size(self.size()))

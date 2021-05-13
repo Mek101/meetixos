@@ -8,10 +8,11 @@ include ../config.mk
 # -- -- -- -- -- -- -- -- -- -- -- Project Variables -- -- -- -- -- -- -- -- -- -- --
 #
 
-REPO_ROOT    ?= $(realpath ..)
-BUILD_DIR    ?= $(REPO_ROOT)/$(BUILD_PREFIX)
-BUILD_TARGET ?= $(realpath $(TARGET_PREFIX)/kernel.json)
-DIST_DIR     ?= ../$(DIST_SYSROOT_PREFIX)/MeetiX
+REPO_ROOT  ?= $(realpath ..)
+BUILD_DIR  ?= $(REPO_ROOT)/$(BUILD_PREFIX)
+KRN_TARGET ?= $(realpath $(TARGET_PREFIX)/kernel.json)
+HHL_TARGET ?= $(realpath hh_loader/$(TARGET_PREFIX)/hh_loader.json)
+DIST_DIR   ?= ../$(DIST_SYSROOT_PREFIX)/MeetiX
 
 #
 # -- -- -- -- -- -- -- -- -- -- -- -- Kernel Paths -- -- -- -- -- -- -- -- -- -- -- --
@@ -31,7 +32,11 @@ MX_KERNEL ?= $(HHL_BUILT_DIR)/mx_kernel
 #
 
 KRN_SOURCES ?= $(shell find src -name *.rs)
-HHL_SOURCES ?= $(shell find hh_loader/src -name *.rs)
+HHL_SOURCES ?= $(shell find hh_loader/src -name *.rs -o -name *.S)
+SHF_SOURCES ?= $(shell find shared/src -name *.rs)
+
+HHL_LINK_SRC ?= $(realpath hh_loader/$(TARGET_PREFIX)/linker.ld)
+KRN_LINK_SRC ?= $(realpath $(TARGET_PREFIX)/linker.ld)
 
 #
 # -- -- -- -- -- -- -- -- -- -- -- -- -- Make Targets -- -- -- -- -- -- -- -- -- -- --
@@ -44,31 +49,28 @@ build: $(MX_KERNEL)
 	$(V) echo "- Kernel Build completed..."
 
 $(MX_KERNEL): $(BUILT_HHL)
-	$(V) echo "- Copy ELF64 kernel into ELF32 executable..."
-	$(V) $(LLVM_OBJCOPY) $(OBJCOPY_FLAGS) $(BUILT_HHL)
-
 	$(V) echo "- Linking '$(basename $(MX_KERNEL))'"
 	$(V) $(CP) -f $(BUILT_HHL) $(MX_KERNEL)
 
-$(BUILT_HHL): $(HHL_CORE_MOD) $(HHL_SOURCES)
+$(BUILT_HHL): $(HHL_CORE_MOD) $(HHL_SOURCES) $(HHL_LINK_SRC)
 	$(V) echo "- Building Kernel Loader..."
 	$(V) RUSTFLAGS="$(RUSTC_FLAGS)"                        \
-         KERNEL_BIN=$(HHL_CORE_MOD)                  \
+         KERNEL_BIN=$(HHL_CORE_MOD)                        \
          CARGO_TARGET_DIR="$(BUILD_DIR)"                   \
              $(CARGO) build $(CARGO_FLAGS)                 \
                       --manifest-path hh_loader/Cargo.toml \
-                      --target hh_loader/$(TARGET_PREFIX)/hh_loader.json
+                      --target $(HHL_TARGET)
 
-$(HHL_CORE_MOD): $(BUILT_KRN)
+$(HHL_CORE_MOD): $(SHF_SOURCES) $(BUILT_KRN)
 	$(V) echo "- Writing Kernel Core Module..."
 	$(V) echo "const KERNEL_SIZE: usize = $$(stat --format %s $(BUILT_KRN));" >$(HHL_CORE_MOD)
-	$(V) echo "const KERNEL_BYTES: [u8; KERNEL_SIZE] = *include_bytes!(r\"$(BUILT_KRN)\");" >>$(HHL_CORE_MOD)
+	$(V) echo "static KERNEL_BYTES: [u8; KERNEL_SIZE] = *include_bytes!(r\"$(BUILT_KRN)\");" >>$(HHL_CORE_MOD)
 
-$(BUILT_KRN): $(KRN_SOURCES)
+$(BUILT_KRN): $(SHF_SOURCES) $(KRN_SOURCES) $(KRN_LINK_SRC)
 	$(V) echo "- Building Kernel Core..."
 	$(V) RUSTFLAGS="$(RUSTC_FLAGS)"      \
          CARGO_TARGET_DIR="$(BUILD_DIR)" \
-             $(CARGO) build $(CARGO_FLAGS) --target $(BUILD_TARGET)
+             $(CARGO) build $(CARGO_FLAGS) --target $(KRN_TARGET)
 
 clean:
 	$(V) echo "- Cleaning $(ARCH)/$(BUILD_MODE) Kernel..."

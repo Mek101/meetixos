@@ -14,21 +14,21 @@ pub trait FrameAllocator<S>
     /**  
      * Allocates a dynamically sized `PhysFrame` for a mapping page
      */
-    fn alloc_page(&mut self) -> Option<PhysFrame<S>>;
+    fn alloc_page(&self) -> Option<PhysFrame<S>>;
 
     /**
      * Frees the given page `PhysFrame` which belonged to a page mapping
      */
-    fn free_page(&mut self, frame: PhysFrame<S>);
+    fn free_page(&self, frame: PhysFrame<S>);
 
     /**  
      * Allocate a `PhysFrame<Page4KiB>` for a page table
      */
-    fn alloc_page_table(&mut self) -> Option<PhysFrame<Page4KiB>>;
+    fn alloc_page_table(&self) -> Option<PhysFrame<Page4KiB>>;
 
     /**
      * Frees the given page table `PhysFrame<Page4KiB>` belonged to a page
      * table mapping
      */
-    fn free_page_table(&mut self, frame: PhysFrame<Page4KiB>);
+    fn free_page_table(&self, frame: PhysFrame<Page4KiB>);
 }

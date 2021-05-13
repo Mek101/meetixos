@@ -46,6 +46,51 @@ impl BootInfos {
     }
 
     /**
+     * Initializes the global inner informations from the given raw
+     * information pointer then constructs the `BootInfos` instance.
+     *
+     * Used by the higher half loader to initialize his instance of the
+     * `BootInfosInner`
+     */
+    #[cfg(feature = "loader_stage")]
+    pub fn from_raw(raw_info_ptr: *const u8) -> Self {
+        unsafe {
+            assert!(BOOT_INFOS_INNER.is_none(), "Tried to re-initialize inner BootInfos");
+        }
+
+        /* obtain the informations inner and store to the global struct */
+        let inner_infos = HwBootInfos::obtain_inner_from_arch_infos(raw_info_ptr);
+        unsafe {
+            BOOT_INFOS_INNER = Some(inner_infos);
+        }
+
+        /* return an instance of the wrapper */
+        Self::obtain()
+    }
+
+    /**
+     * Initializes the global inner informations cloning the given instance
+     * then constructs the `BootInfos` instance.
+     *
+     * Used by the kernel core to clone the higher half loader's instance of
+     * the `BootInfosInner` into the higher half instance
+     */
+    #[cfg(not(feature = "loader_stage"))]
+    pub fn from_other(rhs: BootInfos) -> Self {
+        unsafe {
+            assert!(BOOT_INFOS_INNER.is_none(), "Tried to re-initialize inner BootInfos");
+        }
+
+        /* clone the infos informations inner and store to our global copy */
+        unsafe {
+            BOOT_INFOS_INNER = Some(rhs.m_inner.clone());
+        }
+
+        /* return an instance of the wrapper */
+        Self::obtain()
+    }
+
+    /**
      * Returns the slice to the kernel's command line
      */
     pub fn cmdline_args(&self) -> &'static CmdLineArgs {
@@ -65,55 +110,6 @@ impl BootInfos {
      */
     pub fn vm_layout(&self) -> &'static VMLayout {
         &self.m_inner.m_vm_layout
-    }
-}
-
-#[cfg(feature = "loader_stage")]
-impl From<*const u8> for BootInfos {
-    /**
-     * Initializes the global inner informations from the given raw
-     * information pointer then constructs the `BootInfos` instance.
-     *
-     * Used by the higher half loader to initialize his instance of the
-     * `BootInfosInner`
-     */
-    fn from(raw_info_ptr: *const u8) -> Self {
-        unsafe {
-            assert!(BOOT_INFOS_INNER.is_none(), "Tried to re-initialize inner BootInfos");
-        }
-
-        /* obtain the informations inner and store to the global struct */
-        let inner_infos = HwBootInfos::obtain_inner_from_arch_infos(raw_info_ptr);
-        unsafe {
-            BOOT_INFOS_INNER = Some(inner_infos);
-        }
-
-        /* return an instance of the wrapper */
-        Self::obtain()
-    }
-}
-
-#[cfg(not(feature = "loader_stage"))]
-impl From<&Self> for BootInfos {
-    /**
-     * Initializes the global inner informations cloning the given instance
-     * then constructs the `BootInfos` instance.
-     *
-     * Used by the kernel core to clone the higher half loader's instance of
-     * the `BootInfosInner` into the higher half instance
-     */
-    fn from(rhs: &BootInfos) -> Self {
-        unsafe {
-            assert!(BOOT_INFOS_INNER.is_none(), "Tried to re-initialize inner BootInfos");
-        }
-
-        /* clone the infos informations inner and store to our global copy */
-        unsafe {
-            BOOT_INFOS_INNER = Some(rhs.m_inner.clone());
-        }
-
-        /* return an instance of the wrapper */
-        Self::obtain()
     }
 }
 

@@ -2,11 +2,13 @@
 ENTRY(hhl_start)
 
 SECTIONS {
-    /* load at physical 1MiB, after BIOS and GRUB */
-    . = 0x100000;
+    /* load at physical 2MiB, after BIOS */
+    . = 1M;
 
     /* Higher Half Loader text section */
-    .text ALIGN(4096): {
+    .text ALIGN(4K): {
+        __hhl_text_begin = .;
+
         /* Keep into the text section the multiboot header */
         KEEP(*(.multiboot*))
         *(.text*)
@@ -32,5 +34,7 @@ SECTIONS {
     .bss ALIGN(4K): {
         *(.bss*)
         *(.sbss*)
+
+        __hhl_text_end = .;
     }
 }

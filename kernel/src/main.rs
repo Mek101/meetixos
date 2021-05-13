@@ -14,7 +14,8 @@
            const_fn_fn_ptr_basics,
            iter_advance_by,
            array_methods,
-           stmt_expr_attributes)]
+           stmt_expr_attributes,
+           const_fn_trait_bound)]
 
 //#[macro_use]
 extern crate alloc;
@@ -27,14 +28,11 @@ use shared::{
 use crate::{
     interrupt::init_interrupts,
     log::{
-        enable_logger_buffering,
-        init_logger
+        init_logger,
+        log_enable_buffering
     },
     mem::{
-        heap::{
-            heap_allocated_mem,
-            init_heap
-        },
+        heap::init_heap,
         phys::init_phys_mem
     },
     version::KERN_VERSION
@@ -73,7 +71,7 @@ pub unsafe extern "C" fn kern_start(boot_infos: BootInfos) {
      * The given instance references the higher half loader memory, which will be
      * unmapped in the next steps, and become unreachable
      */
-    let _ = BootInfos::from(&boot_infos);
+    let _ = BootInfos::from_other(boot_infos);
 
     /* initialize the logging system */
     init_logger();
@@ -91,7 +89,7 @@ pub unsafe extern "C" fn kern_start(boot_infos: BootInfos) {
 
     /* enable logger buffering */
     info!("Enabling logger buffering...");
-    enable_logger_buffering();
+    log_enable_buffering(false);
 
     /* initialize the interrupt manager */
     info!("Initializing interrupts...");

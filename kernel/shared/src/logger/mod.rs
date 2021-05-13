@@ -5,7 +5,8 @@ pub use log::{
     debug,
     error,
     info,
-    warn
+    warn,
+    SetLoggerError
 };
 
 pub mod logger;

@@ -35,22 +35,16 @@ install: build
 	$(V) $(MKDIR) -p $(DIST_SYSROOT_PREFIX)
 	$(V) $(RSYNC) -a sysroot/* $(DIST_SYSROOT_PREFIX)
 	$(V) $(RSYNC) -a boot/$(ARCH)/* $(DIST_SYSROOT_PREFIX)
-
-	$(V) echo "- Installing Kernel..."
 	$(V) $(MAKE) $(MAKE_ARGS) -C kernel install
-
-	$(V) echo "- Installing Userland..."
 	$(V) $(MAKE) $(MAKE_ARGS) -C userland install
 
 build: build_kernel build_userland
 	$(V) echo "- MeetiX OS Successfully Built..."
 
 build_userland:
-	$(V) echo "- Building $(ARCH)/$(BUILD_MODE) Userland..."
 	$(V) $(MAKE) $(MAKE_ARGS) -C userland build
 
 build_kernel:
-	$(V) echo "- Building $(ARCH)/$(BUILD_MODE) Kernel..."
 	$(V) $(MAKE) $(MAKE_ARGS) -C kernel build
 
 doc: format_build_src

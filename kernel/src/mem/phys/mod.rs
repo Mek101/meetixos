@@ -1,34 +1,19 @@
-/*! # Kernel Physical Memory Manager
- *
- * Implements the global physical memory allocator used by the kernel
- */
-
-use core::{
-    ops::Range,
-    slice
-};
-
-use bit_field::{
-    BitArray,
-    BitField
-};
+/*! Kernel physical memory manager */
 
 use shared::{
     logger::info,
-    mem::{
-        bitmap::LockedBitMapAllocator,
-        paging::{
-            frame::PhysFrame,
-            Page2MiB,
-            Page4KiB,
-            PageSize
-        }
+    mem::paging::{
+        frame::PhysFrame,
+        Page2MiB,
+        Page4KiB,
+        PageSize
     }
 };
-
 use sync::RawSpinMutex;
 
-use crate::mem::paging::paging_map_unmanaged;
+use crate::mem::phys::allocator::LockedBitMapAllocator;
+
+mod allocator;
 
 /* bitmap allocator */
 static mut BITMAP_ALLOCATOR: LockedBitMapAllocator<RawSpinMutex> =
@@ -37,21 +22,16 @@ static mut BITMAP_ALLOCATOR: LockedBitMapAllocator<RawSpinMutex> =
 /* total amount of available physical memory in bytes */
 static mut TOTAL_MEMORY: usize = 0;
 
-/** # Initializes the physical memory allocator
- *
- * Initializes the global physical memory allocator mapping the physical
- * frames to store the bitmap
+/**
+ * Initializes the global physical memory allocator
  */
 pub fn init_phys_mem() {
     info!("Physical allocator initialized");
 }
 
-/** # Allocates a new `PhysFrame`
- *
+/**
  * Requests to the underling physical allocators to return an unused
- * [`PhysFrame`]
- *
- * [`PhysFrame`]: /hal/paging/type.PhysFrame.html
+ * `PhysFrame` of the requested size
  */
 pub fn phys_mem_alloc_frame<S>() -> Option<PhysFrame<S>>
     where S: PageSize {
@@ -71,11 +51,8 @@ pub fn phys_mem_alloc_frame<S>() -> Option<PhysFrame<S>>
     }
 }
 
-/** # Frees an in-use `PhysFrame`
- *
- * Returns the given [`PhysFrame`] to the frame allocator that allocated it
- *
- * [`PhysFrame`]: /hal/paging/type.PhysFrame.html
+/**
+ * Makes available again the given `PhysFrame`
  */
 pub fn phys_mem_free_frame<S>(phys_frame: PhysFrame<S>)
     where S: PageSize {
@@ -90,19 +67,22 @@ pub fn phys_mem_free_frame<S>(phys_frame: PhysFrame<S>)
     }
 }
 
-/** Returns the total physical memory available in bytes
+/**
+ * Returns the total physical memory available in bytes
  */
 pub fn phys_mem_total_mem() -> usize {
     unsafe { TOTAL_MEMORY }
 }
 
-/** Returns the physical memory currently allocated in bytes
+/**
+ * Returns the physical memory currently allocated in bytes
  */
 pub fn phys_mem_allocated_mem() -> usize {
     unsafe { BITMAP_ALLOCATOR.allocated_mem() }
 }
 
-/** Returns the physical memory currently free in bytes
+/**
+ * Returns the physical memory currently free in bytes
  */
 pub fn phys_mem_free_memory() -> usize {
     phys_mem_total_mem() - phys_mem_allocated_mem()

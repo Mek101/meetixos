@@ -2,19 +2,7 @@
 
 use core::cmp::Ordering;
 
-use crate::{
-    addr::{
-        phys::PhysAddr,
-        Address
-    },
-    mem::paging::{
-        frame::{
-            PhysFrame,
-            PhysFrameRange
-        },
-        PageSize
-    }
-};
+use crate::addr::phys::PhysAddr;
 
 /**
  * Maximum amount of `BootMemArea`s storable into a `BootMemAreas`
@@ -124,17 +112,6 @@ impl BootMemArea {
     pub fn contains(&self, phys_addr: PhysAddr) -> bool {
         phys_addr >= self.m_start_phys_addr
         && phys_addr < self.m_start_phys_addr + self.m_size
-    }
-
-    /**
-     * Returns this `BootMemArea` as `PhysFrameRange`
-     */
-    pub fn as_frame_range<S>(&self) -> PhysFrameRange<S>
-        where S: PageSize {
-        assert_eq!(self.m_size & S::MASK, 0);
-
-        let start_frame = self.start_phys_addr().containing_frame();
-        PhysFrame::range_of(start_frame, start_frame + self.m_size / S::SIZE)
     }
 
     /**

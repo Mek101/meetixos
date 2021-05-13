@@ -10,11 +10,6 @@ use bit_field::{
     BitField
 };
 
-use sync::{
-    Mutex,
-    RawMutex
-};
-
 use crate::{
     addr::{
         phys::PhysAddr,
@@ -37,34 +32,32 @@ use crate::{
  * Each bit represents a `PhysFrame<Page4KiB>` so the allocations (and
  * deallocations happen with this granularity)
  */
-pub struct LockedBitMapAllocator<'a, L>
-    where L: RawMutex {
-    m_inner: Mutex<L, Option<BitMapAllocatorInner<'a>>>
+pub struct BitMapAllocator<'a> {
+    m_inner: Option<BitMapAllocatorInner<'a>>
 }
 
-impl<'a, L> LockedBitMapAllocator<'a, L> where L: RawMutex {
+impl<'a> BitMapAllocator<'a> {
     /**
-     * Constructs an uninitialized `LockedBitMapAllocator`, which must be
-     * initialized with `LockedBitMapAllocator::init()`
+     * Constructs an uninitialized `BitMapAllocator`, which must be
+     * initialized with `BitMapAllocator::init()`
      */
     pub const fn new_uninitialized() -> Self {
-        Self { m_inner: Mutex::new(None) }
+        Self { m_inner: None }
     }
 
     /**
      * Construct the `BitMapAllocatorInner` to become ready to free frames
      */
     pub unsafe fn init(&mut self, bitmap_area_ptr: *mut u8, bytes_count: usize) {
-        *self.m_inner.lock() =
-            Some(BitMapAllocatorInner::new(bitmap_area_ptr, bytes_count))
+        self.m_inner = Some(BitMapAllocatorInner::new(bitmap_area_ptr, bytes_count))
     }
 
     /**
      * Finds the first available bit and maps the returned bit-index to a
      * `PhysFrame<Page4KiB>`
      */
-    pub fn allocate_one(&self) -> Option<PhysFrame<Page4KiB>> {
-        if let Some(ref mut inner) = *self.m_inner.lock() {
+    pub fn allocate_one(&mut self) -> Option<PhysFrame<Page4KiB>> {
+        if let Some(ref mut inner) = self.m_inner {
             inner.allocate_bit().map(|bit_index| {
                                     let raw_addr = bit_index * Page4KiB::SIZE;
                                     PhysAddr::new(raw_addr).containing_frame()
@@ -78,24 +71,24 @@ impl<'a, L> LockedBitMapAllocator<'a, L> where L: RawMutex {
      * Finds the first available byte-aligned block of bits and maps them
      * into a `PhysFrameRange<Page4KiB>`
      */
-    pub fn allocate_contiguous(&self,
+    pub fn allocate_contiguous(&mut self,
                                frames_count: usize)
                                -> Option<PhysFrameRange<Page4KiB>> {
-        if let Some(ref mut inner) = *self.m_inner.lock() {
+        if let Some(ref mut inner) = self.m_inner {
             inner.allocate_bits(frames_count)
-                 .map(|range| {
-                     let start_frame = {
-                         let raw_addr = range.start * Page4KiB::SIZE;
-                         PhysAddr::new(raw_addr).containing_frame()
-                     };
+                .map(|range| {
+                    let start_frame = {
+                        let raw_addr = range.start * Page4KiB::SIZE;
+                        PhysAddr::new(raw_addr).containing_frame()
+                    };
 
-                     let end_frame = {
-                         let raw_addr = range.end * Page4KiB::SIZE;
-                         PhysAddr::new(raw_addr).containing_frame()
-                     };
+                    let end_frame = {
+                        let raw_addr = range.end * Page4KiB::SIZE;
+                        PhysAddr::new(raw_addr).containing_frame()
+                    };
 
-                     PhysFrame::range_of(start_frame, end_frame)
-                 })
+                    PhysFrame::range_of(start_frame, end_frame)
+                })
         } else {
             None
         }
@@ -105,8 +98,8 @@ impl<'a, L> LockedBitMapAllocator<'a, L> where L: RawMutex {
      * Sets as available the bit that corresponds to the given
      * `PhysFrame<Page4KiB>`
      */
-    pub fn free_one(&self, phys_frame: PhysFrame<Page4KiB>) {
-        if let Some(ref mut inner) = *self.m_inner.lock() {
+    pub fn free_one(&mut self, phys_frame: PhysFrame<Page4KiB>) {
+        if let Some(ref mut inner) = self.m_inner {
             inner.free_bit(phys_frame.start_addr().as_usize() / Page4KiB::SIZE)
         }
     }
@@ -115,8 +108,8 @@ impl<'a, L> LockedBitMapAllocator<'a, L> where L: RawMutex {
      * Sets as available the bits that correspond to the given
      * `PhysFrameRange<Page4KiB>`
      */
-    pub fn free_contiguous(&self, frames_range: PhysFrameRange<Page4KiB>) {
-        if let Some(ref mut inner) = *self.m_inner.lock() {
+    pub fn free_contiguous(&mut self, frames_range: PhysFrameRange<Page4KiB>) {
+        if let Some(ref mut inner) = self.m_inner {
             let bits_range_to_free =
                 Range { start: frames_range.start.start_addr().as_usize()
                                / Page4KiB::SIZE,
@@ -132,8 +125,8 @@ impl<'a, L> LockedBitMapAllocator<'a, L> where L: RawMutex {
      *
      * Used for initializations
      */
-    pub fn add_frame(&self, phys_frame: PhysFrame<Page4KiB>) {
-        if let Some(ref mut inner) = *self.m_inner.lock() {
+    pub fn add_frame(&mut self, phys_frame: PhysFrame<Page4KiB>) {
+        if let Some(ref mut inner) = self.m_inner {
             inner.add_bit(phys_frame.start_addr().as_usize() / Page4KiB::SIZE);
         }
     }
@@ -142,7 +135,7 @@ impl<'a, L> LockedBitMapAllocator<'a, L> where L: RawMutex {
      * Returns the total amount of memory allocated
      */
     pub fn allocated_mem(&self) -> usize {
-        if let Some(ref inner) = *self.m_inner.lock() {
+        if let Some(ref inner) = self.m_inner {
             inner.allocated_bits() * Page4KiB::SIZE
         } else {
             0

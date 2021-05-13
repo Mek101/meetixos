@@ -16,19 +16,19 @@ use crate::mem::phys::{
 macro_rules! impl_hal_frame_allocator {
     ($AllocatorName:ident : $PageSize:ident) => {
         impl FrameAllocator<$PageSize> for $AllocatorName {
-            fn alloc_page(&mut self) -> Option<PhysFrame<$PageSize>> {
+            fn alloc_page(&self) -> Option<PhysFrame<$PageSize>> {
                 self.kern_alloc_page()
             }
 
-            fn free_page(&mut self, frame: PhysFrame<$PageSize>) {
+            fn free_page(&self, frame: PhysFrame<$PageSize>) {
                 self.kern_free_page(frame)
             }
 
-            fn alloc_page_table(&mut self) -> Option<PhysFrame<Page4KiB>> {
+            fn alloc_page_table(&self) -> Option<PhysFrame<Page4KiB>> {
                 self.alloc_stats_mut().alloc_table(|| phys_mem_alloc_frame())
             }
 
-            fn free_page_table(&mut self, frame: PhysFrame<Page4KiB>) {
+            fn free_page_table(&self, frame: PhysFrame<Page4KiB>) {
                 self.alloc_stats_mut().free_table(|| phys_mem_free_frame(frame))
             }
         }
@@ -74,15 +74,15 @@ impl KernFrameAllocator<Page4KiB> for RangeAllocator {
         &self.m_stats
     }
 
-    fn alloc_stats_mut(&mut self) -> &mut FrameAllocatorStats {
+    fn alloc_stats_mut(&self) -> &mut FrameAllocatorStats {
         &mut self.m_stats
     }
 
-    fn kern_alloc_page(&mut self) -> Option<PhysFrame<Page4KiB>> {
+    fn kern_alloc_page(&self) -> Option<PhysFrame<Page4KiB>> {
         self.m_phys_frame_range.next()
     }
 
-    fn kern_free_page(&mut self, _phys_frame: PhysFrame<Page4KiB>) {
+    fn kern_free_page(&self, _phys_frame: PhysFrame<Page4KiB>) {
         panic!("Freeing a page using RangeAllocator")
     }
 }
@@ -139,11 +139,11 @@ trait KernFrameAllocator<S>: FrameAllocator<S>
     fn alloc_stats(&self) -> &FrameAllocatorStats;
     fn alloc_stats_mut(&mut self) -> &mut FrameAllocatorStats;
 
-    fn kern_alloc_page(&mut self) -> Option<PhysFrame<S>> {
+    fn kern_alloc_page(&self) -> Option<PhysFrame<S>> {
         self.alloc_stats_mut().alloc_page(|| phys_mem_alloc_frame())
     }
 
-    fn kern_free_page(&mut self, phys_frame: PhysFrame<S>) {
+    fn kern_free_page(&self, phys_frame: PhysFrame<S>) {
         self.alloc_stats_mut().free_page(|| phys_mem_free_frame(phys_frame))
     }
 }

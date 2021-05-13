@@ -154,7 +154,7 @@ impl Into<usize> for VirtAddr {
 
 impl Debug for VirtAddr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "VirtAddr({:#x})", self.as_usize())
+        write!(f, "VirtAddr({:#018x})", self.as_usize())
     }
 }
 
@@ -172,13 +172,13 @@ impl Octal for VirtAddr {
 
 impl UpperHex for VirtAddr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        UpperHex::fmt(&self.as_usize(), f)
+        write!(f, "{:#018X}", self.as_usize())
     }
 }
 
 impl LowerHex for VirtAddr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        LowerHex::fmt(&self.as_usize(), f)
+        write!(f, "{:#018x}", self.as_usize())
     }
 }
 

@@ -128,6 +128,13 @@ impl<T, S> Frame<T, S>
     }
 
     /**
+     * Returns an empty `Range`
+     */
+    pub fn empty_range() -> Range<Frame<T, S>> {
+        Self::range_of(T::new_zero().containing_frame(), T::new_zero().containing_frame())
+    }
+
+    /**
      * Returns an end exclusive `Range` that starts from the given
      * `start_frame` and steps until the previous `end_frame`
      */

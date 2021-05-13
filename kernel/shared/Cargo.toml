@@ -18,6 +18,9 @@ version = "0.4.14"
 version = "0.5.1"
 default-features = false
 
+[dependencies.xmas-elf]
+version = "0.7.0"
+
 ##
 # External aarch64 Crates
 ##
@@ -54,9 +57,6 @@ path = "../../libs/os"
 
 [dependencies.macros]
 path = "../../libs/macros"
-
-[dependencies.sync]
-path = "../../libs/sync"
 
 [features]
 default = []

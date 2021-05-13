@@ -80,7 +80,7 @@ impl PageDir {
      */
     pub fn map_single<S, A>(&mut self,
                             virt_frame: VirtFrame<S>,
-                            allocator: &mut A,
+                            allocator: &A,
                             flags: PTFlags)
                             -> Result<MapFlush<S>, PageDirErr>
         where S: PageSize,
@@ -134,7 +134,7 @@ impl PageDir {
      */
     pub fn map_range<S, A>(&mut self,
                            virt_range: VirtFrameRange<S>,
-                           allocator: &mut A,
+                           allocator: &A,
                            flags: PTFlags)
                            -> Result<MapRangeFlush<S>, PageDirErr>
         where S: PageSize,
@@ -205,7 +205,7 @@ impl PageDir {
      */
     pub fn unmap_single<S, A>(&mut self,
                               virt_frame: VirtFrame<S>,
-                              allocator: &mut A,
+                              allocator: &A,
                               collect_empty_page_tables: bool)
                               -> Result<MapFlush<S>, PageDirErr>
         where S: PageSize,
@@ -233,7 +233,7 @@ impl PageDir {
      */
     pub fn unmap_range<S, A>(&mut self,
                              virt_range: VirtFrameRange<S>,
-                             allocator: &mut A,
+                             allocator: &A,
                              collect_empty_page_tables: bool)
                              -> Result<MapRangeFlush<S>, PageDirErr>
         where S: PageSize,
@@ -322,7 +322,7 @@ impl PageDir {
     fn map_frame<S, A>(&mut self,
                        virt_frame: VirtFrame<S>,
                        phys_frame: Option<PhysFrame<S>>,
-                       allocator: &mut A,
+                       allocator: &A,
                        flags: PTFlags)
                        -> Result<(), PageDirErr>
         where S: PageSize,
@@ -383,7 +383,7 @@ impl PageDir {
      */
     fn unmap_frame<S, A>(&mut self,
                          virt_frame: VirtFrame<S>,
-                         allocator: &mut A,
+                         allocator: &A,
                          collect_empty_page_tables: bool)
                          -> Result<Option<PhysFrame<S>>, PageDirErr>
         where S: PageSize,
@@ -439,7 +439,7 @@ impl PageDir {
      */
     fn ensure_next_pt<'b, S, A>(&self,
                                 entry: &'b mut PageTableEntry,
-                                allocator: &mut A,
+                                allocator: &A,
                                 flags: PTFlags)
                                 -> Result<&'b mut PageTable, PageDirErr>
         where S: PageSize,
@@ -514,7 +514,7 @@ impl PageDir {
                                         virt_frame: VirtFrame<S>,
                                         page_table: &mut PageTable,
                                         pt_level: PageTableLevel,
-                                        allocator: &mut A)
+                                        allocator: &A)
         where S: PageSize,
               A: FrameAllocator<S> {
         /* recurse the page table level before the map level for the PageSize given.
@@ -751,7 +751,7 @@ impl fmt::Display for PageDirErr {
             PageDirErr::PhysAllocFailed => write!(f, "Failed to allocate frame"),
             PageDirErr::PartialHugePageUnmap => {
                 write!(f, "Tried to partially unmap an HUGE frame")
-            },
+            }
         }
     }
 }

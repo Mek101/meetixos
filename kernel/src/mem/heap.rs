@@ -31,7 +31,6 @@ use sync::{
 };
 
 use crate::mem::{
-    frame_allocators::KernAllocator,
     layout::{
         KRN_HEAP_END,
         KRN_HEAP_START
@@ -109,15 +108,8 @@ fn heap_mem_supplier(requested_size: usize) -> Option<(usize, usize)> {
     let next_heap_end = (unsafe { HEAP_PAGES } + requested_pages) * Page4KiB::SIZE;
 
     #[cfg(debug_assertions)]
-    {
-        use shared::{
-            dbg::dbg_display_size,
-            logger::debug
-        };
-
-        debug!("Supplying additional {} to the heap allocator",
-               dbg_display_size(page_aligned_size));
-    }
+    debug!("Supplying additional {} to the heap allocator",
+           dbg_display_size(page_aligned_size));
 
     /* ensure that the kernel heap's reserved virtual area is still in limits */
     if KRN_HEAP_START + next_heap_end >= KRN_HEAP_END {
@@ -125,17 +117,17 @@ fn heap_mem_supplier(requested_size: usize) -> Option<(usize, usize)> {
     }
 
     /* construct the frame range to map */
-    let mapping_frame_range = unsafe {
+    /*let mapping_frame_range = unsafe {
         let current_heap_end_addr =
             VirtAddr::new(KRN_HEAP_START + HEAP_PAGES * Page4KiB::SIZE);
         VirtFrame::range_of_count(VirtFrame::of_addr(current_heap_end_addr),
                                   requested_pages)
-    };
+    };*/
 
     /* lets now map the new memory allocating physical frames explicitly
      * (PTFlags::PRESENT is given)
      */
-    let mut page_dir = paging_active_page_dir();
+    /*let mut page_dir = paging_active_page_dir();
     if let Ok(map_flusher) = page_dir.map_range(mapping_frame_range.clone(),
                                                 &mut KernAllocator::new(),
                                                 PTFlags::PRESENT
@@ -154,7 +146,7 @@ fn heap_mem_supplier(requested_size: usize) -> Option<(usize, usize)> {
 
         /* return the start address and the aligned size */
         Some((mapping_frame_range.start.start_addr().as_usize(), page_aligned_size))
-    } else {
-        None
-    }
+    } else {*/
+    None
+    //}
 }
