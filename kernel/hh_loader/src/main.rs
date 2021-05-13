@@ -62,6 +62,7 @@ pub unsafe extern "C" fn hhl_rust_entry(raw_info_ptr: *const u8) -> ! {
     info!("\tKernel size: {}", dbg_display_size(loader_kernel_core_size()));
 
     /* pre initialize physical memory, obtain how many bitmap pages are necessary */
+    info!("Pre-initializing PhysMem Manager");
     let necessary_bitmap_pages = phys_pre_init();
 
     /* organize the VM layout for the kernel */
@@ -69,10 +70,15 @@ pub unsafe extern "C" fn hhl_rust_entry(raw_info_ptr: *const u8) -> ! {
     vml_randomize_core_layout(necessary_bitmap_pages);
 
     /* initialize the physical memory allocator */
+    info!("Initializing PhysMem Manager");
     phys_init();
 
     /* load the kernel core now */
+    info!("Loading Kernel's Core");
     loader_load_core();
+
+    let value_2 = 536.0 / (shared::dbg::TIB as f64);
+    info!("value_2 = {}", value_2);
 
     info!("Raw info ptr: {:#x}", VirtAddr::from(raw_info_ptr));
     boot_info.cmdline_args().iter().for_each(|arg| info!("Arg: {}", arg.as_str()));
