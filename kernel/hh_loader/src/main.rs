@@ -16,16 +16,14 @@
 #![feature(global_asm, iter_advance_by, panic_info_message, min_type_alias_impl_trait)]
 
 use shared::{
-    addr::virt::VirtAddr,
-    dbg::dbg_display_size,
     infos::info::BootInfos,
     logger::info
 };
 
 use crate::{
     loader::{
-        loader_kernel_core_size,
-        loader_load_core
+        loader_load_core,
+        loader_preload_core
     },
     log::log_init,
     mem::{
@@ -52,14 +50,17 @@ mod version;
 #[no_mangle]
 pub unsafe extern "C" fn hhl_rust_entry(raw_info_ptr: *const u8) -> ! {
     /* interpret the raw pointer given to fill the <BootInfos> */
-    let boot_info = BootInfos::from_raw(raw_info_ptr);
+    let _ = BootInfos::from_raw(raw_info_ptr);
 
     /* initialize the logger, to be able to print in a formatted way */
     log_init();
 
     /* print the hh_loader's header */
     info!("MeetiX Kernel Loader v{}", HHL_VERSION);
-    info!("\tKernel size: {}", dbg_display_size(loader_kernel_core_size()));
+
+    /* load the ELF file of the kernel's core */
+    info!("Pre-loading Kernel's Core");
+    loader_preload_core();
 
     /* pre initialize physical memory, obtain how many bitmap pages are necessary */
     info!("Pre-initializing PhysMem Manager");
@@ -77,19 +78,8 @@ pub unsafe extern "C" fn hhl_rust_entry(raw_info_ptr: *const u8) -> ! {
     info!("Loading Kernel's Core");
     loader_load_core();
 
-    let value_2 = 536.0 / (shared::dbg::TIB as f64);
-    info!("value_2 = {}", value_2);
-
-    info!("Raw info ptr: {:#x}", VirtAddr::from(raw_info_ptr));
-    boot_info.cmdline_args().iter().for_each(|arg| info!("Arg: {}", arg.as_str()));
-    boot_info.mem_areas().iter().for_each(|mem_area| {
-                                    info!("{:?}, {}",
-                                          mem_area,
-                                          dbg_display_size(mem_area.size()))
-                                });
-
     let page_dir = paging_current_page_dir();
-    info!("\n{:?}", page_dir);
+    info!("Current PageDir composition:\n{:?}", page_dir);
 
     loop { /* loop forever here */ }
 }

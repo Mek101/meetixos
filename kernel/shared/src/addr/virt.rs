@@ -214,7 +214,7 @@ impl Sub<usize> for VirtAddr {
     type Output = Self;
 
     fn sub(self, rhs: usize) -> Self::Output {
-        Self::new(self.as_usize() + rhs)
+        Self::new(self.as_usize() - rhs)
     }
 }
 

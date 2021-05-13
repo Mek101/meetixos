@@ -66,7 +66,7 @@ impl<W> Log for Logger<W> where W: LoggerWriter {
         if let Some(ref inner) = self.m_inner {
             let writer = unsafe { &mut *inner.get() };
             write!(writer,
-                   "[{: >5} <> {: <20}] {}\n",
+                   "[{: >5} <> {: <25}] {}\n",
                    record.level(),  /* human readable log-level */
                    record.target(), /* path to the rust module relative to the kernel */
                    record.args()).unwrap();
