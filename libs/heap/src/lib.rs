@@ -9,8 +9,7 @@
  */
 
 #![no_std]
-#![feature(const_fn,
-           const_fn_trait_bound,
+#![feature(const_fn_trait_bound,
            const_fn_fn_ptr_basics,
            fn_traits,
            unboxed_closures,

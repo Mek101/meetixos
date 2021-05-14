@@ -17,10 +17,7 @@ use shared::{
     }
 };
 
-use crate::loader::{
-    loader_core_load_address,
-    loader_kernel_core_load_size
-};
+use crate::loader::loader_core_preload_cache;
 
 /* kernel space begin..end address (192TiB..256TiB) */
 const KERNEL_SPACE_BEGIN: usize = 0x0000_c000_0000_0000;
@@ -37,10 +34,9 @@ pub fn vml_randomize_core_layout(necessary_bitmap_pages: usize) {
 
     /* construct the VM area for the kernel text. This is not relocatable */
     let kern_text_area = {
-        let start_addr = loader_core_load_address();
-        let area_size = loader_kernel_core_load_size();
+        let preload_cache = loader_core_preload_cache();
 
-        VMLayoutArea::new(start_addr, area_size)
+        VMLayoutArea::new(preload_cache.load_address(), preload_cache.load_size())
     };
 
     let phys_mem_bitmap_area = {

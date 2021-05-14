@@ -9,7 +9,6 @@
            alloc_error_handler,
            panic_info_message,
            option_result_unwrap_unchecked,
-           const_fn,
            once_cell,
            const_fn_fn_ptr_basics,
            iter_advance_by,

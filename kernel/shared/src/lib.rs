@@ -5,8 +5,7 @@
  */
 
 #![no_std]
-#![feature(const_fn,
-           asm,
+#![feature(asm,
            array_methods,
            step_trait,
            step_trait_ext,
