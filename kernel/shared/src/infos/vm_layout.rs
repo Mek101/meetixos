@@ -25,6 +25,7 @@ use crate::{
 pub struct VMLayout {
     m_kern_text_area: VMLayoutArea,
     m_kern_heap_area: VMLayoutArea,
+    m_kern_stack_area: VMLayoutArea,
     m_phys_mem_bitmap_area: VMLayoutArea,
     m_phys_mem_mapping_area: VMLayoutArea,
     m_page_cache_area: VMLayoutArea,
@@ -38,6 +39,7 @@ impl VMLayout {
     #[cfg(feature = "loader_stage")]
     pub const fn new(kern_text_area: VMLayoutArea,
                      kern_heap_area: VMLayoutArea,
+                     kern_stack_area: VMLayoutArea,
                      phys_mem_bitmap_area: VMLayoutArea,
                      phys_mem_mapping_area: VMLayoutArea,
                      page_cache_area: VMLayoutArea,
@@ -45,6 +47,7 @@ impl VMLayout {
                      -> Self {
         Self { m_kern_text_area: kern_text_area,
                m_kern_heap_area: kern_heap_area,
+               m_kern_stack_area: kern_stack_area,
                m_phys_mem_bitmap_area: phys_mem_bitmap_area,
                m_phys_mem_mapping_area: phys_mem_mapping_area,
                m_page_cache_area: page_cache_area,
@@ -58,6 +61,7 @@ impl VMLayout {
     pub fn new_zero() -> Self {
         Self { m_kern_heap_area: VMLayoutArea::new_zero(),
                m_kern_text_area: VMLayoutArea::new_zero(),
+               m_kern_stack_area: VMLayoutArea::new_zero(),
                m_phys_mem_bitmap_area: VMLayoutArea::new_zero(),
                m_phys_mem_mapping_area: VMLayoutArea::new_zero(),
                m_page_cache_area: VMLayoutArea::new_zero(),
@@ -76,6 +80,13 @@ impl VMLayout {
      */
     pub fn kern_heap_area(&self) -> &VMLayoutArea {
         &self.m_kern_heap_area
+    }
+
+    /**
+     * Returns the reference to the `VMLayoutArea` of kernel's stack
+     */
+    pub fn kern_stack_area(&self) -> &VMLayoutArea {
+        &self.m_kern_stack_area
     }
 
     /**
@@ -111,10 +122,12 @@ impl VMLayout {
 impl fmt::Display for VMLayout {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f,
-               "Kernel Text:       {}\nKernel Heap:       {}\nPhysMem Bitmap:    \
-                {}\nPhysMem Mapping:   {}\nDisk Page Cache:   {}\nTemporary Mapping: {}",
+               "Kernel Text:       {}\nKernel Heap:       {}\nKernel Stack:      \
+                {}\nPhysMem Bitmap:    {}\nPhysMem Mapping:   {}\nDisk Page Cache:   \
+                {}\nTemporary Mapping: {}",
                self.m_kern_text_area,
                self.m_kern_heap_area,
+               self.m_kern_stack_area,
                self.m_phys_mem_bitmap_area,
                self.m_phys_mem_mapping_area,
                self.m_page_cache_area,

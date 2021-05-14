@@ -36,7 +36,7 @@ hhl_multiboot_header_end:
 /* reserve into the .data section an RW area to use as initial stack */
 .align      0x1000
 hhl_stack_top:
-.rept       0x100 * 0x1000 /* 1MiB of stack */
+.rept       0x200000 /* 2MiB of stack */
     .byte   0
 .endr
 hhl_stack_bottom:

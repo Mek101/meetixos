@@ -35,10 +35,12 @@ pub fn log_init() {
     let level_filter = {
         let infos = BootInfos::obtain();
         infos.cmdline_args()
-            .find_key("-log-level")
-            .map_or(DEFAULT_LOGGING_LEVEL, |arg| {
-                LevelFilter::from_str(arg.value()).unwrap_or(DEFAULT_LOGGING_LEVEL)
-            })
+             .find_key("-log-level")
+             .map(|cmdline_arg| cmdline_arg.value())
+             .map(|arg_value| {
+                 LevelFilter::from_str(arg_value).expect("Invalid '-log-level' value")
+             })
+             .unwrap_or(LevelFilter::Debug)
     };
 
     /* hide all the logs above the given filter level */

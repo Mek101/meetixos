@@ -80,7 +80,11 @@ endif
 #
 
 QEMU      ?= qemu-system-$(ARCH)
-QEMU_ARGS ?= -m 64M -serial stdio
+QEMU_ARGS ?= -m 32M -serial stdio
+
+ifeq ($(ARCH), x86_64)
+    QEMU_ARGS += -cpu IvyBridge
+endif
 
 #
 # -- -- -- -- -- -- -- -- -- -- -- -- Make Arguments -- -- -- -- -- -- -- -- -- -- -- -- --
