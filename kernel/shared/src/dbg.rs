@@ -28,18 +28,18 @@ pub const TIB: usize = GIB * 1024;
  */
 pub fn dbg_display_size(size_value: usize) -> impl fmt::Display {
     struct DebugSizeMul {
-        m_value: f32,
+        m_value: f64,
         m_multiplier: &'static str
     }
 
     impl DebugSizeMul {
         pub fn new(value: usize) -> Self {
-            const F_TIB: f32 = TIB as f32;
-            const F_GIB: f32 = GIB as f32;
-            const F_MIB: f32 = MIB as f32;
-            const F_KIB: f32 = KIB as f32;
+            const F_TIB: f64 = TIB as f64;
+            const F_GIB: f64 = GIB as f64;
+            const F_MIB: f64 = MIB as f64;
+            const F_KIB: f64 = KIB as f64;
 
-            let value = value as f32;
+            let value = value as f64;
             let (value, str_multiplier) = if value >= F_TIB {
                 (value / F_TIB, "TiB")
             } else if value >= F_GIB {

@@ -5,7 +5,7 @@
  */
 
 #![no_std]
-#![feature(const_fn, once_cell)]
+#![feature(once_cell)]
 
 pub use core::lazy::{
     Lazy,

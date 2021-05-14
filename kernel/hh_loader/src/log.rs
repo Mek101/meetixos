@@ -13,16 +13,10 @@ use shared::{
     }
 };
 
-/**
- * Global kernel loader logger instance, is initialized by the
- * `init_logger()` function called by `hhl_rust_entry()`
- */
+/* global logger */
 static mut HHL_LOGGER: Logger<UartWriter> = Logger::new_uninitialized();
 
-/**
- * Default logging level, used as fallback when no valid filters are given
- * via kernel's command line
- */
+/* default logging level when no valid command line filter is given */
 const DEFAULT_LOGGING_LEVEL: LevelFilter = LevelFilter::Debug;
 
 /**

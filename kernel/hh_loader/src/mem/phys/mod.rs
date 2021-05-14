@@ -28,7 +28,7 @@ use shared::{
 };
 
 use crate::{
-    loader::loader_kernel_core_size,
+    loader::loader_core_preload_cache,
     mem::{
         paging::{
             allocator::HHLPageDirAllocator,
@@ -60,13 +60,13 @@ extern "C" {
  * 4KiB pages are necessary to map the physical memory bitmap
  */
 pub fn phys_pre_init() -> usize {
-    const MIN_MEMORY: usize = loader_kernel_core_size() + 4 * Page2MiB::SIZE;
+    let min_memory = loader_core_preload_cache().load_size() + 4 * Page2MiB::SIZE;
 
     /* calculate the total memory available and warn low memory */
     let total_mem = BootInfos::obtain().mem_areas().iter().map(|area| area.size()).sum();
-    if total_mem < MIN_MEMORY {
+    if total_mem < min_memory {
         warn!("Detected a VERY SMALL amount of physical memory: less than {}MiB",
-              MIN_MEMORY / MIB);
+              min_memory / MIB);
     }
 
     /* obtain the range of physical frames occupied by the text of the hh_loader */
