@@ -16,9 +16,9 @@ use crate::{
 /**
  * x86_64 `HwPageDirSupportBase` implementation
  */
-pub struct X64PageDirSupport;
+pub struct HwPageDirSupport;
 
-impl HwPageDirSupportBase for X64PageDirSupport {
+impl HwPageDirSupportBase for HwPageDirSupport {
     /* Page Table Entry flags */
     const PTE_PRESENT: usize = 1 << 0;
     const PTE_READABLE: usize = 0;

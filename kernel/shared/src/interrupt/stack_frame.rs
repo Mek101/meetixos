@@ -5,7 +5,7 @@ use crate::{
         virt::VirtAddr,
         Address
     },
-    arch::interrupt::HwInterruptStackFrame
+    arch::interrupt::stack_frame::HwInterruptStackFrame
 };
 
 /**

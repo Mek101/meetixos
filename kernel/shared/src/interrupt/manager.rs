@@ -11,7 +11,7 @@ use num_enum::{
 };
 
 use crate::{
-    arch::interrupt::HwInterruptManager,
+    arch::interrupt::manager::HwInterruptManager,
     interrupt::stack_frame::InterruptStackFrame
 };
 

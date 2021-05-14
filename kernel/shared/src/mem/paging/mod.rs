@@ -9,7 +9,7 @@ pub mod table;
 use core::fmt::Debug;
 
 use crate::{
-    arch::mem::paging::HwPageDirSupport,
+    arch::mem::paging::dir::HwPageDirSupport,
     mem::paging::{
         dir::HwPageDirSupportBase,
         table::PageTableLevel

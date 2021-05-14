@@ -24,6 +24,7 @@ pub mod infos;
 pub mod interrupt;
 pub mod logger;
 pub mod mem;
+pub mod random;
 pub mod uart;
 
 mod arch;

@@ -5,4 +5,5 @@ pub mod addr;
 pub mod infos;
 pub mod interrupt;
 pub mod mem;
+pub mod random;
 pub mod uart;

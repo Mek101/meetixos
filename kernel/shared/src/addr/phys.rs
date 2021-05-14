@@ -24,7 +24,7 @@ use crate::{
         AddressErr,
         HwAddrBase
     },
-    arch::addr::HwPhysAddr
+    arch::addr::phys::HwPhysAddr
 };
 
 /**

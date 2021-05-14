@@ -3,7 +3,7 @@
 use core::convert::TryFrom;
 
 use bit_field::BitField;
-use x86_64::VirtAddr;
+use x86_64::VirtAddr as X64VirtAddr;
 
 use crate::{
     addr::{
@@ -21,13 +21,13 @@ use crate::{
  */
 #[repr(transparent)]
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
-pub struct X64VirtAddr {
-    m_addr: VirtAddr
+pub struct HwVirtAddr {
+    m_addr: X64VirtAddr
 }
 
-impl HwAddrBase for X64VirtAddr {
+impl HwAddrBase for HwVirtAddr {
     fn new(raw_addr: usize) -> Self {
-        Self { m_addr: VirtAddr::new(raw_addr as u64) }
+        Self { m_addr: X64VirtAddr::new(raw_addr as u64) }
     }
 
     fn as_usize(&self) -> usize {
@@ -35,7 +35,7 @@ impl HwAddrBase for X64VirtAddr {
     }
 }
 
-impl HwVirtAddrBase for X64VirtAddr {
+impl HwVirtAddrBase for HwVirtAddr {
     fn from_4kib_indices(l4_index: PageTableIndex,
                          l3_index: PageTableIndex,
                          l2_index: PageTableIndex,
@@ -47,7 +47,7 @@ impl HwVirtAddrBase for X64VirtAddr {
         addr.set_bits(21..30, Into::<usize>::into(l2_index) as u64);
         addr.set_bits(12..21, Into::<usize>::into(l1_index) as u64);
 
-        Self { m_addr: VirtAddr::new(addr) }
+        Self { m_addr: X64VirtAddr::new(addr) }
     }
 
     fn from_2mib_indices(l4_index: PageTableIndex,
@@ -59,7 +59,7 @@ impl HwVirtAddrBase for X64VirtAddr {
         addr.set_bits(30..39, Into::<usize>::into(l3_index) as u64);
         addr.set_bits(21..30, Into::<usize>::into(l2_index) as u64);
 
-        Self { m_addr: VirtAddr::new(addr) }
+        Self { m_addr: X64VirtAddr::new(addr) }
     }
 
     fn from_1gib_indices(l4_index: PageTableIndex, l3_index: PageTableIndex) -> Self {
@@ -67,7 +67,7 @@ impl HwVirtAddrBase for X64VirtAddr {
         addr.set_bits(39..48, Into::<usize>::into(l4_index) as u64);
         addr.set_bits(30..39, Into::<usize>::into(l3_index) as u64);
 
-        Self { m_addr: VirtAddr::new(addr) }
+        Self { m_addr: X64VirtAddr::new(addr) }
     }
 
     fn level_4_index(&self) -> u16 {
@@ -87,11 +87,11 @@ impl HwVirtAddrBase for X64VirtAddr {
     }
 }
 
-impl TryFrom<usize> for X64VirtAddr {
+impl TryFrom<usize> for HwVirtAddr {
     type Error = AddressErr;
 
     fn try_from(value: usize) -> Result<Self, Self::Error> {
-        VirtAddr::try_new(value as u64).map(|addr| Self { m_addr: addr })
-                                       .map_err(|_| AddressErr(value))
+        X64VirtAddr::try_new(value as u64).map(|addr| Self { m_addr: addr })
+                                          .map_err(|_| AddressErr(value))
     }
 }

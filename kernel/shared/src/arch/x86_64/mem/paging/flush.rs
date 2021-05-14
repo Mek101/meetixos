@@ -11,9 +11,9 @@ use crate::{
 /**
  * x86_64 `HwMapFlusherBase` implementation
  */
-pub struct X64MapFlusher;
+pub struct HwMapFlusher;
 
-impl HwMapFlusherBase for X64MapFlusher {
+impl HwMapFlusherBase for HwMapFlusher {
     fn new() -> Self {
         Self
     }

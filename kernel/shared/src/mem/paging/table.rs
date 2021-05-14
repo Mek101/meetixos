@@ -14,7 +14,7 @@ use crate::{
         phys::PhysAddr,
         Address
     },
-    arch::mem::paging::HwPageDirSupport,
+    arch::mem::paging::dir::HwPageDirSupport,
     mem::paging::{
         dir::HwPageDirSupportBase,
         frame::PhysFrame,

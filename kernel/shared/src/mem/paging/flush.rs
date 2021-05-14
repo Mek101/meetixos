@@ -4,7 +4,7 @@ use core::mem;
 
 use crate::{
     addr::virt::VirtAddr,
-    arch::mem::paging::HwMapFlusher,
+    arch::mem::paging::flush::HwMapFlusher,
     mem::paging::{
         frame::{
             VirtFrame,

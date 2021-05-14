@@ -10,7 +10,7 @@ use crate::{
         virt::VirtAddr,
         Address
     },
-    arch::mem::paging::HwPageDirSupport,
+    arch::mem::paging::dir::HwPageDirSupport,
     mem::paging::{
         allocator::FrameAllocator,
         flush::{

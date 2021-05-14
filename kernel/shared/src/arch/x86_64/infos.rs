@@ -1,7 +1,5 @@
 /*! x86_64 boot informations implementation */
 
-pub use X64BootInfos as HwBootInfos;
-
 use crate::{
     addr::{
         phys::PhysAddr,
@@ -24,9 +22,9 @@ use crate::{
  *
  * Interprets the given `raw_boot_infos` as `Multiboot2` pointer
  */
-pub struct X64BootInfos;
+pub struct HwBootInfos;
 
-impl HwBootInfosBase for X64BootInfos {
+impl HwBootInfosBase for HwBootInfos {
     fn obtain_inner_from_arch_infos(raw_boot_infos_ptr: *const u8) -> BootInfosInner {
         /* load the multiboot informations */
         let multiboot_hdr = unsafe { multiboot2::load(raw_boot_infos_ptr as usize) };

@@ -2,7 +2,7 @@
 
 use core::mem;
 
-use x86_64::structures::idt::InterruptStackFrame;
+use x86_64::structures::idt::InterruptStackFrame as X64InterruptStackFrame;
 
 use crate::interrupt::stack_frame::HwInterruptStackFrameBase;
 
@@ -10,17 +10,17 @@ use crate::interrupt::stack_frame::HwInterruptStackFrameBase;
  * x86_64 `HwInterruptStackFrameBase` implementation
  */
 #[repr(transparent)]
-pub struct X64InterruptStackFrame {
-    m_inner: InterruptStackFrame
+pub struct HwInterruptStackFrame {
+    m_inner: X64InterruptStackFrame
 }
 
-impl X64InterruptStackFrame {
-    pub fn wrap_ptr(frame_ptr: &mut InterruptStackFrame) -> &mut Self {
+impl HwInterruptStackFrame {
+    pub fn wrap_ptr(frame_ptr: &mut X64InterruptStackFrame) -> &mut Self {
         unsafe { mem::transmute(frame_ptr) }
     }
 }
 
-impl HwInterruptStackFrameBase for X64InterruptStackFrame {
+impl HwInterruptStackFrameBase for HwInterruptStackFrame {
     fn instruction_ptr(&self) -> usize {
         self.m_inner.instruction_pointer.as_u64() as usize
     }
