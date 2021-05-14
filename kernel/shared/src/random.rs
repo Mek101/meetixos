@@ -43,7 +43,7 @@ impl Random {
      * Returns a `bool` random generated value
      */
     pub fn randomize_bool(&self) -> bool {
-        self.m_hw_random.randomize_16() != false
+        self.m_hw_random.randomize_u16() != 0
     }
 }
 
