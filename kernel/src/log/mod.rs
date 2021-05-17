@@ -6,7 +6,7 @@ use core::{
 };
 
 use shared::{
-    infos::info::BootInfos,
+    info::info::BootInfo,
     logger::{
         logger::LevelFilter,
         writers::UartWriter
@@ -49,8 +49,8 @@ pub fn init_logger() {
 
     /* search for `-log-level` key into the kernel's command line */
     let level_filter = {
-        let infos = BootInfos::obtain();
-        infos.cmdline_args()
+        let info = BootInfo::obtain();
+        info.cmdline_args()
             .find_key("-log-level")
             .map_or(DEFAULT_LOGGING_LEVEL, |arg| {
                 LevelFilter::from_str(arg.value()).unwrap_or(DEFAULT_LOGGING_LEVEL)
@@ -80,19 +80,19 @@ pub fn log_enable_buffering(use_previous_buffer_if_any: bool) {
      * manager to simply re-use the previously allocated buffer
      */
     let buffer_size =
-        BootInfos::obtain().cmdline_args()
-                           .find_key("-log-buffer-size")
-                           .map_or(DEFAULT_BUFFER_SIZE, |value| {
-                               if let Ok(value) = usize::from_str(value.as_str()) {
-                                   if let Some(value) = NonZeroUsize::new(value) {
-                                       value
-                                   } else {
-                                       DEFAULT_BUFFER_SIZE
-                                   }
-                               } else {
-                                   DEFAULT_BUFFER_SIZE
-                               }
-                           });
+        BootInfo::obtain().cmdline_args()
+                          .find_key("-log-buffer-size")
+                          .map_or(DEFAULT_BUFFER_SIZE, |value| {
+                              if let Ok(value) = usize::from_str(value.as_str()) {
+                                  if let Some(value) = NonZeroUsize::new(value) {
+                                      value
+                                  } else {
+                                      DEFAULT_BUFFER_SIZE
+                                  }
+                              } else {
+                                  DEFAULT_BUFFER_SIZE
+                              }
+                          });
 
     unsafe {
         KERN_LOGGER.enable_buffering(use_previous_buffer_if_any, buffer_size);

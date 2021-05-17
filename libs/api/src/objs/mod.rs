@@ -2,5 +2,5 @@
 
 pub mod config;
 pub mod impls;
-pub mod infos;
+pub mod info;
 pub mod object;

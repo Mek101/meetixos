@@ -1,7 +1,7 @@
 /*! `Thread` specific data */
 
 use crate::{
-    objs::infos::use_instant::ObjUseInstant,
+    objs::info::use_instant::ObjUseInstant,
     tasks::{
         impls::thread::Thread,
         task::Task

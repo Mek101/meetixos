@@ -1,4 +1,4 @@
-/*! Boot informations */
+/*! Boot information */
 
 pub mod args;
 pub mod info;

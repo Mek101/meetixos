@@ -65,13 +65,13 @@ impl<T> Grants<T> where T: Object {
     pub const INFO_USER_WRITE: usize = 13;
 
     /**
-     * Owner's group `informations` permissions bits
+     * Owner's group `information` permissions bits
      */
     pub const INFO_GROUP_READ: usize = 14;
     pub const INFO_GROUP_WRITE: usize = 15;
 
     /**
-     * Other users/groups `informations` permissions bits
+     * Other users/groups `information` permissions bits
      */
     pub const INFO_OTHER_READ: usize = 16;
     pub const INFO_OTHER_WRITE: usize = 17;
@@ -168,7 +168,7 @@ impl<T> Grants<T> where T: Object {
      * * `INFO_OTHER_READ`
      *
      * When the caller have this permission can successfully call
-     * `Object::infos()` and `Object::watch()`
+     * `Object::info()` and `Object::watch()`
      */
     pub fn set_info_readable(&mut self,
                              user: bool,

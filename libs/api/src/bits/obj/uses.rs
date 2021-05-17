@@ -49,7 +49,7 @@ pub enum ObjUse {
 
     /**
      * Let the watcher(s) task(s) notified about the successful
-     * `Object::infos()` (and related) calls of the watched object
+     * `Object::info()` (and related) calls of the watched object
      */
     ReadingInfo = 8,
 

@@ -26,7 +26,7 @@
  *   unnamed) into the filesystem as nodes with a name and a parent, so they
  *   can be referenced with a path using the [`ObjConfig`]
  * * Common [`Object`] interface which gives to each implementation a set of
- *   common methods to [delete the object], [obtain informations] about it
+ *   common methods to [delete the object], [obtain information] about it
  *   (like a Unix-like [`stat()`]) and to [watch it]
  * * Shareability - with to the [`Object`] trait each object is [sendable]
  *   and [receivable]. This simplifies a lot (for the userspace) resource
@@ -56,7 +56,7 @@
  * [`ObjConfig`]: crate::objs::ObjConfig
  * [`Object`]: crate::objs::Object
  * [delete the object]: crate::objs::Object::drop_name
- * [obtain informations]: crate::objs::Object::infos
+ * [obtain information]: crate::objs::Object::info
  * [`stat()`]: https://en.wikipedia.org/wiki/Stat_(system_call)
  * [watch it]: crate::objs::Object::watch
  * [sendable]: crate::objs::Object::send

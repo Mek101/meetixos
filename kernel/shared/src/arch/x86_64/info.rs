@@ -1,14 +1,14 @@
-/*! x86_64 boot informations implementation */
+/*! x86_64 boot information implementation */
 
 use crate::{
     addr::{
         phys::PhysAddr,
         Address
     },
-    infos::{
+    info::{
         info::{
-            BootInfosInner,
-            HwBootInfosBase
+            BootInfoInner,
+            HwBootInfoBase
         },
         mem_area::{
             BootMemArea,
@@ -18,16 +18,16 @@ use crate::{
 };
 
 /**
- * x86_64 `HwBootInfosBase` implementation.
+ * x86_64 `HwBootInfoBase` implementation.
  *
- * Interprets the given `raw_boot_infos` as `Multiboot2` pointer
+ * Interprets the given `raw_boot_info` as `Multiboot2` pointer
  */
-pub struct HwBootInfos;
+pub struct HwBootInfo;
 
-impl HwBootInfosBase for HwBootInfos {
-    fn obtain_inner_from_arch_infos(raw_boot_infos_ptr: *const u8) -> BootInfosInner {
-        /* load the multiboot informations */
-        let multiboot_hdr = unsafe { multiboot2::load(raw_boot_infos_ptr as usize) };
+impl HwBootInfoBase for HwBootInfo {
+    fn obtain_inner_from_arch_info(raw_boot_info_ptr: *const u8) -> BootInfoInner {
+        /* load the multiboot information */
+        let multiboot_hdr = unsafe { multiboot2::load(raw_boot_info_ptr as usize) };
 
         /* obtain the bootloader name */
         let name = if let Some(name_tag) = multiboot_hdr.boot_loader_name_tag() {
@@ -61,6 +61,6 @@ impl HwBootInfosBase for HwBootInfos {
         };
 
         /* construct the instance to return */
-        BootInfosInner::new(raw_cmdline, mem_areas, name)
+        BootInfoInner::new(raw_cmdline, mem_areas, name)
     }
 }

@@ -9,7 +9,7 @@ use shared::{
         dbg_display_size,
         MIB
     },
-    infos::info::BootInfos,
+    info::info::BootInfo,
     logger::{
         info,
         warn
@@ -63,7 +63,7 @@ pub fn phys_pre_init() -> usize {
     let min_memory = loader_core_preload_cache().load_size() + 4 * Page2MiB::SIZE;
 
     /* calculate the total memory available and warn low memory */
-    let total_mem = BootInfos::obtain().mem_areas().iter().map(|area| area.size()).sum();
+    let total_mem = BootInfo::obtain().mem_areas().iter().map(|area| area.size()).sum();
     if total_mem < min_memory {
         warn!("Detected a VERY SMALL amount of physical memory: less than {}MiB",
               min_memory / MIB);
@@ -83,7 +83,7 @@ pub fn phys_pre_init() -> usize {
         PRE_INIT_ALLOCATOR.skip_range(text_frames_range);
     }
 
-    /* print to the log a bit of informations */
+    /* print to the log a bit of information */
     info!("Total Available Memory: {}", dbg_display_size(total_mem));
 
     /* return how many pages are necessary to store the bitmap */

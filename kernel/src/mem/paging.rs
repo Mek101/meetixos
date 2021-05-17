@@ -9,7 +9,7 @@ use shared::{
         virt::VirtAddr,
         Address
     },
-    infos::info::BootInfos,
+    info::info::BootInfo,
     mem::paging::{
         dir::PageDir,
         flush::MapFlusher,
@@ -44,9 +44,9 @@ static mut UNMNG_AREA_ALLOCATOR: UnmngAreaLockedAllocator =
  */
 pub fn paging_active_page_dir() -> PageDir {
     unsafe {
-        PageDir::active_page_dir(BootInfos::obtain().vm_layout()
-                                                    .phys_mem_mapping_area()
-                                                    .start_addr())
+        PageDir::active_page_dir(BootInfo::obtain().vm_layout()
+                                                   .phys_mem_mapping_area()
+                                                   .start_addr())
     }
 }
 

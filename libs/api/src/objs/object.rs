@@ -30,7 +30,7 @@ use crate::{
     objs::{
         config::ObjConfig,
         impls::any::Any,
-        infos::info::ObjInfo
+        info::info::ObjInfo
     },
     tasks::task::Task,
     time::Instant
@@ -83,14 +83,14 @@ impl ObjId {
     }
 
     /**  
-     * Updates the infos of this object.
+     * Updates the info of this object.
      *
      * Internally used by `ObjInfo::update()`
      */
-    pub(crate) fn update_infos<T>(&self, infos: &ObjInfo<T>) -> Result<()>
+    pub(crate) fn update_info<T>(&self, info: &ObjInfo<T>) -> Result<()>
         where T: Object {
         self.kern_call_1(KernFnPath::Object(KernObjectFnId::UpdateInfo),
-                         infos as *const _ as usize)
+                         info as *const _ as usize)
             .map(|_| ())
     }
 
@@ -119,14 +119,14 @@ impl ObjId {
     /**
      * Returns the `ObjInfo` of this object
      */
-    pub(crate) fn infos<T>(&self) -> Result<ObjInfo<T>>
+    pub(crate) fn info<T>(&self) -> Result<ObjInfo<T>>
         where T: Object {
-        let mut infos = ObjInfo::default();
+        let mut info = ObjInfo::default();
         self.kern_call_1(KernFnPath::Object(KernObjectFnId::Info),
-                         &mut infos as *mut _ as usize)
+                         &mut info as *mut _ as usize)
             .map(|_| {
-                infos.set_obj(self);
-                infos
+                info.set_obj(self);
+                info
             })
     }
 
@@ -293,8 +293,8 @@ pub trait Object: From<ObjId> + Default + Clone + Sync + Send {
      * resource.
      *
      * The concurrency is managed internally by the kernel with two
-     * `RWLock`s (one for the data and one for the informations), so
-     * multiple tasks can read the data or the infos but only one a time
+     * `RWLock`s (one for the data and one for the information), so
+     * multiple tasks can read the data or the info but only one a time
      * can write them
      */
     fn send<T>(&self, task: &T) -> Result<()>
@@ -324,15 +324,15 @@ pub trait Object: From<ObjId> + Default + Clone + Sync + Send {
     /**
      * Returns the `ObjInfo` of this object
      */
-    fn infos(&self) -> Result<ObjInfo<Self>> {
-        self.obj_handle().infos()
+    fn info(&self) -> Result<ObjInfo<Self>> {
+        self.obj_handle().info()
     }
 
     /**
      * Returns the `ObjType` of the object
      */
     fn obj_type(&self) -> ObjType {
-        self.infos().unwrap_or_default().obj_type()
+        self.info().unwrap_or_default().obj_type()
     }
 
     /**
@@ -344,14 +344,14 @@ pub trait Object: From<ObjId> + Default + Clone + Sync + Send {
      * 3. Last info modify `Instant`
      */
     fn timestamps(&self) -> (Instant, Instant, Instant, Instant) {
-        self.infos().unwrap_or_default().timestamps()
+        self.info().unwrap_or_default().timestamps()
     }
 
     /**
      * Returns the size of the object's data in bytes
      */
     fn size(&self) -> usize {
-        self.infos().unwrap_or_default().size()
+        self.info().unwrap_or_default().size()
     }
 }
 

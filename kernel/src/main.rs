@@ -20,7 +20,7 @@
 extern crate alloc;
 
 use shared::{
-    infos::info::BootInfos,
+    info::info::BootInfo,
     logger::info
 };
 
@@ -65,12 +65,12 @@ pub fn write_video(message: &str) {
  * that requires physical/dynamic memory allocation
  */
 #[no_mangle]
-pub unsafe extern "C" fn kern_start(boot_infos: BootInfos) {
-    /* initialize the kernel's instance of the BootInfos.
+pub unsafe extern "C" fn kern_start(boot_info: BootInfo) {
+    /* initialize the kernel's instance of the BootInfo.
      * The given instance references the higher half loader memory, which will be
      * unmapped in the next steps, and become unreachable
      */
-    let _ = BootInfos::from_other(boot_infos);
+    let _ = BootInfo::from_other(boot_info);
 
     /* initialize the logging system */
     init_logger();
@@ -136,9 +136,9 @@ fn kern_debug_and_tests() -> ! {
         }
     }*/
 
-    /* dump some informations in debug mode, this block of code is not compiled
+    /* dump some information in debug mode, this block of code is not compiled
      * when the kernel is compiled in release mode but displays many useful debug
-     * informations
+     * information
      */
     /*#[cfg(debug_assertions)]
     {
@@ -152,7 +152,7 @@ fn kern_debug_and_tests() -> ! {
         use logger::debug;
 
         use crate::{
-            debug::dump_boot_infos,
+            debug::dump_boot_info,
             mem::{
                 heap::{
                     heap_free_memory,
@@ -167,7 +167,7 @@ fn kern_debug_and_tests() -> ! {
             }
         };
 
-        dump_boot_infos();
+        dump_boot_info();
 
         debug!("Address Size:");
         debug!("\tVirtAddr size = {} bits, PhysAddr size = {} bits",

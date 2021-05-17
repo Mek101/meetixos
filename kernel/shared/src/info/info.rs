@@ -1,67 +1,67 @@
-/*! Boot informations */
+/*! Boot information */
 
 #[cfg(feature = "loader_stage")]
 use os::str_utils;
 
 #[cfg(feature = "loader_stage")]
 use crate::{
-    arch::infos::HwBootInfos,
-    infos::mem_area::BootMemAreas
+    arch::info::HwBootInfo,
+    info::mem_area::BootMemAreas
 };
 
-use crate::infos::{
+use crate::info::{
     args::CmdLineArgs,
     vm_layout::VMLayout
 };
 
 /**
- * Size in bytes of the bootloader name store into `BootInfosInner`
+ * Size in bytes of the bootloader name store into `BootInfoInner`
  */
 pub(crate) const BOOTLOADER_NAME_LEN_MAX: usize = 64;
 
 /**
- * It is initialized by the `BootInfos::from()` implementation
+ * It is initialized by the `BootInfo::from()` implementation
  */
-static mut BOOT_INFOS_INNER: Option<BootInfosInner> = None;
+static mut BOOT_INFO_INNER: Option<BootInfoInner> = None;
 
 /**
- * Stores an immutable reference to the common bootloader's informations
+ * Stores an immutable reference to the common bootloader's information
  */
 #[repr(transparent)]
 #[derive(Debug, Copy, Clone)]
-pub struct BootInfos {
-    m_inner: &'static BootInfosInner
+pub struct BootInfo {
+    m_inner: &'static BootInfoInner
 }
 
-impl BootInfos {
+impl BootInfo {
     /**
-     * Constructs a `BootInfos` filled with the global `BootInfosInner`
+     * Constructs a `BootInfo` filled with the global `BootInfoInner`
      */
     pub fn obtain() -> Self {
         unsafe {
-            assert!(BOOT_INFOS_INNER.is_some(),
-                    "HAL haven't initialized boot informations");
-            Self { m_inner: BOOT_INFOS_INNER.as_ref().unwrap() }
+            assert!(BOOT_INFO_INNER.is_some(),
+                    "HAL haven't initialized boot information");
+            Self { m_inner: BOOT_INFO_INNER.as_ref().unwrap() }
         }
     }
 
     /**
-     * Initializes the global inner informations from the given raw
-     * information pointer then constructs the `BootInfos` instance.
+     * Initializes the global inner information from the given raw
+     * information pointer then constructs the `BootInfo` instance.
      *
      * Used by the higher half loader to initialize his instance of the
-     * `BootInfosInner`
+     * `BootInfoInner`
      */
     #[cfg(feature = "loader_stage")]
     pub fn from_raw(raw_info_ptr: *const u8) -> Self {
         unsafe {
-            assert!(BOOT_INFOS_INNER.is_none(), "Tried to re-initialize inner BootInfos");
+            assert!(BOOT_INFO_INNER.is_none(), "Tried to re-initialize inner BootInfo");
         }
 
-        /* obtain the informations inner and store to the global struct */
-        let inner_infos = HwBootInfos::obtain_inner_from_arch_infos(raw_info_ptr);
+        /* obtain the information inner and store to the global struct */
+        let inner_info = HwBootInfo::obtain_inner_from_arch_info(raw_info_ptr);
         unsafe {
-            BOOT_INFOS_INNER = Some(inner_infos);
+            BOOT_INFO_INNER = Some(inner_info);
         }
 
         /* return an instance of the wrapper */
@@ -69,21 +69,21 @@ impl BootInfos {
     }
 
     /**
-     * Initializes the global inner informations cloning the given instance
-     * then constructs the `BootInfos` instance.
+     * Initializes the global inner information cloning the given instance
+     * then constructs the `BootInfo` instance.
      *
      * Used by the kernel core to clone the higher half loader's instance of
-     * the `BootInfosInner` into the higher half instance
+     * the `BootInfoInner` into the higher half instance
      */
     #[cfg(not(feature = "loader_stage"))]
-    pub fn from_other(rhs: BootInfos) -> Self {
+    pub fn from_other(rhs: BootInfo) -> Self {
         unsafe {
-            assert!(BOOT_INFOS_INNER.is_none(), "Tried to re-initialize inner BootInfos");
+            assert!(BOOT_INFO_INNER.is_none(), "Tried to re-initialize inner BootInfo");
         }
 
-        /* clone the infos informations inner and store to our global copy */
+        /* clone the info information inner and store to our global copy */
         unsafe {
-            BOOT_INFOS_INNER = Some(rhs.m_inner.clone());
+            BOOT_INFO_INNER = Some(rhs.m_inner.clone());
         }
 
         /* return an instance of the wrapper */
@@ -114,11 +114,11 @@ impl BootInfos {
 }
 
 /**
- * Container of the common infos informations that is initialized and
+ * Container of the common info information that is initialized and
  * instantiated once across all the HAL/kernel instance
  */
 #[derive(Debug)]
-pub(crate) struct BootInfosInner {
+pub(crate) struct BootInfoInner {
     #[cfg(feature = "loader_stage")]
     m_mem_areas: BootMemAreas,
     m_cmdline_args: CmdLineArgs,
@@ -127,9 +127,9 @@ pub(crate) struct BootInfosInner {
 }
 
 #[cfg(feature = "loader_stage")]
-impl BootInfosInner {
+impl BootInfoInner {
     /**
-     * Constructs a `BootInfosInner` with the given arguments
+     * Constructs a `BootInfoInner` with the given arguments
      */
     pub(crate) fn new(raw_cmdline: &str,
                       mem_areas: BootMemAreas,
@@ -146,7 +146,7 @@ impl BootInfosInner {
 }
 
 #[cfg(not(feature = "loader_stage"))]
-impl Clone for BootInfosInner {
+impl Clone for BootInfoInner {
     fn clone(&self) -> Self {
         Self { m_cmdline_args: self.m_cmdline_args.clone(),
                m_vm_layout: self.m_vm_layout.clone(),
@@ -155,14 +155,14 @@ impl Clone for BootInfosInner {
 }
 
 /**
- * Interface of methods that is required by the `BootInfosInner`
+ * Interface of methods that is required by the `BootInfoInner`
  */
 #[cfg(feature = "loader_stage")]
-pub(crate) trait HwBootInfosBase {
+pub(crate) trait HwBootInfoBase {
     /**
      * The instance returned is expected to be filled by the architecture
-     * dependent code using the bootloaders informations given via raw
+     * dependent code using the bootloaders information given via raw
      * pointer
      */
-    fn obtain_inner_from_arch_infos(raw_boot_infos_ptr: *const u8) -> BootInfosInner;
+    fn obtain_inner_from_arch_info(raw_boot_info_ptr: *const u8) -> BootInfoInner;
 }

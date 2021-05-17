@@ -57,7 +57,7 @@ impl<'a> InterruptStackFrame<'a> {
 
 /**
  * Interface on which the `InterruptStackFrame` relies to set/get
- * informations
+ * information
  */
 pub(crate) trait HwInterruptStackFrameBase {
     /**

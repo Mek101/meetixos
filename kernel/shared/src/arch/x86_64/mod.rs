@@ -2,7 +2,7 @@
 
 pub mod addr;
 #[cfg(feature = "loader_stage")]
-pub mod infos;
+pub mod info;
 pub mod interrupt;
 pub mod mem;
 pub mod random;

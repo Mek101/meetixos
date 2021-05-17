@@ -1,4 +1,4 @@
-/*! `Object` metadata informations */
+/*! `Object` metadata information */
 
 use core::str;
 
@@ -26,7 +26,7 @@ use crate::{
     time::Instant
 };
 
-/** # `Object` Informations
+/** # `Object` information
  *
  * Metadata descriptor common to all the `Object` Implementations.
  *
@@ -35,7 +35,7 @@ use crate::{
  * * There is no more need of tons of single system calls to update small
  *   piece of object's metadata, there is only one cumulative info update
  *   call that overwrites the previous one
- * * Using `RAII` the informations are updated when the struct goes out of
+ * * Using `RAII` the information are updated when the struct goes out of
  *   scope or when called explicitly `ObjInfo::update()`
  */
 #[derive(Debug, Default)]
@@ -124,14 +124,14 @@ impl<T> ObjInfo<T> where T: Object {
     /**
      * Returns a reference to the `ObjNameInfo`
      */
-    pub fn name_infos(&self) -> Option<&ObjNameInfo> {
+    pub fn name_information(&self) -> Option<&ObjNameInfo> {
         self.m_name.as_ref()
     }
 
     /**
      * Returns a mutable reference to the `ObjNameInfo`
      */
-    pub fn name_infos_mut(&mut self) -> Option<&mut ObjNameInfo> {
+    pub fn name_info_mut(&mut self) -> Option<&mut ObjNameInfo> {
         self.m_to_update.set_bit(Self::UPDATE_NAME_BIT, true);
         self.m_name.as_mut()
     }
@@ -282,7 +282,7 @@ impl<T> ObjInfo<T> where T: Object {
      */
     pub fn update(&mut self) -> Result<()> {
         if self.m_to_update != 0 {
-            self.m_obj.update_infos(self).map(|_| self.reset_update())
+            self.m_obj.update_info(self).map(|_| self.reset_update())
         } else {
             /* the object is not modified, so return okay anyway */
             Ok(())
@@ -308,7 +308,7 @@ impl<T> Drop for ObjInfo<T> where T: Object {
 }
 
 /**
- * Contains various informations that are related to the VFS representation
+ * Contains various information that are related to the VFS representation
  * of an `Object` based type
  */
 #[derive(Debug, Copy, Clone)]

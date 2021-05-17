@@ -3,7 +3,7 @@
 use core::str::FromStr;
 
 use shared::{
-    infos::info::BootInfos,
+    info::info::BootInfo,
     logger::{
         logger::{
             LevelFilter,
@@ -16,9 +16,6 @@ use shared::{
 /* global logger */
 static mut HHL_LOGGER: Logger<UartWriter> = Logger::new_uninitialized();
 
-/* default logging level when no valid command line filter is given */
-const DEFAULT_LOGGING_LEVEL: LevelFilter = LevelFilter::Debug;
-
 /**
  * Initializes the global logger instance
  */
@@ -28,19 +25,19 @@ pub fn log_init() {
         HHL_LOGGER.enable_as_global().unwrap();
     }
 
-    /* obtain from the from the bootloader informations the command-line
+    /* obtain from the from the bootloader information the command-line
      * arguments and search for the `-log-level` key, if provided (and have a
      * valid value) use it, otherwise fallback to the `DEFAULT_LOGGING_LEVEL`
      */
     let level_filter = {
-        let infos = BootInfos::obtain();
-        infos.cmdline_args()
-             .find_key("-log-level")
-             .map(|cmdline_arg| cmdline_arg.value())
-             .map(|arg_value| {
-                 LevelFilter::from_str(arg_value).expect("Invalid '-log-level' value")
-             })
-             .unwrap_or(LevelFilter::Debug)
+        let info = BootInfo::obtain();
+        info.cmdline_args()
+            .find_key("-log-level")
+            .map(|cmdline_arg| cmdline_arg.value())
+            .map(|arg_value| {
+                LevelFilter::from_str(arg_value).expect("Invalid '-log-level' value")
+            })
+            .unwrap_or(LevelFilter::Debug)
     };
 
     /* hide all the logs above the given filter level */

@@ -38,7 +38,7 @@ use crate::{
  * Reference to an open directory on the VFS.
  *
  * It allows to iterate the directory's children or gain/modify metadata
- * informations about this directory if the caller have the right
+ * information about this directory if the caller have the right
  * permissions.
  *
  * The `Dir` provides an `Iterator` implementation, so it is possible

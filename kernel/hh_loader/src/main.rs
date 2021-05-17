@@ -20,7 +20,7 @@
            array_methods)]
 
 use shared::{
-    infos::info::BootInfos,
+    info::info::BootInfo,
     logger::info
 };
 
@@ -53,8 +53,8 @@ mod version;
  */
 #[no_mangle]
 pub unsafe extern "C" fn hhl_rust_entry(raw_info_ptr: *const u8) -> ! {
-    /* interpret the raw pointer given to fill the <BootInfos> */
-    let _ = BootInfos::from_raw(raw_info_ptr);
+    /* interpret the raw pointer given to fill the <BootInfo> */
+    let _ = BootInfo::from_raw(raw_info_ptr);
 
     /* initialize the logger, to be able to print in a formatted way */
     log_init();

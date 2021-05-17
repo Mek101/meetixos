@@ -3,7 +3,7 @@
 use os::str_utils;
 
 /**
- * Maximum amount of command line arguments that `BootInfosInner` could
+ * Maximum amount of command line arguments that `BootInfoInner` could
  * store
  */
 pub(crate) const BOOT_CMDLINE_ARGS_COUNT_MAX: usize = 32;

@@ -81,7 +81,7 @@ impl Any {
      * Returns the underling `ObjType`
      */
     pub fn real_type(&self) -> ObjType {
-        self.0.infos::<File>().unwrap_or_default().obj_type()
+        self.0.info::<File>().unwrap_or_default().obj_type()
     }
 
     /**

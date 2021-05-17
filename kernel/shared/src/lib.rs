@@ -20,7 +20,7 @@ extern crate macros;
 pub mod addr;
 pub mod dbg;
 pub mod elf;
-pub mod infos;
+pub mod info;
 pub mod interrupt;
 pub mod logger;
 pub mod mem;
