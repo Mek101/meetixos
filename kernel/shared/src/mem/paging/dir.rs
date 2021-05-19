@@ -280,7 +280,7 @@ impl PageDir {
             let next_page_table = &mut table[virt_frame.index_for_level(pt_level)];
 
             /* in this case the next page table existence is not ensured but fail */
-            table = self.next_page_table::<S>(next_page_table)?
+            table = self.next_page_table(next_page_table)?
         }
 
         /* returns the flags for the selected entry */
@@ -394,7 +394,7 @@ impl PageDir {
             let next_page_table = &mut table[virt_frame.index_for_level(pt_level)];
 
             /* in this case the next page table existence is not ensured but fail */
-            table = self.next_page_table::<S>(next_page_table)?
+            table = self.next_page_table(next_page_table)?
         }
 
         /* select the map level entry */
@@ -483,7 +483,7 @@ impl PageDir {
          * this entry if maps a HUGE frame or, if contains a not-present mapping (for
          * demand paging)
          */
-        let next_page_table = self.next_page_table::<S>(entry)?;
+        let next_page_table = self.next_page_table(entry)?;
 
         /* clear the frame if new */
         if new_table_created {
@@ -496,12 +496,11 @@ impl PageDir {
     /**
      * Calculates the virtual address to the next `PageTable`
      */
-    fn next_page_table<'b, S>(&self,
-                              entry: &'b mut PageTableEntry)
-                              -> Result<&'b mut PageTable, PageDirErr>
-        where S: PageSize {
+    fn next_page_table<'b>(&self,
+                           entry: &'b mut PageTableEntry)
+                           -> Result<&'b mut PageTable, PageDirErr> {
         Ok(unsafe {
-            &mut *self.m_phys_offset.next_table_pointer::<S>(entry.phys_frame()?)
+            &mut *self.m_phys_offset.next_table_pointer::<Page4KiB>(entry.phys_frame()?)
         })
     }
 
@@ -523,7 +522,7 @@ impl PageDir {
          */
         if pt_level.as_usize() + 1 < S::MAP_LEVEL.as_usize() {
             let page_table_entry = &mut page_table[virt_frame.index_for_level(pt_level)];
-            let next_table_res = self.next_page_table::<S>(page_table_entry);
+            let next_table_res = self.next_page_table(page_table_entry);
 
             /* recurse to the next level page table */
             if let Ok(next_page_table) = next_table_res {
@@ -540,7 +539,7 @@ impl PageDir {
         let next_page_table_entry = &mut page_table[virt_frame.index_for_level(pt_level)];
 
         /* obtain the reference to the next page table */
-        if let Ok(next_page_table) = self.next_page_table::<S>(next_page_table_entry) {
+        if let Ok(next_page_table) = self.next_page_table(next_page_table_entry) {
             /* well if the next level page table is empty (doesn't contains non-zero
              * page table entries) is possible to free the PhysFrame of the entry that
              * references the `next_page_table`
@@ -578,7 +577,7 @@ impl Debug for PageDir {
             }
 
             if l4_entry.flags().is_present() {
-                if let Ok(l3_page_table) = self.next_page_table::<Page4KiB>(l4_entry) {
+                if let Ok(l3_page_table) = self.next_page_table(l4_entry) {
                     for (l3_index, l3_entry) in l3_page_table.iter_mut().enumerate() {
                         if l3_entry.is_unused() {
                             continue;
@@ -600,7 +599,7 @@ impl Debug for PageDir {
                         }
 
                         if l3_entry.flags().is_present() && !l3_entry.flags().is_huge_page() {
-                            if let Ok(l2_page_table) = self.next_page_table::<Page4KiB>(l3_entry) {
+                            if let Ok(l2_page_table) = self.next_page_table(l3_entry) {
                                 for (l2_index, l2_entry) in l2_page_table.iter_mut().enumerate() {
                                     if l2_entry.is_unused() {
                                         continue;
@@ -623,7 +622,7 @@ impl Debug for PageDir {
                                     }
 
                                     if l2_entry.flags().is_present() && !l2_entry.flags().is_huge_page() {
-                                        if let Ok(l1_page_table) = self.next_page_table::<Page4KiB>(l2_entry) {
+                                        if let Ok(l1_page_table) = self.next_page_table(l2_entry) {
                                             for (l1_index, l1_entry) in l1_page_table.iter_mut().enumerate() {
                                                 if l1_entry.is_unused() {
                                                     continue;

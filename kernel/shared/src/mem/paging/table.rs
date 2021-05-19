@@ -136,7 +136,7 @@ impl PageTableEntry {
         } else if !self.flags().is_present() {
             Err(PageTableEntryErr::PhysFrameNotPresent)
         } else {
-            Ok(PhysFrame::of_addr(self.address()))
+            Ok(self.address().containing_frame())
         }
     }
 
@@ -259,7 +259,7 @@ ext_bitflags! {
 
         /** Tells whether the `PageTableEntry` is a global page
          */
-        const GLOBAL = HwPageDirSupport::PTE_GLOBAL;
+        const GLOBAL     = HwPageDirSupport::PTE_GLOBAL;
 
         /**
          * Tells whether the `PageTableEntry`'s references a big `PhysFrame`
