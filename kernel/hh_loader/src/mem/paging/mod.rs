@@ -28,7 +28,10 @@ static mut PHYS_MEM_OFFSET: Option<VirtAddr> = None;
 pub fn paging_map_phys_mem() {
     let phys_mem_mapping_area = vml_core_layout().phys_mem_mapping_area();
 
-    /* map all the physical memory into the designed area */
+    /* map all the physical memory into the designed area.
+     * Note that here is used mapping with huge 2MiB frames to reduce physical
+     * allocation requests for intermediate page tables
+     */
     let map_result =
         paging_current_page_dir().map_range(phys_mem_mapping_area.as_frame_range(),
                                             &LinearAllocator::new_zero(),

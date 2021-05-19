@@ -1,4 +1,4 @@
-/*! Kernel loader */
+/*! Kernel core loader */
 
 use shared::{
     addr::{
@@ -14,9 +14,14 @@ use shared::{
 /* includes the module which links the kernel core binary */
 include!(env!("KERNEL_BIN"));
 
+/* various information about the kernel core which are accessed frequently */
 static mut KERNEL_PRELOAD_CACHE: Option<KernelPreLoadCache> = None;
 
-pub fn loader_preload_core() {
+/**
+ * Initializes the global kernel core cache to be rapidly accessed
+ * afterwards
+ */
+pub fn loader_init_core_cache() {
     assert!(unsafe { KERNEL_PRELOAD_CACHE.is_none() });
 
     unsafe {
@@ -24,11 +29,17 @@ pub fn loader_preload_core() {
     }
 }
 
+/**
+ * Effectively loads the kernel core
+ */
 pub fn loader_load_core() {
     let preload_cache = loader_core_preload_cache();
     for _program_hdr in preload_cache.elf_file().program_iter() {}
 }
 
+/**
+ * Returns the global static reference to the `KernelPreLoadCache`
+ */
 pub fn loader_core_preload_cache() -> &'static KernelPreLoadCache<'static> {
     if let Some(preload_cache) = unsafe { KERNEL_PRELOAD_CACHE.as_ref() } {
         preload_cache
@@ -37,6 +48,12 @@ pub fn loader_core_preload_cache() -> &'static KernelPreLoadCache<'static> {
     }
 }
 
+/**
+ * Collector of commonly requested information about the kernel core.
+ *
+ * So this object pre-loads various redundant information to be able to
+ * serve them without recalculating each time
+ */
 pub struct KernelPreLoadCache<'a> {
     m_elf_file: ElfFile<'a>,
     m_load_size: usize,

@@ -26,8 +26,8 @@ use shared::{
 
 use crate::{
     loader::{
-        loader_load_core,
-        loader_preload_core
+        loader_init_core_cache,
+        loader_load_core
     },
     log::log_init,
     mem::{
@@ -67,7 +67,7 @@ pub unsafe extern "C" fn hhl_rust_entry(raw_info_ptr: *const u8) -> ! {
 
     /* load the ELF file of the kernel's core */
     info!("Pre-loading Kernel's Core");
-    loader_preload_core();
+    loader_init_core_cache();
 
     /* pre initialize physical memory, obtain how many bitmap pages are necessary */
     info!("Pre-initializing PhysMem Manager");
