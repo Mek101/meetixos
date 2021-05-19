@@ -23,6 +23,7 @@ use crate::{
     loader::loader_core_preload_cache,
     mem::phys::phys_total_memory
 };
+use shared::addr::align_down;
 
 /* kernel space begin (192TiB) */
 const KERN_SPACE_BEGIN: usize = 0x0000_c000_0000_0000;
@@ -36,42 +37,59 @@ static mut KERNEL_VM_LAYOUT: Option<VMLayout> = None;
 pub fn vml_randomize_core_layout(necessary_bitmap_pages: usize) {
     assert!(unsafe { KERNEL_VM_LAYOUT.is_none() });
 
+    /* calculate how many kernel VM is available removing the kernel text */
     let kern_space_size =
         loader_core_preload_cache().load_address() - VirtAddr::new(KERN_SPACE_BEGIN);
 
+    /* constructs a VM components iterator & randomizer, which calculates the
+     * size for each one keeping in mind the occupation of the other components
+     * which must have a fixed size according to the given parameters
+     */
     let vm_components = VMComponents::new(necessary_bitmap_pages,
                                           kern_space_size.as_usize(),
                                           phys_total_memory());
 
+    /* prepare the iteration values */
+    let mut vm_area_address = KERN_SPACE_BEGIN;
     let mut vm_areas = [(VMComponent::None, VMLayoutArea::new_zero()),
                         (VMComponent::None, VMLayoutArea::new_zero()),
                         (VMComponent::None, VMLayoutArea::new_zero()),
                         (VMComponent::None, VMLayoutArea::new_zero()),
                         (VMComponent::None, VMLayoutArea::new_zero()),
                         (VMComponent::None, VMLayoutArea::new_zero())];
-    let mut vm_start = KERN_SPACE_BEGIN;
-    for (i, vm_component) in vm_components.enumerate() {
-        let vml_addr = align_up(vm_start, vm_component.alignment());
 
-        let diff = vml_addr - vm_start;
-        let size = if diff > 0 && vm_component.is_resizable() {
-            vm_component.size() - diff
+    /* iterate now the randomized components to construct the <VMLayoutArea>s */
+    for (i, vm_component) in vm_components.enumerate() {
+        /* align up the current address with the alignment of the current component */
+        let vma_aligned_addr = align_up(vm_area_address, vm_component.alignment());
+
+        /* lets check the alignment difference, if the difference exists and the
+         * component is resizable lets resize it, otherwise keep his size as original
+         */
+        let alignment_diff = vma_aligned_addr - vm_area_address;
+        let size = if alignment_diff > 0 && vm_component.is_resizable() {
+            align_down(vm_component.size() - alignment_diff, vm_component.alignment())
         } else {
             vm_component.size()
         };
 
-        vm_areas[i] = (vm_component, VMLayoutArea::new(VirtAddr::new(vml_addr), size));
-        vm_start += size;
+        /* place the new area into the vector and go to the next area address */
+        vm_areas[i] =
+            (vm_component, VMLayoutArea::new(VirtAddr::new(vma_aligned_addr), size));
+        vm_area_address += size;
     }
 
+    /* sort the areas by his integer value */
     vm_areas.sort_unstable_by(|vma_1, vma_2| vma_1.0.as_value().cmp(&vma_2.0.as_value()));
 
+    /* construct the kernel text area, which is the only area not randomizable */
     let kern_text_area = {
         let core_preload_cache = loader_core_preload_cache();
         VMLayoutArea::new(core_preload_cache.load_address(),
                           core_preload_cache.load_size())
     };
 
+    /* finally construct the <VMLayout> */
     let vm_layout = VMLayout::new(kern_text_area,
                                   vm_areas[0].1,
                                   vm_areas[1].1,
@@ -81,17 +99,24 @@ pub fn vml_randomize_core_layout(necessary_bitmap_pages: usize) {
                                   vm_areas[5].1);
     info!("\n{}", vm_layout);
 
+    /* store the value into the global */
     unsafe {
         KERNEL_VM_LAYOUT = Some(vm_layout);
     }
 }
 
+/**
+ * Returns the immutable reference to the randomized <VMLayout>
+ */
 pub fn vml_core_layout() -> &'static VMLayout {
     assert!(unsafe { KERNEL_VM_LAYOUT.is_some() });
 
     unsafe { KERNEL_VM_LAYOUT.as_ref().unwrap() }
 }
 
+/**
+ * Lists the VM components that could be randomized
+ */
 #[derive(Debug)]
 enum VMComponent {
     KernHeap(usize),
@@ -104,8 +129,14 @@ enum VMComponent {
 }
 
 impl VMComponent {
+    /**
+     * Amount of valid variants (excluded `None`)
+     */
     const COUNT: usize = 6;
 
+    /**
+     * Returns the value of the current variant
+     */
     fn size(&self) -> usize {
         match self {
             Self::KernHeap(value)
@@ -118,6 +149,9 @@ impl VMComponent {
         }
     }
 
+    /**
+     * Returns the alignment of the current variant
+     */
     fn alignment(&self) -> usize {
         match self {
             Self::KernHeap(_)
@@ -129,6 +163,10 @@ impl VMComponent {
         }
     }
 
+    /**
+     * Returns whether the current variant represents a VM component that
+     * could be shrinked
+     */
     fn is_resizable(&self) -> bool {
         match self {
             Self::PhysMemBitmap(_)
@@ -140,6 +178,9 @@ impl VMComponent {
         }
     }
 
+    /**
+     * Returns the cardinal value of the current variant
+     */
     fn as_value(&self) -> usize {
         /* NOTE: Here must be kept the exactly same order of the VMLayout's
          *       constructor otherwise the sorting would not work
@@ -158,11 +199,12 @@ impl VMComponent {
 
 impl From<(usize, usize)> for VMComponent {
     fn from(raw_value: (usize, usize)) -> Self {
+        /* keep the following values aligned with the as_value method */
         match raw_value.0 {
-            0 => Self::PhysMemBitmap(raw_value.1),
-            1 => Self::PhysMemMapping(raw_value.1),
-            2 => Self::KernStack(raw_value.1),
-            3 => Self::KernHeap(raw_value.1),
+            0 => Self::KernHeap(raw_value.1),
+            1 => Self::KernStack(raw_value.1),
+            2 => Self::PhysMemBitmap(raw_value.1),
+            3 => Self::PhysMemMapping(raw_value.1),
             4 => Self::PageCache(raw_value.1),
             5 => Self::TmpMapping(raw_value.1),
             _ => panic!("Tried to construct an invalid VMComponent")
@@ -170,15 +212,21 @@ impl From<(usize, usize)> for VMComponent {
     }
 }
 
+/**
+ * `VMComponent` randomizer and size calculator
+ */
 struct VMComponents {
     m_components: [VMComponent; VMComponent::COUNT],
-
     m_extracted: [bool; VMComponent::COUNT],
     m_extracted_count: usize,
     m_random: Random
 }
 
 impl VMComponents {
+    /**
+     * Constructs a `VMComponents` and calculates the size for each
+     * `VMComponent`
+     */
     fn new(bitmap_pages_count: usize,
            kern_space_size: usize,
            total_memory: usize)
@@ -195,10 +243,11 @@ impl VMComponents {
                                     - tmp_map_size)
                                    / 2;
 
-        Self { m_components: [VMComponent::PhysMemBitmap(phys_mem_bitmap_size),
-                              VMComponent::PhysMemMapping(phys_mem_map_size),
+        /* keep the order of the <VMComponent> variants */
+        Self { m_components: [VMComponent::KernHeap(last_components_size),
                               VMComponent::KernStack(kern_stack_size),
-                              VMComponent::KernHeap(last_components_size),
+                              VMComponent::PhysMemBitmap(phys_mem_bitmap_size),
+                              VMComponent::PhysMemMapping(phys_mem_map_size),
                               VMComponent::PageCache(last_components_size),
                               VMComponent::TmpMapping(tmp_map_size)],
                m_extracted: [false; VMComponent::COUNT],
