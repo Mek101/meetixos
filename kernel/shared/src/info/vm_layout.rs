@@ -138,7 +138,7 @@ impl fmt::Display for VMLayout {
 /**
  * Virtual memory area for the kernel's layout
  */
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct VMLayoutArea {
     m_start_addr: VirtAddr,
     m_size: usize

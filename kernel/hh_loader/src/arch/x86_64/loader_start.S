@@ -1,7 +1,5 @@
 /*! x86_64 hh_loader bootstrap implementation */
 
-.att_syntax
-
 .extern hhl_rust_entry
 .global hhl_l4_page_table
 

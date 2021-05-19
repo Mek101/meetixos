@@ -50,6 +50,9 @@ static mut PRE_INIT_ALLOCATOR: HHLPreInitAllocator = HHLPreInitAllocator::new();
 /* <false> until <init_phys_mem()> successfully finish */
 static mut CAN_USE_BITMAP: bool = false;
 
+/* filled with the total amount of memory in bytes */
+static mut TOTAL_MEMORY: usize = 0;
+
 extern "C" {
     static __hhl_text_begin: usize;
     static __hhl_text_end: usize;
@@ -69,6 +72,11 @@ pub fn phys_pre_init() -> usize {
               min_memory / MIB);
     }
 
+    /* save the total memory amount in bytes */
+    unsafe {
+        TOTAL_MEMORY = total_mem;
+    }
+
     /* obtain the range of physical frames occupied by the text of the hh_loader */
     let text_frames_range = {
         let text_begin = unsafe { &__hhl_text_begin as *const _ as usize };
@@ -78,7 +86,7 @@ pub fn phys_pre_init() -> usize {
                             PhysAddr::new(text_end).containing_frame())
     };
 
-    /* instruct the pre-init allocator to not use them */
+    /* instruct the pre-init allocator to not use the following range */
     unsafe {
         PRE_INIT_ALLOCATOR.skip_range(text_frames_range);
     }
@@ -138,6 +146,13 @@ pub fn phys_alloc_frame() -> Option<PhysFrame<Page4KiB>> {
     } else {
         unsafe { PRE_INIT_ALLOCATOR.allocate() }
     }
+}
+
+/**
+ * Returns the total amount of physical memory available
+ */
+pub fn phys_total_memory() -> usize {
+    unsafe { TOTAL_MEMORY }
 }
 
 /**
