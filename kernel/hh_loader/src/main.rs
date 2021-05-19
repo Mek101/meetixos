@@ -13,11 +13,7 @@
 
 #![no_std]
 #![no_main]
-#![feature(global_asm,
-           iter_advance_by,
-           panic_info_message,
-           min_type_alias_impl_trait,
-           array_methods)]
+#![feature(global_asm, iter_advance_by, panic_info_message, array_methods)]
 
 use shared::{
     info::info::BootInfo,
