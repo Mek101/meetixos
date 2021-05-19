@@ -18,6 +18,10 @@ TARGET   ?= $(shell pwd)/userland/$(TARGET_PREFIX)/userland.json
 # -- -- -- -- -- -- -- -- -- -- -- -- -- Make Targets -- -- -- -- -- -- -- -- -- -- -- --
 #
 
+just_run:
+	$(V) echo "- Running QEMU $(VIRT_ACCEL)"
+	$(V) $(QEMU) $(VIRT_ACCEL) $(QEMU_ARGS) -cdrom $(BUILD_PREFIX)/$(BUILD_MODE)/meetixos.iso
+
 run: image
 	$(V) echo "- Running QEMU $(VIRT_ACCEL)"
 	$(V) $(QEMU) $(VIRT_ACCEL) $(QEMU_ARGS) -cdrom $(BUILD_PREFIX)/$(BUILD_MODE)/meetixos.iso

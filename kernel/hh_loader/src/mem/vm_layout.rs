@@ -2,6 +2,7 @@
 
 use shared::{
     addr::{
+        align_down,
         align_up,
         virt::VirtAddr,
         Address
@@ -23,7 +24,6 @@ use crate::{
     loader::loader_core_preload_cache,
     mem::phys::phys_total_memory
 };
-use shared::addr::align_down;
 
 /* kernel space begin (192TiB) */
 const KERN_SPACE_BEGIN: usize = 0x0000_c000_0000_0000;
@@ -59,16 +59,18 @@ pub fn vml_randomize_core_layout(necessary_bitmap_pages: usize) {
                         (VMComponent::None, VMLayoutArea::new_zero())];
 
     /* iterate now the randomized components to construct the <VMLayoutArea>s */
+    let mut accumulated_diff = 0;
     for (i, vm_component) in vm_components.enumerate() {
         /* align up the current address with the alignment of the current component */
         let vma_aligned_addr = align_up(vm_area_address, vm_component.alignment());
 
-        /* lets check the alignment difference, if the difference exists and the
-         * component is resizable lets resize it, otherwise keep his size as original
-         */
+        /* check the current difference between the aligned and the original address */
         let alignment_diff = vma_aligned_addr - vm_area_address;
-        let size = if alignment_diff > 0 && vm_component.is_resizable() {
-            align_down(vm_component.size() - alignment_diff, vm_component.alignment())
+        accumulated_diff += alignment_diff;
+
+        /* shrink if possible the area with the accumulated size */
+        let size = if accumulated_diff > 0 && vm_component.is_shrinkable() {
+            align_down(vm_component.size() - accumulated_diff, vm_component.alignment())
         } else {
             vm_component.size()
         };
@@ -154,11 +156,12 @@ impl VMComponent {
      */
     fn alignment(&self) -> usize {
         match self {
-            Self::KernHeap(_)
-            | Self::PhysMemBitmap(_)
-            | Self::PhysMemMapping(_)
-            | Self::PageCache(_) => Page4KiB::SIZE,
-            Self::KernStack(_) | Self::TmpMapping(_) => Page2MiB::SIZE,
+            Self::KernHeap(_) | Self::PhysMemBitmap(_) | Self::PageCache(_) => {
+                Page4KiB::SIZE
+            },
+            Self::KernStack(_) | Self::PhysMemMapping(_) | Self::TmpMapping(_) => {
+                Page2MiB::SIZE
+            },
             _ => panic!("Tried to obtain alignment of `None` VMComponent")
         }
     }
@@ -167,7 +170,7 @@ impl VMComponent {
      * Returns whether the current variant represents a VM component that
      * could be shrinked
      */
-    fn is_resizable(&self) -> bool {
+    fn is_shrinkable(&self) -> bool {
         match self {
             Self::PhysMemBitmap(_)
             | Self::PhysMemMapping(_)
@@ -232,16 +235,17 @@ impl VMComponents {
            total_memory: usize)
            -> Self {
         let phys_mem_bitmap_size = bitmap_pages_count * Page4KiB::SIZE;
-        let phys_mem_map_size = total_memory;
+        let phys_mem_map_size = align_up(total_memory, Page2MiB::SIZE);
         let kern_stack_size = Page2MiB::SIZE;
         let tmp_map_size = Page2MiB::SIZE;
 
-        let last_components_size = (kern_space_size
-                                    - kern_stack_size
-                                    - phys_mem_bitmap_size
-                                    - phys_mem_map_size
-                                    - tmp_map_size)
-                                   / 2;
+        let last_components_size = align_down((kern_space_size
+                                               - kern_stack_size
+                                               - phys_mem_bitmap_size
+                                               - phys_mem_map_size
+                                               - tmp_map_size)
+                                              / 2,
+                                              Page4KiB::SIZE);
 
         /* keep the order of the <VMComponent> variants */
         Self { m_components: [VMComponent::KernHeap(last_components_size),

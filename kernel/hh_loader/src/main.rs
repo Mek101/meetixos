@@ -31,7 +31,10 @@ use crate::{
     },
     log::log_init,
     mem::{
-        paging::paging_current_page_dir,
+        paging::{
+            paging_current_page_dir,
+            paging_map_phys_mem
+        },
         phys::{
             phys_init,
             phys_pre_init
@@ -77,6 +80,10 @@ pub unsafe extern "C" fn hhl_rust_entry(raw_info_ptr: *const u8) -> ! {
     /* initialize the physical memory allocator */
     info!("Initializing PhysMem Manager");
     phys_init();
+
+    /* map the physical memory at the right area */
+    info!("Initializing paging");
+    paging_map_phys_mem();
 
     /* load the kernel core now */
     info!("Loading Kernel's Core");
