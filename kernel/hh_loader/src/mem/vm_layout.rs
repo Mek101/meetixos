@@ -11,7 +11,7 @@ use shared::{
         VMLayout,
         VMLayoutArea
     },
-    logger::info,
+    logger::debug,
     mem::paging::{
         Page2MiB,
         Page4KiB,
@@ -99,7 +99,7 @@ pub fn vml_randomize_core_layout(necessary_bitmap_pages: usize) {
                                   vm_areas[3].1,
                                   vm_areas[4].1,
                                   vm_areas[5].1);
-    info!("\n{}", vm_layout);
+    debug!("\n{}", vm_layout);
 
     /* store the value into the global */
     unsafe {

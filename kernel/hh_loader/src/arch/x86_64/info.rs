@@ -1,21 +1,28 @@
 /*! x86_64 boot information implementation */
 
-use crate::{
+use shared::{
     addr::{
         phys::PhysAddr,
+        virt::VirtAddr,
         Address
     },
+    mem::paging::frame::VirtFrame
+};
+
+use crate::info::{
     info::{
-        info::{
-            BootInfoInner,
-            HwBootInfoBase
-        },
-        mem_area::{
-            BootMemArea,
-            BootMemAreas
-        }
+        BootInfo,
+        HwBootInfoBase
+    },
+    mem_area::{
+        BootMemArea,
+        BootMemAreas
     }
 };
+
+/* NOTE: keep the following values aligned with the code in loader_start.S */
+const LOADER_MAPPED_RANGE_START: usize = 0x0;
+const LOADER_MAPPED_RANGE_LAST: usize = 0x01E00000;
 
 /**
  * x86_64 `HwBootInfoBase` implementation.
@@ -25,7 +32,7 @@ use crate::{
 pub struct HwBootInfo;
 
 impl HwBootInfoBase for HwBootInfo {
-    fn obtain_inner_from_arch_info(raw_boot_info_ptr: *const u8) -> BootInfoInner {
+    fn obtain_from_arch_info(raw_boot_info_ptr: *const u8) -> BootInfo {
         /* load the multiboot information */
         let multiboot_hdr = unsafe { multiboot2::load(raw_boot_info_ptr as usize) };
 
@@ -52,7 +59,7 @@ impl HwBootInfoBase for HwBootInfo {
                 let mem_area = BootMemArea::new(PhysAddr::new(mmap.start_address()
                                                               as usize),
                                                 mmap.size() as usize);
-                mem_areas.push(mem_area);
+                mem_areas.insert(mem_area);
             }
 
             mem_areas
@@ -60,7 +67,15 @@ impl HwBootInfoBase for HwBootInfo {
             panic!("Multiboot2 header doesn't provide a valid memory map");
         };
 
+        /* hh_loader identity maps the first 32MiB of RAM */
+        let loader_mapped_range = {
+            let start_frame = VirtAddr::new(LOADER_MAPPED_RANGE_START).containing_frame();
+            let last_frame = VirtAddr::new(LOADER_MAPPED_RANGE_LAST).containing_frame();
+
+            VirtFrame::range_of(start_frame, last_frame)
+        };
+
         /* construct the instance to return */
-        BootInfoInner::new(raw_cmdline, mem_areas, name)
+        BootInfo::new(mem_areas, raw_cmdline, loader_mapped_range, name)
     }
 }

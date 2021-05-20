@@ -36,7 +36,6 @@ impl VMLayout {
     /**
      * Constructs a `VMLayout` filled with the given `VMLayoutArea`s
      */
-    #[cfg(feature = "loader_stage")]
     pub const fn new(kern_text_area: VMLayoutArea,
                      kern_heap_area: VMLayoutArea,
                      kern_stack_area: VMLayoutArea,
@@ -57,7 +56,6 @@ impl VMLayout {
     /**
      * Constructs a zero-filled `VMLayout`
      */
-    #[cfg(feature = "loader_stage")]
     pub fn new_zero() -> Self {
         Self { m_kern_heap_area: VMLayoutArea::new_zero(),
                m_kern_text_area: VMLayoutArea::new_zero(),
@@ -148,7 +146,6 @@ impl VMLayoutArea {
     /**  
      * Constructs a `VMLayoutArea` filled with the given data
      */
-    #[cfg(feature = "loader_stage")]
     pub const fn new(start_addr: VirtAddr, size: usize) -> Self {
         Self { m_start_addr: start_addr,
                m_size: size }
@@ -157,7 +154,6 @@ impl VMLayoutArea {
     /**
      * Constructs a zero-filled `VMLayoutArea`
      */
-    #[cfg(feature = "loader_stage")]
     pub fn new_zero() -> Self {
         Self { m_start_addr: VirtAddr::new_zero(),
                m_size: 0 }

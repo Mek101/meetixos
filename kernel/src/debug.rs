@@ -1,7 +1,7 @@
 /*! Kernel debugging */
 
 use shared::{
-    info::info::BootInfo,
+    info::descriptor::LoaderInfo,
     logger::debug
 };
 
@@ -29,9 +29,9 @@ pub fn dump_boot_info() {
  */
 pub fn dump_boot_cmdline() {
     debug!("\tCommand Line:");
-    for cmd_arg in BootInfo::obtain().cmdline_args().iter() {
+    /*for cmd_arg in BootInfo::obtain().cmdline_args().iter() {
         debug!("\t\t{}", cmd_arg.as_str());
-    }
+    }*/
 }
 
 /** # Dumps boot memory areas

@@ -1,17 +1,17 @@
 /*! Command line arguments */
 
-use os::str_utils;
+use crate::os::str_utils;
 
 /**
  * Maximum amount of command line arguments that `BootInfoInner` could
  * store
  */
-pub(crate) const BOOT_CMDLINE_ARGS_COUNT_MAX: usize = 32;
+const BOOT_CMDLINE_ARGS_COUNT_MAX: usize = 32;
 
 /**
  * Maximum length in bytes that each command line arguments could have
  */
-pub(crate) const BOOT_CMDLINE_ARGS_LEN_MAX: usize = 64;
+const BOOT_CMDLINE_ARGS_LEN_MAX: usize = 64;
 
 /**
  * Collection of tokenized arguments given to the kernel by the currently
@@ -27,8 +27,7 @@ impl CmdLineArgs {
     /**
      * Constructs a `CmdLineArgs` which parses the given raw slice
      */
-    #[cfg(feature = "loader_stage")]
-    pub(crate) fn new(raw_cmdline: &str) -> Self {
+    pub fn new(raw_cmdline: &str) -> Self {
         /* split and count the raw string arguments */
         let mut count = 0;
         let mut args_buf = [CmdLineArg::default(); BOOT_CMDLINE_ARGS_COUNT_MAX];
@@ -97,8 +96,7 @@ impl CmdLineArg {
     /**
      * Constructs a `CmdLineArg` with the given argument
      */
-    #[cfg(feature = "loader_stage")]
-    pub(crate) fn new(arg: &str) -> Self {
+    pub fn new(arg: &str) -> Self {
         let mut arg_buf = [0; BOOT_CMDLINE_ARGS_LEN_MAX];
         str_utils::copy_str_to_u8_buf(&mut arg_buf, arg);
 

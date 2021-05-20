@@ -15,12 +15,16 @@
 #![no_main]
 #![feature(global_asm, iter_advance_by, panic_info_message, array_methods)]
 
-use shared::{
-    info::info::BootInfo,
-    logger::info
+use shared::logger::{
+    debug,
+    info
 };
 
 use crate::{
+    info::{
+        boot_info,
+        boot_info_init
+    },
     loader::{
         loader_init_core_cache,
         loader_load_core
@@ -41,6 +45,7 @@ use crate::{
 };
 
 mod arch;
+mod info;
 mod loader;
 mod log;
 mod mem;
@@ -52,8 +57,8 @@ mod version;
  */
 #[no_mangle]
 pub unsafe extern "C" fn hhl_rust_entry(raw_info_ptr: *const u8) -> ! {
-    /* interpret the raw pointer given to fill the <BootInfo> */
-    let _ = BootInfo::from_raw(raw_info_ptr);
+    /* initialize the given raw information pointer */
+    boot_info_init(raw_info_ptr);
 
     /* initialize the logger, to be able to print in a formatted way */
     log_init();
@@ -62,31 +67,33 @@ pub unsafe extern "C" fn hhl_rust_entry(raw_info_ptr: *const u8) -> ! {
     info!("MeetiX Kernel Loader v{}", HHL_VERSION);
 
     /* load the ELF file of the kernel's core */
-    info!("Pre-loading Kernel's Core");
+    info!("Initializing Kernel's Core Cache...");
     loader_init_core_cache();
 
     /* pre initialize physical memory, obtain how many bitmap pages are necessary */
-    info!("Pre-initializing PhysMem Manager");
+    info!("Initializing Physical Memory Management...");
     let necessary_bitmap_pages = phys_pre_init();
 
     /* organize the VM layout for the kernel */
-    info!("Randomizing Kernel Core's VM Layout...");
+    info!("Initializing Kernel's Core VM Layout...");
     vml_randomize_core_layout(necessary_bitmap_pages);
 
     /* initialize the physical memory allocator */
-    info!("Initializing PhysMem Manager");
+    info!("Initializing Physical Memory Management...");
     phys_init();
 
     /* map the physical memory at the right area */
-    info!("Initializing paging");
+    info!("Initializing Paging...");
     paging_map_phys_mem();
 
     /* load the kernel core now */
     info!("Loading Kernel's Core");
     loader_load_core();
 
+    debug!("Bootloader name: {}", boot_info().bootloader_name());
+
     let page_dir = paging_current_page_dir();
-    info!("Current PageDir composition:\n{:?}", page_dir);
+    debug!("Current PageDir composition:\n{:?}", page_dir);
 
     info!("Halting!");
     loop { /* loop forever here */ }

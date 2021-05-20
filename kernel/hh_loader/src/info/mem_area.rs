@@ -1,13 +1,19 @@
 /*! Boot physical memory area */
 
-use core::cmp::Ordering;
+use core::{
+    cmp::Ordering,
+    fmt
+};
 
-use crate::addr::phys::PhysAddr;
+use shared::{
+    addr::phys::PhysAddr,
+    dbg::dbg_display_size
+};
 
 /**
  * Maximum amount of `BootMemArea`s storable into a `BootMemAreas`
  */
-pub const BOOT_MEM_AREAS_COUNT_MAX: usize = 64;
+const BOOT_MEM_AREAS_COUNT_MAX: usize = 64;
 
 /**
  * Fixed collection of address ordered  `BootMemArea`s
@@ -107,14 +113,6 @@ impl BootMemArea {
     }
 
     /**
-     * Returns whether the given `PhysAddr` belongs to this `BootMemArea`
-     */
-    pub fn contains(&self, phys_addr: PhysAddr) -> bool {
-        phys_addr >= self.m_start_phys_addr
-        && phys_addr < self.m_start_phys_addr + self.m_size
-    }
-
-    /**
      * Returns the starting physical address of the area
      */
     pub fn start_phys_addr(&self) -> PhysAddr {
@@ -126,5 +124,11 @@ impl BootMemArea {
      */
     pub fn size(&self) -> usize {
         self.m_size
+    }
+}
+
+impl fmt::Display for BootMemArea {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:x} ({})", self.m_start_phys_addr, dbg_display_size(self.m_size))
     }
 }

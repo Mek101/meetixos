@@ -9,7 +9,6 @@ use shared::{
         virt::VirtAddr,
         Address
     },
-    info::info::BootInfo,
     mem::paging::{
         dir::PageDir,
         flush::MapFlusher,
@@ -43,11 +42,7 @@ static mut UNMNG_AREA_ALLOCATOR: UnmngAreaLockedAllocator =
  * [`PageDir`]: /hal/paging/struct.PageDir.html
  */
 pub fn paging_active_page_dir() -> PageDir {
-    unsafe {
-        PageDir::active_page_dir(BootInfo::obtain().vm_layout()
-                                                   .phys_mem_mapping_area()
-                                                   .start_addr())
-    }
+    unsafe { PageDir::active_page_dir(VirtAddr::new_zero()) }
 }
 
 /** # Makes accessible the given `PhysFrame` range

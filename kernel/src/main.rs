@@ -20,7 +20,7 @@
 extern crate alloc;
 
 use shared::{
-    info::info::BootInfo,
+    info::descriptor::LoaderInfo,
     logger::info
 };
 
@@ -65,12 +65,12 @@ pub fn write_video(message: &str) {
  * that requires physical/dynamic memory allocation
  */
 #[no_mangle]
-pub unsafe extern "C" fn kern_start(boot_info: BootInfo) {
+pub unsafe extern "C" fn kern_start(boot_info: *const LoaderInfo) {
     /* initialize the kernel's instance of the BootInfo.
      * The given instance references the higher half loader memory, which will be
      * unmapped in the next steps, and become unreachable
      */
-    let _ = BootInfo::from_other(boot_info);
+    //let _ = BootInfo::from_other(boot_info);
 
     /* initialize the logging system */
     init_logger();

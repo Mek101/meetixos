@@ -2,7 +2,7 @@
 ENTRY(hhl_start)
 
 SECTIONS {
-    /* load at physical 2MiB, after BIOS */
+    /* load at physical 1MiB, after BIOS */
     . = 1M;
 
     /* Higher Half Loader text section */

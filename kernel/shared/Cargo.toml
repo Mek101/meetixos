@@ -42,9 +42,6 @@ version = "0.6.0"
 [target.'cfg(target_arch = "x86_64")'.dependencies.x86_64]
 version = "0.14.1"
 
-[target.'cfg(target_arch = "x86_64")'.dependencies.multiboot2]
-version = "0.10.1"
-
 [target.'cfg(target_arch = "x86_64")'.dependencies.uart_16550]
 version = "0.2.12"
 
@@ -57,7 +54,3 @@ path = "../../libs/os"
 
 [dependencies.macros]
 path = "../../libs/macros"
-
-[features]
-default = []
-loader_stage = []

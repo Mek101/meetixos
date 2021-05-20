@@ -1,7 +1,5 @@
 /*! Boot information */
 
 pub mod args;
-pub mod info;
-#[cfg(feature = "loader_stage")]
-pub mod mem_area;
+pub mod descriptor;
 pub mod vm_layout;

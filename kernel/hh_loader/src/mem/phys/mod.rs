@@ -9,7 +9,6 @@ use shared::{
         dbg_display_size,
         MIB
     },
-    info::info::BootInfo,
     logger::{
         info,
         warn
@@ -28,6 +27,7 @@ use shared::{
 };
 
 use crate::{
+    info::boot_info,
     loader::loader_core_preload_cache,
     mem::{
         paging::{
@@ -66,7 +66,7 @@ pub fn phys_pre_init() -> usize {
     let min_memory = loader_core_preload_cache().load_size() + 4 * Page2MiB::SIZE;
 
     /* calculate the total memory available and warn low memory */
-    let total_mem = BootInfo::obtain().mem_areas().iter().map(|area| area.size()).sum();
+    let total_mem = boot_info().mem_areas().iter().map(|area| area.size()).sum();
     if total_mem < min_memory {
         warn!("Detected a VERY SMALL amount of physical memory: less than {}MiB",
               min_memory / MIB);

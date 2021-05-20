@@ -1,16 +1,10 @@
 /*! Kernel logger implementation */
 
-use core::{
-    num::NonZeroUsize,
-    str::FromStr
-};
+use core::num::NonZeroUsize;
 
-use shared::{
-    info::info::BootInfo,
-    logger::{
-        logger::LevelFilter,
-        writers::UartWriter
-    }
+use shared::logger::{
+    logger::LevelFilter,
+    writers::UartWriter
 };
 use sync::RawSpinMutex;
 
@@ -48,14 +42,15 @@ pub fn init_logger() {
     }
 
     /* search for `-log-level` key into the kernel's command line */
-    let level_filter = {
+    let level_filter = DEFAULT_LOGGING_LEVEL;
+    /*{
         let info = BootInfo::obtain();
         info.cmdline_args()
             .find_key("-log-level")
             .map_or(DEFAULT_LOGGING_LEVEL, |arg| {
                 LevelFilter::from_str(arg.value()).unwrap_or(DEFAULT_LOGGING_LEVEL)
             })
-    };
+    };*/
 
     /* hide all the logs above the given filter level */
     log_set_max_level(level_filter);
@@ -79,20 +74,20 @@ pub fn log_enable_buffering(use_previous_buffer_if_any: bool) {
      * <truncate_to_init_size> is true, otherwise use 0, to tell to the buffer
      * manager to simply re-use the previously allocated buffer
      */
-    let buffer_size =
-        BootInfo::obtain().cmdline_args()
-                          .find_key("-log-buffer-size")
-                          .map_or(DEFAULT_BUFFER_SIZE, |value| {
-                              if let Ok(value) = usize::from_str(value.as_str()) {
-                                  if let Some(value) = NonZeroUsize::new(value) {
-                                      value
-                                  } else {
-                                      DEFAULT_BUFFER_SIZE
-                                  }
-                              } else {
-                                  DEFAULT_BUFFER_SIZE
-                              }
-                          });
+    let buffer_size = NonZeroUsize::new(1).unwrap();
+    /*BootInfo::obtain().cmdline_args()
+    .find_key("-log-buffer-size")
+    .map_or(DEFAULT_BUFFER_SIZE, |value| {
+        if let Ok(value) = usize::from_str(value.as_str()) {
+            if let Some(value) = NonZeroUsize::new(value) {
+                value
+            } else {
+                DEFAULT_BUFFER_SIZE
+            }
+        } else {
+            DEFAULT_BUFFER_SIZE
+        }
+    });*/
 
     unsafe {
         KERN_LOGGER.enable_buffering(use_previous_buffer_if_any, buffer_size);
