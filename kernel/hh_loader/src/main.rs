@@ -90,6 +90,5 @@ pub unsafe extern "C" fn hhl_rust_entry(raw_info_ptr: *const u8) -> ! {
     let page_dir = paging_current_page_dir();
     debug!("Current PageDir composition:\n{:?}", page_dir);
 
-    info!("Halting!");
-    loop { /* loop forever here */ }
+    panic!("Kernel Core loader returned");
 }
