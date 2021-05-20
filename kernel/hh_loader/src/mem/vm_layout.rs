@@ -7,6 +7,7 @@ use shared::{
         virt::VirtAddr,
         Address
     },
+    dbg::KIB,
     info::vm_layout::{
         VMLayout,
         VMLayoutArea
@@ -156,12 +157,11 @@ impl VMComponent {
      */
     fn alignment(&self) -> usize {
         match self {
-            Self::KernHeap(_) | Self::PhysMemBitmap(_) | Self::PageCache(_) => {
-                Page4KiB::SIZE
-            },
-            Self::KernStack(_) | Self::PhysMemMapping(_) | Self::TmpMapping(_) => {
-                Page2MiB::SIZE
-            },
+            Self::KernHeap(_)
+            | Self::PhysMemBitmap(_)
+            | Self::KernStack(_)
+            | Self::PageCache(_) => Page4KiB::SIZE,
+            Self::PhysMemMapping(_) | Self::TmpMapping(_) => Page2MiB::SIZE,
             _ => panic!("Tried to obtain alignment of `None` VMComponent")
         }
     }
@@ -236,7 +236,7 @@ impl VMComponents {
            -> Self {
         let phys_mem_bitmap_size = bitmap_pages_count * Page4KiB::SIZE;
         let phys_mem_map_size = align_up(total_memory, Page2MiB::SIZE);
-        let kern_stack_size = Page2MiB::SIZE;
+        let kern_stack_size = 64 * KIB;
         let tmp_map_size = Page2MiB::SIZE;
 
         let last_components_size = align_down((kern_space_size

@@ -15,10 +15,7 @@
 #![no_main]
 #![feature(global_asm, iter_advance_by, panic_info_message, array_methods)]
 
-use shared::logger::{
-    debug,
-    info
-};
+use shared::logger::info;
 
 use crate::{
     info::info_init_boot_info,
@@ -87,8 +84,8 @@ pub unsafe extern "C" fn hhl_rust_entry(raw_info_ptr: *const u8) -> ! {
     info!("Loading Kernel's Core");
     loader_load_core();
 
-    let page_dir = paging_current_page_dir();
-    debug!("Current PageDir composition:\n{:?}", page_dir);
+    shared::logger::debug!("Current PageDir composition:\n{:?}",
+                           paging_current_page_dir());
 
     panic!("Kernel Core loader returned");
 }

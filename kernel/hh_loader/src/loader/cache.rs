@@ -6,6 +6,7 @@ use shared::{
         Address
     },
     elf::{
+        header,
         program::Type,
         ElfFile
     }
@@ -30,7 +31,12 @@ impl<'a> KernelPreLoadCache<'a> {
     pub(super) fn new(core_elf_bytes: &'a [u8]) -> Self {
         /* parse the elf bytes and panic when kernel core image is corrupted */
         let core_elf = match ElfFile::new(core_elf_bytes) {
-            Ok(core_elf) => core_elf,
+            Ok(core_elf) => {
+                if let Err(err) = header::sanity_check(&core_elf) {
+                    panic!("corrupted kernel core image: {}", err);
+                }
+                core_elf
+            },
             Err(err) => panic!("Corrupted kernel core image: {}", err)
         };
 

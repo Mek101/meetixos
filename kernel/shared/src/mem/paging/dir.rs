@@ -732,6 +732,21 @@ pub enum PageDirErr {
     PartialHugePageUnmap
 }
 
+impl PageDirErr {
+    /**
+     * Returns a human readable string for the error variant
+     */
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::PageNotMapped => "Page not mapped",
+            Self::PageAlreadyMapped => "Virtual address already mapped",
+            Self::EmptyRange => "Empty range given",
+            Self::PhysAllocFailed => "Failed to allocate frame",
+            Self::PartialHugePageUnmap => "Tried to partially unmap an HUGE frame"
+        }
+    }
+}
+
 impl From<PageTableEntryErr> for PageDirErr {
     fn from(pte_err: PageTableEntryErr) -> Self {
         match pte_err {
@@ -743,14 +758,6 @@ impl From<PageTableEntryErr> for PageDirErr {
 
 impl fmt::Display for PageDirErr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            PageDirErr::PageNotMapped => write!(f, "Page not mapped"),
-            PageDirErr::PageAlreadyMapped => write!(f, "Virtual address already mapped"),
-            PageDirErr::EmptyRange => write!(f, "Empty range given"),
-            PageDirErr::PhysAllocFailed => write!(f, "Failed to allocate frame"),
-            PageDirErr::PartialHugePageUnmap => {
-                write!(f, "Tried to partially unmap an HUGE frame")
-            }
-        }
+        write!(f, "{}", self.as_str())
     }
 }
