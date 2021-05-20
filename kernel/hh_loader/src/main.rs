@@ -21,10 +21,7 @@ use shared::logger::{
 };
 
 use crate::{
-    info::{
-        boot_info,
-        boot_info_init
-    },
+    info::info_init_boot_info,
     loader::{
         loader_init_core_cache,
         loader_load_core
@@ -58,7 +55,7 @@ mod version;
 #[no_mangle]
 pub unsafe extern "C" fn hhl_rust_entry(raw_info_ptr: *const u8) -> ! {
     /* initialize the given raw information pointer */
-    boot_info_init(raw_info_ptr);
+    info_init_boot_info(raw_info_ptr);
 
     /* initialize the logger, to be able to print in a formatted way */
     log_init();
@@ -89,8 +86,6 @@ pub unsafe extern "C" fn hhl_rust_entry(raw_info_ptr: *const u8) -> ! {
     /* load the kernel core now */
     info!("Loading Kernel's Core");
     loader_load_core();
-
-    debug!("Bootloader name: {}", boot_info().bootloader_name());
 
     let page_dir = paging_current_page_dir();
     debug!("Current PageDir composition:\n{:?}", page_dir);

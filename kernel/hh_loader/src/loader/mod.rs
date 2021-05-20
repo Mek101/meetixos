@@ -1,6 +1,9 @@
 /*! Kernel core loader */
 
-use crate::loader::cache::KernelPreLoadCache;
+use crate::{
+    info::info_prepare_loader_info,
+    loader::cache::KernelPreLoadCache
+};
 
 pub mod cache;
 
@@ -28,6 +31,8 @@ pub fn loader_init_core_cache() {
 pub fn loader_load_core() {
     let preload_cache = loader_core_preload_cache();
     for _program_hdr in preload_cache.elf_file().program_iter() {}
+
+    let _loader_info = info_prepare_loader_info();
 }
 
 /**
