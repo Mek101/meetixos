@@ -1,5 +1,7 @@
 /*! Kernel core loader */
 
+use core::mem::size_of;
+
 use crate::{
     arch::loader::arch_loader_switch_to_kernel,
     info::info_prepare_loader_info,
@@ -38,14 +40,14 @@ pub fn loader_init_core_cache() {
 pub fn loader_load_core() {
     /* load the kernel core parts needed for switching */
     let stack_area = loader_stack_setup_core_stack();
-    let core_entry = loader_elf_load_core_elf();
+    let core_entry_point = loader_elf_load_core_elf();
     let loader_info = info_prepare_loader_info();
 
     /* switch to the kernel core */
     unsafe {
-        arch_loader_switch_to_kernel(stack_area.end_addr(),
+        arch_loader_switch_to_kernel((stack_area.end_addr() - 1) - size_of::<usize>(),
                                      loader_info as *const _,
-                                     core_entry);
+                                     core_entry_point);
     }
 }
 

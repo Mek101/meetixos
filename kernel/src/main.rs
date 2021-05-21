@@ -36,6 +36,8 @@ use crate::{
     },
     version::KERN_VERSION
 };
+use core::fmt::Write;
+use shared::uart::Uart;
 
 mod debug;
 mod interrupt;
@@ -65,18 +67,23 @@ pub fn write_video(message: &str) {
  * that requires physical/dynamic memory allocation
  */
 #[no_mangle]
-pub unsafe extern "C" fn kern_start(boot_info: *const LoaderInfo) {
+pub unsafe extern "C" fn kern_start(/*_boot_info: *const LoaderInfo*/) {
     /* initialize the kernel's instance of the BootInfo.
      * The given instance references the higher half loader memory, which will be
      * unmapped in the next steps, and become unreachable
      */
     //let _ = BootInfo::from_other(boot_info);
 
-    /* initialize the logging system */
-    init_logger();
+    let mut uart = Uart::new();
+    uart.init();
+    write!(uart, "Hi From MeetiX Kernel!");
 
-    info!("MeetiX Kernel v{} is booting...", KERN_VERSION);
-    write_video("MeetiX Kernel v0.1.0 is booting...");
+    /* initialize the logging system */
+    //init_logger();
+
+    //info!("MeetiX Kernel v{} is booting...", KERN_VERSION);
+    //write_video("MeetiX Kernel v0.1.0 is booting...");
+    loop {}
 
     /* initialize the physical memory allocator */
     info!("Initializing physical memory...");

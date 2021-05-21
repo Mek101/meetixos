@@ -185,7 +185,7 @@ impl VMLayoutArea {
      */
     pub fn as_frame_range<S>(&self) -> VirtFrameRange<S>
         where S: PageSize {
-        assert_eq!(self.m_size % S::SIZE, 0);
+        //assert_eq!(self.m_size % S::SIZE, 0);
 
         let start_frame = self.start_addr().containing_frame();
         VirtFrame::range_of(start_frame, start_frame + self.m_size / S::SIZE)

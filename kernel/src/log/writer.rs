@@ -110,10 +110,10 @@ impl<W> LoggerWriter for BufferedWriter<W> where W: LoggerWriter {
 
 impl<W> fmt::Write for BufferedWriter<W> where W: LoggerWriter {
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        if self.m_buffered {
-            self.write_buffered(s)
-        } else {
-            self.m_writer.write_str(s)
-        }
+        //if self.m_buffered {
+        //    self.write_buffered(s)
+        //} else {
+        self.m_writer.write_str(s)
+        //}
     }
 }

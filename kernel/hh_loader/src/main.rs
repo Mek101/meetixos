@@ -13,7 +13,7 @@
 
 #![no_std]
 #![no_main]
-#![feature(global_asm, iter_advance_by, panic_info_message, array_methods)]
+#![feature(global_asm, iter_advance_by, panic_info_message, array_methods, asm)]
 
 use shared::logger::info;
 
@@ -25,10 +25,7 @@ use crate::{
     },
     log::log_init,
     mem::{
-        paging::{
-            paging_current_page_dir,
-            paging_map_phys_mem
-        },
+        paging::paging_map_phys_mem,
         phys::{
             phys_init,
             phys_pre_init
@@ -40,6 +37,7 @@ use crate::{
 
 mod arch;
 mod info;
+mod interrupt;
 mod loader;
 mod log;
 mod mem;
@@ -64,6 +62,8 @@ pub unsafe extern "C" fn hhl_rust_entry(raw_info_ptr: *const u8) -> ! {
     info!("Initializing Kernel's Core Cache...");
     loader_init_core_cache();
 
+    interrupt::init_interrupts();
+
     /* pre initialize physical memory, obtain how many bitmap pages are necessary */
     info!("Initializing Physical Memory Management...");
     let necessary_bitmap_pages = phys_pre_init();
@@ -83,9 +83,6 @@ pub unsafe extern "C" fn hhl_rust_entry(raw_info_ptr: *const u8) -> ! {
     /* load the kernel core now */
     info!("Loading Kernel's Core");
     loader_load_core();
-
-    shared::logger::debug!("Current PageDir composition:\n{:?}",
-                           paging_current_page_dir());
 
     panic!("Kernel Core loader returned");
 }

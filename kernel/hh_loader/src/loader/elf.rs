@@ -127,7 +127,8 @@ fn loader_load_map_segment<F>(program_hdr: ProgramHeader,
 
     /* construct the right combination of protection bits */
     let map_flags = {
-        let mut pd_flags = PDirFlags::new().set_present().set_remap().build();
+        let mut pd_flags =
+            PDirFlags::new().set_present().set_global().set_remap().build();
         if !program_hdr.flags().is_execute() {
             pd_flags.set_no_execute();
         }
