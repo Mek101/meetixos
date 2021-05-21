@@ -90,7 +90,7 @@ impl<T, S> Frame<T, S>
      * Returns the `Frame` which is down-aligned to the nearest `S::SIZE`
      */
     pub fn of_addr(addr: T) -> Self {
-        Self::new_unchecked(addr.align_down(S::SIZE).unwrap())
+        Self::new_unchecked(addr.align_down(S::SIZE))
     }
 
     /**

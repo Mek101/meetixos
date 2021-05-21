@@ -16,9 +16,9 @@ use shared::{
     mem::{
         bitmap::BitMapAllocator,
         paging::{
+            flags::PDirFlags,
             flush::MapFlusher,
             frame::PhysFrame,
-            table::PTFlags,
             Page2MiB,
             Page4KiB,
             PageSize
@@ -31,7 +31,7 @@ use crate::{
     loader::loader_core_preload_cache,
     mem::{
         paging::{
-            allocator::HHLPageDirAllocator,
+            allocators::HHLPageDirAllocator,
             paging_current_page_dir
         },
         phys::init_allocator::HHLPreInitAllocator,
@@ -108,11 +108,12 @@ pub fn phys_init() {
     let map_result =
         paging_current_page_dir().map_range(bitmap_area.as_frame_range::<Page4KiB>(),
                                             &HHLPageDirAllocator,
-                                            PTFlags::PRESENT
-                                            | PTFlags::READABLE
-                                            | PTFlags::WRITEABLE
-                                            | PTFlags::GLOBAL
-                                            | PTFlags::NO_EXECUTE);
+                                            PDirFlags::new().set_present()
+                                                            .set_readable()
+                                                            .set_writeable()
+                                                            .set_global()
+                                                            .set_no_execute()
+                                                            .build());
     match map_result {
         Ok(flusher) => flusher.flush(),
         Err(err) => panic!("Unable to map physical memory bitmap: cause: {}", err)

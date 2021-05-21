@@ -71,19 +71,19 @@ pub trait Address:
     }
 
     /**
-     * Returns on `Ok` the aligned up address using the given `align`
+     * Returns the aligned up address using the given `align`
      */
-    fn align_up<A>(self, align: A) -> Result<Self, AddressErr>
+    fn align_up<A>(&self, align: A) -> Self
         where A: Into<usize> {
-        Self::try_from(align_up(self.into(), align.into()))
+        Self::new(align_up(self.as_usize(), align.into()))
     }
 
     /**
-     * Returns on `Ok` the aligned down address using the given `align`
+     * Returns the aligned down address using the given `align`
      */
-    fn align_down<A>(self, align: A) -> Result<Self, AddressErr>
+    fn align_down<A>(&self, align: A) -> Self
         where A: Into<usize> {
-        Self::try_from(align_down(self.into(), align.into()))
+        Self::new(align_down(self.as_usize(), align.into()))
     }
 
     /**
@@ -99,9 +99,7 @@ pub trait Address:
      */
     fn is_aligned<A>(&self, align: A) -> bool
         where A: Into<usize> {
-        Self::from(self.clone()).align_down(align)
-                                .map(|aligned| aligned == self.clone())
-                                .unwrap_or(false)
+        self.align_down(align).eq(self)
     }
 
     /**

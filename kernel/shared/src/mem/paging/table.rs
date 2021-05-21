@@ -144,9 +144,9 @@ impl PageTableEntry {
      * Updates the `PageTableEntry` data with the given `PhysFrame` and
      * the given `PTFlags`
      */
-    pub fn set_mapping<S>(&mut self, phys_frame: PhysFrame<S>, flags: PTFlags)
+    pub fn set_mapping<S>(&mut self, phys_frame: PhysFrame<S>, pt_flags: PTFlags)
         where S: PageSize {
-        self.m_entry_data = phys_frame.start_addr().as_usize() | flags.bits();
+        self.m_entry_data = phys_frame.start_addr().as_usize() | pt_flags.bits();
     }
 
     /**

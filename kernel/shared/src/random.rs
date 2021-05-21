@@ -19,6 +19,13 @@ impl Random {
     }
 
     /**
+     * Returns an `usize` random generated number
+     */
+    pub fn randomize_usize(&self) -> usize {
+        self.m_hw_random.randomize_u64() as usize
+    }
+
+    /**
      * Returns an `u64` random generated number
      */
     pub fn randomize_u64(&self) -> u64 {

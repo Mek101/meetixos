@@ -13,6 +13,7 @@ use crate::{
     arch::mem::paging::dir::HwPageDirSupport,
     mem::paging::{
         allocator::FrameAllocator,
+        flags::PDirFlags,
         flush::{
             MapFlush,
             MapFlusher,
@@ -81,7 +82,7 @@ impl PageDir {
     pub fn map_single<S, A>(&mut self,
                             virt_frame: VirtFrame<S>,
                             allocator: &A,
-                            flags: PTFlags)
+                            pd_flags: PDirFlags)
                             -> Result<MapFlush<S>, PageDirErr>
         where S: PageSize,
               A: FrameAllocator<S> {
@@ -89,7 +90,7 @@ impl PageDir {
         {
             /* ensure logical correctness in DEBUG mode */
             if !S::IS_BIG {
-                assert!(!flags.is_huge_page());
+                assert!(!pd_flags.is_huge_page());
             }
         }
 
@@ -99,7 +100,7 @@ impl PageDir {
          * a None; the map_frame() method will simply leave 0 the frame bits of the
          * PageTableEntry
          */
-        let phys_frame = if flags.is_present() {
+        let phys_frame = if pd_flags.is_present() {
             if let Some(phys_frame) = allocator.alloc_page() {
                 Some(phys_frame)
             } else {
@@ -110,9 +111,9 @@ impl PageDir {
         };
 
         /* add the <HUGE_PAGE> flag if required and not already present */
-        let mut map_flags = flags.clone();
-        if S::IS_BIG && !flags.is_huge_page() {
-            map_flags |= PTFlags::HUGE_PAGE;
+        let mut map_flags = pd_flags.clone();
+        if S::IS_BIG && !pd_flags.is_huge_page() {
+            map_flags.set_huge_page();
         }
 
         /* demand the actual mapping operations to the map_frame() method */
@@ -135,7 +136,7 @@ impl PageDir {
     pub fn map_range<S, A>(&mut self,
                            virt_range: VirtFrameRange<S>,
                            allocator: &A,
-                           flags: PTFlags)
+                           flags: PDirFlags)
                            -> Result<MapRangeFlush<S>, PageDirErr>
         where S: PageSize,
               A: FrameAllocator<S> {
@@ -323,7 +324,7 @@ impl PageDir {
                        virt_frame: VirtFrame<S>,
                        phys_frame: Option<PhysFrame<S>>,
                        allocator: &A,
-                       flags: PTFlags)
+                       pd_flags: PDirFlags)
                        -> Result<(), PageDirErr>
         where S: PageSize,
               A: FrameAllocator<S> {
@@ -342,7 +343,7 @@ impl PageDir {
             /* Ensure the existence of the next page table and fail without any
              * rollback because caller methods unmaps partially done mappings
              */
-            table = self.ensure_next_pt(next_table_entry, allocator, flags)?;
+            table = self.ensure_next_pt(next_table_entry, allocator, pd_flags)?;
         }
 
         /* select the map level entry */
@@ -351,7 +352,10 @@ impl PageDir {
         /* ensure that the selected entry is unused or without PhysFrame (in case of
          * demand paging)
          */
-        if table_entry.is_unused() || !table_entry.flags().is_present() {
+        if table_entry.is_unused()
+           || !table_entry.flags().is_present()
+           || pd_flags.is_remap()
+        {
             /* we have now to distinguish the two cases here:
              * 1) phys_frame is Some, explicit mapping is requested: we have to fill
              *    the entry with physical frame given and the flags
@@ -367,9 +371,9 @@ impl PageDir {
              * the mapping page table without effectively map a PhysFrame
              */
             if let Some(phys_frame) = phys_frame {
-                table_entry.set_mapping(phys_frame, flags);
+                table_entry.set_mapping(phys_frame, pd_flags.page_table_flags());
             } else {
-                table_entry.set_flags(flags);
+                table_entry.set_flags(pd_flags.page_table_flags());
             }
             Ok(())
         } else {
@@ -440,7 +444,7 @@ impl PageDir {
     fn ensure_next_pt<'b, S, A>(&self,
                                 entry: &'b mut PageTableEntry,
                                 allocator: &A,
-                                flags: PTFlags)
+                                flags: PDirFlags)
                                 -> Result<&'b mut PageTable, PageDirErr>
         where S: PageSize,
               A: FrameAllocator<S> {

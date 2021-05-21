@@ -28,7 +28,7 @@ impl FrameAllocator<Page4KiB> for HHLPageDirAllocator {
     }
 
     fn free_page(&self, _: PhysFrame<Page4KiB>) {
-        panic!("HHLPageDirAllocator called to free a page")
+        //panic!("HHLPageDirAllocator called to free a page")
     }
 
     fn alloc_page_table(&self) -> Option<PhysFrame<Page4KiB>> {
@@ -36,7 +36,7 @@ impl FrameAllocator<Page4KiB> for HHLPageDirAllocator {
     }
 
     fn free_page_table(&self, _: PhysFrame<Page4KiB>) {
-        panic!("HHLPageDirAllocator called to free a page table")
+        //panic!("HHLPageDirAllocator called to free a page table")
     }
 }
 
@@ -63,7 +63,7 @@ impl FrameAllocator<Page2MiB> for LinearAllocator {
     }
 
     fn free_page(&self, _: PhysFrame<Page2MiB>) {
-        panic!("LinearAllocator called to free a page")
+        //panic!("LinearAllocator called to free a page")
     }
 
     fn alloc_page_table(&self) -> Option<PhysFrame<Page4KiB>> {
@@ -71,6 +71,6 @@ impl FrameAllocator<Page2MiB> for LinearAllocator {
     }
 
     fn free_page_table(&self, _: PhysFrame<Page4KiB>) {
-        panic!("LinearAllocator called to free a page table")
+        //panic!("LinearAllocator called to free a page table")
     }
 }

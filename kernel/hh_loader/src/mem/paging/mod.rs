@@ -5,19 +5,20 @@ use shared::{
         virt::VirtAddr,
         Address
     },
+    logger::debug,
     mem::paging::{
         dir::PageDir,
-        flush::MapFlusher,
-        table::PTFlags
+        flags::PDirFlags,
+        flush::MapFlusher
     }
 };
 
 use crate::mem::{
-    paging::allocator::LinearAllocator,
+    paging::allocators::LinearAllocator,
     vm_layout::vml_core_layout
 };
 
-pub mod allocator;
+pub mod allocators;
 
 /* offset of the physical memory into virtual memory */
 static mut PHYS_MEM_OFFSET: Option<VirtAddr> = None;
@@ -27,6 +28,7 @@ static mut PHYS_MEM_OFFSET: Option<VirtAddr> = None;
  */
 pub fn paging_map_phys_mem() {
     let phys_mem_mapping_area = vml_core_layout().phys_mem_mapping_area();
+    debug!("Mapping physical memory at: {}", phys_mem_mapping_area);
 
     /* map all the physical memory into the designed area.
      * Note that here is used mapping with huge 2MiB frames to reduce physical
@@ -35,12 +37,13 @@ pub fn paging_map_phys_mem() {
     let map_result =
         paging_current_page_dir().map_range(phys_mem_mapping_area.as_frame_range(),
                                             &LinearAllocator::new_zero(),
-                                            PTFlags::PRESENT
-                                            | PTFlags::READABLE
-                                            | PTFlags::WRITEABLE
-                                            | PTFlags::GLOBAL
-                                            | PTFlags::HUGE_PAGE
-                                            | PTFlags::NO_EXECUTE);
+                                            PDirFlags::new().set_present()
+                                                            .set_readable()
+                                                            .set_writeable()
+                                                            .set_global()
+                                                            .set_huge_page()
+                                                            .set_no_execute()
+                                                            .build());
     match map_result {
         Ok(map_flusher) => {
             /* not strictly necessary, but just to be sure */
@@ -48,6 +51,7 @@ pub fn paging_map_phys_mem() {
         },
         Err(err) => {
             /* cannot continue anymore */
+            debug!("\n{:?}", paging_current_page_dir());
             panic!("Failed to map physical memory: cause: {}", err)
         }
     }

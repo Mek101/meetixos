@@ -2,6 +2,7 @@
 
 pub mod allocator;
 pub mod dir;
+pub mod flags;
 pub mod flush;
 pub mod frame;
 pub mod table;
