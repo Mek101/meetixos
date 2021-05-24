@@ -12,7 +12,10 @@ pub use log::{
     SetLoggerError
 };
 
-use log::set_max_level;
+use log::{
+    set_max_level,
+    Level
+};
 
 use crate::logger::writers::LoggerWriter;
 
@@ -25,6 +28,13 @@ pub struct Logger<W>
 }
 
 impl<W> Logger<W> where W: LoggerWriter {
+    const ESC_RED: usize = 31;
+    const ESC_GREEN: usize = 32;
+    const ESC_YELLOW: usize = 33;
+    const ESC_MAGENTA: usize = 35;
+    const ESC_CYAN: usize = 36;
+    const ESC_WHITE: usize = 37;
+
     /**
      * Constructs an uninitialized `Logger` which must be initialized with
      * `Logger::enable_as_global()`
@@ -64,10 +74,20 @@ impl<W> Log for Logger<W> where W: LoggerWriter {
 
     fn log(&self, record: &Record) {
         if let Some(ref inner) = self.m_inner {
+            let color_escape = match record.level() {
+                Level::Error => Self::ESC_RED,
+                Level::Warn => Self::ESC_YELLOW,
+                Level::Info => Self::ESC_GREEN,
+                Level::Debug => Self::ESC_MAGENTA,
+                Level::Trace => Self::ESC_WHITE
+            };
+
             let writer = unsafe { &mut *inner.get() };
             write!(writer,
-                   "[{: >5} <> {: <25}] {}\n",
-                   record.level(),  /* human readable log-level */
+                   "[\x1b[0;{}m{: >5}\x1b[0m <> \x1b[0;{}m{: <25}\x1b[0m] {}\n",
+                   color_escape,
+                   record.level(), /* human readable log-level */
+                   Self::ESC_CYAN,
                    record.target(), /* path to the rust module relative to the kernel */
                    record.args()).unwrap();
         }

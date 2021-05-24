@@ -85,6 +85,7 @@ pub fn phys_pre_init() -> usize {
         PhysFrame::range_of(PhysAddr::new(text_begin).containing_frame(),
                             PhysAddr::new(text_end).containing_frame())
     };
+    debug!("Text Range: {:?}", text_frames_range);
 
     /* instruct the pre-init allocator to not use the following range */
     unsafe {

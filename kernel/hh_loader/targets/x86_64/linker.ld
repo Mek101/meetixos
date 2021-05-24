@@ -35,6 +35,7 @@ SECTIONS {
         *(.bss*)
         *(.sbss*)
 
+        . = ALIGN(4K);
         __hhl_text_end = .;
     }
 }
