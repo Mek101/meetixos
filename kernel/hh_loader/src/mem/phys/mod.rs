@@ -83,14 +83,12 @@ pub fn phys_pre_init() -> usize {
         PhysAddr::new(raw_end_addr).containing_frame() + 1
     };
     debug!("first_available_frame: {:?}", first_usable_frame);
+    debug!("Total Available Memory: {}", dbg_display_size(total_mem));
 
     /* instruct the pre-init allocator to not use the following range */
     unsafe {
         PRE_INIT_ALLOCATOR.start_after(first_usable_frame);
     }
-
-    /* print to the log a bit of information */
-    debug!("Total Available Memory: {}", dbg_display_size(total_mem));
 
     /* return how many pages are necessary to store the bitmap */
     ((total_mem / Page4KiB::SIZE / (u8::BITS as usize)) + Page4KiB::MASK) >> 12
@@ -118,9 +116,6 @@ pub fn phys_init() {
         Err(err) => panic!("Unable to map physical memory bitmap: cause: {}", err)
     }
 
-    debug!("Success!");
-    debug!("Initializing bitmap allocator");
-
     unsafe {
         /* initialize the bitmap allocator */
         BITMAP_ALLOCATOR.init(bitmap_area.start_addr().as_ptr_mut(), bitmap_area.size());
@@ -131,8 +126,6 @@ pub fn phys_init() {
             for phys_frame in phys_frames {
                 BITMAP_ALLOCATOR.add_frame(phys_frame)
             }
-
-            debug!("Success!");
 
             /* now can be used the bitmap allocator */
             CAN_USE_BITMAP = true;
