@@ -84,11 +84,13 @@ impl<W> Log for Logger<W> where W: LoggerWriter {
 
             let writer = unsafe { &mut *inner.get() };
             write!(writer,
-                   "[\x1b[0;{}m{: >5}\x1b[0m <> \x1b[0;{}m{: <25}\x1b[0m] {}\n",
+                   "[\x1b[0;{}m{: >5}\x1b[0m <> \x1b[0;{}m{: <25}\x1b[0m] \
+                    \x1b[0;{}m{}\x1b[0m\n",
                    color_escape,
                    record.level(), /* human readable log-level */
                    Self::ESC_CYAN,
                    record.target(), /* path to the rust module relative to the kernel */
+                   color_escape,
                    record.args()).unwrap();
         }
     }

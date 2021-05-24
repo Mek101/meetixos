@@ -41,6 +41,7 @@ pub fn info_prepare_loader_info() -> &'static LoaderInfo {
     let boot_info = boot_info();
     let loader_info = LoaderInfo::new(boot_info.cmdline_args().clone(),
                                       vml_core_layout().clone(),
+                                      boot_info.loader_reserved_range().clone(),
                                       boot_info.loader_mapped_range().clone(),
                                       boot_info.bootloader_name());
 

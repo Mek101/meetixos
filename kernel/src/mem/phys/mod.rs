@@ -1,7 +1,7 @@
 /*! Kernel physical memory manager */
 
 use shared::{
-    logger::info,
+    logger::log_info,
     mem::paging::{
         frame::PhysFrame,
         Page2MiB,
@@ -26,7 +26,7 @@ static mut TOTAL_MEMORY: usize = 0;
  * Initializes the global physical memory allocator
  */
 pub fn init_phys_mem() {
-    info!("Physical allocator initialized");
+    log_info!("Physical allocator initialized");
 }
 
 /**

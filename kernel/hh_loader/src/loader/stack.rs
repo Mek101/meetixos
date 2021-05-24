@@ -2,7 +2,10 @@
 
 use shared::{
     info::vm_layout::VMLayoutArea,
-    logger::debug,
+    logger::{
+        log_debug,
+        log_trace
+    },
     mem::paging::flush::MapFlusher
 };
 
@@ -20,7 +23,7 @@ use shared::mem::paging::flags::PDirFlags;
  */
 pub fn loader_stack_setup_core_stack() -> VMLayoutArea {
     let stack_area = vml_core_layout().kern_stack_area();
-    debug!("Mapping kernel stack at: {}", stack_area);
+    log_debug!("Mapping kernel stack at: {}", stack_area);
 
     /* map the stack area */
     let mapping_res =
@@ -34,7 +37,7 @@ pub fn loader_stack_setup_core_stack() -> VMLayoutArea {
     match mapping_res {
         Ok(map_flusher) => map_flusher.flush(),
         Err(err) => {
-            debug!("\n{:?}", paging_current_page_dir());
+            log_trace!("\n{:?}", paging_current_page_dir());
             panic!("Failed to map kernel stack: cause: {}", err)
         }
     }

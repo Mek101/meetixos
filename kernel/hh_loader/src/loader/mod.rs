@@ -4,7 +4,10 @@ use core::mem::size_of;
 
 use shared::{
     addr::virt::VirtAddr,
-    logger::debug
+    logger::{
+        log_debug,
+        log_trace
+    }
 };
 
 use crate::{
@@ -14,7 +17,8 @@ use crate::{
         cache::KernelPreLoadCache,
         elf::loader_elf_load_core_elf,
         stack::loader_stack_setup_core_stack
-    }
+    },
+    mem::paging::paging_current_page_dir
 };
 
 pub mod cache;
@@ -48,8 +52,8 @@ pub fn loader_load_core() {
     let core_entry_point = loader_elf_load_core_elf();
     let loader_info = info_prepare_loader_info();
 
-    debug!("Switching to kernel core jumping at: {:x}", core_entry_point);
-    debug!("PageDir composition:\n{:?}", crate::mem::paging::paging_current_page_dir());
+    log_debug!("Switching to kernel core jumping at: {:x}", core_entry_point);
+    log_trace!("PageDir composition:\n{:?}", paging_current_page_dir());
 
     /* switch to the kernel core */
     unsafe {

@@ -8,7 +8,7 @@ use shared::{
         },
         stack_frame::InterruptStackFrame
     },
-    logger::info
+    logger::log_info
 };
 
 static mut INTERRUPT_MANAGER: InterruptManager = InterruptManager::new_uninitialized();
@@ -20,7 +20,7 @@ pub fn init_interrupts() {
 
         INTERRUPT_MANAGER.enable_as_global();
     }
-    info!("Interrupts initialized");
+    log_info!("Interrupts initialized");
 }
 
 fn page_fault_except_handler(_stack_frame: InterruptStackFrame,

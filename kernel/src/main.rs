@@ -21,7 +21,7 @@ extern crate alloc;
 
 use shared::{
     info::descriptor::LoaderInfo,
-    logger::info
+    logger::log_info
 };
 
 use crate::{
@@ -81,27 +81,27 @@ pub unsafe extern "C" fn kern_start(_boot_info: *const LoaderInfo) {
     /* initialize the logging system */
     //init_logger();
 
-    //info!("MeetiX Kernel v{} is booting...", KERN_VERSION);
+    //log_info!("MeetiX Kernel v{} is booting...", KERN_VERSION);
     write_video("MeetiX Kernel v0.1.0 is booting...");
     loop {}
 
     /* initialize the physical memory allocator */
-    info!("Initializing physical memory...");
+    log_info!("Initializing physical memory...");
     init_phys_mem();
 
     /* initialize the heap memory allocator */
-    info!("Initializing dynamic memory...");
+    log_info!("Initializing dynamic memory...");
     init_heap();
 
     /* enable logger buffering */
-    info!("Enabling logger buffering...");
+    log_info!("Enabling logger buffering...");
     log_enable_buffering(false);
 
     /* initialize the interrupt manager */
-    info!("Initializing interrupts...");
+    log_info!("Initializing interrupts...");
     init_interrupts();
 
-    info!("Pre-init done...");
+    log_info!("Pre-init done...");
     kern_debug_and_tests();
 }
 
@@ -113,7 +113,7 @@ fn kern_debug_and_tests() -> ! {
         use shared::mem::paging::Page4KiB;
 
         if let Some(phys_frame) = phys_mem_alloc_frame::<Page4KiB>() {
-            info!("allocated PhysFrame<Page4KiB>({:?})", phys_frame)
+            log_info!("allocated PhysFrame<Page4KiB>({:?})", phys_frame)
         } else {
             panic!("Failed to allocate a 4KiB frame");
         }
@@ -124,7 +124,7 @@ fn kern_debug_and_tests() -> ! {
         use hal::paging::Page2MiB;
 
         if let Some(phys_frame) = phys_mem_alloc_frame::<Page2MiB>() {
-            info!("allocated PhysFrame<Page2MiB>({:?})", phys_frame)
+            log_info!("allocated PhysFrame<Page2MiB>({:?})", phys_frame)
         } else {
             panic!("Failed to allocate a 2MiB frame");
         }
@@ -136,10 +136,10 @@ fn kern_debug_and_tests() -> ! {
 
         let boxed_int = Box::new([1u64, 2u64, 3u64, 5u64, 6u64, 7u64, 8u64, 9u64, 10u64]);
 
-        info!("\theap_allocated_mem: {}", dbg_display_size(heap_allocated_mem()));
+        log_info!("\theap_allocated_mem: {}", dbg_display_size(heap_allocated_mem()));
 
         for (i, value) in boxed_int.iter().enumerate() {
-            info!("\tvalue ({}, {})", i, value);
+            log_info!("\tvalue ({}, {})", i, value);
         }
     }*/
 
@@ -176,30 +176,30 @@ fn kern_debug_and_tests() -> ! {
 
         dump_boot_info();
 
-        debug!("Address Size:");
-        debug!("\tVirtAddr size = {} bits, PhysAddr size = {} bits",
+        log_debug!("Address Size:");
+        log_debug!("\tVirtAddr size = {} bits, PhysAddr size = {} bits",
                size_of::<VirtAddr>() * 8,
                size_of::<PhysAddr>() * 8);
 
-        debug!("Physical Memory Consumption");
-        debug!("\tphys_mem_total_mem:     {}", dbg_display_size(phys_mem_total_mem()));
-        debug!("\tphys_mem_allocated_mem: {}",
+        log_debug!("Physical Memory Consumption");
+        log_debug!("\tphys_mem_total_mem:     {}", dbg_display_size(phys_mem_total_mem()));
+        log_debug!("\tphys_mem_allocated_mem: {}",
                dbg_display_size(phys_mem_allocated_mem()));
-        debug!("\tphys_mem_free_memory:   {}", dbg_display_size(phys_mem_free_memory()));
+        log_debug!("\tphys_mem_free_memory:   {}", dbg_display_size(phys_mem_free_memory()));
 
-        debug!("Dynamic Memory Consumption");
-        debug!("\theap_managed_mem:   {}", dbg_display_size(heap_managed_mem()));
-        debug!("\theap_allocated_mem: {}", dbg_display_size(heap_allocated_mem()));
-        debug!("\theap_free_memory:   {}", dbg_display_size(heap_free_memory()));
+        log_debug!("Dynamic Memory Consumption");
+        log_debug!("\theap_managed_mem:   {}", dbg_display_size(heap_managed_mem()));
+        log_debug!("\theap_allocated_mem: {}", dbg_display_size(heap_allocated_mem()));
+        log_debug!("\theap_free_memory:   {}", dbg_display_size(heap_free_memory()));
 
-        debug!("Page Directory");
+        log_debug!("Page Directory");
         let active_page_dir = paging_active_page_dir();
-        debug!("\tactive_page_dir.root_phys_frame: {:?}",
+        log_debug!("\tactive_page_dir.root_phys_frame: {:?}",
                active_page_dir.root_phys_frame());
-        debug!("\n{:?}", active_page_dir);
+        log_debug!("\n{:?}", active_page_dir);
     }
 
-    info!("Initializing Core modules...");
+    log_info!("Initializing Core modules...");
 
     for _ in 0..8 {
         test_4kib_alloc();

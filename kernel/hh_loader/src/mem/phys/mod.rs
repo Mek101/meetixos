@@ -10,8 +10,8 @@ use shared::{
         MIB
     },
     logger::{
-        debug,
-        warn
+        log_debug,
+        log_warn
     },
     mem::{
         bitmap::BitMapAllocator,
@@ -62,13 +62,14 @@ extern "C" {
  * 4KiB pages are necessary to map the physical memory bitmap
  */
 pub fn phys_pre_init() -> usize {
+    let boot_info = boot_info();
     let min_memory = loader_core_preload_cache().load_size() + 4 * Page2MiB::SIZE;
 
     /* calculate the total memory available and warn low memory */
-    let total_mem = boot_info().mem_areas().iter().map(|area| area.size()).sum();
+    let total_mem = boot_info.mem_areas().iter().map(|area| area.size()).sum();
     if total_mem < min_memory {
-        warn!("Detected a VERY SMALL amount of physical memory: less than {}MiB",
-              min_memory / MIB);
+        log_warn!("Detected a VERY SMALL amount of physical memory: less than {}MiB",
+                  min_memory / MIB);
     }
 
     /* save the total memory amount in bytes */
@@ -78,12 +79,13 @@ pub fn phys_pre_init() -> usize {
 
     /* obtain the range of physical frames occupied by the text of the hh_loader */
     let first_usable_frame = {
-        let raw_end_addr = unsafe { &__hhl_text_end as *const _ as usize };
+        let first_virt_usable_frame = boot_info.loader_reserved_range().end().clone() + 1;
 
-        PhysAddr::new(raw_end_addr).containing_frame() + 1
+        /* possible since the memory in this case is identity mapped */
+        PhysAddr::new(first_virt_usable_frame.start_addr().as_usize()).containing_frame()
     };
-    debug!("first_available_frame: {:?}", first_usable_frame);
-    debug!("Total Available Memory: {}", dbg_display_size(total_mem));
+    log_debug!("first_available_frame: {:?}", first_usable_frame);
+    log_debug!("Total Available Memory: {}", dbg_display_size(total_mem));
 
     /* instruct the pre-init allocator to not use the following range */
     unsafe {
@@ -99,7 +101,7 @@ pub fn phys_pre_init() -> usize {
  */
 pub fn phys_init() {
     let bitmap_area = vml_core_layout().phys_mem_bitmap_area();
-    debug!("Mapping bitmap area at: {}", bitmap_area);
+    log_debug!("Mapping bitmap area at: {}", bitmap_area);
 
     /* map into the designated area the bitmap */
     let map_result =

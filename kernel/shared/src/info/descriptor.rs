@@ -8,7 +8,7 @@ use crate::{
         vm_layout::VMLayout
     },
     mem::paging::{
-        frame::VirtFrameRange,
+        frame::VirtFrameRangeIncl,
         Page2MiB
     }
 };
@@ -26,7 +26,8 @@ pub const BOOTLOADER_NAME_LEN_MAX: usize = 64;
 pub struct LoaderInfo {
     m_cmdline_args: CmdLineArgs,
     m_vm_layout: VMLayout,
-    m_loader_mapped_range: VirtFrameRange<Page2MiB>,
+    m_loader_reserved_range: VirtFrameRangeIncl<Page2MiB>,
+    m_loader_mapped_range: VirtFrameRangeIncl<Page2MiB>,
     m_bootloader_name: [u8; BOOTLOADER_NAME_LEN_MAX],
     m_bootloader_name_len: usize
 }
@@ -37,7 +38,8 @@ impl LoaderInfo {
      */
     pub fn new(cmdline_args: CmdLineArgs,
                vm_layout: VMLayout,
-               loader_mapped_range: VirtFrameRange<Page2MiB>,
+               loader_reserved_range: VirtFrameRangeIncl<Page2MiB>,
+               loader_mapped_range: VirtFrameRangeIncl<Page2MiB>,
                bootloader_name: &str)
                -> Self {
         let mut name_buffer = [0; BOOTLOADER_NAME_LEN_MAX];
@@ -45,6 +47,7 @@ impl LoaderInfo {
 
         Self { m_cmdline_args: cmdline_args,
                m_vm_layout: vm_layout,
+               m_loader_reserved_range: loader_reserved_range,
                m_loader_mapped_range: loader_mapped_range,
                m_bootloader_name: name_buffer,
                m_bootloader_name_len: bootloader_name.len() }
@@ -65,13 +68,22 @@ impl LoaderInfo {
     }
 
     /**
-     * Returns the virtual range of pages mapped by the `hh_loader` which
-     * the kernel core must unmap.
+     * Returns the virtual range on which the `hh_loader` physically
+     * resides.
      *
-     * NOTE: Any physical page/page table must be freed because they are
-     *       already marked as available into the physical bitmap
+     * NOTE: Physical pages in this range can be marked as available again
      */
-    pub fn loader_mapped_range(&self) -> VirtFrameRange<Page2MiB> {
+    pub fn loader_reserved_range(&self) -> VirtFrameRangeIncl<Page2MiB> {
+        self.m_loader_reserved_range.clone()
+    }
+
+    /**
+     * Returns the initial mapped range of virtual memory which must be
+     * unmapped
+     *
+     * NOTE: Physical pages cannot be marked as available
+     */
+    pub fn loader_mapped_range(&self) -> VirtFrameRangeIncl<Page2MiB> {
         self.m_loader_mapped_range.clone()
     }
 

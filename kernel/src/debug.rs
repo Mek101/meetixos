@@ -2,7 +2,7 @@
 
 use shared::{
     info::descriptor::LoaderInfo,
-    logger::debug
+    logger::log_debug
 };
 
 /** # Dumps `BootInfo`
@@ -13,8 +13,9 @@ use shared::{
  * [`HAL`]: /hal/
  */
 pub fn dump_boot_info() {
-    debug!("BootInfo:");
-    //debug!("\tPhys Mem Offset: {:?}", BootInfo::obtain().hw_phys_mem_offset());
+    log_debug!("BootInfo:");
+    //log_debug!("\tPhys Mem Offset: {:?}",
+    // BootInfo::obtain().hw_phys_mem_offset());
     dump_boot_cmdline();
     dump_boot_mem_areas();
 }
@@ -28,9 +29,9 @@ pub fn dump_boot_info() {
  * [`HAL`]: /hal/
  */
 pub fn dump_boot_cmdline() {
-    debug!("\tCommand Line:");
+    log_debug!("\tCommand Line:");
     /*for cmd_arg in BootInfo::obtain().cmdline_args().iter() {
-        debug!("\t\t{}", cmd_arg.as_str());
+        log_debug!("\t\t{}", cmd_arg.as_str());
     }*/
 }
 
@@ -43,9 +44,9 @@ pub fn dump_boot_cmdline() {
  * [`HAL`]: /hal/
  */
 pub fn dump_boot_mem_areas() {
-    debug!("\tMemory Areas:");
+    log_debug!("\tMemory Areas:");
     /*for mma in BootInfo::obtain().mem_areas().iter() {
-        debug!("\t\tBootMemArea {{ {:?}, {} }}",
+        log_debug!("\t\tBootMemArea {{ {:?}, {} }}",
                mma.start_phys_addr(),
                dbg_display_size(mma.size()));
     }*/

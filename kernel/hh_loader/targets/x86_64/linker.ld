@@ -40,7 +40,7 @@ SECTIONS {
     .kernel_core ALIGN(4K): {
         *(.kernel_core*)
 
-        . = ALIGN(4K);
+        . = ALIGN(2M);
         __hhl_text_end = .;
     }
 }

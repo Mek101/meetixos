@@ -14,8 +14,8 @@ use shared::{
     },
     dbg::dbg_display_size,
     logger::{
-        debug,
-        info
+        log_debug,
+        log_info
     },
     mem::paging::{
         flush::MapFlusher,
@@ -56,7 +56,7 @@ pub fn init_heap() {
     unsafe {
         HEAP_ALLOCATOR.force_init();
     }
-    info!("Heap allocator initialized");
+    log_info!("Heap allocator initialized");
 }
 
 /** Returns the heap's currently managed virtual region size
@@ -108,8 +108,8 @@ fn heap_mem_supplier(requested_size: usize) -> Option<(usize, usize)> {
     let next_heap_end = (unsafe { HEAP_PAGES } + requested_pages) * Page4KiB::SIZE;
 
     #[cfg(debug_assertions)]
-    debug!("Supplying additional {} to the heap allocator",
-           dbg_display_size(page_aligned_size));
+    log_debug!("Supplying additional {} to the heap allocator",
+               dbg_display_size(page_aligned_size));
 
     /* ensure that the kernel heap's reserved virtual area is still in limits */
     if KRN_HEAP_START + next_heap_end >= KRN_HEAP_END {
