@@ -54,7 +54,6 @@ static mut CAN_USE_BITMAP: bool = false;
 static mut TOTAL_MEMORY: usize = 0;
 
 extern "C" {
-    static __hhl_text_begin: usize;
     static __hhl_text_end: usize;
 }
 
@@ -78,9 +77,11 @@ pub fn phys_pre_init() -> usize {
     }
 
     /* obtain the range of physical frames occupied by the text of the hh_loader */
-    let first_usable_frame =
-        PhysAddr::new(unsafe { &__hhl_text_end as *const _ as usize }).containing_frame()
-        + 1;
+    let first_usable_frame = {
+        let raw_end_addr = unsafe { &__hhl_text_end as *const _ as usize };
+
+        PhysAddr::new(raw_end_addr).containing_frame() + 1
+    };
     debug!("first_available_frame: {:?}", first_usable_frame);
 
     /* instruct the pre-init allocator to not use the following range */
