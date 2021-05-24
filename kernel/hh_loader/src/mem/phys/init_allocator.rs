@@ -1,18 +1,12 @@
 /*! Initial physical memory allocator */
 
-use core::ops::Range;
-
 use shared::{
     addr::{
         phys::PhysAddr,
         Address
     },
-    dbg::MIB,
     mem::paging::{
-        frame::{
-            PhysFrame,
-            PhysFrameRange
-        },
+        frame::PhysFrame,
         Page4KiB,
         PageSize
     }
@@ -25,7 +19,6 @@ use crate::info::boot_info;
  * allocate `PhysFrame<Page4KiB>` frames
  */
 pub(super) struct HHLPreInitAllocator {
-    m_to_skip: Range<usize>,
     m_next_frame: usize
 }
 
@@ -34,21 +27,14 @@ impl HHLPreInitAllocator {
      * Constructs a `PreInitBootMemAllocator`
      */
     pub const fn new() -> Self {
-        Self { m_to_skip: Range { start: 0,
-                                  end: 0 },
-               /* keep the first MiB reserved */
-               m_next_frame: MIB / Page4KiB::SIZE }
+        Self { m_next_frame: 0 }
     }
 
     /**
      * Sets the range of physical frames that the allocator must ignore
      */
-    pub fn skip_range(&mut self, to_skip_frame_range: PhysFrameRange<Page4KiB>) {
-        let raw_start_addr = to_skip_frame_range.start.start_addr().as_usize();
-        let raw_end_addr = to_skip_frame_range.end.start_addr().as_usize();
-
-        self.m_to_skip = Range { start: raw_start_addr / Page4KiB::SIZE,
-                                 end: raw_end_addr / Page4KiB::SIZE };
+    pub fn start_after(&mut self, first_usable_frame: PhysFrame<Page4KiB>) {
+        self.m_next_frame = first_usable_frame.start_addr().as_usize() / Page4KiB::SIZE;
     }
 
     /**
@@ -57,9 +43,6 @@ impl HHLPreInitAllocator {
     pub fn allocate(&mut self) -> Option<PhysFrame<Page4KiB>> {
         self.iter_to_next()?.next().map(|phys_frame| {
                                        self.m_next_frame += 1;
-                                       if self.m_next_frame == self.m_to_skip.start {
-                                           self.m_next_frame = self.m_to_skip.end
-                                       }
                                        phys_frame
                                    })
     }

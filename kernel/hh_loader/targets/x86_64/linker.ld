@@ -34,6 +34,11 @@ SECTIONS {
     .bss ALIGN(4K): {
         *(.bss*)
         *(.sbss*)
+    }
+
+    /* Kernel Core code */
+    .kernel_core ALIGN(4K): {
+        *(.kernel_core*)
 
         . = ALIGN(4K);
         __hhl_text_end = .;

@@ -11,7 +11,7 @@ use shared::addr::{
 pub unsafe fn arch_loader_switch_to_kernel(stack_top: VirtAddr,
                                            loader_info_ptr: VirtAddr,
                                            core_entry_point: VirtAddr) {
-    asm!("mov rsp, {}; mov rbp, rsp; push 0; jmp {}",
+    asm!("mov rsp, {}; mov rbp, rsp; push 0; call {}",
          in(reg) stack_top.as_usize(),
          in(reg) core_entry_point.as_usize(),
          in("rdi") loader_info_ptr.as_usize());

@@ -64,6 +64,7 @@ $(BUILT_HHL): $(HHL_CORE_MOD) $(HHL_SOURCES) $(HHL_LINK_SRC)
 $(HHL_CORE_MOD): $(SHF_SOURCES) $(BUILT_KRN)
 	$(V) echo "- Writing Kernel Core Module..."
 	$(V) echo "const KERNEL_SIZE: usize = $$(stat --format %s $(BUILT_KRN));" >$(HHL_CORE_MOD)
+	$(V) echo "#[link_section = \".kernel_core\"]" >>$(HHL_CORE_MOD)
 	$(V) echo "static KERNEL_BYTES: [u8; KERNEL_SIZE] = *include_bytes!(r\"$(BUILT_KRN)\");" >>$(HHL_CORE_MOD)
 
 $(BUILT_KRN): $(SHF_SOURCES) $(KRN_SOURCES) $(KRN_LINK_SRC)

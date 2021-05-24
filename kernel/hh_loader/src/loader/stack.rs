@@ -39,5 +39,12 @@ pub fn loader_stack_setup_core_stack() -> VMLayoutArea {
         }
     }
 
+    /* zero-fill the area of the allocated stack */
+    let stack_area_slice = unsafe {
+        core::slice::from_raw_parts_mut(stack_area.start_addr().as_ptr_mut::<u8>(),
+                                        stack_area.size())
+    };
+    stack_area_slice.fill(0);
+
     stack_area.clone()
 }

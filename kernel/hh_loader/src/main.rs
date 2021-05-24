@@ -38,7 +38,6 @@ use crate::{
 
 mod arch;
 mod info;
-mod interrupt;
 mod loader;
 mod log;
 mod mem;
@@ -62,8 +61,6 @@ pub unsafe extern "C" fn hhl_rust_entry(raw_info_ptr: *const u8) -> ! {
     /* load the ELF file of the kernel's core */
     info!("Initializing Kernel's Core Cache...");
     loader_init_core_cache();
-
-    interrupt::init_interrupts();
 
     /* pre initialize physical memory, obtain how many bitmap pages are necessary */
     info!("Initializing Physical Memory Management...");

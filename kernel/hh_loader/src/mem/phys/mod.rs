@@ -78,18 +78,14 @@ pub fn phys_pre_init() -> usize {
     }
 
     /* obtain the range of physical frames occupied by the text of the hh_loader */
-    let text_frames_range = {
-        let text_begin = unsafe { &__hhl_text_begin as *const _ as usize };
-        let text_end = unsafe { &__hhl_text_end as *const _ as usize };
-
-        PhysFrame::range_of(PhysAddr::new(text_begin).containing_frame(),
-                            PhysAddr::new(text_end).containing_frame())
-    };
-    debug!("Text Range: {:?}", text_frames_range);
+    let first_usable_frame =
+        PhysAddr::new(unsafe { &__hhl_text_end as *const _ as usize }).containing_frame()
+        + 1;
+    debug!("first_available_frame: {:?}", first_usable_frame);
 
     /* instruct the pre-init allocator to not use the following range */
     unsafe {
-        PRE_INIT_ALLOCATOR.skip_range(text_frames_range);
+        PRE_INIT_ALLOCATOR.start_after(first_usable_frame);
     }
 
     /* print to the log a bit of information */
@@ -121,6 +117,9 @@ pub fn phys_init() {
         Err(err) => panic!("Unable to map physical memory bitmap: cause: {}", err)
     }
 
+    debug!("Success!");
+    debug!("Initializing bitmap allocator");
+
     unsafe {
         /* initialize the bitmap allocator */
         BITMAP_ALLOCATOR.init(bitmap_area.start_addr().as_ptr_mut(), bitmap_area.size());
@@ -131,6 +130,8 @@ pub fn phys_init() {
             for phys_frame in phys_frames {
                 BITMAP_ALLOCATOR.add_frame(phys_frame)
             }
+
+            debug!("Success!");
 
             /* now can be used the bitmap allocator */
             CAN_USE_BITMAP = true;

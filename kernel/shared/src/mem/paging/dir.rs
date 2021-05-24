@@ -100,7 +100,7 @@ impl PageDir {
          * a None; the map_frame() method will simply leave 0 the frame bits of the
          * PageTableEntry
          */
-        let phys_frame = if pd_flags.is_present() {
+        let phys_frame = if pd_flags.is_present() && !pd_flags.is_remap() {
             if let Some(phys_frame) = allocator.alloc_page() {
                 Some(phys_frame)
             } else {
@@ -576,9 +576,7 @@ impl Debug for PageDir {
                 continue;
             }
 
-            if let Err(err) = writeln!(f, "\tL4{:?}", l4_entry) {
-                return Err(err);
-            }
+            writeln!(f, "\tL4{:?}", l4_entry)?;
 
             if l4_entry.flags().is_present() {
                 if let Ok(l3_page_table) = self.next_page_table(l4_entry) {
@@ -587,19 +585,15 @@ impl Debug for PageDir {
                             continue;
                         }
 
-                        if let Err(err) = write!(f, "\t\tL3{:?}", l3_entry) {
-                            return Err(err);
-                        }
+                        write!(f, "\t\tL3{:?}", l3_entry)?;
+
                         if l3_entry.flags().is_huge_page() {
                             let frame = VirtFrame::<Page1GiB>::from_table_indexes(PageTableIndex::new(l4_index as u16),
                                                                                   PageTableIndex::new(l3_index as u16));
-                            if let Err(err) = writeln!(f, " VirtFrame<1GiB>({:?})", frame.start_addr()) {
-                                return Err(err);
-                            } else {
-                                continue;
-                            }
+                            writeln!(f, " VirtFrame<1GiB>({:?})", frame.start_addr())?;
+                            continue;
                         } else {
-                            let _ = write!(f, "\n");
+                            write!(f, "\n")?;
                         }
 
                         if l3_entry.flags().is_present() && !l3_entry.flags().is_huge_page() {
@@ -609,20 +603,15 @@ impl Debug for PageDir {
                                         continue;
                                     }
 
-                                    if let Err(err) = write!(f, "\t\t\tL2{:?}", l2_entry) {
-                                        return Err(err);
-                                    }
+                                    write!(f, "\t\t\tL2{:?}", l2_entry)?;
                                     if l2_entry.flags().is_huge_page() {
                                         let frame = VirtFrame::<Page2MiB>::from_table_indexes(PageTableIndex::new(l4_index as u16),
                                                                                               PageTableIndex::new(l3_index as u16),
                                                                                               PageTableIndex::new(l2_index as u16));
-                                        if let Err(err) = writeln!(f, " VirtFrame<2MiB>({:?})", frame.start_addr()) {
-                                            return Err(err);
-                                        } else {
-                                            continue;
-                                        }
+                                        writeln!(f, " VirtFrame<2MiB>({:?})", frame.start_addr())?;
+                                        continue;
                                     } else {
-                                        let _ = write!(f, "\n");
+                                        write!(f, "\n")?;
                                     }
 
                                     if l2_entry.flags().is_present() && !l2_entry.flags().is_huge_page() {
@@ -637,9 +626,7 @@ impl Debug for PageDir {
                                                                                                       PageTableIndex::new(l2_index as u16),
                                                                                                       PageTableIndex::new(l1_index as u16));
 
-                                                if let Err(err) = writeln!(f, "\t\t\t\tL1{:?} VirtFrame<4KiB>({:?})", l1_entry, frame.start_addr()) {
-                                                    return Err(err);
-                                                }
+                                                writeln!(f, "\t\t\t\tL1{:?} VirtFrame<4KiB>({:?})", l1_entry, frame.start_addr())?;
                                             }
                                         }
                                     }
@@ -651,6 +638,47 @@ impl Debug for PageDir {
             }
         }
         Ok(())
+    }
+}
+
+/**
+ * Lists the errors that could occur when using the `PageDir`
+ */
+pub enum PageDirErr {
+    PageNotMapped,
+    PageAlreadyMapped,
+    EmptyRange,
+    PhysAllocFailed,
+    PartialHugePageUnmap
+}
+
+impl PageDirErr {
+    /**
+     * Returns a human readable string for the error variant
+     */
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::PageNotMapped => "Page not mapped",
+            Self::PageAlreadyMapped => "Virtual address already mapped",
+            Self::EmptyRange => "Empty range given",
+            Self::PhysAllocFailed => "Failed to allocate frame",
+            Self::PartialHugePageUnmap => "Tried to partially unmap an HUGE frame"
+        }
+    }
+}
+
+impl From<PageTableEntryErr> for PageDirErr {
+    fn from(pte_err: PageTableEntryErr) -> Self {
+        match pte_err {
+            PageTableEntryErr::PhysFrameNotPresent => Self::PageNotMapped,
+            PageTableEntryErr::InUseForBigFrame => Self::PageAlreadyMapped
+        }
+    }
+}
+
+impl fmt::Display for PageDirErr {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.as_str())
     }
 }
 
@@ -723,45 +751,4 @@ pub(crate) trait HwPageDirSupportBase {
      * Activates the given `PhysFrame` as current `PageDir`
      */
     unsafe fn activate_page_dir(phys_frame: PhysFrame<Page4KiB>);
-}
-
-/**
- * Lists the errors that could occur when using the `PageDir`
- */
-pub enum PageDirErr {
-    PageNotMapped,
-    PageAlreadyMapped,
-    EmptyRange,
-    PhysAllocFailed,
-    PartialHugePageUnmap
-}
-
-impl PageDirErr {
-    /**
-     * Returns a human readable string for the error variant
-     */
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Self::PageNotMapped => "Page not mapped",
-            Self::PageAlreadyMapped => "Virtual address already mapped",
-            Self::EmptyRange => "Empty range given",
-            Self::PhysAllocFailed => "Failed to allocate frame",
-            Self::PartialHugePageUnmap => "Tried to partially unmap an HUGE frame"
-        }
-    }
-}
-
-impl From<PageTableEntryErr> for PageDirErr {
-    fn from(pte_err: PageTableEntryErr) -> Self {
-        match pte_err {
-            PageTableEntryErr::PhysFrameNotPresent => Self::PageNotMapped,
-            PageTableEntryErr::InUseForBigFrame => Self::PageAlreadyMapped
-        }
-    }
-}
-
-impl fmt::Display for PageDirErr {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.as_str())
-    }
 }
