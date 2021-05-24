@@ -14,6 +14,7 @@
 #![no_std]
 #![no_main]
 #![feature(global_asm, iter_advance_by, panic_info_message, array_methods, asm)]
+#![feature(abi_x86_interrupt)]
 
 use shared::logger::info;
 

@@ -74,9 +74,9 @@ pub unsafe extern "C" fn kern_start(/*_boot_info: *const LoaderInfo*/) {
      */
     //let _ = BootInfo::from_other(boot_info);
 
-    let mut uart = Uart::new();
-    uart.init();
-    write!(uart, "Hi From MeetiX Kernel!");
+    // let mut uart = Uart::new();
+    // uart.init();
+    // write!(uart, "Hi From MeetiX Kernel!");
 
     /* initialize the logging system */
     //init_logger();

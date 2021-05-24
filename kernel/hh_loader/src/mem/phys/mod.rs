@@ -10,7 +10,7 @@ use shared::{
         MIB
     },
     logger::{
-        info,
+        debug,
         warn
     },
     mem::{
@@ -92,7 +92,7 @@ pub fn phys_pre_init() -> usize {
     }
 
     /* print to the log a bit of information */
-    info!("Total Available Memory: {}", dbg_display_size(total_mem));
+    debug!("Total Available Memory: {}", dbg_display_size(total_mem));
 
     /* return how many pages are necessary to store the bitmap */
     ((total_mem / Page4KiB::SIZE / (u8::BITS as usize)) + Page4KiB::MASK) >> 12
@@ -103,6 +103,7 @@ pub fn phys_pre_init() -> usize {
  */
 pub fn phys_init() {
     let bitmap_area = vml_core_layout().phys_mem_bitmap_area();
+    debug!("Mapping bitmap area at: {}", bitmap_area);
 
     /* map into the designated area the bitmap */
     let map_result =

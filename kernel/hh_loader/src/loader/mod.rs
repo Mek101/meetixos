@@ -2,6 +2,11 @@
 
 use core::mem::size_of;
 
+use shared::{
+    addr::virt::VirtAddr,
+    logger::debug
+};
+
 use crate::{
     arch::loader::arch_loader_switch_to_kernel,
     info::info_prepare_loader_info,
@@ -43,10 +48,13 @@ pub fn loader_load_core() {
     let core_entry_point = loader_elf_load_core_elf();
     let loader_info = info_prepare_loader_info();
 
+    debug!("Switching to kernel core jumping at: {:x}", core_entry_point);
+    debug!("PageDir composition:\n{:?}", crate::mem::paging::paging_current_page_dir());
+
     /* switch to the kernel core */
     unsafe {
-        arch_loader_switch_to_kernel((stack_area.end_addr() - 1) - size_of::<usize>(),
-                                     loader_info as *const _,
+        arch_loader_switch_to_kernel(stack_area.end_addr() - size_of::<usize>(),
+                                     VirtAddr::from(loader_info as *const _),
                                      core_entry_point);
     }
 }
