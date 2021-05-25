@@ -1,5 +1,7 @@
 /*! Kernel land logger implementation */
 
+use core::str::FromStr;
+
 use core::cell::UnsafeCell;
 
 pub use log::{
@@ -15,7 +17,10 @@ use log::{
     Level
 };
 
-use crate::logger::writers::LoggerWriter;
+use crate::{
+    info::args::CmdLineArgs,
+    logger::writers::LoggerWriter
+};
 
 /* re-export log stuffs */
 /**
@@ -58,10 +63,28 @@ impl<W> Logger<W> where W: LoggerWriter {
     }
 
     /**
+     * Calls `Logger::set_max_logging_level` searching for the right cmdline
+     * argument key into the given `CmdLineArgs`
+     */
+    pub fn set_max_logging_level_from_cmdline(&self,
+                                              cmdline: &CmdLineArgs,
+                                              fallback: LevelFilter) {
+        /* search for the filter into the commandline given */
+        let level_filter = cmdline.find_key("-log-level")
+                                  .map(|cmdline_arg| cmdline_arg.value())
+                                  .map(LevelFilter::from_str)
+                                  .map(|result| result.unwrap_or(fallback))
+                                  .unwrap_or(fallback);
+
+        /* apply the filter */
+        self.set_max_logging_level(level_filter);
+    }
+
+    /**
      * Sets the `log::LevelFilter` for the active instance
      */
-    pub fn set_max_logging_level(&self, log_level: LevelFilter) {
-        set_max_level(log_level);
+    pub fn set_max_logging_level(&self, level_filter: LevelFilter) {
+        set_max_level(level_filter);
     }
 
     /**

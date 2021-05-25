@@ -2,17 +2,20 @@
 
 use core::num::NonZeroUsize;
 
-use shared::logger::{
+use shared::{
+    info::args::CmdLineArgs,
     logger::{
-        set_logger,
-        LevelFilter,
-        Log,
-        Logger,
-        Metadata,
-        Record
-    },
-    writers::LoggerWriter,
-    SetLoggerError
+        logger::{
+            set_logger,
+            LevelFilter,
+            Log,
+            Logger,
+            Metadata,
+            Record
+        },
+        writers::LoggerWriter,
+        SetLoggerError
+    }
 };
 use sync::{
     Mutex,
@@ -55,6 +58,16 @@ impl<L, W> LockedBufferedLogger<L, W>
      */
     pub fn enable_as_global(&'static self) -> Result<(), SetLoggerError> {
         set_logger(self)
+    }
+
+    /**
+     * Calls `Logger::set_max_logging_level` searching for the right cmdline
+     * argument key into the given `CmdLineArgs`
+     */
+    pub fn set_max_logging_level_from_cmdline(&self,
+                                              cmdline: &CmdLineArgs,
+                                              fallback: LevelFilter) {
+        self.m_inner.lock().set_max_logging_level_from_cmdline(cmdline, fallback);
     }
 
     /**

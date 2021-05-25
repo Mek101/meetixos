@@ -15,10 +15,12 @@ use shared::{
 };
 
 use crate::{
+    boot_info::boot_info_init,
     log::log_init,
     version::KERN_VERSION
 };
 
+mod boot_info;
 mod log;
 mod mem;
 mod panic;
@@ -29,7 +31,10 @@ mod version;
  * execution
  */
 #[no_mangle]
-pub unsafe extern "C" fn kern_start(_loader_info_ptr: *const LoaderInfo) {
+pub unsafe extern "C" fn kern_start(loader_info_ptr: *const LoaderInfo) {
+    /* initialize the given raw information pointer */
+    boot_info_init(loader_info_ptr);
+
     /* initialize the logger, to be able to print in a formatted way */
     log_init();
 
