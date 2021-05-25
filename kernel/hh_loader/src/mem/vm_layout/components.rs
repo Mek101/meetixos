@@ -108,7 +108,7 @@ impl VMComponent {
     }
 }
 
-impl fmt::Debug for VMComponent {
+impl fmt::Display for VMComponent {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let (variant_name, size) = match *self {
             Self::KernHeap(value) => ("KernHeap", value),

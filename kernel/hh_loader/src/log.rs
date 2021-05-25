@@ -21,6 +21,7 @@ static mut HHL_LOGGER: Logger<UartWriter> = Logger::new_uninitialized();
 pub fn log_init() {
     /* enable the global logger as global for the log crate too */
     unsafe {
+        HHL_LOGGER.init();
         HHL_LOGGER.enable_as_global().unwrap();
     }
 

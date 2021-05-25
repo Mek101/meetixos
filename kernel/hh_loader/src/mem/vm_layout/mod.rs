@@ -10,7 +10,10 @@ use shared::{
         VMLayout,
         VMLayoutArea
     },
-    logger::debug
+    logger::{
+        debug,
+        trace
+    }
 };
 
 use crate::{
@@ -107,12 +110,14 @@ fn vml_randomize_components(necessary_bitmap_pages: usize)
                         (VMComponent::None, VMLayoutArea::new_zero())];
 
     /* iterate now the randomized components to construct the <VMLayoutArea>s */
-    let mut accumulated_diff = 0;
+    let mut total_alignment_diff = 0;
     for (i, vm_component) in vm_components.enumerate() {
+        trace!("Extracted VMComponent: {}", vm_component);
+
         /* construct the VMLayout area aligning his size and address */
         let vm_area = vml_place_vm_component(vm_component,
                                              &mut vm_area_address,
-                                             &mut accumulated_diff);
+                                             &mut total_alignment_diff);
 
         /* put into the vector the component and the area returned */
         vm_areas[i] = (vm_component, vm_area);
@@ -150,8 +155,7 @@ fn vml_place_vm_component(vm_component: VMComponent,
         vm_component.size()
     };
 
-    debug!("{:x} -> {:x} : {:x} - {:?}",
-           current_vm_area_address, vma_aligned_addr, size, vm_component);
+    debug!("{:x} -> {:x} : {:x}", current_vm_area_address, vma_aligned_addr, size);
 
     /* update out the address for the next VMComponent */
     *vm_area_address += size + alignment_diff;

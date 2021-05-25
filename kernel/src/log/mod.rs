@@ -21,6 +21,7 @@ static mut KERN_LOGGER: LockedBufferedLogger<RawSpinMutex, UartWriter> =
 pub fn log_init() {
     /* enable the global logger as global for the log crate too */
     unsafe {
+        KERN_LOGGER.init();
         KERN_LOGGER.enable_as_global().unwrap();
     }
 

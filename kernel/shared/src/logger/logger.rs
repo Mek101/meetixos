@@ -43,11 +43,17 @@ impl<W> Logger<W> where W: LoggerWriter {
     }
 
     /**
-     * Initializes the inner instance and sets `self` as global logger with
-     * `log::set_logger()`
+     * Initializes the inner writer
      */
-    pub fn enable_as_global(&'static mut self) -> Result<(), SetLoggerError> {
+    pub fn init(&mut self) {
         self.m_inner = Some(UnsafeCell::new(W::new()));
+    }
+
+    /**
+     * Sets `self` as global logger with `log::set_logger()`
+     */
+    pub fn enable_as_global(&'static self) -> Result<(), SetLoggerError> {
+        assert!(self.m_inner.is_some());
         set_logger(self)
     }
 

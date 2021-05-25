@@ -44,9 +44,16 @@ impl<L, W> LockedBufferedLogger<L, W>
     }
 
     /**
-     * Sets `self` as global logger
+     * Initializes the inner writer
      */
-    pub fn enable_as_global(&'static mut self) -> Result<(), SetLoggerError> {
+    pub fn init(&mut self) {
+        self.m_inner.lock().init();
+    }
+
+    /**
+     * Sets `self` as global logger with `log::set_logger()`
+     */
+    pub fn enable_as_global(&'static self) -> Result<(), SetLoggerError> {
         set_logger(self)
     }
 
