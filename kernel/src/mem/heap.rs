@@ -3,7 +3,7 @@
 use core::alloc::Layout;
 
 use heap::locked::raw::RawLazyLockedHeap;
-use shared::logger::log_info;
+use shared::logger::info;
 use sync::{
     RawMutex,
     RawSpinMutex
@@ -23,7 +23,7 @@ pub fn init_heap() {
     unsafe {
         HEAP_ALLOCATOR.force_init();
     }
-    log_info!("Heap allocator initialized");
+    info!("Heap allocator initialized");
 }
 
 /**
@@ -54,7 +54,7 @@ fn heap_mem_supplier(_requested_size: usize) -> Option<(usize, usize)> {
     // Page4KiB::SIZE;
 
     //#[cfg(debug_assertions)]
-    //log_debug!("Supplying additional {} to the heap allocator",
+    //debug!("Supplying additional {} to the heap allocator",
     //           dbg_display_size(page_aligned_size));
 
     /* ensure that the kernel heap's reserved virtual area is still in limits */

@@ -5,8 +5,8 @@ use core::mem::size_of;
 use shared::{
     addr::virt::VirtAddr,
     logger::{
-        log_debug,
-        log_trace
+        debug,
+        trace
     }
 };
 
@@ -52,8 +52,8 @@ pub fn loader_load_core() {
     let core_entry_point = loader_elf_load_core_elf();
     let loader_info = info_prepare_loader_info();
 
-    log_debug!("Switching to kernel core jumping at: {:x}", core_entry_point);
-    log_trace!("PageDir composition:\n{:?}", paging_current_page_dir());
+    debug!("Switching to kernel core jumping at: {:x}", core_entry_point);
+    trace!("PageDir composition:\n{:?}", paging_current_page_dir());
 
     /* switch to the kernel core */
     unsafe {

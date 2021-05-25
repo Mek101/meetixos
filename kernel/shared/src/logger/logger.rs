@@ -2,7 +2,6 @@
 
 use core::cell::UnsafeCell;
 
-/* re-export log stuffs */
 pub use log::{
     set_logger,
     LevelFilter,
@@ -11,7 +10,6 @@ pub use log::{
     Record,
     SetLoggerError
 };
-
 use log::{
     set_max_level,
     Level
@@ -19,6 +17,7 @@ use log::{
 
 use crate::logger::writers::LoggerWriter;
 
+/* re-export log stuffs */
 /**
  * Generic writer backed `Log` implementation
  */

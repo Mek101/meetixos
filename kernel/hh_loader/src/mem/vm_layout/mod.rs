@@ -10,7 +10,7 @@ use shared::{
         VMLayout,
         VMLayoutArea
     },
-    logger::log_debug
+    logger::debug
 };
 
 use crate::{
@@ -63,7 +63,7 @@ pub fn vml_randomize_core_layout(necessary_bitmap_pages: usize) {
                                   vm_areas[3].1,
                                   vm_areas[4].1,
                                   vm_areas[5].1);
-    log_debug!("\n{}", vm_layout);
+    debug!("\n{}", vm_layout);
 
     /* store the value into the global */
     unsafe {
@@ -150,11 +150,8 @@ fn vml_place_vm_component(vm_component: VMComponent,
         vm_component.size()
     };
 
-    log_debug!("{:x} -> {:x} : {:x} - {:?}",
-               current_vm_area_address,
-               vma_aligned_addr,
-               size,
-               vm_component);
+    debug!("{:x} -> {:x} : {:x} - {:?}",
+           current_vm_area_address, vma_aligned_addr, size, vm_component);
 
     /* update out the address for the next VMComponent */
     *vm_area_address += size + alignment_diff;

@@ -15,7 +15,7 @@
 #![no_main]
 #![feature(global_asm, iter_advance_by, panic_info_message, array_methods, asm)]
 
-use shared::logger::log_info;
+use shared::logger::info;
 
 use crate::{
     info::info_init_boot_info,
@@ -55,30 +55,30 @@ pub unsafe extern "C" fn hhl_rust_entry(raw_info_ptr: *const u8) -> ! {
     log_init();
 
     /* print the hh_loader's header */
-    log_info!("MeetiX Kernel Loader v{}", HHL_VERSION);
+    info!("MeetiX Kernel Loader v{}", HHL_VERSION);
 
     /* load the ELF file of the kernel's core */
-    log_info!("Initializing Kernel's Core Cache...");
+    info!("Initializing Kernel's Core Cache...");
     loader_init_core_cache();
 
     /* pre initialize physical memory, obtain how many bitmap pages are necessary */
-    log_info!("Initializing Physical Memory Management...");
+    info!("Initializing Physical Memory Management...");
     let necessary_bitmap_pages = phys_pre_init();
 
     /* organize the VM layout for the kernel */
-    log_info!("Initializing Kernel's Core VM Layout...");
+    info!("Initializing Kernel's Core VM Layout...");
     vml_randomize_core_layout(necessary_bitmap_pages);
 
     /* initialize the physical memory allocator */
-    log_info!("Initializing Physical Memory Management...");
+    info!("Initializing Physical Memory Management...");
     phys_init();
 
     /* map the physical memory at the right area */
-    log_info!("Initializing Paging...");
+    info!("Initializing Paging...");
     paging_map_phys_mem();
 
     /* load the kernel core now */
-    log_info!("Loading Kernel's Core");
+    info!("Loading Kernel's Core");
     loader_load_core();
 
     panic!("Kernel Core loader returned");

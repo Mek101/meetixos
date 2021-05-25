@@ -1,7 +1,5 @@
 /*! Boot information */
 
-use crate::os::str_utils;
-
 use crate::{
     info::{
         args::CmdLineArgs,
@@ -10,7 +8,8 @@ use crate::{
     mem::paging::{
         frame::VirtFrameRangeIncl,
         Page2MiB
-    }
+    },
+    os::str_utils
 };
 
 /**

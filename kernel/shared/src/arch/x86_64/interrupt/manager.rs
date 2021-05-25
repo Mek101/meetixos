@@ -21,6 +21,10 @@ use x86_64::{
 };
 
 use crate::{
+    addr::{
+        virt::VirtAddr,
+        Address
+    },
     arch::x86_64::interrupt::stack_frame::HwInterruptStackFrame,
     interrupt::{
         manager::{
@@ -30,15 +34,8 @@ use crate::{
             InterruptReason
         },
         stack_frame::InterruptStackFrame
-    }
-};
-
-use crate::{
-    addr::{
-        virt::VirtAddr,
-        Address
     },
-    logger::log_debug
+    logger::debug
 };
 
 /**
@@ -411,9 +408,9 @@ extern "x86-interrupt" fn except_invalid_op(mut stack_frame: X64InterruptStackFr
 
 extern "x86-interrupt" fn except_page_fault(mut stack_frame: X64InterruptStackFrame,
                                             _error_code: PageFaultErrorCode) {
-    log_debug!("PageFault: {:?} -> {:x}",
-               _error_code,
-               VirtAddr::new(x86_64::registers::control::Cr2::read().as_u64() as usize));
+    debug!("PageFault: {:?} -> {:x}",
+           _error_code,
+           VirtAddr::new(x86_64::registers::control::Cr2::read().as_u64() as usize));
 
     HwInterruptManager::hw_except_handler(&mut stack_frame,
                                           InterruptManagerException::PageFault);

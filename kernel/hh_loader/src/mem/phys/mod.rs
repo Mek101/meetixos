@@ -10,8 +10,8 @@ use shared::{
         MIB
     },
     logger::{
-        log_debug,
-        log_warn
+        debug,
+        warn
     },
     mem::{
         bitmap::BitMapAllocator,
@@ -68,8 +68,8 @@ pub fn phys_pre_init() -> usize {
     /* calculate the total memory available and warn low memory */
     let total_mem = boot_info.mem_areas().iter().map(|area| area.size()).sum();
     if total_mem < min_memory {
-        log_warn!("Detected a VERY SMALL amount of physical memory: less than {}MiB",
-                  min_memory / MIB);
+        warn!("Detected a VERY SMALL amount of physical memory: less than {}MiB",
+              min_memory / MIB);
     }
 
     /* save the total memory amount in bytes */
@@ -84,8 +84,8 @@ pub fn phys_pre_init() -> usize {
         /* possible since the memory in this case is identity mapped */
         PhysAddr::new(first_virt_usable_frame.start_addr().as_usize()).containing_frame()
     };
-    log_debug!("first_available_frame: {:?}", first_usable_frame);
-    log_debug!("Total Available Memory: {}", dbg_display_size(total_mem));
+    debug!("first_available_frame: {:?}", first_usable_frame);
+    debug!("Total Available Memory: {}", dbg_display_size(total_mem));
 
     /* instruct the pre-init allocator to not use the following range */
     unsafe {
@@ -101,7 +101,7 @@ pub fn phys_pre_init() -> usize {
  */
 pub fn phys_init() {
     let bitmap_area = vml_core_layout().phys_mem_bitmap_area();
-    log_debug!("Mapping bitmap area at: {}", bitmap_area);
+    debug!("Mapping bitmap area at: {}", bitmap_area);
 
     /* map into the designated area the bitmap */
     let map_result =

@@ -6,8 +6,8 @@ use shared::{
         Address
     },
     logger::{
-        log_debug,
-        log_trace
+        debug,
+        trace
     },
     mem::paging::{
         dir::PageDir,
@@ -31,7 +31,7 @@ static mut PHYS_MEM_OFFSET: Option<VirtAddr> = None;
  */
 pub fn paging_map_phys_mem() {
     let phys_mem_mapping_area = vml_core_layout().phys_mem_mapping_area();
-    log_debug!("Mapping physical memory at: {}", phys_mem_mapping_area);
+    debug!("Mapping physical memory at: {}", phys_mem_mapping_area);
 
     /* map all the physical memory into the designed area.
      * Note that here is used mapping with huge 2MiB frames to reduce physical
@@ -54,7 +54,7 @@ pub fn paging_map_phys_mem() {
         },
         Err(err) => {
             /* cannot continue anymore */
-            log_trace!("\n{:?}", paging_current_page_dir());
+            trace!("\n{:?}", paging_current_page_dir());
             panic!("Failed to map physical memory: cause: {}", err)
         }
     }

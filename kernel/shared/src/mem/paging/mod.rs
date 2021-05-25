@@ -1,12 +1,5 @@
 /*! Paging management */
 
-pub mod allocator;
-pub mod dir;
-pub mod flags;
-pub mod flush;
-pub mod frame;
-pub mod table;
-
 use core::fmt::Debug;
 
 use crate::{
@@ -16,6 +9,13 @@ use crate::{
         table::PageTableLevel
     }
 };
+
+pub mod allocator;
+pub mod dir;
+pub mod flags;
+pub mod flush;
+pub mod frame;
+pub mod table;
 
 /**
  * Default 4KiB page-frame size

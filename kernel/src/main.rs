@@ -11,7 +11,7 @@ extern crate alloc;
 
 use shared::{
     info::descriptor::LoaderInfo,
-    logger::log_info
+    logger::info
 };
 
 use crate::{
@@ -34,6 +34,6 @@ pub unsafe extern "C" fn kern_start(_loader_info_ptr: *const LoaderInfo) {
     log_init();
 
     /* print the kernel header */
-    log_info!("MeetiX Kernel v{}", KERN_VERSION);
+    info!("MeetiX Kernel v{}", KERN_VERSION);
     loop {}
 }
