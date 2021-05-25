@@ -24,6 +24,7 @@ use crate::info::{
 const LOADER_MAPPED_RANGE_LAST: usize = 0x01E00000;
 
 extern "C" {
+    static __hhl_text_begin: usize;
     static __hhl_text_end: usize;
 }
 
@@ -75,10 +76,18 @@ impl HwBootInfoBase for HwBootInfo {
 
         /* hh_loader resides with his text and data into this range */
         let loader_reserved_range = {
-            let last_frame =
-                VirtAddr::from(unsafe { &__hhl_text_end as *const _ }).containing_frame();
+            let start_frame = {
+                let raw_ptr = unsafe { &__hhl_text_begin as *const _ };
 
-            VirtFrame::range_incl_of(VirtAddr::new_zero().containing_frame(), last_frame)
+                VirtAddr::from(raw_ptr).containing_frame()
+            };
+            let end_frame = {
+                let raw_ptr = unsafe { &__hhl_text_end as *const _ };
+
+                VirtAddr::from(raw_ptr).containing_frame()
+            };
+
+            VirtFrame::range_incl_of(start_frame, end_frame)
         };
 
         /* hh_loader identity maps the first 32MiB of RAM */

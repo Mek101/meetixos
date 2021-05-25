@@ -2,8 +2,8 @@
 ENTRY(hhl_start)
 
 SECTIONS {
-    /* load at physical 1MiB, after BIOS */
-    . = 1M;
+    /* load at physical 2MiB, after BIOS */
+    . = 2M;
 
     /* Higher Half Loader text section */
     .text ALIGN(4K): {
