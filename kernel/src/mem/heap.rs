@@ -3,10 +3,34 @@
 use core::alloc::Layout;
 
 use heap::locked::raw::RawLazyLockedHeap;
-use shared::logger::info;
+use shared::{
+    addr::{
+        align_up,
+        Address
+    },
+    logger::trace,
+    mem::paging::{
+        flags::PDirFlags,
+        flush::MapFlusher,
+        frame::{
+            VirtFrame,
+            VirtFrameRange
+        },
+        Page4KiB,
+        PageSize
+    }
+};
 use sync::{
     RawMutex,
     RawSpinMutex
+};
+
+use crate::mem::{
+    paging::{
+        allocators::KernAllocator,
+        paging_current_page_dir
+    },
+    vm_layout::vml_layout
 };
 
 /* lazy allocator initialized by <init_heap()> */
@@ -14,16 +38,17 @@ use sync::{
 static mut HEAP_ALLOCATOR: RawLazyLockedHeap<RawSpinMutex> =
     unsafe { RawLazyLockedHeap::new(|| Some(RawSpinMutex::INIT), heap_mem_supplier) };
 
-/** # Initializes the heap allocator
- *
+/* keeps the count of physical frames requested */
+static mut HEAP_ALLOCATED_FRAMES: usize = 0;
+
+/**
  * Forces the initialization of the global lazy allocator to avoid
  * concurrency in the first usage
  */
-pub fn init_heap() {
+pub fn heap_init() {
     unsafe {
         HEAP_ALLOCATOR.force_init();
     }
-    info!("Heap allocator initialized");
 }
 
 /**
@@ -31,68 +56,65 @@ pub fn init_heap() {
  * errors
  */
 #[alloc_error_handler]
-fn alloc_error_handler(layout: Layout) -> ! {
+fn heap_alloc_error_handler(layout: Layout) -> ! {
     panic!("Heap allocation failed, no more memory available, requested {:?}", layout);
 }
 
-/** # Heap memory supplier
- *
- * Implements the memory supplier requested by the [`Heap`] manager to
- * request more memory from the backend
- *
- * [`Heap`]: /heap/struct.Heap.html
+/**
+ * Supplies additional memory to the `HEAP_ALLOCATOR`
  */
-fn heap_mem_supplier(_requested_size: usize) -> Option<(usize, usize)> {
-    //static mut HEAP_PAGES: usize = 0;
+fn heap_mem_supplier(requested_size: usize) -> Option<(usize, usize)> {
+    trace!("Called heap_mem_supplier({})", requested_size);
 
-    /* calculate the immediate up-aligned size from the requested one, the number
-     * of pages to map and the new heap's end address
-     */
-    //let page_aligned_size = align_up(requested_size, Page4KiB::SIZE);
-    //let requested_pages = page_aligned_size / Page4KiB::SIZE;
-    //let next_heap_end = (unsafe { HEAP_PAGES } + requested_pages) *
-    // Page4KiB::SIZE;
+    /* align up the requested size to page boundary */
+    let page_aligned_size = align_up(requested_size, Page4KiB::SIZE);
+    let requested_pages = page_aligned_size / Page4KiB::SIZE;
+    let next_active_heap_end =
+        unsafe { (HEAP_ALLOCATED_FRAMES + requested_pages) * Page4KiB::SIZE };
 
-    //#[cfg(debug_assertions)]
-    //debug!("Supplying additional {} to the heap allocator",
-    //           dbg_display_size(page_aligned_size));
+    trace!("heap_mem_supplier: page_aligned_size = {}, requested_pages = {}, \
+            next_active_heap_end = {}",
+           page_aligned_size,
+           requested_pages,
+           next_active_heap_end);
 
-    /* ensure that the kernel heap's reserved virtual area is still in limits */
-    //if KRN_HEAP_START + next_heap_end >= KRN_HEAP_END {
-    //    panic!("Reached the end of kernel's heap reserved virtual memory area");
-    //}
+    /* check for VM limits */
+    let (heap_start_address, heap_end_address) = vml_layout().kern_heap_area().as_parts();
+    if heap_start_address + next_active_heap_end >= heap_end_address {
+        panic!("Reached end of Kernel's Heap reserved area");
+    }
 
-    /* construct the frame range to map */
-    /*let mapping_frame_range = unsafe {
-        let current_heap_end_addr =
-            VirtAddr::new(KRN_HEAP_START + HEAP_PAGES * Page4KiB::SIZE);
-        VirtFrame::range_of_count(VirtFrame::of_addr(current_heap_end_addr),
+    /* prepare the new frame range to map */
+    let new_heap_to_map_range: VirtFrameRange<Page4KiB> = {
+        let current_active_heap_end =
+            heap_start_address + unsafe { HEAP_ALLOCATED_FRAMES } * Page4KiB::SIZE;
+
+        VirtFrame::range_of_count(current_active_heap_end.containing_frame(),
                                   requested_pages)
-    };*/
+    };
 
-    /* lets now map the new memory allocating physical frames explicitly
-     * (PTFlags::PRESENT is given)
-     */
-    /*let mut page_dir = paging_active_page_dir();
-    if let Ok(map_flusher) = page_dir.map_range(mapping_frame_range.clone(),
-                                                &mut KernAllocator::new(),
-                                                PTFlags::PRESENT
-                                                | PTFlags::READABLE
-                                                | PTFlags::WRITEABLE
-                                                | PTFlags::GLOBAL)
+    /* map the new range of pages for the heap */
+    let mut page_dir = paging_current_page_dir();
+    if let Ok(map_flusher) = page_dir.map_range(new_heap_to_map_range.clone(),
+                                                &KernAllocator::new(),
+                                                PDirFlags::new().set_present()
+                                                                .set_readable()
+                                                                .set_writeable()
+                                                                .set_no_execute()
+                                                                .set_global()
+                                                                .build())
     {
-        /* update the amount of allocated pages for the heap. Note that any kind of
-         * lock is used here, because the heap manager calls this supplier when is
-         * already locked
-         */
-        unsafe { HEAP_PAGES += requested_pages };
+        trace!("heap_mem_supplier: Mapped {:?}", new_heap_to_map_range);
 
-        /* flush the new TLB entries */
+        /* update the currently mapped pages counter */
+        unsafe {
+            HEAP_ALLOCATED_FRAMES += requested_pages;
+        }
+
+        /* flush the TLB entries and return the address */
         map_flusher.flush();
-
-        /* return the start address and the aligned size */
-        Some((mapping_frame_range.start.start_addr().as_usize(), page_aligned_size))
-    } else {*/
-    None
-    //}
+        Some((new_heap_to_map_range.start.start_addr().as_usize(), page_aligned_size))
+    } else {
+        None
+    }
 }

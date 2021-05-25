@@ -1,7 +1,5 @@
 /*! Locked logger implementation */
 
-use core::num::NonZeroUsize;
-
 use shared::{
     info::args::CmdLineArgs,
     logger::{
@@ -70,19 +68,17 @@ impl<L, W> LockedBufferedLogger<L, W>
         self.m_inner.lock().set_max_logging_level_from_cmdline(cmdline, fallback);
     }
 
-    /**
+    /*
      * Sets the `log::LevelFilter` for the active instance
      */
-    pub fn set_max_logging_level(&self, log_level: LevelFilter) {
-        self.m_inner.lock().set_max_logging_level(log_level)
-    }
+    //pub fn set_max_logging_level(&self, log_level: LevelFilter) {
+    //    self.m_inner.lock().set_max_logging_level(log_level)
+    //}
 
     /**
      * Enables the line-buffering
      */
-    pub fn enable_buffering(&self,
-                            use_previous_buffer_if_any: bool,
-                            buffer_size: NonZeroUsize) {
+    pub fn enable_buffering(&self, use_previous_buffer_if_any: bool, buffer_size: usize) {
         unsafe {
             if let Some(writer) = self.m_inner.lock().writer_mut() {
                 writer.enable_buffering(use_previous_buffer_if_any, buffer_size)
@@ -90,16 +86,16 @@ impl<L, W> LockedBufferedLogger<L, W>
         }
     }
 
-    /**
+    /*
      * Disables the line-buffering
      */
-    pub fn disable_buffering(&self, keep_buffer: bool) {
-        unsafe {
-            if let Some(writer) = self.m_inner.lock().writer_mut() {
-                writer.disable_buffering(keep_buffer)
-            }
-        }
-    }
+    //pub fn disable_buffering(&self, keep_buffer: bool) {
+    //   unsafe {
+    //        if let Some(writer) = self.m_inner.lock().writer_mut() {
+    //            writer.disable_buffering(keep_buffer)
+    //        }
+    //    }
+    //}
 }
 
 impl<L, W> Log for LockedBufferedLogger<L, W>

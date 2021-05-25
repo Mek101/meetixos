@@ -10,7 +10,6 @@ use shared::mem::{
         Page4KiB
     }
 };
-
 use sync::{
     Mutex,
     RawMutex
@@ -35,9 +34,12 @@ impl<'a, L> LockedBitMapAllocator<'a, L> where L: RawMutex {
     /**
      * Initializes the instance
      */
-    pub fn init(&mut self, bitmap_area_ptr: *mut u8, bytes_count: usize) {
+    pub fn init(&mut self,
+                bitmap_area_ptr: *mut u8,
+                bytes_count: usize,
+                allocated_bits: usize) {
         unsafe {
-            self.m_inner.lock().init(bitmap_area_ptr, bytes_count);
+            self.m_inner.lock().init(bitmap_area_ptr, bytes_count, allocated_bits);
         }
     }
 
@@ -71,19 +73,19 @@ impl<'a, L> LockedBitMapAllocator<'a, L> where L: RawMutex {
         self.m_inner.lock().free_contiguous(frames_range)
     }
 
-    /**
+    /*
      * Marks as available the given `PhysFrame<Page4KiB>`.
      *
      * Used by the swapper
      */
-    pub fn add_frame(&self, phys_frame: PhysFrame<Page4KiB>) {
-        self.m_inner.lock().add_frame(phys_frame)
-    }
+    //pub fn add_frame(&self, phys_frame: PhysFrame<Page4KiB>) {
+    //    self.m_inner.lock().add_phys_frame(phys_frame)
+    //}
 
-    /**
+    /*
      * Returns the total amount of memory allocated
      */
-    pub fn allocated_mem(&self) -> usize {
-        self.m_inner.lock().allocated_mem()
-    }
+    //pub fn allocated_mem(&self) -> usize {
+    //   self.m_inner.lock().allocated_mem()
+    //}
 }

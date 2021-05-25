@@ -1,5 +1,7 @@
 /*! Command line arguments */
 
+use core::str::FromStr;
+
 use crate::os::str_utils;
 
 /**
@@ -41,8 +43,8 @@ impl CmdLineArgs {
     }
 
     /**
-     * Returns the reference to a `CmdLineArg` if contains the given key
-     * `to_find` ignoring the case.
+     * Returns the reference to a `CmdLineArg` if contains the given `key`
+     * ignoring the case.
      *
      * The method evaluates whether the current argument is a key value
      * argument (i.e -key=Value) or not.
@@ -50,14 +52,26 @@ impl CmdLineArgs {
      * In the first case evaluates only the `-key` part, otherwise all the
      * word
      */
-    pub fn find_key(&self, to_find: &str) -> Option<&CmdLineArg> {
+    pub fn find_arg_by_key(&self, key: &str) -> Option<&CmdLineArg> {
         self.iter().find(|arg| {
                        if arg.is_key_value() {
-                           arg.key().eq_ignore_ascii_case(to_find)
+                           arg.key().eq_ignore_ascii_case(key)
                        } else {
-                           arg.as_str().eq_ignore_ascii_case(to_find)
+                           arg.as_str().eq_ignore_ascii_case(key)
                        }
                    })
+    }
+
+    /**
+     * Return the value for the given `key` converted to the `T` type
+     */
+    pub fn value_by_key<T>(&self, key: &str, fallback: T) -> T
+        where T: FromStr + Copy {
+        self.find_arg_by_key(key)
+            .map(|cmdline_arg| cmdline_arg.value())
+            .map(|value_str| T::from_str(value_str))
+            .map(|result| result.unwrap_or(fallback))
+            .unwrap_or(fallback)
     }
 
     /**

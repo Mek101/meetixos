@@ -48,8 +48,12 @@ impl<'a> BitMapAllocator<'a> {
     /**
      * Construct the `BitMapAllocatorInner` to become ready to free frames
      */
-    pub unsafe fn init(&mut self, bitmap_area_ptr: *mut u8, bytes_count: usize) {
-        self.m_inner = Some(BitMapAllocatorInner::new(bitmap_area_ptr, bytes_count))
+    pub unsafe fn init(&mut self,
+                       bitmap_area_ptr: *mut u8,
+                       bytes_count: usize,
+                       allocated_bits: usize) {
+        self.m_inner =
+            Some(BitMapAllocatorInner::new(bitmap_area_ptr, bytes_count, allocated_bits))
     }
 
     /**
@@ -123,9 +127,9 @@ impl<'a> BitMapAllocator<'a> {
      * Makes the given `PhysFrame<Page4KiB>` available for further
      * allocations.
      *
-     * Used for initializations
+     * Used for initializations or swap(?)
      */
-    pub fn add_frame(&mut self, phys_frame: PhysFrame<Page4KiB>) {
+    pub fn add_phys_frame(&mut self, phys_frame: PhysFrame<Page4KiB>) {
         if let Some(ref mut inner) = self.m_inner {
             inner.add_bit(phys_frame.start_addr().as_usize() / Page4KiB::SIZE);
         }
@@ -161,13 +165,16 @@ impl<'a> BitMapAllocatorInner<'a> {
      * Constructs a mutable slice from the given raw parameters and sets
      * every byte to 0
      */
-    unsafe fn new(bitmap_area: *mut u8, bytes_count: usize) -> Self {
+    unsafe fn new(bitmap_area_ptr: *mut u8,
+                  bytes_count: usize,
+                  allocated_bits: usize)
+                  -> Self {
         /* mark all the bits as un available */
-        let slice = slice::from_raw_parts_mut(bitmap_area, bytes_count);
+        let slice = slice::from_raw_parts_mut(bitmap_area_ptr, bytes_count);
         slice.fill(0);
 
         Self { m_bits: slice,
-               m_allocated_bits: 0 }
+               m_allocated_bits: allocated_bits }
     }
 
     /**
@@ -261,7 +268,10 @@ impl<'a> BitMapAllocatorInner<'a> {
 
         /* iterate each byte in requested blocks */
         for byte_index in (0..self.m_bits.len() - bytes_count).step_by(bytes_count) {
+            /* obtain the reference to the current slice of bytes */
             let slice_to_check = &self.m_bits[byte_index..byte_index + bytes_count];
+
+            /* check whether this slice contains all 1 (available bits) */
             if Self::is_slice_all_available(slice_to_check) {
                 return Some(byte_index * u8::BIT_LENGTH);
             }
@@ -273,11 +283,10 @@ impl<'a> BitMapAllocatorInner<'a> {
      * Returns whether the given slice is available
      */
     fn is_slice_all_available(slice_to_check: &[u8]) -> bool {
-        for byte in slice_to_check {
-            if *byte != u8::MAX {
-                return false;
-            }
-        }
-        return true;
+        let (prefix, aligned, suffix) = unsafe { slice_to_check.align_to::<u64>() };
+
+        prefix.iter().all(|&byte| byte == u8::MAX)
+        && aligned.iter().all(|&value| value == u64::MAX)
+        && suffix.iter().all(|&byte| byte == u8::MAX)
     }
 }

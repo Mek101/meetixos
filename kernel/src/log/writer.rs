@@ -3,7 +3,6 @@
 use alloc::vec::Vec;
 use core::{
     fmt,
-    num::NonZeroUsize,
     str
 };
 
@@ -25,24 +24,24 @@ impl<W> BufferedWriter<W> where W: LoggerWriter {
      */
     pub fn enable_buffering(&mut self,
                             use_previous_buffer_if_any: bool,
-                            buffer_size: NonZeroUsize) {
+                            buffer_size: usize) {
         if !use_previous_buffer_if_any || self.m_buffer.is_none() {
-            self.m_buffer = Some(Vec::with_capacity(buffer_size.get()));
+            self.m_buffer = Some(Vec::with_capacity(buffer_size));
         }
         self.m_buffered = true;
     }
 
-    /**
+    /*
      * Disables the line-buffering and destroys the buffer if `keep_buffer`
      * is false
      */
-    pub fn disable_buffering(&mut self, keep_buffer: bool) {
-        self.m_buffered = false;
-        if !keep_buffer {
-            /* overwriting with <None> the field throws the <drop> call for it */
-            self.m_buffer = None;
-        }
-    }
+    //pub fn disable_buffering(&mut self, keep_buffer: bool) {
+    //    self.m_buffered = false;
+    //    if !keep_buffer {
+    //        /* overwriting with <None> the field throws the <drop> call for it */
+    //        self.m_buffer = None;
+    //    }
+    //}
 
     /**
      * Writes the given `str_chunk` into the buffer and flushes to the back

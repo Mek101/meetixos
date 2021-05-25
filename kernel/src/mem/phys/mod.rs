@@ -1,7 +1,10 @@
-/*! Kernel physical memory manager */
+/*! Kernel physical memory management */
 
 use shared::{
-    logger::log_info,
+    logger::{
+        trace,
+        warn
+    },
     mem::paging::{
         frame::PhysFrame,
         Page2MiB,
@@ -11,50 +14,61 @@ use shared::{
 };
 use sync::RawSpinMutex;
 
-use crate::mem::phys::allocator::LockedBitMapAllocator;
+use crate::mem::{
+    phys::allocator::LockedBitMapAllocator,
+    vm_layout::vml_layout
+};
 
 mod allocator;
 
-/* bitmap allocator */
+/* bitmap allocator, initialized by <phys_init()> */
 static mut BITMAP_ALLOCATOR: LockedBitMapAllocator<RawSpinMutex> =
     LockedBitMapAllocator::new_uninitialized();
 
-/* total amount of available physical memory in bytes */
-static mut TOTAL_MEMORY: usize = 0;
-
 /**
- * Initializes the global physical memory allocator
+ * Initializes the physical memory manager
  */
-pub fn init_phys_mem() {
-    log_info!("Physical allocator initialized");
+pub fn phys_init(allocated_bits: usize) {
+    let bitmap_area = vml_layout().phys_mem_bitmap_area();
+
+    /* initialize the bitmap allocator using the hh_loader's bitmap */
+    unsafe {
+        BITMAP_ALLOCATOR.init(bitmap_area.start_addr().as_ptr_mut(),
+                              bitmap_area.size(),
+                              allocated_bits);
+    }
 }
 
 /**
- * Requests to the underling physical allocators to return an unused
- * `PhysFrame` of the requested size
+ * Allocates a `PhysFrame` of the requested size
  */
-pub fn phys_mem_alloc_frame<S>() -> Option<PhysFrame<S>>
+pub fn phys_alloc_frame<S>() -> Option<PhysFrame<S>>
     where S: PageSize {
-    /* match the PageSize requested and use the right bitmap allocator method */
-    match S::SIZE {
+    let phys_frame = match S::SIZE {
         Page4KiB::SIZE => unsafe {
             BITMAP_ALLOCATOR.allocate_one()
                             .map(|phys_frame| phys_frame.into_generic_sized_frame())
         },
         Page2MiB::SIZE => unsafe {
             BITMAP_ALLOCATOR.allocate_contiguous(Page2MiB::SIZE / Page4KiB::SIZE)
-                            .map(|phys_frame_range| {
-                                phys_frame_range.start.into_generic_sized_frame()
-                            })
+                            .map(|phys_frame| phys_frame.start.into_generic_sized_frame())
         },
-        _ => panic!("Requested a PhysFrame of a NOT supported PageSize")
+        _ => {
+            warn!("phys_alloc_frame() called with unknown PageSize");
+            None
+        }
+    };
+
+    if let Some(phys_frame) = phys_frame {
+        trace!("phys_alloc_frame: Allocated PhysFrame = {:?}", phys_frame);
     }
+    phys_frame
 }
 
 /**
- * Makes available again the given `PhysFrame`
+ * Makes available again, for further allocations, the given `PhysFrame`
  */
-pub fn phys_mem_free_frame<S>(phys_frame: PhysFrame<S>)
+pub fn phys_free_frame<S>(phys_frame: PhysFrame<S>)
     where S: PageSize {
     match S::SIZE {
         Page4KiB::SIZE => unsafe {
@@ -63,27 +77,8 @@ pub fn phys_mem_free_frame<S>(phys_frame: PhysFrame<S>)
         Page2MiB::SIZE => unsafe {
             BITMAP_ALLOCATOR.free_contiguous(phys_frame.into_range_of())
         },
-        _ => panic!("Freeing a PhysFrame of a NOT supported PageSize")
+        _ => {
+            warn!("phys_free_frame() called with unknown PageSize");
+        }
     }
-}
-
-/**
- * Returns the total physical memory available in bytes
- */
-pub fn phys_mem_total_mem() -> usize {
-    unsafe { TOTAL_MEMORY }
-}
-
-/**
- * Returns the physical memory currently allocated in bytes
- */
-pub fn phys_mem_allocated_mem() -> usize {
-    unsafe { BITMAP_ALLOCATOR.allocated_mem() }
-}
-
-/**
- * Returns the physical memory currently free in bytes
- */
-pub fn phys_mem_free_memory() -> usize {
-    phys_mem_total_mem() - phys_mem_allocated_mem()
 }
