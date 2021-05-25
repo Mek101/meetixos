@@ -25,6 +25,7 @@ pub const BOOTLOADER_NAME_LEN_MAX: usize = 64;
 pub struct LoaderInfo {
     m_cmdline_args: CmdLineArgs,
     m_vm_layout: VMLayout,
+    m_bitmap_allocated_bits: usize,
     m_loader_reserved_range: VirtFrameRangeIncl<Page2MiB>,
     m_loader_mapped_range: VirtFrameRangeIncl<Page2MiB>,
     m_bootloader_name: [u8; BOOTLOADER_NAME_LEN_MAX],
@@ -37,6 +38,7 @@ impl LoaderInfo {
      */
     pub fn new(cmdline_args: CmdLineArgs,
                vm_layout: VMLayout,
+               bitmap_allocated_bits: usize,
                loader_reserved_range: VirtFrameRangeIncl<Page2MiB>,
                loader_mapped_range: VirtFrameRangeIncl<Page2MiB>,
                bootloader_name: &str)
@@ -46,6 +48,7 @@ impl LoaderInfo {
 
         Self { m_cmdline_args: cmdline_args,
                m_vm_layout: vm_layout,
+               m_bitmap_allocated_bits: bitmap_allocated_bits,
                m_loader_reserved_range: loader_reserved_range,
                m_loader_mapped_range: loader_mapped_range,
                m_bootloader_name: name_buffer,
@@ -64,6 +67,13 @@ impl LoaderInfo {
      */
     pub fn vm_layout(&self) -> &VMLayout {
         &self.m_vm_layout
+    }
+
+    /**
+     * Returns the amount of bits allocated into the bitmap area
+     */
+    pub fn bitmap_allocated_bits(&self) -> usize {
+        self.m_bitmap_allocated_bits
     }
 
     /**
@@ -90,7 +100,7 @@ impl LoaderInfo {
      * Returns the bootloader's name
      */
     pub fn bootloader_name(&self) -> &str {
-        str_utils::u8_ptr_to_str_slice(self.m_bootloader_name.as_ptr(),
-                                       self.m_bootloader_name_len)
+        let name_slice = &self.m_bootloader_name[..self.m_bootloader_name_len];
+        str_utils::u8_slice_to_str_slice(name_slice)
     }
 }

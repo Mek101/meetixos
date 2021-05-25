@@ -1,6 +1,12 @@
 /*! Boot information management */
 
-use shared::info::descriptor::LoaderInfo;
+use shared::{
+    info::descriptor::LoaderInfo,
+    mem::paging::{
+        Page4KiB,
+        PageSize
+    }
+};
 
 use crate::{
     arch::info::HwBootInfo,
@@ -8,7 +14,10 @@ use crate::{
         BootInfo,
         HwBootInfoBase
     },
-    mem::vm_layout::vml_core_layout
+    mem::{
+        phys::phys_allocated_memory,
+        vm_layout::vml_core_layout
+    }
 };
 
 pub mod info;
@@ -41,6 +50,7 @@ pub fn info_prepare_loader_info() -> &'static LoaderInfo {
     let boot_info = boot_info();
     let loader_info = LoaderInfo::new(boot_info.cmdline_args().clone(),
                                       vml_core_layout().clone(),
+                                      phys_allocated_memory() / Page4KiB::SIZE,
                                       boot_info.loader_reserved_range().clone(),
                                       boot_info.loader_mapped_range().clone(),
                                       boot_info.bootloader_name());

@@ -120,13 +120,15 @@ pub fn phys_init() {
 
     unsafe {
         /* initialize the bitmap allocator */
-        BITMAP_ALLOCATOR.init(bitmap_area.start_addr().as_ptr_mut(), bitmap_area.size());
+        BITMAP_ALLOCATOR.init(bitmap_area.start_addr().as_ptr_mut(),
+                              bitmap_area.size(),
+                              PRE_INIT_ALLOCATOR.allocated_frames());
 
         /* enable now the bits that correspond to the available physical frames */
         if let Some(phys_frames) = PRE_INIT_ALLOCATOR.iter_to_next() {
             /* mark the remaining frames as available */
             for phys_frame in phys_frames {
-                BITMAP_ALLOCATOR.add_frame(phys_frame)
+                BITMAP_ALLOCATOR.add_phys_frame(phys_frame)
             }
 
             /* now can be used the bitmap allocator */
@@ -153,6 +155,17 @@ pub fn phys_alloc_frame() -> Option<PhysFrame<Page4KiB>> {
  */
 pub fn phys_total_memory() -> usize {
     unsafe { TOTAL_MEMORY }
+}
+
+/**
+ * Returns the total amount of physical memory currently allocated
+ */
+pub fn phys_allocated_memory() -> usize {
+    if can_use_bitmap() {
+        unsafe { BITMAP_ALLOCATOR.allocated_mem() }
+    } else {
+        unsafe { PRE_INIT_ALLOCATOR.allocated_frames() * Page4KiB::SIZE }
+    }
 }
 
 /**

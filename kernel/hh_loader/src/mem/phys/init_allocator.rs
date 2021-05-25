@@ -70,4 +70,11 @@ impl HHLPreInitAllocator {
                                 });
         it.advance_by(self.m_next_frame).map(|_| it).ok()
     }
+
+    /**
+     * Returns the amount of allocated 4KiB frames
+     */
+    pub fn allocated_frames(&self) -> usize {
+        self.m_next_frame
+    }
 }
