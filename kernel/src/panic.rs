@@ -4,10 +4,7 @@ use core::panic::PanicInfo;
 
 use shared::logger::log_error;
 
-use crate::write_video;
-
-/** # Panic Handler
- *
+/**
  * Writes to the log output the kernel panic message and halts the kernel
  */
 #[panic_handler]
@@ -25,6 +22,5 @@ fn panic_handler(info: &PanicInfo) -> ! {
         log_error!("> {} at {}:{}", location.file(), location.line(), location.column());
     }
 
-    write_video("[KernelPanic] ");
-    loop { /* halt forever: TODO halt other CPUs */ }
+    loop { /* halt forever TODO halt other CPUs */ }
 }
