@@ -4,16 +4,10 @@ version = "0.1.0"
 edition = "2018"
 authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
 
-##
-# Kernel Crates
-##
+[dependencies]
+# -------------------------------- Kernel Private Crates ------------------------------- #
+shared = { path = "../shared" }
 
-[dependencies.shared]
-path = "../shared"
-
-##
-# External x86_64 Crates
-##
-
-[target.'cfg(target_arch = "x86_64")'.dependencies.multiboot2]
-version = "0.10.1"
+[target.'cfg(target_arch = "x86_64")'.dependencies]
+# ------------------------ External x86_64 Thirdy Party Crates ------------------------- #
+multiboot2 = "*"

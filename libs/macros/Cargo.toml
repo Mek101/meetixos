@@ -4,23 +4,11 @@ version = "0.1.0"
 edition = "2018"
 authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
 
-##
-# External Crates
-##
+[dependencies]
+# ---------------------------- External Thirdy Party Crates ---------------------------- #
+bitflags = "*"
+paste    = "*"
+num_enum = { version = "*", default-features = false }
 
-[dependencies.bitflags]
-version = "1.2.1"
-
-[dependencies.paste]
-version = "1.0.5"
-
-[dependencies.num_enum]
-version = "0.5.1"
-default-features = false
-
-##
-# MeetiX Libraries Crates
-##
-
-[dependencies.sync]
-path = "../sync"
+# ------------------------------ MeetiX Libraries Crates ------------------------------- #
+sync = { path = "../sync" }

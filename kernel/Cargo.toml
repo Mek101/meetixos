@@ -4,31 +4,14 @@ version = "0.1.0"
 edition = "2018"
 authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
 
-##
-# Kernel Crates
-##
+[dependencies]
+# -------------------------------- Kernel Private Crates ------------------------------- #
+shared = { path = "shared" }
 
-[dependencies.shared]
-path = "shared"
+# ---------------------------- External Thirdy Party Crates ---------------------------- #
+bit_field = "*"
 
-##
-# External Crates
-##
-
-[dependencies.bit_field]
-version = "0.10.1"
-
-##
-# MeetiX Libraries Crates
-##
-
-[dependencies.api]
-path = "../libs/api"
-features = ["enable_kernel_methods"]
-
-[dependencies.heap]
-path = "../libs/heap"
-features = ["disable_locked"]
-
-[dependencies.sync]
-path = "../libs/sync"
+# ------------------------------ MeetiX Libraries Crates ------------------------------- #
+api  = { path = "../libs/api",  features = ["enable_kernel_methods"] }
+heap = { path = "../libs/heap", features = ["disable_locked"] }
+sync = { path = "../libs/sync" }

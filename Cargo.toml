@@ -13,6 +13,5 @@ members = [
     # App Crates
     "userland/apps/example_app",
     # Binary Crates
-    "userland/bins/example"
-
+    "userland/bins/example",
 ]

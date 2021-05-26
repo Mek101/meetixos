@@ -4,30 +4,15 @@ version = "0.1.0"
 edition = "2018"
 authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
 
-##
-# External Crates
-##
+[dependencies]
+# ---------------------------- External Thirdy Party Crates ---------------------------- #
+num_enum              = { version = "*", default-features = false }
+linked_list_allocator = { version = "*", default-features = false }
 
-[dependencies.linked_list_allocator]
-version = "0.9.0"
-# we don't need default features since it is used only the internal hole module
-default-features = false
-
-[dependencies.num_enum]
-version = "0.5.1"
-default-features = false
-
-##
-# MeetiX Libraries Crates
-##
-
-[dependencies.api]
-path = "../api"
-optional = true
-
-[dependencies.sync]
-path = "../sync"
+# ------------------------------ MeetiX Libraries Crates ------------------------------- #
+api  = { path = "../api", optional = true }
+sync = { path = "../sync" }
 
 [features]
 disable_locked = []
-default = ["api"]
+default        = ["api"]
