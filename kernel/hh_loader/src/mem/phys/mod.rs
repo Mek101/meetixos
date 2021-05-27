@@ -11,6 +11,7 @@ use shared::{
     },
     logger::{
         debug,
+        trace,
         warn
     },
     mem::{
@@ -92,8 +93,16 @@ pub fn phys_pre_init() -> usize {
         PRE_INIT_ALLOCATOR.start_after(first_usable_frame);
     }
 
+    /* obtain the last address of the physical memory */
+    let last_address = boot_info.mem_areas()
+                                .iter()
+                                .last()
+                                .map(|area| area.start_phys_addr() + area.size())
+                                .map(|last_phys_addr| last_phys_addr.as_usize())
+                                .unwrap();
+
     /* return how many pages are necessary to store the bitmap */
-    ((total_mem / Page4KiB::SIZE / (u8::BITS as usize)) + Page4KiB::MASK) >> 12
+    ((last_address / Page4KiB::SIZE / (u8::BITS as usize)) + Page4KiB::MASK) >> 12
 }
 
 /**
@@ -127,6 +136,7 @@ pub fn phys_init() {
         /* enable now the bits that correspond to the available physical frames */
         if let Some(phys_frames) = PRE_INIT_ALLOCATOR.iter_to_next() {
             /* mark the remaining frames as available */
+            trace!("phys_init: Adding physical frames to the bitmap");
             for phys_frame in phys_frames {
                 BITMAP_ALLOCATOR.add_phys_frame(phys_frame)
             }

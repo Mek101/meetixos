@@ -33,7 +33,7 @@ CARGO := $(shell which cargo)
 #
 
 RUSTC_FLAGS ?= -Zmacro-backtrace
-CARGO_FLAGS ?= --color=always --verbose
+CARGO_FLAGS ?= --color=always
 
 ifeq ($(BUILD_MODE),release)
     CARGO_FLAGS += --release
