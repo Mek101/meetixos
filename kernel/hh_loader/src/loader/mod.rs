@@ -6,6 +6,7 @@ use shared::{
     addr::virt::VirtAddr,
     logger::{
         debug,
+        info,
         trace
     }
 };
@@ -52,6 +53,7 @@ pub fn loader_load_core() {
     let core_entry_point = loader_elf_load_core_elf();
     let loader_info = info_prepare_loader_info();
 
+    info!("Starting Kernel Core...\n");
     debug!("Switching to kernel core jumping at: {:x}", core_entry_point);
     trace!("PageDir composition:\n{:?}", paging_current_page_dir());
 

@@ -11,6 +11,10 @@ shared = { path = "shared" }
 # ---------------------------- External Thirdy Party Crates ---------------------------- #
 bit_field = "*"
 
+[target.'cfg(target_arch = "x86_64")'.dependencies]
+# ------------------------ External x86_64 Thirdy Party Crates ------------------------- #
+x86_64 = "*"
+
 # ------------------------------ MeetiX Libraries Crates ------------------------------- #
 api  = { path = "../libs/api",  features = ["enable_kernel_methods"] }
 heap = { path = "../libs/heap", features = ["disable_locked"] }

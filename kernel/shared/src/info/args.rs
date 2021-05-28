@@ -1,6 +1,9 @@
 /*! Command line arguments */
 
-use core::str::FromStr;
+use core::{
+    fmt,
+    str::FromStr
+};
 
 use crate::os::str_utils;
 
@@ -93,6 +96,15 @@ impl CmdLineArgs {
      */
     pub fn is_empty(&self) -> bool {
         self.count() == 0
+    }
+}
+
+impl fmt::Display for CmdLineArgs {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for arg in self.iter() {
+            write!(f, "{} ", arg.as_str())?;
+        }
+        Ok(())
     }
 }
 

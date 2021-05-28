@@ -22,6 +22,7 @@ use crate::{
         cmdline_info,
         cmdline_info_init
     },
+    interrupt::interrupt_init,
     log::{
         log_enable_buffering,
         log_init
@@ -36,6 +37,7 @@ use crate::{
 };
 
 mod cmdline;
+mod interrupt;
 mod log;
 mod mem;
 mod panic;
@@ -54,8 +56,7 @@ pub unsafe extern "C" fn kern_start(loader_info: &LoaderInfo) {
     log_init();
 
     /* print the kernel header */
-    trace!("Booted By {}", cmdline_info().bootloader_name());
-    info!("MeetiX Kernel v{}", KERN_VERSION);
+    print_header();
 
     /* initialize the kernel <VMLayout> from the LoaderInfo given */
     info!("Initializing Kernel VM Layout...");
@@ -77,6 +78,21 @@ pub unsafe extern "C" fn kern_start(loader_info: &LoaderInfo) {
     info!("Enabling Kernel Logging Buffering...");
     log_enable_buffering(false);
 
-    trace!("PageDir:\n{:?}", crate::mem::paging::paging_current_page_dir());
+    /* initialize interrupt management */
+    info!("Initializing Interrupt Management...");
+    interrupt_init();
+
+    //trace!("PageDir:\n{:?}", crate::mem::paging::paging_current_page_dir());
     loop {}
+}
+
+/**
+ * Prints the header in the logging
+ */
+fn print_header() {
+    info!("MeetiX Kernel v{}", KERN_VERSION);
+    info!("...Hoping you will use this OS as your primarily OS, maybe one day...");
+
+    trace!("Booted By {}", cmdline_info().bootloader_name());
+    trace!("Commandline: {}", cmdline_info().cmdline_args());
 }
