@@ -20,7 +20,7 @@ use crate::{
 };
 
 /**
- * Generic container that uses an [`OsRawMutex`] to ensure mutual exclusive
+ * Generic container that uses an `OsRawMutex` to ensure mutual exclusive
  * access to the value held
  */
 pub type Mutex<T> = sync::Mutex<OsRawMutex, T>;

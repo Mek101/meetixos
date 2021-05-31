@@ -8,7 +8,7 @@ use num_enum::{
 };
 
 /**
- * Lists the available object types represented by an [`ObjId`]
+ * Lists the available object types represented by an `ObjId`
  */
 #[repr(usize)]
 #[derive(Debug)]

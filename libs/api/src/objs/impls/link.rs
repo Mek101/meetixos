@@ -6,10 +6,7 @@ use os::sysc::{
 };
 
 use crate::{
-    bits::obj::{
-        grants::WithTraversableDataObject,
-        types::ObjType
-    },
+    bits::obj::types::ObjType,
     caller::{
         KernCaller,
         Result
@@ -100,10 +97,6 @@ impl KernCaller for Link {
     fn caller_handle_bits(&self) -> u32 {
         self.obj_handle().caller_handle_bits()
     }
-}
-
-impl WithTraversableDataObject for Link {
-    /* No methods to implement */
 }
 
 impl UserCreatable for Link {

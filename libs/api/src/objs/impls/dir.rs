@@ -16,10 +16,7 @@ use os::{
 };
 
 use crate::{
-    bits::obj::{
-        grants::WithTraversableDataObject,
-        types::ObjType
-    },
+    bits::obj::types::ObjType,
     caller::{
         KernCaller,
         Result
@@ -83,10 +80,6 @@ impl KernCaller for Dir {
     fn caller_handle_bits(&self) -> u32 {
         self.obj_handle().caller_handle_bits()
     }
-}
-
-impl WithTraversableDataObject for Dir {
-    /* No methods to implement */
 }
 
 impl UserCreatable for Dir {
@@ -158,10 +151,10 @@ impl DirEntry {
      * Constructs a new `DirEntry` with the given values
      */
     pub fn new(name: &str, obj_type: ObjType) -> Self {
-        let mut buf = [0; VFS_NAME_LEN_MAX];
-        str_utils::copy_str_to_u8_buf(&mut buf, name);
+        let mut name_buffer = [0; VFS_NAME_LEN_MAX];
+        str_utils::copy_str_to_u8_buf(&mut name_buffer, name);
 
-        Self { m_name: buf,
+        Self { m_name: name_buffer,
                m_name_len: name.len(),
                m_type: obj_type }
     }

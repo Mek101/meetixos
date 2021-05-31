@@ -9,7 +9,6 @@ use os::sysc::{
 
 use crate::{
     bits::obj::{
-        grants::WithExecutableDataObject,
         modes::SeekMode,
         types::ObjType
     },
@@ -187,10 +186,6 @@ impl KernCaller for File {
     fn caller_handle_bits(&self) -> u32 {
         self.obj_handle().caller_handle_bits()
     }
-}
-
-impl WithExecutableDataObject for File {
-    /* No methods to implement */
 }
 
 impl SizeableData for File {

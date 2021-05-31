@@ -193,7 +193,7 @@ impl<T, M> ObjConfig<T, M>
 
     /**
      * Dispatches the configuration to the kernel that opens (or creates if
-     * [`Object::creat()`] was called) the object referenced by `path`.
+     * `Object::creat()` was called) the object referenced by `path`.
      *
      * The life of the objects created with this method varies by type:
      * Permanent objects, like `File`s, `Dir`ectories, `Link`s and

@@ -56,8 +56,6 @@ impl KrnIterator {
     /**
      * According to the `SeekMode` given, it updates the end to begin
      * position
-     *
-     * [`SeekMode`]: crate::bits::obj::modes::SeekMode
      */
     pub fn set_end_to_begin_pos(&self, pos: SeekMode) -> Result<usize> {
         self.kern_call_1(KernFnPath::Iterator(KrnIteratorFnId::SetEndToBeginPos),

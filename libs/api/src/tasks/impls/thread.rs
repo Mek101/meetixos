@@ -82,7 +82,7 @@ impl Thread {
     }
 
     /**
-     * Adds a cleanup callback that will be executed using a [`LIFO`] queue.
+     * Adds a cleanup callback that will be executed using a `LIFO` queue.
      *
      * They are executed when the `Thread` terminates (naturally or
      * because explicitly called `Thread::terminate(true)`).

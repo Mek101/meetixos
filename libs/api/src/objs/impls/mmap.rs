@@ -17,7 +17,6 @@ use os::sysc::{
 
 use crate::{
     bits::obj::{
-        grants::WithExecutableDataObject,
         modes::MMapPtrMode,
         types::ObjType
     },
@@ -167,10 +166,6 @@ impl KernCaller for MMap {
 }
 
 impl SizeableData for MMap {
-    /* No methods to implement */
-}
-
-impl WithExecutableDataObject for MMap {
     /* No methods to implement */
 }
 
