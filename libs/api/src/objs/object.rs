@@ -32,8 +32,7 @@ use crate::{
         impls::any::Any,
         info::info::ObjInfo
     },
-    tasks::task::Task,
-    time::Instant
+    tasks::task::Task
 };
 
 /**
@@ -287,8 +286,7 @@ pub trait Object: From<ObjId> + Default + Clone + Sync + Send {
         self.obj_handle().watch(filter, callback_fn)
     }
 
-    /** # Share this `Object` with another `Task`
-     *
+    /**
      * Sends this object instance to another `Task` to share the same
      * resource.
      *
@@ -326,32 +324,6 @@ pub trait Object: From<ObjId> + Default + Clone + Sync + Send {
      */
     fn info(&self) -> Result<ObjInfo<Self>> {
         self.obj_handle().info()
-    }
-
-    /**
-     * Returns the `ObjType` of the object
-     */
-    fn obj_type(&self) -> ObjType {
-        self.info().unwrap_or_default().obj_type()
-    }
-
-    /**
-     * Returns all the `Instant` timestamps ordered as
-     *
-     * 0. Creation `Instant`
-     * 1. Last access `Instant`
-     * 2. Last data modify `Instant`
-     * 3. Last info modify `Instant`
-     */
-    fn timestamps(&self) -> (Instant, Instant, Instant, Instant) {
-        self.info().unwrap_or_default().timestamps()
-    }
-
-    /**
-     * Returns the size of the object's data in bytes
-     */
-    fn size(&self) -> usize {
-        self.info().unwrap_or_default().size()
     }
 }
 

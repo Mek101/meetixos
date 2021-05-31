@@ -34,7 +34,9 @@ use crate::{
  * implemented by the `OSUser` and the `OSGroup`
  */
 #[derive(Debug, Default, Copy, Clone)]
-pub struct OSEntityId(u16);
+pub struct OSEntityId {
+    m_raw: u16
+}
 
 impl OSEntityId {
     /**
@@ -51,7 +53,7 @@ impl OSEntityId {
      * Returns the raw identifier of this `OSEntityId`
      */
     pub fn as_raw(&self) -> u16 {
-        self.0
+        self.m_raw
     }
 
     /**
@@ -64,7 +66,7 @@ impl OSEntityId {
 
 impl From<u16> for OSEntityId {
     fn from(raw_id: u16) -> Self {
-        Self(raw_id)
+        Self { m_raw: raw_id }
     }
 }
 

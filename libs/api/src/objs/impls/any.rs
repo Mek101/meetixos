@@ -26,7 +26,9 @@ use crate::{
  * The `Any` can be safely downcast to his real type with his methods
  */
 #[derive(Debug, Default)]
-pub struct Any(ObjId);
+pub struct Any {
+    m_obj: ObjId
+}
 
 impl Any {
     /**
@@ -35,7 +37,7 @@ impl Any {
      */
     pub fn downcast<T: Object>(self) -> result::Result<T, Self> {
         if self.real_type() == T::TYPE {
-            Ok(T::from(self.0))
+            Ok(T::from(self.m_obj))
         } else {
             Err(self)
         }
@@ -48,10 +50,10 @@ impl Any {
     pub unsafe fn downcast_panic<T: Object>(self) -> T {
         /* check for the static type, converts if the same, panic otherwise */
         if self.real_type() == T::TYPE {
-            T::from(self.0)
+            T::from(self.m_obj)
         } else {
             panic!("Any({})::downcast_panic<{}> - Failed, {} != {}",
-                   self.0.as_raw(),
+                   self.m_obj.as_raw(),
                    type_name::<T>(),
                    self.real_type(),
                    T::TYPE);
@@ -65,7 +67,7 @@ impl Any {
      * with the new handle received according to the `RecvMode` given
      */
     pub fn recv(&mut self, mode: RecvMode) -> Result<()> {
-        self.0.recv(ObjType::Unknown, mode)
+        self.m_obj.recv(ObjType::Unknown, mode)
     }
 
     /**
@@ -81,7 +83,7 @@ impl Any {
      * Returns the underling `ObjType`
      */
     pub fn real_type(&self) -> ObjType {
-        self.0.info::<File>().unwrap_or_default().obj_type()
+        self.m_obj.info::<File>().unwrap_or_default().obj_type()
     }
 
     /**
@@ -142,7 +144,7 @@ impl Any {
 }
 
 impl From<ObjId> for Any {
-    fn from(id: ObjId) -> Self {
-        Self(id)
+    fn from(obj_id: ObjId) -> Self {
+        Self { m_obj: obj_id }
     }
 }

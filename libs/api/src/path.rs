@@ -26,6 +26,7 @@ use crate::{
     bits::path::PathExistsState,
     caller::KernCaller
 };
+use core::ops::Index;
 
 /**
  * Implements a simple way to manage VFS paths.
@@ -358,6 +359,19 @@ impl Eq for Path {
 impl AsRef<[u8]> for Path {
     fn as_ref(&self) -> &[u8] {
         self.as_str().as_bytes()
+    }
+}
+
+impl<'a> Index<usize> for Path {
+    type Output = str;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        for (i, component) in self.components().enumerate() {
+            if i == index {
+                return component;
+            }
+        }
+        unreachable!();
     }
 }
 

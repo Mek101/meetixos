@@ -21,9 +21,10 @@ pub enum PathExistsState {
 
     /**
      * The path exists only until a certain component, the variant contains
-     * the index of the last existing component
+     * the index of the last existing component which can be retrieved via
+     * `path[]` operator
      */
-    ExistsUntil(u32),
+    ExistsUntil(usize),
 
     /**
      * The path doesn't exists completely
@@ -48,7 +49,7 @@ impl TryFrom<(usize, usize)> for PathExistsState {
                     Err(())
                 }
             },
-            1 => Ok(Self::ExistsUntil(value.1 as u32)),
+            1 => Ok(Self::ExistsUntil(value.1)),
             2 => Ok(Self::NotExists),
             3 => Ok(Self::EmptyPath),
             _ => Err(())
