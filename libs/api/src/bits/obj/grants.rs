@@ -78,6 +78,20 @@ impl<T> Grants<T> where T: Object {
     }
 
     /**
+     * Returns the raw permission bits
+     */
+    pub fn as_raw(&self) -> u32 {
+        self.m_bits
+    }
+
+    /**
+     * Returns the raw permission bits as usize
+     */
+    pub fn as_raw_usize(&self) -> usize {
+        self.as_raw() as usize
+    }
+
+    /**
      * Returns the bit value for the given `GrantsBits`
      */
     pub fn is(&self, bit: GrantsBit) -> bool {

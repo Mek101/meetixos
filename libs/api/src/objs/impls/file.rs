@@ -48,9 +48,10 @@ pub struct File {
 
 impl File {
     /**
-     * Puts into the given `buf` at max `buf.len()` bytes read from the
-     * current file's data cursor position and returns the number of read
-     * bytes
+     * Puts into the given `buf` at max `buf.len()` bytes.
+     *
+     * It starts read them from the current position of the cursor and
+     * returns the number of read bytes
      */
     pub fn read(&self, buf: &mut [u8]) -> Result<usize> {
         self.kern_call_2(KernFnPath::File(KernFileFnId::ReadData),
@@ -59,8 +60,10 @@ impl File {
     }
 
     /**
-     * Puts into the File's data the content of the given `buf` and returns
-     * the number of written bytes
+     * Puts into the `File`'s data the content of `buf` trying to write all
+     * the `buf.len()` bytes.
+     *
+     * Returns the number of written bytes
      */
     pub fn write(&self, buf: &[u8]) -> Result<usize> {
         self.kern_call_2(KernFnPath::File(KernFileFnId::WriteData),
@@ -159,8 +162,8 @@ impl File {
     /**
      * Returns the current cursor position
      */
-    pub fn current_pos(&self) -> u64 {
-        self.set_pos(SeekMode::Absolute(0)).unwrap_or(0)
+    pub fn pos(&self) -> Result<u64> {
+        self.set_pos(SeekMode::Absolute(0))
     }
 }
 

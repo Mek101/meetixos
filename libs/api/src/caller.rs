@@ -59,8 +59,10 @@ pub(crate) trait KernCaller {
      * `KernCaller::call_id()`
      */
     fn kern_call_0(&self, id: KernFnPath) -> Result<usize> {
-        let mut error = Error::default();
-        unsafe { syscall_0(self.call_id(id), error.as_ptr()).map_err(|_| error) }
+        let mut error_value = Error::default();
+        unsafe {
+            syscall_0(self.call_id(id), error_value.as_ptr()).map_err(|_| error_value)
+        }
     }
 
     /**
@@ -71,8 +73,10 @@ pub(crate) trait KernCaller {
      * `KernCaller::call_id()`
      */
     fn kern_call_1(&self, id: KernFnPath, a1: usize) -> Result<usize> {
-        let mut error = Error::default();
-        unsafe { syscall_1(self.call_id(id), a1, error.as_ptr()).map_err(|_| error) }
+        let mut error_value = Error::default();
+        unsafe {
+            syscall_1(self.call_id(id), a1, error_value.as_ptr()).map_err(|_| error_value)
+        }
     }
 
     /**
@@ -83,8 +87,12 @@ pub(crate) trait KernCaller {
      * `KernCaller::call_id()`
      */
     fn kern_call_2(&self, id: KernFnPath, a1: usize, a2: usize) -> Result<usize> {
-        let mut error = Error::default();
-        unsafe { syscall_2(self.call_id(id), a1, a2, error.as_ptr()).map_err(|_| error) }
+        let mut error_value = Error::default();
+        unsafe {
+            syscall_2(self.call_id(id), a1, a2, error_value.as_ptr()).map_err(|_| {
+                                                                         error_value
+                                                                     })
+        }
     }
 
     /**
@@ -100,9 +108,11 @@ pub(crate) trait KernCaller {
                    a2: usize,
                    a3: usize)
                    -> Result<usize> {
-        let mut error = Error::default();
+        let mut error_value = Error::default();
         unsafe {
-            syscall_3(self.call_id(id), a1, a2, a3, error.as_ptr()).map_err(|_| error)
+            syscall_3(self.call_id(id), a1, a2, a3, error_value.as_ptr()).map_err(|_| {
+                                                                             error_value
+                                                                         })
         }
     }
 
@@ -120,9 +130,9 @@ pub(crate) trait KernCaller {
                    a3: usize,
                    a4: usize)
                    -> Result<usize> {
-        let mut error = Error::default();
+        let mut error_value = Error::default();
         unsafe {
-            syscall_4(self.call_id(id), a1, a2, a3, a4, error.as_ptr()).map_err(|_| error)
+            syscall_4(self.call_id(id), a1, a2, a3, a4, error_value.as_ptr()).map_err(|_| error_value)
         }
     }
 
@@ -139,17 +149,17 @@ pub(crate) trait KernCaller {
                    a2: usize,
                    a3: usize,
                    a4: usize,
-                   arg5: usize)
+                   a5: usize)
                    -> Result<usize> {
-        let mut error = Error::default();
+        let mut error_value = Error::default();
         unsafe {
             syscall_5(self.call_id(id),
                       a1,
                       a2,
                       a3,
                       a4,
-                      arg5,
-                      error.as_ptr()).map_err(|_| error)
+                      a5,
+                      error_value.as_ptr()).map_err(|_| error_value)
         }
     }
 }

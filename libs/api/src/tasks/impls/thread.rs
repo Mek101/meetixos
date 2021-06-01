@@ -36,18 +36,6 @@ pub struct Thread {
 
 impl Thread {
     /**
-     * Puts the `Thread` into the wait state for the given non-zero
-     * `Duration`.
-     *
-     * It is possible to call this method for another `Thread` of the same
-     * `Proc` that executes this; in that case the referenced `Thread`
-     * will stop for the given `Duration`
-     */
-    pub fn sleep(&self, duration: Duration) -> Result<()> {
-        self.wait_for(WaitFor::Quantum(duration))
-    }
-
-    /**
      * Puts this `Thread` into the wait state until the given `target`
      * doesn't terminate.
      *
@@ -61,24 +49,26 @@ impl Thread {
     }
 
     /**
+     * Puts the `Thread` into the wait state for the given non-zero
+     * `Duration`.
+     *
+     * It is possible to call this method for another `Thread` of the same
+     * `Proc` that executes this; in that case the referenced `Thread`
+     * will stop for the given `Duration`
+     */
+    pub fn sleep(duration: Duration) -> Result<()> {
+        Self::this().wait_for(WaitFor::Quantum(duration))
+    }
+
+    /**
      * Puts this `Thread` into the wait state until the given `irq` doesn't
      * throw.
      *
      * It is denied to call this method with a `Thread` reference that is
      * not the one returned by `Thread::this()`
      */
-    pub fn wait_irq(&self, irq: u32) -> Result<()> {
-        self.wait_for(WaitFor::Irq(irq))
-    }
-
-    /**
-     * Puts the `Thread` into the waiting state for an amount of time
-     * according to the `WaitFor` mode given
-     */
-    pub fn wait_for(&self, wait_reason: WaitFor) -> Result<()> {
-        self.kern_call_1(KernFnPath::Thread(KernThreadFnId::WaitFor),
-                         &wait_reason as *const _ as usize)
-            .map(|_| ())
+    pub fn wait_irq(irq: u32) -> Result<()> {
+        Self::this().wait_for(WaitFor::Irq(irq))
     }
 
     /**
@@ -128,6 +118,16 @@ impl Thread {
             .map_err(|_| ())
             .map(|_| entry_data)
             .unwrap()
+    }
+
+    /**
+     * Puts the `Thread` into the waiting state for an amount of time
+     * according to the `WaitFor` mode given
+     */
+    fn wait_for(&self, wait_reason: WaitFor) -> Result<()> {
+        self.kern_call_1(KernFnPath::Thread(KernThreadFnId::WaitFor),
+                         &wait_reason as *const _ as usize)
+            .map(|_| ())
     }
 }
 

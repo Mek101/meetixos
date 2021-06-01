@@ -35,13 +35,13 @@ impl TaskId {
      * Obtains the current `TaskId` of the `TaskType` given
      */
     fn this(task_type: TaskType) -> Self {
-        let mut task = Self::default();
-        task.kern_call_1(KernFnPath::Task(KernTaskFnId::This), task_type.into())
-            .map(|task_id| {
-                task.m_raw = task_id as u32;
-                task
-            })
-            .unwrap()
+        let mut task_id = Self::default();
+        task_id.kern_call_1(KernFnPath::Task(KernTaskFnId::This), task_type.into())
+               .map(|raw_task_id| {
+                   task_id.m_raw = raw_task_id as u32;
+                   task_id
+               })
+               .unwrap()
     }
 
     /**

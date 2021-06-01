@@ -22,14 +22,29 @@ pub enum ObjType {
     Unknown,
 
     /**
-     * Identifies a `File` object
+     * Identifies a `Device` object
      */
-    File,
+    Device,
 
     /**
      * Identifies a `Dir` object
      */
     Dir,
+
+    /**
+     * Identifies a `File` object
+     */
+    File,
+
+    /**
+     * Identifies an `IpcChan` object
+     */
+    IpcChan,
+
+    /**
+     * Identifies an `KrnIterator` object
+     */
+    KrnIterator,
 
     /**
      * Identifies a `Link` object
@@ -42,19 +57,9 @@ pub enum ObjType {
     MMap,
 
     /**
-     * Identifies an `IpcChan` object
-     */
-    IpcChan,
-
-    /**
      * Identifies an `OsRawMutex` object
      */
-    OsRawMutex,
-
-    /**
-     * Identifies an `KrnIterator` object
-     */
-    KrnIterator
+    OsRawMutex
 }
 
 impl Default for ObjType {
@@ -67,13 +72,14 @@ impl fmt::Display for ObjType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Unknown => write!(f, "Unknown"),
-            Self::File => write!(f, "File"),
+            Self::Device => write!(f, "Device"),
             Self::Dir => write!(f, "Dir"),
+            Self::File => write!(f, "File"),
+            Self::IpcChan => write!(f, "IpcChan"),
+            Self::KrnIterator => write!(f, "KrnIterator"),
             Self::Link => write!(f, "Link"),
             Self::MMap => write!(f, "MMap"),
-            Self::IpcChan => write!(f, "IpcChan"),
-            Self::OsRawMutex => write!(f, "OsRawMutex"),
-            Self::KrnIterator => write!(f, "KrnIterator")
+            Self::OsRawMutex => write!(f, "OsRawMutex")
         }
     }
 }

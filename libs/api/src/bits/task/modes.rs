@@ -141,3 +141,36 @@ pub enum WaitFor {
      */
     Irq(u32)
 }
+
+/**
+ * Lists the available `Proc::mount()` modes
+ */
+#[repr(usize)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum MountMode {
+    /**
+     * The filesystem is visible to all the processes in any of the active
+     * sessions
+     */
+    OSGlobal,
+
+    /**
+     * The filesystem is visible only by the processes in the current
+     * session (ancestors of the caller too)
+     */
+    SessionGlobal,
+
+    /**
+     * The filesystem is visible only by the process which have performed
+     * the mount and his children
+     */
+    ChildInheritable,
+
+    /**
+     * The filesystem is only visible to the caller process
+     */
+    PrivateToProc
+}

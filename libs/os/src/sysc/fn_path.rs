@@ -6,6 +6,7 @@ use core::{
 };
 
 use crate::sysc::codes::{
+    KernDeviceFnId,
     KernDirFnId,
     KernFileFnId,
     KernIpcChanFnId,
@@ -42,6 +43,7 @@ pub enum KernFnPath {
     OSEntConfig(KernOSEntConfigFnId),
     Object(KernObjectFnId),
     Task(KernTaskFnId),
+    Device(KernDeviceFnId),
     Dir(KernDirFnId),
     File(KernFileFnId),
     IpcChan(KernIpcChanFnId),
@@ -69,20 +71,21 @@ impl KernFnPath {
             Self::OSEntConfig(_) => 2,
             Self::Object(_) => 3,
             Self::Task(_) => 4,
-            Self::Dir(_) => 5,
-            Self::File(_) => 6,
-            Self::IpcChan(_) => 7,
-            Self::Iterator(_) => 8,
-            Self::Link(_) => 9,
-            Self::MMap(_) => 10,
-            Self::Mutex(_) => 11,
-            Self::TimeInst(_) => 12,
-            Self::Path(_) => 13,
-            Self::OSEntity(_) => 14,
-            Self::OSUser(_) => 15,
-            Self::OSGroup(_) => 16,
-            Self::Proc(_) => 17,
-            Self::Thread(_) => 18
+            Self::Device(_) => 5,
+            Self::Dir(_) => 6,
+            Self::File(_) => 7,
+            Self::IpcChan(_) => 8,
+            Self::Iterator(_) => 9,
+            Self::Link(_) => 10,
+            Self::MMap(_) => 11,
+            Self::Mutex(_) => 12,
+            Self::TimeInst(_) => 13,
+            Self::Path(_) => 14,
+            Self::OSEntity(_) => 15,
+            Self::OSUser(_) => 16,
+            Self::OSGroup(_) => 17,
+            Self::Proc(_) => 18,
+            Self::Thread(_) => 19
         }
     }
 
@@ -96,6 +99,7 @@ impl KernFnPath {
             Self::OSEntConfig(fn_id) => fn_id.into(),
             Self::Object(fn_id) => fn_id.into(),
             Self::Task(fn_id) => fn_id.into(),
+            Self::Device(fn_id) => fn_id.into(),
             Self::Dir(fn_id) => fn_id.into(),
             Self::File(fn_id) => fn_id.into(),
             Self::IpcChan(fn_id) => fn_id.into(),
@@ -117,136 +121,143 @@ impl KernFnPath {
 impl TryFrom<(usize, usize)> for KernFnPath {
     type Error = ();
 
-    fn try_from(value: (usize, usize)) -> Result<Self, Self::Error> {
-        match value.0 {
+    fn try_from((variant, value): (usize, usize)) -> Result<Self, Self::Error> {
+        match variant {
             0 => {
-                if let Ok(fn_id) = KernObjConfigFnId::try_from(value.1 as u16) {
+                if let Ok(fn_id) = KernObjConfigFnId::try_from(value as u16) {
                     Ok(Self::ObjConfig(fn_id))
                 } else {
                     Err(())
                 }
             },
             1 => {
-                if let Ok(fn_id) = KernTaskConfigFnId::try_from(value.1 as u16) {
+                if let Ok(fn_id) = KernTaskConfigFnId::try_from(value as u16) {
                     Ok(Self::TaskConfig(fn_id))
                 } else {
                     Err(())
                 }
             },
             2 => {
-                if let Ok(fn_id) = KernOSEntConfigFnId::try_from(value.1 as u16) {
+                if let Ok(fn_id) = KernOSEntConfigFnId::try_from(value as u16) {
                     Ok(Self::OSEntConfig(fn_id))
                 } else {
                     Err(())
                 }
             },
             3 => {
-                if let Ok(fn_id) = KernObjectFnId::try_from(value.1 as u16) {
+                if let Ok(fn_id) = KernObjectFnId::try_from(value as u16) {
                     Ok(Self::Object(fn_id))
                 } else {
                     Err(())
                 }
             },
             4 => {
-                if let Ok(fn_id) = KernTaskFnId::try_from(value.1 as u16) {
+                if let Ok(fn_id) = KernTaskFnId::try_from(value as u16) {
                     Ok(Self::Task(fn_id))
                 } else {
                     Err(())
                 }
             },
             5 => {
-                if let Ok(fn_id) = KernDirFnId::try_from(value.1 as u16) {
-                    Ok(Self::Dir(fn_id))
+                if let Ok(fn_id) = KernDeviceFnId::try_from(value as u16) {
+                    Ok(Self::Device(fn_id))
                 } else {
                     Err(())
                 }
             },
             6 => {
-                if let Ok(fn_id) = KernFileFnId::try_from(value.1 as u16) {
-                    Ok(Self::File(fn_id))
+                if let Ok(fn_id) = KernDirFnId::try_from(value as u16) {
+                    Ok(Self::Dir(fn_id))
                 } else {
                     Err(())
                 }
             },
             7 => {
-                if let Ok(fn_id) = KernIpcChanFnId::try_from(value.1 as u16) {
-                    Ok(Self::IpcChan(fn_id))
+                if let Ok(fn_id) = KernFileFnId::try_from(value as u16) {
+                    Ok(Self::File(fn_id))
                 } else {
                     Err(())
                 }
             },
             8 => {
-                if let Ok(fn_id) = KrnIteratorFnId::try_from(value.1 as u16) {
-                    Ok(Self::Iterator(fn_id))
+                if let Ok(fn_id) = KernIpcChanFnId::try_from(value as u16) {
+                    Ok(Self::IpcChan(fn_id))
                 } else {
                     Err(())
                 }
             },
             9 => {
-                if let Ok(fn_id) = KernLinkFnId::try_from(value.1 as u16) {
-                    Ok(Self::Link(fn_id))
+                if let Ok(fn_id) = KrnIteratorFnId::try_from(value as u16) {
+                    Ok(Self::Iterator(fn_id))
                 } else {
                     Err(())
                 }
             },
             10 => {
-                if let Ok(fn_id) = KernMMapFnId::try_from(value.1 as u16) {
-                    Ok(Self::MMap(fn_id))
+                if let Ok(fn_id) = KernLinkFnId::try_from(value as u16) {
+                    Ok(Self::Link(fn_id))
                 } else {
                     Err(())
                 }
             },
             11 => {
-                if let Ok(fn_id) = KernMutexFnId::try_from(value.1 as u16) {
-                    Ok(Self::Mutex(fn_id))
+                if let Ok(fn_id) = KernMMapFnId::try_from(value as u16) {
+                    Ok(Self::MMap(fn_id))
                 } else {
                     Err(())
                 }
             },
             12 => {
-                if let Ok(fn_id) = KernTimeInstFnId::try_from(value.1 as u16) {
-                    Ok(Self::TimeInst(fn_id))
+                if let Ok(fn_id) = KernMutexFnId::try_from(value as u16) {
+                    Ok(Self::Mutex(fn_id))
                 } else {
                     Err(())
                 }
             },
             13 => {
-                if let Ok(fn_id) = KernPathFnId::try_from(value.1 as u16) {
-                    Ok(Self::Path(fn_id))
+                if let Ok(fn_id) = KernTimeInstFnId::try_from(value as u16) {
+                    Ok(Self::TimeInst(fn_id))
                 } else {
                     Err(())
                 }
             },
             14 => {
-                if let Ok(fn_id) = KernOSEntFnId::try_from(value.1 as u16) {
-                    Ok(Self::OSEntity(fn_id))
+                if let Ok(fn_id) = KernPathFnId::try_from(value as u16) {
+                    Ok(Self::Path(fn_id))
                 } else {
                     Err(())
                 }
             },
             15 => {
-                if let Ok(fn_id) = KernOSUserFnId::try_from(value.1 as u16) {
-                    Ok(Self::OSUser(fn_id))
+                if let Ok(fn_id) = KernOSEntFnId::try_from(value as u16) {
+                    Ok(Self::OSEntity(fn_id))
                 } else {
                     Err(())
                 }
             },
             16 => {
-                if let Ok(fn_id) = KernOSGroupFnId::try_from(value.1 as u16) {
-                    Ok(Self::OSGroup(fn_id))
+                if let Ok(fn_id) = KernOSUserFnId::try_from(value as u16) {
+                    Ok(Self::OSUser(fn_id))
                 } else {
                     Err(())
                 }
             },
             17 => {
-                if let Ok(fn_id) = KernProcFnId::try_from(value.1 as u16) {
-                    Ok(Self::Proc(fn_id))
+                if let Ok(fn_id) = KernOSGroupFnId::try_from(value as u16) {
+                    Ok(Self::OSGroup(fn_id))
                 } else {
                     Err(())
                 }
             },
             18 => {
-                if let Ok(fn_id) = KernThreadFnId::try_from(value.1 as u16) {
+                if let Ok(fn_id) = KernProcFnId::try_from(value as u16) {
+                    Ok(Self::Proc(fn_id))
+                } else {
+                    Err(())
+                }
+            },
+            19 => {
+                if let Ok(fn_id) = KernThreadFnId::try_from(value as u16) {
                     Ok(Self::Thread(fn_id))
                 } else {
                     Err(())
@@ -265,6 +276,7 @@ impl fmt::Display for KernFnPath {
             Self::OSEntConfig(code) => write!(f, "KernFnPath::OSEntConfig({:?})", code),
             Self::Object(code) => write!(f, "KernFnPath::Object({:?})", code),
             Self::Task(code) => write!(f, "KernFnPath::Task({:?})", code),
+            Self::Device(code) => write!(f, "KernFnPath::Device({:?})", code),
             Self::Dir(code) => write!(f, "KernFnPath::Dir({:?})", code),
             Self::File(code) => write!(f, "KernFnPath::File({:?})", code),
             Self::IpcChan(code) => write!(f, "KernFnPath::IpcChan({:?})", code),

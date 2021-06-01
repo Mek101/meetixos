@@ -79,6 +79,22 @@ pub enum KernTaskFnId {
 }
 
 /**
+ * Lists the system call codes for the `api::objs::impls::Device` struct
+ */
+#[repr(u16)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum KernDeviceFnId {
+    Read,
+    Write,
+    SetPos,
+    MapToMem,
+    IOSetup
+}
+
+/**
  * Lists the system call codes for the `api::objs::impls::Dir` struct
  */
 #[repr(u16)]
@@ -246,7 +262,9 @@ pub enum KernOSGroupFnId {
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernProcFnId {
-    MainThread
+    MainThread,
+    Mount,
+    UnMount
 }
 
 /**

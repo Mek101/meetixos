@@ -103,7 +103,7 @@ impl<T> ObjInfo<T> where T: Object {
     /**
      * Returns the `ObjMemInfo` reference
      */
-    pub fn mem_info(&mut self) -> &ObjMemInfo {
+    pub fn mem_info(&self) -> &ObjMemInfo {
         &self.m_mem_info
     }
 
