@@ -30,6 +30,7 @@ static mut BITMAP_ALLOCATOR: LockedBitMapAllocator<RawSpinMutex> =
  */
 pub fn phys_init(allocated_bits: usize) {
     let bitmap_area = vml_layout().phys_mem_bitmap_area();
+    trace!("phys_init: allocated_bits: {}", allocated_bits);
 
     /* initialize the bitmap allocator using the hh_loader's bitmap */
     unsafe {

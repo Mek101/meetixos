@@ -66,13 +66,13 @@ pub unsafe extern "C" fn kern_start(loader_info: &LoaderInfo) {
     info!("Initializing Kernel Physical Memory Management...");
     phys_init(loader_info.bitmap_allocated_bits());
 
-    /* unmap the kernel loader, after this call <loader_info> will be invalid */
-    info!("Unmapping Kernel Loader...");
-    paging_unmap_loader(loader_info);
-
     /* initialize the kernel heap */
     info!("Initializing Kernel Heap...");
     heap_init();
+
+    /* unmap the kernel loader, after this call <loader_info> will be invalid */
+    info!("Unmapping Kernel Loader...");
+    paging_unmap_loader(loader_info);
 
     /* enable logging buffering */
     info!("Enabling Kernel Logging Buffering...");
