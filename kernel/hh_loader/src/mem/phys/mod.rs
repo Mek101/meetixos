@@ -1,5 +1,7 @@
 /*! HH_Loader physical memory management */
 
+use core::slice;
+
 use shared::{
     addr::{
         phys::PhysAddr,
@@ -128,6 +130,10 @@ pub fn phys_init() {
     }
 
     unsafe {
+        /* cleanup the bitmap area */
+        slice::from_raw_parts_mut(bitmap_area.start_addr().as_ptr_mut::<u8>(),
+                                  bitmap_area.size()).fill(0);
+
         /* initialize the bitmap allocator */
         BITMAP_ALLOCATOR.init(bitmap_area.start_addr().as_ptr_mut(),
                               bitmap_area.size(),
@@ -136,10 +142,13 @@ pub fn phys_init() {
         /* enable now the bits that correspond to the available physical frames */
         if let Some(phys_frames) = PRE_INIT_ALLOCATOR.iter_to_next() {
             /* mark the remaining frames as available */
-            trace!("phys_init: Adding physical frames to the bitmap");
             for phys_frame in phys_frames {
                 BITMAP_ALLOCATOR.add_phys_frame(phys_frame)
             }
+
+            trace!("phys_init: added {} frames to the bitmap ({})",
+                   BITMAP_ALLOCATOR.added_frames(),
+                   dbg_display_size(BITMAP_ALLOCATOR.added_frames() * Page4KiB::SIZE));
 
             /* now can be used the bitmap allocator */
             CAN_USE_BITMAP = true;

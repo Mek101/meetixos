@@ -34,7 +34,8 @@ use crate::{
  * deallocations happen with this granularity)
  */
 pub struct BitMapAllocator<'a> {
-    m_inner: Option<BitMapAllocatorInner<'a>>
+    m_inner: Option<BitMapAllocatorInner<'a>>,
+    m_added_frames: usize
 }
 
 impl<'a> BitMapAllocator<'a> {
@@ -43,7 +44,8 @@ impl<'a> BitMapAllocator<'a> {
      * initialized with `BitMapAllocator::init()`
      */
     pub const fn new_uninitialized() -> Self {
-        Self { m_inner: None }
+        Self { m_inner: None,
+               m_added_frames: 0 }
     }
 
     /**
@@ -134,6 +136,7 @@ impl<'a> BitMapAllocator<'a> {
     pub fn add_phys_frame(&mut self, phys_frame: PhysFrame<Page4KiB>) {
         if let Some(ref mut inner) = self.m_inner {
             inner.add_bit(phys_frame.start_addr().as_usize() / Page4KiB::SIZE);
+            self.m_added_frames += 1;
         }
     }
 
@@ -146,6 +149,10 @@ impl<'a> BitMapAllocator<'a> {
         } else {
             0
         }
+    }
+
+    pub fn added_frames(&self) -> usize {
+        self.m_added_frames
     }
 }
 
@@ -171,11 +178,7 @@ impl<'a> BitMapAllocatorInner<'a> {
                   bytes_count: usize,
                   allocated_bits: usize)
                   -> Self {
-        /* mark all the bits as un available */
-        let slice = slice::from_raw_parts_mut(bitmap_area_ptr, bytes_count);
-        slice.fill(0);
-
-        Self { m_bits: slice,
+        Self { m_bits: slice::from_raw_parts_mut(bitmap_area_ptr, bytes_count),
                m_allocated_bits: allocated_bits }
     }
 

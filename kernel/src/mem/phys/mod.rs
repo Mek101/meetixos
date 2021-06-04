@@ -1,7 +1,6 @@
 /*! Kernel physical memory management */
 
 use shared::{
-    dbg::dbg_display_size,
     logger::{
         trace,
         warn
@@ -66,9 +65,6 @@ pub fn phys_alloc_frame<S>() -> Option<PhysFrame<S>>
 
     if let Some(phys_frame) = phys_frame {
         trace!("phys_alloc_frame: Allocated PhysFrame = {:?}", phys_frame);
-    } else {
-        trace!("phys_alloc_frame: Failed to allocate a frame of Page{}",
-               dbg_display_size(S::SIZE));
     }
     phys_frame
 }
