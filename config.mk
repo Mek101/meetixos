@@ -50,6 +50,7 @@ endif
 TOOLCHAIN_ROOT := $(shell $(RUSTC) --print sysroot)
 LLVM_OBJCOPY   := $(shell find $(TOOLCHAIN_ROOT) -name llvm-objcopy)
 LLVM_STRIP     := $(shell find $(TOOLCHAIN_ROOT) -name llvm-strip)
+LLVM_NM        := $(shell find $(TOOLCHAIN_ROOT) -name llvm-nm)
 LLVM_LD        := $(shell find $(TOOLCHAIN_ROOT) -name rust-lld)
 
 #

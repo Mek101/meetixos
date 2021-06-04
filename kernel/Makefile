@@ -21,9 +21,10 @@ DIST_DIR   ?= ../$(DIST_SYSROOT_PREFIX)/MeetiX
 KRN_BUILT_DIR ?= $(BUILD_DIR)/kernel/$(BUILD_MODE)
 HHL_BUILT_DIR ?= $(BUILD_DIR)/hh_loader/$(BUILD_MODE)
 
-BUILT_KRN    ?= $(KRN_BUILT_DIR)/kernel
-BUILT_HHL    ?= $(HHL_BUILT_DIR)/hh_loader
-HHL_CORE_MOD ?= $(KRN_BUILT_DIR)/kernel_bin.rs
+BUILT_KRN        ?= $(KRN_BUILT_DIR)/kernel
+BUILT_HHL        ?= $(HHL_BUILT_DIR)/hh_loader
+HHL_CORE_MOD     ?= $(KRN_BUILT_DIR)/kernel_bin.rs
+HHL_CORE_MAP ?= $(KRN_BUILT_DIR)/kern_symbols.map
 
 MX_KERNEL ?= $(HHL_BUILT_DIR)/mx_kernel
 
@@ -52,10 +53,11 @@ $(MX_KERNEL): $(BUILT_HHL)
 	$(V) echo "- Linking '$(basename $(MX_KERNEL))'"
 	$(V) $(CP) -f $(BUILT_HHL) $(MX_KERNEL)
 
-$(BUILT_HHL): $(HHL_CORE_MOD) $(HHL_SOURCES) $(HHL_LINK_SRC)
+$(BUILT_HHL): $(HHL_CORE_MOD) $(HHL_CORE_MAP) $(HHL_SOURCES) $(HHL_LINK_SRC)
 	$(V) echo "- Building Kernel Loader..."
 	$(V) RUSTFLAGS="$(RUSTC_FLAGS)"                        \
          KERNEL_BIN=$(HHL_CORE_MOD)                        \
+         KERNEL_SYM=$(HHL_CORE_MAP)                        \
          CARGO_TARGET_DIR="$(BUILD_DIR)"                   \
              $(CARGO) build $(CARGO_FLAGS)                 \
                       --manifest-path hh_loader/Cargo.toml \
@@ -64,8 +66,14 @@ $(BUILT_HHL): $(HHL_CORE_MOD) $(HHL_SOURCES) $(HHL_LINK_SRC)
 $(HHL_CORE_MOD): $(SHF_SOURCES) $(BUILT_KRN)
 	$(V) echo "- Writing Kernel Core Module..."
 	$(V) echo "const KERNEL_SIZE: usize = $$(stat --format %s $(BUILT_KRN));" >$(HHL_CORE_MOD)
+	$(V) echo >>$(HHL_CORE_MOD)
 	$(V) echo "#[link_section = \".kernel_core\"]" >>$(HHL_CORE_MOD)
 	$(V) echo "static KERNEL_BYTES: [u8; KERNEL_SIZE] = *include_bytes!(r\"$(BUILT_KRN)\");" >>$(HHL_CORE_MOD)
+	$(V) echo >>$(HHL_CORE_MOD)
+
+$(HHL_CORE_MAP): $(SHF_SOURCES) $(BUILT_KRN)
+	$(V) echo "- Writing Kernel Core Symbols Map..."
+	$(V) $(LLVM_NM) -n $(BUILT_KRN) | awk '{ if ($$2 != "a") printf("0x%s %s\\n", $$1, $$3); }' | uniq >$(HHL_CORE_MAP)
 
 $(BUILT_KRN): $(SHF_SOURCES) $(KRN_SOURCES) $(KRN_LINK_SRC)
 	$(V) echo "- Building Kernel Core..."

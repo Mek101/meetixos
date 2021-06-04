@@ -42,8 +42,6 @@ pub fn paging_unmap_loader(loader_info: &LoaderInfo) {
                             inclusive_range.end().clone() + 1)
     };
 
-    //assert!(loader_reserved_range.)
-
     let mut page_dir = paging_current_page_dir();
 
     /* unmap the mapped range of the loader.

@@ -7,8 +7,8 @@ authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
 [dependencies]
 # ---------------------------- External Thirdy Party Crates ---------------------------- #
 log       = "*"
-bit_field = "*"
 xmas-elf  = "*"
+bit_field = "*"
 num_enum  = { version = "*", default-features = false}
 
 # ------------------------------ MeetiX Libraries Crates ------------------------------- #

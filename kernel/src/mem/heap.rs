@@ -94,27 +94,31 @@ fn heap_mem_supplier(requested_size: usize) -> Option<(usize, usize)> {
     };
 
     /* map the new range of pages for the heap */
-    let mut page_dir = paging_current_page_dir();
-    if let Ok(map_flusher) = page_dir.map_range(new_heap_to_map_range.clone(),
-                                                &KernAllocator::new(),
-                                                PDirFlags::new().set_present()
-                                                                .set_readable()
-                                                                .set_writeable()
-                                                                .set_no_execute()
-                                                                .set_global()
-                                                                .build())
-    {
-        trace!("heap_mem_supplier: Mapped {:?}", new_heap_to_map_range);
+    let mapping_res =
+        paging_current_page_dir().map_range(new_heap_to_map_range.clone(),
+                                            &KernAllocator::new(),
+                                            PDirFlags::new().set_present()
+                                                            .set_readable()
+                                                            .set_writeable()
+                                                            .set_no_execute()
+                                                            .set_global()
+                                                            .build());
+    match mapping_res {
+        Ok(map_flusher) => {
+            trace!("heap_mem_supplier: Mapped {:?}", new_heap_to_map_range);
 
-        /* update the currently mapped pages counter */
-        unsafe {
-            HEAP_ALLOCATED_FRAMES += requested_pages;
+            /* update the currently mapped pages counter */
+            unsafe {
+                HEAP_ALLOCATED_FRAMES += requested_pages;
+            }
+
+            /* flush the TLB entries and return the address */
+            map_flusher.flush();
+            Some((new_heap_to_map_range.start.start_addr().as_usize(), page_aligned_size))
+        },
+        Err(err) => {
+            trace!("heap_mem_supplier: Failed to extend kernel heap: cause: {}", err);
+            None
         }
-
-        /* flush the TLB entries and return the address */
-        map_flusher.flush();
-        Some((new_heap_to_map_range.start.start_addr().as_usize(), page_aligned_size))
-    } else {
-        None
     }
 }

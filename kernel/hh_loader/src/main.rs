@@ -41,6 +41,7 @@ mod loader;
 mod log;
 mod mem;
 mod panic;
+mod symbols;
 mod version;
 
 /**

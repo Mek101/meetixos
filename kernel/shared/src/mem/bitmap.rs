@@ -15,6 +15,7 @@ use crate::{
         phys::PhysAddr,
         Address
     },
+    logger::trace,
     mem::paging::{
         frame::{
             PhysFrame,
@@ -62,6 +63,7 @@ impl<'a> BitMapAllocator<'a> {
      */
     pub fn allocate_one(&mut self) -> Option<PhysFrame<Page4KiB>> {
         if let Some(ref mut inner) = self.m_inner {
+            trace!("BitMapAllocator::allocate_one()");
             inner.allocate_bit().map(|bit_index| {
                                     let raw_addr = bit_index * Page4KiB::SIZE;
                                     PhysAddr::new(raw_addr).containing_frame()
@@ -200,6 +202,7 @@ impl<'a> BitMapAllocatorInner<'a> {
                 }
             }
         }
+        trace!("DAIOCNEEEE");
         None
     }
 

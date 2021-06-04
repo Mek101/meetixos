@@ -1,6 +1,7 @@
 /*! Kernel physical memory management */
 
 use shared::{
+    dbg::dbg_display_size,
     logger::{
         trace,
         warn
@@ -30,6 +31,10 @@ static mut BITMAP_ALLOCATOR: LockedBitMapAllocator<RawSpinMutex> =
  */
 pub fn phys_init(allocated_bits: usize) {
     let bitmap_area = vml_layout().phys_mem_bitmap_area();
+    trace!("phys_init: bitmap_area: {:x}, bitmap_area_size: {}, allocated_frames: {}",
+           bitmap_area.start_addr(),
+           dbg_display_size(bitmap_area.size()),
+           allocated_bits);
 
     /* initialize the bitmap allocator using the hh_loader's bitmap */
     unsafe {
@@ -61,6 +66,9 @@ pub fn phys_alloc_frame<S>() -> Option<PhysFrame<S>>
 
     if let Some(phys_frame) = phys_frame {
         trace!("phys_alloc_frame: Allocated PhysFrame = {:?}", phys_frame);
+    } else {
+        trace!("phys_alloc_frame: Failed to allocate a frame of Page{}",
+               dbg_display_size(S::SIZE));
     }
     phys_frame
 }

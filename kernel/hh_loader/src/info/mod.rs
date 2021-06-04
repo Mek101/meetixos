@@ -17,7 +17,8 @@ use crate::{
     mem::{
         phys::phys_allocated_memory,
         vm_layout::vml_core_layout
-    }
+    },
+    symbols::kernel_symbols
 };
 
 pub mod info;
@@ -53,6 +54,7 @@ pub fn info_prepare_loader_info() -> &'static LoaderInfo {
                                       phys_allocated_memory() / Page4KiB::SIZE,
                                       boot_info.loader_reserved_range().clone(),
                                       boot_info.loader_mapped_range().clone(),
+                                      kernel_symbols(),
                                       boot_info.bootloader_name());
 
     /* store the loader info into the global value and return the reference */

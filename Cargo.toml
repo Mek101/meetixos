@@ -9,6 +9,7 @@ members = [
     "libs/heap",
     "libs/macros",
     "libs/os",
+    "libs/symbols",
     "libs/sync",
     # App Crates
     "userland/apps/example_app",

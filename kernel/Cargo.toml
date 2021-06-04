@@ -16,6 +16,7 @@ bit_field = "*"
 x86_64 = "*"
 
 # ------------------------------ MeetiX Libraries Crates ------------------------------- #
-api  = { path = "../libs/api",  features = ["enable_kernel_methods"] }
-heap = { path = "../libs/heap", features = ["disable_locked"] }
-sync = { path = "../libs/sync" }
+api     = { path = "../libs/api",  features = ["enable_kernel_methods"] }
+heap    = { path = "../libs/heap", features = ["disable_locked"] }
+sync    = { path = "../libs/sync" }
+symbols = { path = "../libs/symbols" }

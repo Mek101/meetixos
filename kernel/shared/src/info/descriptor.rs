@@ -24,10 +24,20 @@ pub const BOOTLOADER_NAME_LEN_MAX: usize = 64;
 #[derive(Debug, Clone)]
 pub struct LoaderInfo {
     m_cmdline_args: CmdLineArgs,
+
+    /* core VMLayout related fields */
     m_vm_layout: VMLayout,
     m_bitmap_allocated_bits: usize,
+
+    /* ranges to unmap when in kernel context */
     m_loader_reserved_range: VirtFrameRangeIncl<Page2MiB>,
     m_loader_mapped_range: VirtFrameRangeIncl<Page2MiB>,
+
+    /* kernel symbols, part of the loader text */
+    m_kern_symbols: *const u8,
+    m_kern_symbols_len: usize,
+
+    /* the name of the bootloader which have booted the entire kernel */
     m_bootloader_name: [u8; BOOTLOADER_NAME_LEN_MAX],
     m_bootloader_name_len: usize
 }
@@ -41,6 +51,7 @@ impl LoaderInfo {
                bitmap_allocated_bits: usize,
                loader_reserved_range: VirtFrameRangeIncl<Page2MiB>,
                loader_mapped_range: VirtFrameRangeIncl<Page2MiB>,
+               kern_symbols: &str,
                bootloader_name: &str)
                -> Self {
         let mut name_buffer = [0; BOOTLOADER_NAME_LEN_MAX];
@@ -51,6 +62,8 @@ impl LoaderInfo {
                m_bitmap_allocated_bits: bitmap_allocated_bits,
                m_loader_reserved_range: loader_reserved_range,
                m_loader_mapped_range: loader_mapped_range,
+               m_kern_symbols: kern_symbols.as_ptr(),
+               m_kern_symbols_len: kern_symbols.len(),
                m_bootloader_name: name_buffer,
                m_bootloader_name_len: bootloader_name.len() }
     }
@@ -94,6 +107,13 @@ impl LoaderInfo {
      */
     pub fn loader_mapped_range(&self) -> VirtFrameRangeIncl<Page2MiB> {
         self.m_loader_mapped_range.clone()
+    }
+
+    /**
+     * Returns the kernel symbols as slice
+     */
+    pub fn kernel_symbols_slice(&self) -> &str {
+        str_utils::u8_ptr_to_str_slice(self.m_kern_symbols, self.m_kern_symbols_len)
     }
 
     /**
