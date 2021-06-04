@@ -2,6 +2,7 @@
 
 use core::panic::PanicInfo;
 
+use crate::symbols::symbols_print_backtrace;
 use shared::logger::error;
 
 /**
@@ -21,6 +22,9 @@ fn panic_handler(info: &PanicInfo) -> ! {
     if let Some(location) = info.location() {
         error!("> {} at {}:{}", location.file(), location.line(), location.column());
     }
+
+    /* print the backtrace */
+    symbols_print_backtrace();
 
     loop { /* halt forever TODO halt other CPUs */ }
 }

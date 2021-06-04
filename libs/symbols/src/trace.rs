@@ -49,10 +49,10 @@ impl<'a> fmt::Display for StackBackTrace<'a> {
               && current_frm_ptr != 0
         {
             /* obtain the symbol for the current pointer and display it */
-            if let Some(code_sym) = self.m_symbols_list.symbol_at(current_frm_ptr) {
-                write!(f, "{:#018x} - {}", current_frm_ptr, code_sym)?;
+            if let Some(code_sym) = self.m_symbols_list.symbol_at(current_ret_ptr) {
+                writeln!(f, "{:#018x} - {}", current_ret_ptr, code_sym)?;
             } else {
-                write!(f, "{:#018x} - (???)", current_frm_ptr)?;
+                writeln!(f, "{:#018x} - (???)", current_ret_ptr)?;
             }
 
             /* step to the previous frame pointer */

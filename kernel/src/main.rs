@@ -33,6 +33,7 @@ use crate::{
         phys::phys_init,
         vm_layout::vml_init_from_loader_info
     },
+    symbols::symbols_init,
     version::KERN_VERSION
 };
 
@@ -41,6 +42,7 @@ mod interrupt;
 mod log;
 mod mem;
 mod panic;
+mod symbols;
 mod version;
 
 /**
@@ -70,19 +72,22 @@ pub unsafe extern "C" fn kern_start(loader_info: &LoaderInfo) {
     info!("Initializing Kernel Heap...");
     heap_init();
 
+    /* initialize the global kernel symbols */
+    info!("Initializing Kernel Symbols...");
+    symbols_init(loader_info);
+
     /* unmap the kernel loader, after this call <loader_info> will be invalid */
     info!("Unmapping Kernel Loader...");
     paging_unmap_loader(loader_info);
 
     /* enable logging buffering */
-    info!("Enabling Kernel Logging Buffering...");
+    info!("Enabling Buffered Kernel Logging...");
     log_enable_buffering(false);
 
     /* initialize interrupt management */
     info!("Initializing Interrupt Management...");
     interrupt_init();
 
-    //trace!("PageDir:\n{:?}", crate::mem::paging::paging_current_page_dir());
     loop {}
 }
 

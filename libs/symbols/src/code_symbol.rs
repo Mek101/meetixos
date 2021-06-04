@@ -5,7 +5,10 @@ use core::{
     fmt
 };
 
-use alloc::string::String;
+use alloc::{
+    format,
+    string::String
+};
 
 use crate::demangle;
 
@@ -31,6 +34,9 @@ impl CodeSymbol {
         /* obtain and parse as integer the first part */
         let virt_addr = {
             let str_virt_addr = line_parts.next()?;
+            if str_virt_addr.is_empty() {
+                return None;
+            }
 
             usize::from_str_radix(str_virt_addr, 16).ok()?
         };
@@ -38,8 +44,11 @@ impl CodeSymbol {
         /* obtains and puts the demangled symbol name into a <String> object */
         let symbol_name = {
             let str_symbol_name = line_parts.next()?;
+            if str_symbol_name.is_empty() {
+                return None;
+            }
 
-            String::from(demangle(str_symbol_name).as_str())
+            format!("{:#}", demangle(str_symbol_name))
         };
 
         Some(Self { m_virt_addr: virt_addr,
@@ -77,6 +86,6 @@ impl Ord for CodeSymbol {
 
 impl fmt::Display for CodeSymbol {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:#018x} - {}", self.m_virt_addr, self.m_symbol_name)
+        write!(f, "{:#018x} - {:#}", self.m_virt_addr, self.m_symbol_name)
     }
 }

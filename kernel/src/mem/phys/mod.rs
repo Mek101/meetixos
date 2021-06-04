@@ -1,6 +1,7 @@
 /*! Kernel physical memory management */
 
 use shared::{
+    dbg::dbg_display_size,
     logger::{
         trace,
         warn
