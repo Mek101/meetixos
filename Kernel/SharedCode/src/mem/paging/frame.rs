@@ -261,7 +261,7 @@ impl<T, S> fmt::Debug for Frame<T, S>
     }
 }
 
-unsafe impl<T, S> Step for Frame<T, S>
+impl<T, S> Step for Frame<T, S>
     where T: Address,
           S: PageSize
 {

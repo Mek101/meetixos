@@ -8,7 +8,6 @@
 #![feature(asm,
            array_methods,
            step_trait,
-           step_trait_ext,
            abi_x86_interrupt,
            const_fn_fn_ptr_basics,
            const_mut_refs,
