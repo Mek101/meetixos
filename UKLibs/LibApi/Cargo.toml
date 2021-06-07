@@ -1,0 +1,18 @@
+[package]
+name = "api"
+version = "0.1.0"
+edition = "2018"
+authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
+
+[dependencies]
+# ---------------------------- External Thirdy Party Crates ---------------------------- #
+bit_field = "*"
+num_enum  = { version = "*", default-features = false }
+
+# ------------------------------ MeetiX Libraries Crates ------------------------------- #
+os   = { path = "../LibOS" }
+sync = { path = "../LibSync" }
+
+[features]
+default               = []
+enable_kernel_methods = []

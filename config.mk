@@ -1,6 +1,6 @@
 #! Makefile Configuration Variables
 #!
-#! This Makefile is responsible to build/install/clean/doc the userland applications
+#! This Makefile is responsible to build/install/clean/doc the Userland applications
 
 #
 # -- -- -- -- -- -- -- -- -- -- Configuration Variables -- -- -- -- -- -- -- -- -- --
@@ -9,7 +9,7 @@
 ARCH       ?= x86_64
 BUILD_MODE ?= debug
 VIRT_ACCEL ?= #-enable-kvm
-SMP_CORES  ?= 1 # TODO support SMP in the kernel
+SMP_CORES  ?= 1 # TODO support SMP in the Kernel
 V          ?= @ # disable print of executed command, remove to print commands
 OFFLINE    ?= false
 
@@ -17,9 +17,9 @@ OFFLINE    ?= false
 # -- -- -- -- -- -- -- -- -- -- -- Build Prefixes -- -- -- -- -- -- -- -- -- -- -- --
 #
 
-BUILD_PREFIX        ?= target/$(ARCH)
-TARGET_PREFIX       ?= targets/$(ARCH)
-DIST_SYSROOT_PREFIX ?= $(BUILD_PREFIX)/sysroot/$(BUILD_MODE)
+BUILD_PREFIX        ?= Build/$(ARCH)
+TARGET_PREFIX       ?= Targets/$(ARCH)
+DIST_SYSROOT_PREFIX ?= $(BUILD_PREFIX)/Root/$(BUILD_MODE)
 
 #
 # -- -- -- -- -- -- -- -- -- -- -- -- Rust Tools -- -- -- -- -- -- -- -- -- -- -- -- --

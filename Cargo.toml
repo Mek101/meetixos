@@ -1,18 +1,18 @@
 [workspace]
 members = [
     # Kernel Crates
-    "kernel",
-    "kernel/hh_loader",
-    "kernel/shared",
-    # Library Crates
-    "libs/api",
-    "libs/heap",
-    "libs/macros",
-    "libs/os",
-    "libs/symbols",
-    "libs/sync",
+    "Kernel",
+    "Kernel/HHLoader",
+    "Kernel/SharedCode",
+    # User/Kernel Libraries
+    "UKLibs/LibApi",
+    "UKLibs/LibHeap",
+    "UKLibs/LibMacros",
+    "UKLibs/LibOS",
+    "UKLibs/LibSymbols",
+    "UKLibs/LibSync",
     # App Crates
-    "userland/apps/example_app",
+    "Userland/Apps/ExampleApp",
     # Binary Crates
-    "userland/bins/example",
+    "Userland/Bins/Example",
 ]

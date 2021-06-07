@@ -2,25 +2,27 @@
 <module type="CPP_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/kernel/hh_loader/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/kernel/libs/bitmap_allocator/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/kernel/libs/dbg_utils/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/kernel/libs/early_allocator/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/kernel/libs/hal/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/kernel/libs/logger/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/kernel/libs/vm_layout/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/kernel/shared/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/kernel/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/libs/api/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/libs/heap/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/libs/macros/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/libs/os/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/libs/sync/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/userland/apps/example_app/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/userland/bins/example/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/libs/symbols/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Kernel/HHLoader/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Kernel/SharedCode/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Kernel/libs/bitmap_allocator/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Kernel/libs/dbg_utils/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Kernel/libs/early_allocator/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Kernel/libs/hal/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Kernel/libs/logger/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Kernel/libs/vm_layout/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Kernel/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/UKLibs/LibApi/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/UKLibs/LibHeap/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/UKLibs/LibMacros/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/UKLibs/LibOS/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/UKLibs/LibSymbols/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/UKLibs/LibSync/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Userland/Apps/ExampleApp/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Userland/Bins/Example/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
-      <excludeFolder url="file://$MODULE_DIR$/userland/target" />
+      <excludeFolder url="file://$MODULE_DIR$/Userland/target" />
+      <excludeFolder url="file://$MODULE_DIR$/Target" />
+      <excludeFolder url="file://$MODULE_DIR$/Build" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

@@ -1,0 +1,22 @@
+[package]
+name = "kernel"
+version = "0.1.0"
+edition = "2018"
+authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
+
+[dependencies]
+# -------------------------------- Kernel Private Crates ------------------------------- #
+shared = { path = "SharedCode" }
+
+# ---------------------------- External Thirdy Party Crates ---------------------------- #
+bit_field = "*"
+
+[target.'cfg(target_arch = "x86_64")'.dependencies]
+# ------------------------ External x86_64 Thirdy Party Crates ------------------------- #
+x86_64 = "*"
+
+# ------------------------------ MeetiX Libraries Crates ------------------------------- #
+api     = { path = "../UKLibs/LibApi",  features = ["enable_kernel_methods"] }
+heap    = { path = "../UKLibs/LibHeap", features = ["disable_locked"] }
+sync    = { path = "../UKLibs/LibSync" }
+symbols = { path = "../UKLibs/LibSymbols" }
