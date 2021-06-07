@@ -39,6 +39,8 @@ SHF_SOURCES ?= $(shell find shared/src -name *.rs)
 HHL_LINK_SRC ?= $(realpath hh_loader/$(TARGET_PREFIX)/linker.ld)
 KRN_LINK_SRC ?= $(realpath $(TARGET_PREFIX)/linker.ld)
 
+LIBS_SRC ?= $(shell find ../libs -name *.rs)
+
 #
 # -- -- -- -- -- -- -- -- -- -- -- -- -- Make Targets -- -- -- -- -- -- -- -- -- -- --
 #
@@ -75,7 +77,7 @@ $(KRN_CORE_MAP): $(SHF_SOURCES) $(BUILT_KRN)
 	$(V) echo "- Writing Kernel Core Symbols Map..."
 	$(V) $(LLVM_NM) -n $(BUILT_KRN) | awk '{ if ($$2 != "a") printf("%s %s\n", $$1, $$3); }' | uniq >$(KRN_CORE_MAP)
 
-$(BUILT_KRN): $(SHF_SOURCES) $(KRN_SOURCES) $(KRN_LINK_SRC)
+$(BUILT_KRN): $(SHF_SOURCES) $(KRN_SOURCES) $(KRN_LINK_SRC) $(LIBS_SRC)
 	$(V) echo "- Building Kernel Core..."
 	$(V) RUSTFLAGS="$(RUSTC_FLAGS)"      \
          CARGO_TARGET_DIR="$(BUILD_DIR)" \
