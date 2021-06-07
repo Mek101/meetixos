@@ -2,7 +2,6 @@
 MeetiX is a modern interpretation of the UNIX operating system written in [Rust](https://www.rust-lang.org/).
 
 ## Kernel Features
-
 **TODO**
 
 ## Userspace Features
@@ -11,3 +10,4 @@ MeetiX is a modern interpretation of the UNIX operating system written in [Rust]
 ## Contributors
 * [Marco Cicognani](https://github.com/MarcoCicognani)
 * [Edoardo La Greca](https://github.com/EdoardoLaGreca)
+* [Damiano Morandi](https://github.com/Mek101)
