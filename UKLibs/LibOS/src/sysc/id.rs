@@ -6,7 +6,7 @@ use core::{
     ops::Range
 };
 
-use bit_field::BitField;
+use bits::bit_field::BitFields;
 
 use crate::sysc::fn_path::KernFnPath;
 
@@ -46,15 +46,15 @@ impl SysCallId {
      * Returns the `KernFnPath`
      */
     pub fn fn_path(&self) -> KernFnPath {
-        KernFnPath::try_from((self.m_raw.get_bits(Self::CALL_CLASS_BITS),
-                              self.m_raw.get_bits(Self::CALL_CODE_BITS))).unwrap()
+        KernFnPath::try_from((self.m_raw.bits_at(Self::CALL_CLASS_BITS),
+                              self.m_raw.bits_at(Self::CALL_CODE_BITS))).unwrap()
     }
 
     /**
      * Returns the custom data bits
      */
     pub fn custom_data(&self) -> u32 {
-        self.m_raw.get_bits(Self::CUSTOM_DATA_BITS) as u32
+        self.m_raw.bits_at(Self::CUSTOM_DATA_BITS) as u32
     }
 }
 

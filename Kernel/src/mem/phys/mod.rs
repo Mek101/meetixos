@@ -55,7 +55,8 @@ pub fn phys_alloc_frame<S>() -> Option<PhysFrame<S>>
                             .map(|phys_frame| phys_frame.into_generic_sized_frame())
         },
         Page2MiB::SIZE => unsafe {
-            BITMAP_ALLOCATOR.allocate_contiguous(Page2MiB::SIZE / Page4KiB::SIZE)
+            BITMAP_ALLOCATOR.allocate_contiguous(Page2MiB::SIZE / Page4KiB::SIZE,
+                                                 Page2MiB::SIZE)
                             .map(|phys_frame| phys_frame.start.into_generic_sized_frame())
         },
         _ => {

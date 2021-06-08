@@ -2,8 +2,7 @@
 
 use core::marker::PhantomData;
 
-use bit_field::BitField;
-
+use bits::bit_field::BitFields;
 use os::{
     str_utils,
     sysc::{
@@ -229,42 +228,42 @@ impl<T, M> ObjConfig<T, M>
      * Returns whether `ObjConfig::for_read()` was called
      */
     pub fn is_read(&self) -> bool {
-        self.m_flags.get_bit(Self::CFG_READ_BIT)
+        self.m_flags.bit_at(Self::CFG_READ_BIT)
     }
 
     /**
      * Returns whether `ObjConfig::for_write()` was called
      */
     pub fn is_write(&self) -> bool {
-        self.m_flags.get_bit(Self::CFG_WRITE_BIT)
+        self.m_flags.bit_at(Self::CFG_WRITE_BIT)
     }
 
     /**
      * Returns whether `ObjConfig::for_exec()` was called
      */
     pub fn is_exec(&self) -> bool {
-        self.m_flags.get_bit(Self::CFG_EXEC_BIT)
+        self.m_flags.bit_at(Self::CFG_EXEC_BIT)
     }
 
     /**
      * Returns whether `ObjConfig::exclusive()` was called
      */
     pub fn is_exclusive(&self) -> bool {
-        self.m_flags.get_bit(Self::CFG_EXCLUSIVE_BIT)
+        self.m_flags.bit_at(Self::CFG_EXCLUSIVE_BIT)
     }
 
     /**
      * Returns whether `ObjConfig::with_size()` was called
      */
     pub fn is_sized(&self) -> bool {
-        self.m_flags.get_bit(Self::CFG_SET_SIZE_BIT)
+        self.m_flags.bit_at(Self::CFG_SET_SIZE_BIT)
     }
 
     /**
      * Returns whether `ObjConfig::creat()` was called
      */
     pub fn is_creat(&self) -> bool {
-        self.m_flags.get_bit(Self::CFG_CREAT_BIT)
+        self.m_flags.bit_at(Self::CFG_CREAT_BIT)
     }
 
     /**

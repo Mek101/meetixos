@@ -2,8 +2,7 @@
 
 use core::marker::PhantomData;
 
-use bit_field::BitField;
-
+use bits::bit_field::BitFields;
 use os::{
     limits::ENTITY_NAME_LEN_MAX,
     str_utils,
@@ -164,14 +163,14 @@ impl<T: OSEntity, M: ConfigMode> OSEntConfig<T, M> {
      * Returns whether this configuration represents a creation request
      */
     pub fn is_creat(&self) -> bool {
-        self.m_flags.get_bit(Self::CFG_CREAT_BIT)
+        self.m_flags.bit_at(Self::CFG_CREAT_BIT)
     }
 
     /**
      * Returns whether the admin filter/flag is enabled
      */
     pub fn is_admin(&self) -> bool {
-        self.m_flags.get_bit(Self::CFG_ADMIN_BIT)
+        self.m_flags.bit_at(Self::CFG_ADMIN_BIT)
     }
 
     /**

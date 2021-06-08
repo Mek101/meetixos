@@ -54,9 +54,10 @@ impl<'a, L> LockedBitMapAllocator<'a, L> where L: RawMutex {
      * Allocates the first available contiguous `frames_count` bits
      */
     pub fn allocate_contiguous(&self,
-                               frames_count: usize)
+                               frames_count: usize,
+                               alignment: usize)
                                -> Option<PhysFrameRange<Page4KiB>> {
-        self.m_inner.lock().allocate_contiguous(frames_count)
+        self.m_inner.lock().allocate_contiguous(frames_count, alignment)
     }
 
     /**

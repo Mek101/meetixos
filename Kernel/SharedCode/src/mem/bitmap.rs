@@ -5,9 +5,10 @@ use core::{
     slice
 };
 
-use bit_field::{
+use bits::bit_field::{
     BitArray,
-    BitField
+    BitFields,
+    BitFindMode
 };
 
 use crate::{
@@ -78,10 +79,11 @@ impl<'a> BitMapAllocator<'a> {
      * into a `PhysFrameRange<Page4KiB>`
      */
     pub fn allocate_contiguous(&mut self,
-                               frames_count: usize)
+                               frames_count: usize,
+                               alignment: usize)
                                -> Option<PhysFrameRange<Page4KiB>> {
         if let Some(ref mut inner) = self.m_inner {
-            inner.allocate_bits(frames_count)
+            inner.allocate_bits(frames_count, alignment/Page4KiB::SIZE)
                 .map(|range| {
                     let start_frame = {
                         let raw_addr = range.start * Page4KiB::SIZE;
@@ -185,53 +187,44 @@ impl<'a> BitMapAllocatorInner<'a> {
      * the allocated bits
      */
     fn allocate_bit(&mut self) -> Option<usize> {
-        for (byte_index, byte) in self.m_bits.iter_mut().enumerate() {
-            /* find the first non-zero byte. Since <true> is used to identify available
-             * bits non-zero value bytes means that contains at least one bit
-             * allocatable
-             */
-            if *byte != 0u8 {
-                /* same for the bits, find the first available and use it */
-                for bit_index in 0..u8::BIT_LENGTH {
-                    if byte.get_bit(bit_index) {
-                        byte.set_bit(bit_index, false);
-                        self.m_allocated_bits += 1;
-
-                        /* returns the absolute allocated index */
-                        return Some(byte_index * u8::BIT_LENGTH + bit_index);
-                    }
-                }
-            }
-        }
-        None
+        self.m_bits.find_bit(true, BitFindMode::Regular).map(|abs_bit_index| {
+                                                            self.m_bits
+                                                                .set_bit(abs_bit_index,
+                                                                         false);
+                                                            self.m_allocated_bits += 1;
+                                                            abs_bit_index
+                                                        })
     }
 
     /**
      * Returns the Range of bit-indexes that are contiguous and respects
      */
-    fn allocate_bits(&mut self, bits_count: usize) -> Option<Range<usize>> {
-        assert_eq!(bits_count % u8::BIT_LENGTH, 0);
+    fn allocate_bits(&mut self,
+                     bits_count: usize,
+                     alignment: usize)
+                     -> Option<Range<usize>> {
+        assert_eq!(bits_count % u8::BITS as usize, 0);
 
-        self.find_free_block(bits_count).map(|first_free_block_bit| {
-                                            let bit_range = first_free_block_bit
-                                                            ..first_free_block_bit
-                                                              + bits_count;
+        self.find_first_free_aligned_block(bits_count, alignment)
+            .map(|first_free_block_bit| {
+                let bit_range = first_free_block_bit..first_free_block_bit + bits_count;
 
-                                            /* mark all the selected bits as allocated */
-                                            for bit_index in bit_range.clone() {
-                                                self.m_bits.set_bit(bit_index, false);
-                                            }
-                                            self.m_allocated_bits += bits_count;
+                /* mark all the selected bits as
+                 * allocated */
+                for bit_index in bit_range.clone() {
+                    self.m_bits.set_bit(bit_index, false);
+                }
+                self.m_allocated_bits += bits_count;
 
-                                            bit_range
-                                        })
+                bit_range
+            })
     }
 
     /**
      * Makes available again the bit given
      */
     fn free_bit(&mut self, bit_index: usize) {
-        assert_eq!(self.m_bits.get_bit(bit_index), false);
+        assert_eq!(self.m_bits.bit_at(bit_index), false);
 
         self.m_bits.set_bit(bit_index, true);
         self.m_allocated_bits -= 1;
@@ -242,8 +235,8 @@ impl<'a> BitMapAllocatorInner<'a> {
      */
     fn free_bits(&mut self, range_to_free: Range<usize>) {
         self.m_allocated_bits -= range_to_free.end - range_to_free.start;
-        for bit in range_to_free {
-            self.m_bits.set_bit(bit, true);
+        for bit_index in range_to_free {
+            self.m_bits.set_bit(bit_index, true);
         }
     }
 
@@ -266,8 +259,11 @@ impl<'a> BitMapAllocatorInner<'a> {
      *
      * The bits count aligned must be aligned to the byte size (8 bits)
      */
-    fn find_free_block(&self, bits_count: usize) -> Option<usize> {
-        let bytes_count = bits_count / u8::BIT_LENGTH;
+    fn find_first_free_aligned_block(&self,
+                                     bits_count: usize,
+                                     _alignment: usize)
+                                     -> Option<usize> {
+        let bytes_count = bits_count / u8::BITS as usize;
 
         /* iterate each byte in requested blocks */
         for byte_index in (0..self.m_bits.len() - bytes_count).step_by(bytes_count) {
@@ -276,7 +272,7 @@ impl<'a> BitMapAllocatorInner<'a> {
 
             /* check whether this slice contains all 1 (available bits) */
             if Self::is_slice_all_available(slice_to_check) {
-                return Some(byte_index * u8::BIT_LENGTH);
+                return Some(byte_index * u8::BITS as usize);
             }
         }
         None

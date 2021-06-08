@@ -8,9 +8,6 @@ authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
 # -------------------------------- Kernel Private Crates ------------------------------- #
 shared = { path = "SharedCode" }
 
-# ---------------------------- External Thirdy Party Crates ---------------------------- #
-bit_field = "*"
-
 [target.'cfg(target_arch = "x86_64")'.dependencies]
 # ------------------------ External x86_64 Thirdy Party Crates ------------------------- #
 x86_64 = "*"
@@ -20,3 +17,4 @@ api     = { path = "../UKLibs/LibApi",  features = ["enable_kernel_methods"] }
 heap    = { path = "../UKLibs/LibHeap", features = ["disable_locked"] }
 sync    = { path = "../UKLibs/LibSync" }
 symbols = { path = "../UKLibs/LibSymbols" }
+bits    = { path = "../UKLibs/LibBits" }

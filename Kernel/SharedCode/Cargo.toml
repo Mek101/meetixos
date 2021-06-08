@@ -13,6 +13,7 @@ num_enum  = { version = "*", default-features = false}
 
 # ------------------------------ MeetiX Libraries Crates ------------------------------- #
 os     = { path = "../../UKLibs/LibOS" }
+bits   = { path = "../../UKLibs/LibBits" }
 macros = { path = "../../UKLibs/LibMacros" }
 
 [target.'cfg(target_arch = "aarch64")'.dependencies]

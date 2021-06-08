@@ -2,11 +2,12 @@
 
 use core::marker::PhantomData;
 
-use bit_field::BitField;
 use num_enum::{
     IntoPrimitive,
     TryFromPrimitive
 };
+
+use bits::bit_field::BitFields;
 
 use crate::objs::{
     impls::{
@@ -95,7 +96,7 @@ impl<T> Grants<T> where T: Object {
      * Returns the bit value for the given `GrantsBits`
      */
     pub fn is(&self, bit: GrantsBit) -> bool {
-        self.m_bits.get_bit(bit.into())
+        self.m_bits.bit_at(bit.into())
     }
 
     /**
