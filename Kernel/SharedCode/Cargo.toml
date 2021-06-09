@@ -15,6 +15,7 @@ num_enum  = { version = "*", default-features = false}
 os     = { path = "../../UKLibs/LibOS" }
 bits   = { path = "../../UKLibs/LibBits" }
 macros = { path = "../../UKLibs/LibMacros" }
+helps  = { path = "../../UKLibs/LibHelps" }
 
 [target.'cfg(target_arch = "aarch64")'.dependencies]
 # ------------------------ External aarch64 Thirdy Party Crates ------------------------ #

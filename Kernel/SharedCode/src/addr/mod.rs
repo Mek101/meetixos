@@ -18,6 +18,11 @@ use core::{
     }
 };
 
+use helps::align::{
+    align_down,
+    align_up
+};
+
 use crate::mem::paging::{
     frame::Frame,
     PageSize
@@ -121,25 +126,6 @@ pub struct AddressErr(pub(crate) usize);
 impl fmt::Display for AddressErr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "The given address was not properly aligned ({:#X})", self.0)
-    }
-}
-
-/**
- * Returns the `addr` align down to the nearest value multiple of `align`
- */
-pub const fn align_down(addr: usize, align: usize) -> usize {
-    addr & !(align - 1)
-}
-
-/**
- * Returns the `addr` align up to the nearest value multiple of `align`
- */
-pub const fn align_up(addr: usize, align: usize) -> usize {
-    let align_mask = align - 1;
-    if addr & align_mask != 0 {
-        (addr | align_mask) + 1
-    } else {
-        addr
     }
 }
 

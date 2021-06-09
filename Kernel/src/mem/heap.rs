@@ -3,11 +3,9 @@
 use core::alloc::Layout;
 
 use heap::locked::raw::RawLazyLockedHeap;
+use helps::align::align_up;
 use shared::{
-    addr::{
-        align_up,
-        Address
-    },
+    addr::Address,
     logger::trace,
     mem::paging::{
         flags::PDirFlags,

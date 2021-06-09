@@ -2,11 +2,11 @@
 
 use core::fmt;
 
+use helps::align::{
+    align_down,
+    align_up
+};
 use shared::{
-    addr::{
-        align_down,
-        align_up
-    },
     dbg::{
         dbg_display_size,
         KIB
@@ -37,13 +37,18 @@ impl VMComponent {
     /**
      * `VMComponent`s which supports shrinking
      */
-    const SHRINKABLE_COMPONENTS: [VMComponent; 2] =
-        [VMComponent::PageCache(0), VMComponent::KernHeap(0)];
+    const SHRINKABLE_COMPONENTS: &'static [Self] =
+        &[Self::PageCache(0), Self::KernHeap(0)];
 
     /**
      * Amount of valid variants (excluded `None`)
      */
-    pub(crate) const COUNT: usize = 6;
+    pub(super) const COUNT: usize = [Self::KernHeap(0),
+                                     Self::KernStack(0),
+                                     Self::PhysMemBitmap(0),
+                                     Self::PhysMemMapping(0),
+                                     Self::PageCache(0),
+                                     Self::TmpMapping(0)].len();
 
     /**
      * Returns the value of the current variant

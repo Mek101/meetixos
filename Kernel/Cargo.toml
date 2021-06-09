@@ -18,3 +18,4 @@ heap    = { path = "../UKLibs/LibHeap", features = ["disable_locked"] }
 sync    = { path = "../UKLibs/LibSync" }
 symbols = { path = "../UKLibs/LibSymbols" }
 bits    = { path = "../UKLibs/LibBits" }
+helps   = { path = "../UKLibs/LibHelps" }

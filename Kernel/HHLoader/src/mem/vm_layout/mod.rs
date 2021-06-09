@@ -1,8 +1,8 @@
 /*! Virtual memory layout randomizer */
 
+use helps::align::align_down;
 use shared::{
     addr::{
-        align_down,
         virt::VirtAddr,
         Address
     },

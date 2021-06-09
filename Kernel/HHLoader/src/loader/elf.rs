@@ -2,9 +2,9 @@
 
 use core::slice;
 
+use helps::align::align_up;
 use shared::{
     addr::{
-        align_up,
         virt::VirtAddr,
         Address
     },

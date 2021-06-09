@@ -11,3 +11,6 @@ shared = { path = "../SharedCode" }
 [target.'cfg(target_arch = "x86_64")'.dependencies]
 # ------------------------ External x86_64 Thirdy Party Crates ------------------------- #
 multiboot2 = "*"
+
+# ------------------------------ MeetiX Libraries Crates ------------------------------- #
+helps = { path = "../../UKLibs/LibHelps" }
