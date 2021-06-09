@@ -18,9 +18,9 @@ use shared::{
         PageSize
     }
 };
-use sync::{
-    RawMutex,
-    RawSpinMutex
+use sync::mutex::{
+    spin::RawSpinMutex,
+    ConstCreatBackRawMutex
 };
 
 use crate::mem::{
@@ -33,8 +33,9 @@ use crate::mem::{
 
 /* lazy allocator initialized by <init_heap()> */
 #[global_allocator]
-static mut HEAP_ALLOCATOR: RawLazyLockedHeap<RawSpinMutex> =
-    unsafe { RawLazyLockedHeap::new(|| Some(RawSpinMutex::INIT), heap_mem_supplier) };
+static mut HEAP_ALLOCATOR: RawLazyLockedHeap<RawSpinMutex> = unsafe {
+    RawLazyLockedHeap::new(|| Some(RawSpinMutex::CONST_CREAT), heap_mem_supplier)
+};
 
 /* keeps the count of physical frames requested */
 static mut HEAP_ALLOCATED_FRAMES: usize = 0;

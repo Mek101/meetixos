@@ -15,9 +15,9 @@ use shared::{
         SetLoggerError
     }
 };
-use sync::{
-    Mutex,
-    RawMutex
+use sync::mutex::{
+    ConstCreatBackRawMutex,
+    Mutex
 };
 
 use crate::log::writer::BufferedWriter;
@@ -28,20 +28,20 @@ use crate::log::writer::BufferedWriter;
  * Relies on another `LoggerWriter` to flush the buffer
  */
 pub(super) struct LockedBufferedLogger<L, W>
-    where L: RawMutex,
+    where L: ConstCreatBackRawMutex,
           W: LoggerWriter {
     m_inner: Mutex<L, Logger<BufferedWriter<W>>>
 }
 
 impl<L, W> LockedBufferedLogger<L, W>
-    where L: RawMutex,
+    where L: ConstCreatBackRawMutex,
           W: LoggerWriter
 {
     /**
      * Constructs an uninitialized `LockedBufferedLogger`
      */
     pub const fn new_uninitialized() -> Self {
-        Self { m_inner: Mutex::new(Logger::new_uninitialized()) }
+        Self { m_inner: Mutex::const_new(Logger::new_uninitialized()) }
     }
 
     /**
@@ -99,7 +99,7 @@ impl<L, W> LockedBufferedLogger<L, W>
 }
 
 impl<L, W> Log for LockedBufferedLogger<L, W>
-    where L: RawMutex,
+    where L: ConstCreatBackRawMutex,
           W: LoggerWriter
 {
     fn enabled(&self, metadata: &Metadata) -> bool {
@@ -116,14 +116,14 @@ impl<L, W> Log for LockedBufferedLogger<L, W>
 }
 
 unsafe impl<L, W> Send for LockedBufferedLogger<L, W>
-    where L: RawMutex,
+    where L: ConstCreatBackRawMutex,
           W: LoggerWriter
 {
     /* Nothing to implement, just a marker */
 }
 
 unsafe impl<L, W> Sync for LockedBufferedLogger<L, W>
-    where L: RawMutex,
+    where L: ConstCreatBackRawMutex,
           W: LoggerWriter
 {
     /* Nothing to implement, just a marker */

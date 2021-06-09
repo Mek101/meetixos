@@ -10,9 +10,11 @@ use core::{
 };
 
 use sync::{
-    Lazy,
-    Mutex,
-    RawMutex
+    mutex::{
+        BackRawMutex,
+        Mutex
+    },
+    Lazy
 };
 
 use crate::{
@@ -21,8 +23,8 @@ use crate::{
 };
 
 /**
- * Callback used by the `RawLazyLockedHeap` to obtain the `sync::RawMutex`
- * implementation
+ * Callback used by the `RawLazyLockedHeap` to obtain the
+ * `sync::BackRawMutex` implementation
  */
 pub type RawLazyMutexSupplier<M> = fn() -> Option<M>;
 
@@ -34,11 +36,11 @@ pub type RawLazyMutexSupplier<M> = fn() -> Option<M>;
  * initialization
  */
 pub struct RawLazyLockedHeap<M>
-    where M: RawMutex + 'static {
+    where M: BackRawMutex + 'static {
     m_lazy_locked_heap: Lazy<Mutex<M, Heap>, LazyHeapInitializer<M>>
 }
 
-impl<M> RawLazyLockedHeap<M> where M: RawMutex + 'static {
+impl<M> RawLazyLockedHeap<M> where M: BackRawMutex + 'static {
     /**
      * Constructs a `RawLazyLockedHeap` without effectively initialize the
      * internal `sync::Mutex` or `Heap`
@@ -79,7 +81,7 @@ impl<M> RawLazyLockedHeap<M> where M: RawMutex + 'static {
     }
 }
 
-unsafe impl<M> GlobalAlloc for RawLazyLockedHeap<M> where M: RawMutex {
+unsafe impl<M> GlobalAlloc for RawLazyLockedHeap<M> where M: BackRawMutex {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         self.m_lazy_locked_heap
             .lock()
@@ -104,12 +106,12 @@ unsafe impl<M> GlobalAlloc for RawLazyLockedHeap<M> where M: RawMutex {
  * function to give to the `sync::Lazy` that captures local objects
  */
 struct LazyHeapInitializer<T>
-    where T: RawMutex {
+    where T: BackRawMutex {
     m_raw_mutex_supplier: RawLazyMutexSupplier<T>,
     m_mem_supplier: HeapMemorySupplier
 }
 
-impl<T> LazyHeapInitializer<T> where T: RawMutex {
+impl<T> LazyHeapInitializer<T> where T: BackRawMutex {
     /**
      * Constructs a `LazyHeapInitializer`
      */
@@ -121,12 +123,12 @@ impl<T> LazyHeapInitializer<T> where T: RawMutex {
     }
 }
 
-impl<T> FnOnce<()> for LazyHeapInitializer<T> where T: RawMutex {
+impl<T> FnOnce<()> for LazyHeapInitializer<T> where T: BackRawMutex {
     type Output = Mutex<T, Heap>;
 
     extern "rust-call" fn call_once(self, _args: ()) -> Self::Output {
         let raw_mutex =
-            (self.m_raw_mutex_supplier)().expect("Failed to lazy obtain `RawMutex`");
-        Mutex::const_new(raw_mutex, unsafe { Heap::new(self.m_mem_supplier) })
+            (self.m_raw_mutex_supplier)().expect("Failed to lazy obtain `BackRawMutex`");
+        Mutex::raw_new(raw_mutex, unsafe { Heap::new(self.m_mem_supplier) })
     }
 }

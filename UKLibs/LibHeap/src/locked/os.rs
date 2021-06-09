@@ -2,8 +2,6 @@
 
 use core::ops::Deref;
 
-use linked_list_allocator::align_up;
-
 use api::objs::{
     impls::{
         mmap::MMap,
@@ -11,6 +9,7 @@ use api::objs::{
     },
     object::UserCreatable
 };
+use helps::align::align_up;
 
 use crate::locked::raw::RawLazyLockedHeap;
 

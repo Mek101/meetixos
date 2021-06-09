@@ -10,25 +10,25 @@ use shared::mem::{
         Page4KiB
     }
 };
-use sync::{
-    Mutex,
-    RawMutex
+use sync::mutex::{
+    ConstCreatBackRawMutex,
+    Mutex
 };
 
 /**
  * Thread safe `BitMapAllocator`
  */
 pub(super) struct LockedBitMapAllocator<'a, L>
-    where L: RawMutex {
+    where L: ConstCreatBackRawMutex {
     m_inner: Mutex<L, BitMapAllocator<'a>>
 }
 
-impl<'a, L> LockedBitMapAllocator<'a, L> where L: RawMutex {
+impl<'a, L> LockedBitMapAllocator<'a, L> where L: ConstCreatBackRawMutex {
     /**
      * Constructs an uninitialized `LockedBitMapAllocator`
      */
     pub const fn new_uninitialized() -> Self {
-        Self { m_inner: Mutex::new(BitMapAllocator::new_uninitialized()) }
+        Self { m_inner: Mutex::const_new(BitMapAllocator::new_uninitialized()) }
     }
 
     /**

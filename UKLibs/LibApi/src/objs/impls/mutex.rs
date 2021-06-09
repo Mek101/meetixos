@@ -5,13 +5,17 @@ use os::sysc::{
     fn_path::KernFnPath
 };
 use sync::{
-    GuardNoSend,
-    RawMutex
+    guards::LockGuardNonSendable,
+    mutex::{
+        BackRawMutex,
+        FallibleCreatBackRawMutex
+    }
 };
 
 use crate::{
     bits::obj::types::ObjType,
     caller::KernCaller,
+    errors::error::Error,
     objs::object::{
         ObjId,
         Object,
@@ -23,12 +27,12 @@ use crate::{
  * Generic container that uses an `OsRawMutex` to ensure mutual exclusive
  * access to the value held
  */
-pub type Mutex<T> = sync::Mutex<OsRawMutex, T>;
+pub type OsMutex<T> = sync::mutex::Mutex<OsRawMutex, T>;
 
 /**
  * RAII box that allow access to the data when the `Mutex` is locked
  */
-pub type MutexGuard<'a, T> = sync::MutexGuard<'a, OsRawMutex, T>;
+pub type OsMutexGuard<'a, T> = sync::mutex::guard::MutexDataGuard<'a, OsRawMutex, T>;
 
 /**
  * Reference to an open mutex on the VFS.
@@ -46,58 +50,53 @@ pub struct OsRawMutex {
 
 impl OsRawMutex {
     /**
-     * Const stub used only to satisfy the `INIT` constant requirement of
-     * the `RawMutex` trait
+     * Constructs an `OsMutex` from an already existing `OsRawMutex`
      */
-    const fn const_init_for_raw() -> Self {
-        Self { m_handle: ObjId::const_new() }
-    }
-
-    /**
-     * The `Mutex` created with this `OsRawMutex` contains `value`.
-     *
-     * If another process references the same `OsRawMutex` will have no
-     * access to the stored `value`.
-     *
-     * The method consumes the instance because move it into the `Mutex`
-     */
-    pub const fn into_mutex<T>(self, value: T) -> Mutex<T> {
-        Mutex::const_new(self, value)
+    pub const fn into_os_mutex<T>(self, value: T) -> OsMutex<T> {
+        OsMutex::raw_new(self, value)
     }
 }
 
-unsafe impl RawMutex for OsRawMutex {
-    /**
-     * Use a `Mutex` which relies on this `RawMutex` implementation and
-     * created with this constant will `panic!()` at first call
-     */
-    const INIT: Self = Self::const_init_for_raw();
+impl FallibleCreatBackRawMutex for OsRawMutex {
+    type CreatError = Error;
 
+    fn creat_raw() -> Result<Self, Self::CreatError> {
+        Self::creat().for_read().for_write().apply_for_anon()
+    }
+}
+
+unsafe impl BackRawMutex for OsRawMutex {
     /**
      * The `Mutex` cannot be send across different threads using rust
      * primitives, because each thread have his own open object table, but
      * is obviously possible using `Object::send()` system call
      */
-    type GuardMarker = GuardNoSend;
+    type LockGuardShareabilityMark = LockGuardNonSendable;
 
-    fn lock(&self) {
-        let _ = self.kern_call_0(KernFnPath::Mutex(KernMutexFnId::Lock)).unwrap();
+    fn do_lock(&self) {
+        self.kern_call_0(KernFnPath::Mutex(KernMutexFnId::Lock))
+            .unwrap_or_else(|err| panic!("Failed to OsRawMutex::do_lock {:?}: cause: {}", self, err));
     }
 
-    fn try_lock(&self) -> bool {
+    fn do_try_lock(&self) -> bool {
         self.kern_call_0(KernFnPath::Mutex(KernMutexFnId::TryLock))
             .map(|res| res != 0)
-            .unwrap_or(false)
+            .unwrap_or_else(|err| {
+                panic!("Failed to OsRawMutex::do_try_lock {:?}: cause: {}", self, err)
+            })
     }
 
-    unsafe fn unlock(&self) {
-        let _ = self.kern_call_0(KernFnPath::Mutex(KernMutexFnId::Unlock)).unwrap();
+    unsafe fn do_unlock(&self) {
+        self.kern_call_0(KernFnPath::Mutex(KernMutexFnId::Unlock))
+            .unwrap_or_else(|err| panic!("Failed to OsRawMutex::do_unlock {:?}: cause: {}", self, err));
     }
 
-    fn is_locked(&self) -> bool {
+    fn do_is_locked(&self) -> bool {
         self.kern_call_0(KernFnPath::Mutex(KernMutexFnId::IsLocked))
             .map(|res| res != 0)
-            .unwrap_or(false)
+            .unwrap_or_else(|err| {
+                panic!("Failed to OsRawMutex::do_is_locked {:?}: cause: {}", self, err)
+            })
     }
 }
 

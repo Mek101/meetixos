@@ -5,28 +5,13 @@
  */
 
 #![no_std]
-#![feature(once_cell)]
+#![feature(once_cell, const_fn_trait_bound, const_mut_refs)]
 
 pub use core::lazy::{
     Lazy,
     OnceCell
 };
 
-pub use lock_api::{
-    GuardNoSend,
-    GuardSend,
-    Mutex,
-    MutexGuard,
-    RawMutex,
-    RawRwLock,
-    RwLock,
-    RwLockReadGuard,
-    RwLockUpgradableReadGuard,
-    RwLockWriteGuard
-};
-
-pub use spinning_top::{
-    RawSpinlock as RawSpinMutex,
-    Spinlock as SpinMutex,
-    SpinlockGuard as SpinMutexGuard
-};
+pub mod guards;
+pub mod mutex;
+pub mod rw_lock;

@@ -5,6 +5,3 @@ edition = "2018"
 authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
 
 [dependencies]
-# ---------------------------- External Thirdy Party Crates ---------------------------- #
-lock_api     = { version = "*", features = ["nightly"] }
-spinning_top = "*"

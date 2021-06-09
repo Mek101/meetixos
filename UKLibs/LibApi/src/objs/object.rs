@@ -50,15 +50,6 @@ pub struct ObjId {
 
 impl ObjId {
     /**
-     * Constructs an un initialized `ObjId`.
-     *
-     * Used only by the `OsRawMutex` to satisfy the constant initialization
-     */
-    pub(crate) const fn const_new() -> Self {
-        Self { m_raw: 0 }
-    }
-
-    /**
      * Shares this `ObjId` with another `Task`
      */
     fn send<T>(&self, receiver: &T) -> Result<()>
