@@ -20,6 +20,7 @@
       <sourceFolder url="file://$MODULE_DIR$/Userland/Apps/ExampleApp/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Userland/Bins/Example/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/UKLibs/LibBits/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/UKLibs/LibHelps/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/Userland/target" />
       <excludeFolder url="file://$MODULE_DIR$/Target" />

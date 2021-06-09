@@ -7,7 +7,6 @@ use core::{
 
 use bits::bit_field::{
     BitArray,
-    BitFields,
     BitFindMode
 };
 

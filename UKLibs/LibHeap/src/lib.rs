@@ -12,6 +12,7 @@
 #![feature(const_fn_trait_bound,
            const_fn_fn_ptr_basics,
            fn_traits,
+           const_mut_refs,
            unboxed_closures,
            once_cell)]
 
@@ -21,8 +22,6 @@ use core::{
     ptr::NonNull
 };
 
-use linked_list_allocator::hole::HoleList;
-
 use num_enum::{
     IntoPrimitive,
     TryFromPrimitive
@@ -30,10 +29,12 @@ use num_enum::{
 
 use crate::{
     consts::SLAB_THRESHOLD,
+    linked_list::LinkedList,
     slab::Slab
 };
 
 pub mod consts;
+pub mod linked_list;
 pub mod locked;
 pub mod slab;
 
@@ -44,136 +45,6 @@ pub mod slab;
  * allocated and the aligned size of his minimum allocation block
  */
 pub type HeapMemorySupplier = fn(requested_size: usize) -> Option<(usize, usize)>;
-
-/**
- * Lists the currently available allocators of the `Heap` manager
- */
-#[repr(u8)]
-#[derive(Debug)]
-#[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
-#[derive(IntoPrimitive, TryFromPrimitive)]
-pub enum Allocator {
-    Slab64Bytes,
-    Slab128Bytes,
-    Slab256Bytes,
-    Slab512Bytes,
-    Slab1024Bytes,
-    Slab2048Bytes,
-    Slab4096Bytes,
-    Slab8192Bytes,
-    LinkedList
-}
-
-impl Allocator {
-    const VARIANTS: [Allocator; 9] = [Self::Slab64Bytes,
-                                      Self::Slab128Bytes,
-                                      Self::Slab256Bytes,
-                                      Self::Slab512Bytes,
-                                      Self::Slab1024Bytes,
-                                      Self::Slab2048Bytes,
-                                      Self::Slab4096Bytes,
-                                      Self::Slab8192Bytes,
-                                      Self::LinkedList];
-
-    /**
-     * Returns the best Allocator variant to serve the given request.
-     *
-     * The function fallbacks to `Allocator::LinkedList` when a
-     * `Allocator::SlabXX` is chosen but the difference between the
-     * `layout.size()` and the block size of the `Slab` exceeds the
-     * `SLAB_THRESHOLD`
-     */
-    pub fn for_layout(layout: Layout) -> Allocator {
-        let mut chosen = Allocator::LinkedList;
-        for allocator in Self::VARIANTS.iter() {
-            let alloc_size = allocator.max_alloc_size();
-
-            /* allocators that doesn't have the requested size and the requested
-             * alignment are discarded before the check of the threshold
-             */
-            if alloc_size < layout.size() || alloc_size < layout.align() {
-                continue;
-            }
-
-            /* check now whether the max allocation size of the current slab allocator
-             * is less than the SLAB_THRESHOLD
-             */
-            if alloc_size - layout.size() < SLAB_THRESHOLD {
-                chosen = allocator.clone();
-            } else {
-                /* break if the previous condition is not respected, because the next
-                 * slab allocator (if not directly the linked_list) doubles the size of
-                 * the current allocator, so there are no chances that the condition is
-                 * respected.
-                 *
-                 * Breaking makes the chosen allocator the linked_list
-                 */
-                break;
-            }
-        }
-        chosen
-    }
-
-    /**
-     * Returns the minimum allocation block size for the selected variant
-     */
-    pub fn min_alloc_size(&self) -> usize {
-        match self {
-            Self::Slab64Bytes => 64,
-            Self::Slab128Bytes => 128,
-            Self::Slab256Bytes => 256,
-            Self::Slab512Bytes => 512,
-            Self::Slab1024Bytes => 1024,
-            Self::Slab2048Bytes => 2048,
-            Self::Slab4096Bytes => 4096,
-            Self::Slab8192Bytes => 8192,
-            Self::LinkedList => HoleList::min_size()
-        }
-    }
-
-    /**
-     * Returns the maximum allocation block size for the selected variant
-     */
-    pub fn max_alloc_size(&self) -> usize {
-        match self {
-            Allocator::LinkedList => usize::MAX,
-            _ => self.min_alloc_size()
-        }
-    }
-
-    /**
-     * Returns the minimum amount of memory that each allocator wants as
-     * extension
-     */
-    pub fn min_managed_size(&self) -> usize {
-        if *self != Self::LinkedList {
-            self.min_alloc_size() * 4
-        } else {
-            /* for the linked list request at least 16KB */
-            16 * 1024
-        }
-    }
-
-    /**
-     * Calculates the minimum memory consumption requested by an
-     * `heap::Heap` instance to become functional
-     */
-    pub fn cumulative_min_managed_size() -> usize {
-        let mut size = 0;
-        for allocator in Self::VARIANTS.iter() {
-            size += allocator.min_managed_size();
-        }
-        size
-    }
-
-    /**
-     * Returns an `Iterator` to the variants
-     */
-    pub fn iter() -> impl Iterator<Item = &'static Self> {
-        Self::VARIANTS.iter()
-    }
-}
 
 /**
  * Multi strategy heap manager capable of use as `global_allocator` in
@@ -187,9 +58,6 @@ impl Allocator {
  *   `SLAB_THRESHOLD`.
  * * `LinkedList` - classic UNIX chunk allocation, used for allocation
  *   requests above the 8KiB and when slab allocation exceed the threshold.
- *
- * Slab allocator comes from the internal `heap::slab` module, linked list
- * allocator comes from Philipp Oppermann's `linked_list_allocator` crate
  */
 pub struct Heap {
     m_slab_64: Slab,
@@ -200,7 +68,7 @@ pub struct Heap {
     m_slab_2048: Slab,
     m_slab_4096: Slab,
     m_slab_8192: Slab,
-    m_linked_list: HoleList,
+    m_linked_list: LinkedList,
     m_mem_supplier: HeapMemorySupplier,
     m_allocated_mem: usize,
     m_managed_mem: usize
@@ -208,7 +76,7 @@ pub struct Heap {
 
 impl Heap {
     /**
-     * Constructs a new `Heap` which immediately uses the given
+     * Constructs a new `Heap` which immediately calls the given
      * `HeapMemorySupplier` to become operative
      */
     pub unsafe fn new(mem_supplier: HeapMemorySupplier) -> Self {
@@ -217,22 +85,22 @@ impl Heap {
          * the cumulative minimum size, that is the sum of all the min_alloc_size()
          * returns
          */
-        let (mut addr, aligned_size) =
-            mem_supplier(Allocator::cumulative_min_managed_size()).unwrap();
+        let (mut start_addr, aligned_size) =
+            mem_supplier(Allocator::cumulative_extend_block_size()).unwrap();
 
         /* construct an Allocator iterator to construct the slabs in sequence */
         let mut allocators = Allocator::iter();
 
-        Self { m_slab_64: Self::construct_slab(&mut addr, allocators.next().unwrap()),
-               m_slab_128: Self::construct_slab(&mut addr, allocators.next().unwrap()),
-               m_slab_256: Self::construct_slab(&mut addr, allocators.next().unwrap()),
-               m_slab_512: Self::construct_slab(&mut addr, allocators.next().unwrap()),
-               m_slab_1024: Self::construct_slab(&mut addr, allocators.next().unwrap()),
-               m_slab_2048: Self::construct_slab(&mut addr, allocators.next().unwrap()),
-               m_slab_4096: Self::construct_slab(&mut addr, allocators.next().unwrap()),
-               m_slab_8192: Self::construct_slab(&mut addr, allocators.next().unwrap()),
-               m_linked_list: HoleList::new(addr,
-                                            Allocator::LinkedList.min_managed_size()),
+        Self { m_slab_64: Self::new_slab(&mut start_addr, allocators.next().unwrap()),
+               m_slab_128: Self::new_slab(&mut start_addr, allocators.next().unwrap()),
+               m_slab_256: Self::new_slab(&mut start_addr, allocators.next().unwrap()),
+               m_slab_512: Self::new_slab(&mut start_addr, allocators.next().unwrap()),
+               m_slab_1024: Self::new_slab(&mut start_addr, allocators.next().unwrap()),
+               m_slab_2048: Self::new_slab(&mut start_addr, allocators.next().unwrap()),
+               m_slab_4096: Self::new_slab(&mut start_addr, allocators.next().unwrap()),
+               m_slab_8192: Self::new_slab(&mut start_addr, allocators.next().unwrap()),
+               m_linked_list:
+                   LinkedList::new(start_addr, Allocator::LinkedList.extend_block_size()),
                m_mem_supplier: mem_supplier,
                m_allocated_mem: 0,
                m_managed_mem: aligned_size }
@@ -241,45 +109,72 @@ impl Heap {
     /**
      * Dispatches the given memory region to the given `Allocator`
      */
-    pub unsafe fn add_region(&mut self, addr: usize, size: usize, allocator: Allocator) {
+    pub unsafe fn add_region(&mut self,
+                             block_addr: usize,
+                             aligned_block_size: usize,
+                             allocator: Allocator) {
         /* check whether the caller wants to add memory to a slab allocator, in that
          * case check whether the given size is aligned with the Allocator's minimum
          * allocation size, otherwise give the wasted region to the linked_list
          * allocator that not necessarily needs a big alignment, just a minimum size
          */
-        let mut size = size;
+        let mut aligned_block_size = aligned_block_size;
         if allocator != Allocator::LinkedList {
-            let exceeding = size % allocator.min_alloc_size();
+            let block_exceeding_size = aligned_block_size % allocator.block_size();
 
             /* if the remaining subregion is at least the minimum required size of the
              * linked list give it to him, otherwise leave the remaining space
              * unmanaged
              */
-            if exceeding != 0 && exceeding >= HoleList::min_size() {
-                size = size - exceeding;
-                self.add_region(addr + size, exceeding, Allocator::LinkedList);
+            if block_exceeding_size != 0
+               && block_exceeding_size >= LinkedList::block_size()
+            {
+                aligned_block_size -= block_exceeding_size;
+                let region_exceeding_back_addr = block_addr + aligned_block_size;
+
+                /* recurse the call */
+                self.add_region(region_exceeding_back_addr,
+                                block_exceeding_size,
+                                Allocator::LinkedList);
             }
         }
 
         /* dispatch the memory to the requested allocator */
         match allocator {
-            Allocator::Slab64Bytes => self.m_slab_64.extend(addr, size),
-            Allocator::Slab128Bytes => self.m_slab_128.extend(addr, size),
-            Allocator::Slab256Bytes => self.m_slab_256.extend(addr, size),
-            Allocator::Slab512Bytes => self.m_slab_512.extend(addr, size),
-            Allocator::Slab1024Bytes => self.m_slab_1024.extend(addr, size),
-            Allocator::Slab2048Bytes => self.m_slab_2048.extend(addr, size),
-            Allocator::Slab4096Bytes => self.m_slab_4096.extend(addr, size),
-            Allocator::Slab8192Bytes => self.m_slab_8192.extend(addr, size),
+            Allocator::Slab64Bytes => {
+                self.m_slab_64.extend(block_addr, aligned_block_size)
+            },
+            Allocator::Slab128Bytes => {
+                self.m_slab_128.extend(block_addr, aligned_block_size)
+            },
+            Allocator::Slab256Bytes => {
+                self.m_slab_256.extend(block_addr, aligned_block_size)
+            },
+            Allocator::Slab512Bytes => {
+                self.m_slab_512.extend(block_addr, aligned_block_size)
+            },
+            Allocator::Slab1024Bytes => {
+                self.m_slab_1024.extend(block_addr, aligned_block_size)
+            },
+            Allocator::Slab2048Bytes => {
+                self.m_slab_2048.extend(block_addr, aligned_block_size)
+            },
+            Allocator::Slab4096Bytes => {
+                self.m_slab_4096.extend(block_addr, aligned_block_size)
+            },
+            Allocator::Slab8192Bytes => {
+                self.m_slab_8192.extend(block_addr, aligned_block_size)
+            },
             Allocator::LinkedList => {
-                let ptr = NonNull::new_unchecked(addr as *mut u8);
-                let layout = Layout::from_size_align_unchecked(size, 1);
-                self.m_linked_list.deallocate(ptr, layout);
+                let new_region_ptr = NonNull::new_unchecked(block_addr as *mut u8);
+                let layout = Layout::from_size_align_unchecked(aligned_block_size, 1);
+
+                self.m_linked_list.deallocate(new_region_ptr, layout);
             }
         }
 
         /* increase the total heap managed memory counter */
-        self.m_managed_mem += size;
+        self.m_managed_mem += aligned_block_size;
     }
 
     /**
@@ -295,8 +190,10 @@ impl Heap {
      * To know which allocator will be used call `Allocator::for_layout()`
      */
     pub fn allocate(&mut self, layout: Layout) -> Result<NonNull<u8>, ()> {
-        let allocator = Allocator::for_layout(layout);
-        let res = match allocator {
+        let sub_allocator = Allocator::for_layout(layout);
+
+        /* allocate with the chosen sub-allocator */
+        let alloc_res = match sub_allocator {
             Allocator::Slab64Bytes => self.m_slab_64.alloc_block(),
             Allocator::Slab128Bytes => self.m_slab_128.alloc_block(),
             Allocator::Slab256Bytes => self.m_slab_256.alloc_block(),
@@ -305,30 +202,29 @@ impl Heap {
             Allocator::Slab2048Bytes => self.m_slab_2048.alloc_block(),
             Allocator::Slab4096Bytes => self.m_slab_4096.alloc_block(),
             Allocator::Slab8192Bytes => self.m_slab_8192.alloc_block(),
-            Allocator::LinkedList => {
-                self.m_linked_list.allocate_first_fit(layout).map(|pair| pair.0)
-            },
+            Allocator::LinkedList => self.m_linked_list.allocate_first_fit(layout)
         };
 
-        /* increase the currently allocated memory counter if okay */
-        if res.is_ok() {
+        /* handle allocation result */
+        if alloc_res.is_ok() {
+            /* increase the currently allocated memory counter */
             self.m_allocated_mem += layout.size();
-            res
+            alloc_res
         } else {
-            /* if the allocation failed means that the allocator used have exhausted
-             * the memory, so use the supplier to obtain more from the underling system
-             */
-            let size = max(allocator.min_managed_size(), layout.size());
-            if let Some(suppl_res) = (self.m_mem_supplier)(size) {
+            /* the allocation was failed, request to the supplier new memory */
+            if let Some((block_addr, aligned_size)) =
+                (self.m_mem_supplier)(max(sub_allocator.extend_block_size(),
+                                          layout.size()))
+            {
                 /* add the returned region to the allocator designed */
                 unsafe {
-                    self.add_region(suppl_res.0, suppl_res.1, allocator);
+                    self.add_region(block_addr, aligned_size, sub_allocator);
                 }
 
                 /* retry the allocation */
                 self.allocate(layout)
             } else {
-                res
+                alloc_res
             }
         }
     }
@@ -386,10 +282,140 @@ impl Heap {
     /**
      * Returns the `Slab` that allocates the next `Allocator` sizes
      */
-    unsafe fn construct_slab(addr: &mut usize, allocator: &Allocator) -> Slab {
-        let slab =
-            Slab::new(*addr, allocator.min_managed_size(), allocator.min_alloc_size());
-        *addr += allocator.min_managed_size();
+    unsafe fn new_slab(start_addr: &mut usize, allocator: &Allocator) -> Slab {
+        let initial_managed_size = allocator.extend_block_size();
+        let slab = Slab::new(*start_addr, initial_managed_size, allocator.block_size());
+
+        *start_addr += initial_managed_size;
         slab
+    }
+}
+
+/**
+ * Lists the currently available allocators of the `Heap` manager
+ */
+#[repr(u8)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum Allocator {
+    Slab64Bytes,
+    Slab128Bytes,
+    Slab256Bytes,
+    Slab512Bytes,
+    Slab1024Bytes,
+    Slab2048Bytes,
+    Slab4096Bytes,
+    Slab8192Bytes,
+    LinkedList
+}
+
+impl Allocator {
+    const VARIANTS: &'static [Allocator] = &[Self::Slab64Bytes,
+                                             Self::Slab128Bytes,
+                                             Self::Slab256Bytes,
+                                             Self::Slab512Bytes,
+                                             Self::Slab1024Bytes,
+                                             Self::Slab2048Bytes,
+                                             Self::Slab4096Bytes,
+                                             Self::Slab8192Bytes,
+                                             Self::LinkedList];
+
+    /**
+     * Returns the best Allocator variant to serve the given request.
+     *
+     * The function fallbacks to `Allocator::LinkedList` when a
+     * `Allocator::SlabXX` is chosen but the difference between the
+     * `layout.size()` and the block size of the `Slab` exceeds the
+     * `SLAB_THRESHOLD`
+     */
+    pub fn for_layout(layout: Layout) -> Allocator {
+        let mut selected_allocator = Allocator::LinkedList;
+        for allocator in Self::VARIANTS.iter() {
+            let alloc_size = allocator.max_alloc_size();
+
+            /* allocators that doesn't have the requested size and the requested
+             * alignment are discarded before the check of the threshold
+             */
+            if alloc_size < layout.size() || alloc_size < layout.align() {
+                continue;
+            }
+
+            /* check now whether the max allocation size of the current slab allocator
+             * is less than the SLAB_THRESHOLD
+             */
+            if alloc_size - layout.size() < SLAB_THRESHOLD {
+                selected_allocator = allocator.clone();
+            } else {
+                /* break if the previous condition is not respected, because the next
+                 * slab allocator (if not directly the linked_list) doubles the size of
+                 * the current allocator, so there are no chances that the condition is
+                 * respected.
+                 *
+                 * Breaking makes the chosen allocator the linked_list
+                 */
+                break;
+            }
+        }
+        selected_allocator
+    }
+
+    /**
+     * Returns the allocation block size for the selected variant
+     */
+    pub fn block_size(&self) -> usize {
+        match self {
+            Self::Slab64Bytes => 64,
+            Self::Slab128Bytes => 128,
+            Self::Slab256Bytes => 256,
+            Self::Slab512Bytes => 512,
+            Self::Slab1024Bytes => 1024,
+            Self::Slab2048Bytes => 2048,
+            Self::Slab4096Bytes => 4096,
+            Self::Slab8192Bytes => 8192,
+            Self::LinkedList => LinkedList::block_size()
+        }
+    }
+
+    /**
+     * Returns the maximum allocation block size for the selected variant
+     */
+    pub fn max_alloc_size(&self) -> usize {
+        match self {
+            Allocator::LinkedList => usize::MAX,
+            _ => self.block_size()
+        }
+    }
+
+    /**
+     * Returns size of the extension block requested for the current variant
+     */
+    pub fn extend_block_size(&self) -> usize {
+        if *self != Self::LinkedList {
+            self.block_size() * 4
+        } else {
+            /* for the linked list request at least 16KB */
+            16 * 1024
+        }
+    }
+
+    /**
+     * Calculates the minimum memory consumption requested by an
+     * `heap::Heap` instance to become functional
+     */
+    pub fn cumulative_extend_block_size() -> usize {
+        let mut size = 0;
+        for allocator in Self::VARIANTS.iter() {
+            size += allocator.extend_block_size();
+        }
+        size
+    }
+
+    /**
+     * Returns an `Iterator` to the variants
+     */
+    pub fn iter() -> impl Iterator<Item = &'static Self> {
+        Self::VARIANTS.iter()
     }
 }
