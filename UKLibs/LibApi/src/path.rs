@@ -7,15 +7,16 @@ use core::{
     ops::{
         Add,
         AddAssign,
+        Index,
         Sub,
         SubAssign
     },
     str::Split
 };
 
+use helps::str::u8_ptr_to_str_slice;
 use os::{
     limits::VFS_PATH_LEN_MAX,
-    str_utils,
     sysc::{
         codes::KernPathFnId,
         fn_path::KernFnPath
@@ -26,7 +27,6 @@ use crate::{
     bits::path::PathExistsState,
     caller::KernCaller
 };
-use core::ops::Index;
 
 /**
  * Implements a simple way to manage VFS paths.
@@ -194,7 +194,7 @@ impl Path {
      * Returns the `Path` as string slice
      */
     pub fn as_str(&self) -> &str {
-        str_utils::u8_ptr_to_str_slice(self.m_buf.as_ptr(), self.m_len)
+        u8_ptr_to_str_slice(self.m_buf.as_ptr(), self.m_len)
     }
 
     /**

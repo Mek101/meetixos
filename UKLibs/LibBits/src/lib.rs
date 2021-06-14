@@ -6,4 +6,5 @@
 
 #![no_std]
 
-pub mod bit_field;
+pub mod fields;
+pub mod flags;

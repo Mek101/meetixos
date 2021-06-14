@@ -2,10 +2,10 @@
 
 use core::marker::PhantomData;
 
-use bits::bit_field::BitFields;
+use bits::fields::BitFields;
+use helps::str::copy_str_to_u8_buf;
 use os::{
     limits::ENTITY_NAME_LEN_MAX,
-    str_utils,
     sysc::{
         codes::KernOSEntConfigFnId,
         fn_path::KernFnPath
@@ -78,7 +78,7 @@ impl<T> OSEntConfig<T, CreatMode> where T: OSEntity {
      */
     pub fn apply(mut self, name: &str) -> Result<T> {
         let mut buf = [0; ENTITY_NAME_LEN_MAX];
-        str_utils::copy_str_to_u8_buf(&mut buf, name);
+        copy_str_to_u8_buf(&mut buf, name);
         self.m_name = Some(buf);
 
         self.kern_call_1(KernFnPath::OSEntConfig(KernOSEntConfigFnId::CreateEntity),
@@ -106,7 +106,7 @@ impl<T> OSEntConfig<T, FindMode> where T: OSEntity {
      */
     pub fn with_name(&mut self, name: &str) -> &mut Self {
         let mut buf = [0; ENTITY_NAME_LEN_MAX];
-        str_utils::copy_str_to_u8_buf(&mut buf, name);
+        copy_str_to_u8_buf(&mut buf, name);
 
         self.m_name = Some(buf);
         self

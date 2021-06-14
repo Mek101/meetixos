@@ -19,15 +19,12 @@ impl HwMapFlusherBase for HwMapFlusher {
     }
 
     unsafe fn flush_addr(&self, addr: VirtAddr) {
-        use x86_64::{
-            instructions,
-            VirtAddr as X64VirtAddr
-        };
-
-        instructions::tlb::flush(X64VirtAddr::new_unsafe(addr.as_usize() as u64));
+        asm!("invlpg [{}]", in(reg) addr.as_usize(), options(nostack, preserves_flags));
     }
 
     unsafe fn flush_all(&self) {
-        x86_64::instructions::tlb::flush_all();
+        let cr3_value: usize;
+        asm!("mov {}, cr3", out(reg) cr3_value, options(nomem, nostack, preserves_flags));
+        asm!("mov cr3, {}", in(reg) cr3_value, options(nomem, preserves_flags));
     }
 }

@@ -9,9 +9,10 @@ authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
 num_enum  = { version = "*", default-features = false }
 
 # ------------------------------ MeetiX Libraries Crates ------------------------------- #
-os   = { path = "../LibOS" }
-sync = { path = "../LibSync" }
-bits = { path = "../LibBits" }
+os    = { path = "../LibOS" }
+sync  = { path = "../LibSync" }
+bits  = { path = "../LibBits" }
+helps = { path = "../LibHelps" }
 
 [features]
 default               = []

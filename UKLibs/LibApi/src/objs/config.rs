@@ -2,13 +2,11 @@
 
 use core::marker::PhantomData;
 
-use bits::bit_field::BitFields;
-use os::{
-    str_utils,
-    sysc::{
-        codes::KernObjConfigFnId,
-        fn_path::KernFnPath
-    }
+use bits::fields::BitFields;
+use helps::str::u8_slice_to_str_slice;
+use os::sysc::{
+    codes::KernObjConfigFnId,
+    fn_path::KernFnPath
 };
 
 use crate::{
@@ -205,7 +203,7 @@ impl<T, M> ObjConfig<T, M>
      */
     pub fn apply_for<P>(&mut self, path: P) -> Result<T>
         where P: AsRef<[u8]> {
-        self.m_path = Some(Path::from(str_utils::u8_slice_to_str_slice(path.as_ref())));
+        self.m_path = Some(Path::from(u8_slice_to_str_slice(path.as_ref())));
         self.apply_builder_config()
     }
 

@@ -6,7 +6,7 @@ use core::{
     ops::Range
 };
 
-use bits::bit_field::BitFields;
+use bits::fields::BitFields;
 
 use crate::sysc::fn_path::KernFnPath;
 

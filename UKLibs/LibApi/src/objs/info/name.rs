@@ -1,9 +1,10 @@
 /*! `Object` name information descriptor */
 
-use os::{
-    limits::VFS_NAME_LEN_MAX,
-    str_utils
+use helps::str::{
+    copy_str_to_u8_buf,
+    u8_ptr_to_str_slice
 };
+use os::limits::VFS_NAME_LEN_MAX;
 
 /**
  * Contains various information that are related to the VFS representation
@@ -24,7 +25,7 @@ impl ObjNameInfo {
      */
     pub fn new(name_id: u64, name: &str, links: u32) -> Self {
         let mut buf = [0; VFS_NAME_LEN_MAX];
-        str_utils::copy_str_to_u8_buf(&mut buf, name);
+        copy_str_to_u8_buf(&mut buf, name);
 
         Self { m_name_id: name_id,
                m_name_buf: buf,
@@ -45,7 +46,7 @@ impl ObjNameInfo {
      * Returns the name as encoded string slice
      */
     pub fn name(&self) -> &str {
-        str_utils::u8_ptr_to_str_slice(self.m_name_buf.as_ptr(), self.m_name_len)
+        u8_ptr_to_str_slice(self.m_name_buf.as_ptr(), self.m_name_len)
     }
 
     /**
@@ -53,7 +54,7 @@ impl ObjNameInfo {
      * will be called
      */
     pub fn set_name(&mut self, new_name: &str) {
-        str_utils::copy_str_to_u8_buf(&mut self.m_name_buf, new_name)
+        copy_str_to_u8_buf(&mut self.m_name_buf, new_name)
     }
 
     /**

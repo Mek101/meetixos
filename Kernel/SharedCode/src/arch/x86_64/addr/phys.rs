@@ -2,7 +2,7 @@
 
 use core::convert::TryFrom;
 
-use x86_64::PhysAddr as X64PhysAddr;
+use bits::fields::BitFields;
 
 use crate::addr::{
     AddressErr,
@@ -15,24 +15,26 @@ use crate::addr::{
 #[repr(transparent)]
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub struct HwPhysAddr {
-    m_addr: X64PhysAddr
+    m_raw_addr: usize
 }
 
 impl HwAddrBase for HwPhysAddr {
     fn new(raw_addr: usize) -> Self {
-        Self { m_addr: X64PhysAddr::new_truncate(raw_addr as u64) }
+        Self { m_raw_addr: raw_addr % (1 << 52) }
     }
 
     fn as_usize(&self) -> usize {
-        self.m_addr.as_u64() as usize
+        self.m_raw_addr
     }
 }
 
 impl TryFrom<usize> for HwPhysAddr {
     type Error = AddressErr;
 
-    fn try_from(value: usize) -> Result<Self, Self::Error> {
-        X64PhysAddr::try_new(value as u64).map(|addr| Self { m_addr: addr })
-                                          .map_err(|_| AddressErr(value))
+    fn try_from(raw_addr: usize) -> Result<Self, Self::Error> {
+        match raw_addr.bits_at(52..64) {
+            0 => Ok(Self { m_raw_addr: raw_addr }),
+            _ => Err(AddressErr(raw_addr))
+        }
     }
 }

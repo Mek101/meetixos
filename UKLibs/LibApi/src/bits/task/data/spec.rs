@@ -2,13 +2,11 @@
 
 use core::cmp::min;
 
-use os::{
-    limits::{
-        PROC_ARG_COUNT_MAX,
-        PROC_ARG_LEN_MAX,
-        THREAD_NAME_LEN_MAX
-    },
-    str_utils
+use helps::str::copy_str_to_u8_buf;
+use os::limits::{
+    PROC_ARG_COUNT_MAX,
+    PROC_ARG_LEN_MAX,
+    THREAD_NAME_LEN_MAX
 };
 
 use crate::{
@@ -79,8 +77,7 @@ impl TaskSpecData {
                                         * with Option::Some
                                         */
                                        let mut name_buf = [0; THREAD_NAME_LEN_MAX];
-                                       str_utils::copy_str_to_u8_buf(&mut name_buf,
-                                                                     str_name);
+                                       copy_str_to_u8_buf(&mut name_buf, str_name);
                                        name_buf
                                    }) }
     }
@@ -100,8 +97,7 @@ impl TaskSpecData {
                                       */
                                      let mut args_buf = RAW_PROC_ARGS_INIT;
                                      for i in 0..min(PROC_ARG_COUNT_MAX, args.len()) {
-                                         str_utils::copy_str_to_u8_buf(&mut args_buf[i],
-                                                                       args[i])
+                                         copy_str_to_u8_buf(&mut args_buf[i], args[i])
                                      }
                                      args_buf
                                  }) }

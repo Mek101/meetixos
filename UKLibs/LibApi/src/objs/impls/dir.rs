@@ -6,9 +6,12 @@ use core::{
     str
 };
 
+use helps::str::{
+    copy_str_to_u8_buf,
+    u8_ptr_to_str_slice
+};
 use os::{
     limits::VFS_NAME_LEN_MAX,
-    str_utils,
     sysc::{
         codes::KernDirFnId,
         fn_path::KernFnPath
@@ -134,7 +137,7 @@ impl DirEntry {
      * Returns the name of the child as string slice
      */
     pub fn name(&self) -> &str {
-        str_utils::u8_ptr_to_str_slice(self.m_name.as_ptr(), self.m_name_len)
+        u8_ptr_to_str_slice(self.m_name.as_ptr(), self.m_name_len)
     }
 
     /**
@@ -152,7 +155,7 @@ impl DirEntry {
      */
     pub fn new(name: &str, obj_type: ObjType) -> Self {
         let mut name_buffer = [0; VFS_NAME_LEN_MAX];
-        str_utils::copy_str_to_u8_buf(&mut name_buffer, name);
+        copy_str_to_u8_buf(&mut name_buffer, name);
 
         Self { m_name: name_buffer,
                m_name_len: name.len(),

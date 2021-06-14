@@ -7,7 +7,7 @@ use num_enum::{
     TryFromPrimitive
 };
 
-use bits::bit_field::BitFields;
+use bits::fields::BitFields;
 
 use crate::objs::{
     impls::{

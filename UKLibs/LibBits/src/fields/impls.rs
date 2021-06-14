@@ -6,7 +6,7 @@ use core::ops::{
     RangeBounds
 };
 
-use crate::bit_field::{
+use crate::fields::{
     BitArray,
     BitFields,
     BitFindMode

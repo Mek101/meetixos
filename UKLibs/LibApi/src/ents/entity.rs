@@ -2,12 +2,10 @@
 
 use core::str;
 
-use os::{
-    str_utils,
-    sysc::{
-        codes::KernOSEntFnId,
-        fn_path::KernFnPath
-    }
+use helps::str::u8_slice_to_str_slice;
+use os::sysc::{
+    codes::KernOSEntFnId,
+    fn_path::KernFnPath
 };
 
 use crate::{
@@ -46,7 +44,7 @@ impl OSEntityId {
         self.kern_call_2(KernFnPath::OSEntity(KernOSEntFnId::Name),
                          buf.as_mut_ptr() as usize,
                          buf.len())
-            .map(move |len| str_utils::u8_slice_to_str_slice(&buf[..len]))
+            .map(move |len| u8_slice_to_str_slice(&buf[..len]))
     }
 
     /**

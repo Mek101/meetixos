@@ -2,9 +2,12 @@
 
 use core::fmt;
 
+use helps::str::{
+    copy_str_to_u8_buf,
+    u8_slice_to_str_slice
+};
 use os::{
     limits::ERROR_MESSAGE_LEN_MAX,
-    str_utils,
     sysc::id::SysCallId
 };
 
@@ -38,7 +41,7 @@ impl Error {
                m_syscall: syscall,
                m_message: message.map(|str_buf| {
                                      let mut buf = [0; ERROR_MESSAGE_LEN_MAX];
-                                     str_utils::copy_str_to_u8_buf(&mut buf, str_buf);
+                                     copy_str_to_u8_buf(&mut buf, str_buf);
                                      buf
                                  }) }
     }
@@ -61,7 +64,7 @@ impl Error {
      * Returns the formatted message of the error if any
      */
     pub fn message(&self) -> Option<&str> {
-        self.m_message.map(|buf| str_utils::u8_slice_to_str_slice(&buf))
+        self.m_message.map(|buf| u8_slice_to_str_slice(&buf))
     }
 
     /**

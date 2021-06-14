@@ -21,5 +21,4 @@ pub mod arch;
 pub mod arch;
 
 pub mod limits;
-pub mod str_utils;
 pub mod sysc;
