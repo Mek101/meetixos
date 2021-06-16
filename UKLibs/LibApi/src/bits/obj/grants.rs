@@ -7,7 +7,10 @@ use num_enum::{
     TryFromPrimitive
 };
 
-use bits::fields::BitFields;
+use bits::flags::{
+    BitFlags,
+    BitFlagsValues
+};
 
 use crate::objs::{
     impls::{
@@ -27,7 +30,7 @@ use crate::objs::{
 #[derive(Debug)]
 pub struct Grants<T>
     where T: Object {
-    m_bits: u32,
+    m_bits: BitFlags<u32, GrantsBit>,
     _unused: PhantomData<T>
 }
 
@@ -36,7 +39,7 @@ impl<T> Grants<T> where T: Object {
      * Constructs a zeroed `Grants`
      */
     pub fn new() -> Self {
-        Self { m_bits: 0,
+        Self { m_bits: BitFlags::new_zero(),
                _unused: Default::default() }
     }
 
@@ -66,8 +69,8 @@ impl<T> Grants<T> where T: Object {
      * According to the `allow` value allows or disallow the actions
      * associated with the given `GrantsBit`
      */
-    pub fn set(&mut self, bit: GrantsBit, allow: bool) -> &mut Self {
-        self.m_bits.set_bit(bit.into(), allow);
+    pub fn set(&mut self, _bit: GrantsBit, _allow: bool) -> &mut Self {
+        // self.m_bits.set_bit(bit.into(), allow);
         self
     }
 
@@ -82,7 +85,7 @@ impl<T> Grants<T> where T: Object {
      * Returns the raw permission bits
      */
     pub fn as_raw(&self) -> u32 {
-        self.m_bits
+        self.m_bits.raw_bits()
     }
 
     /**
@@ -95,33 +98,36 @@ impl<T> Grants<T> where T: Object {
     /**
      * Returns the bit value for the given `GrantsBits`
      */
-    pub fn is(&self, bit: GrantsBit) -> bool {
-        self.m_bits.bit_at(bit.into())
+    pub fn is(&self, _bit: GrantsBit) -> bool {
+        // self.m_bits.bit_at(bit.into())
+        false
     }
 
     /**
-     * Returns whether any of given `GrantsBit`s is active
+     * Returns whether any of given `GrantsBit`s are active
      */
-    pub fn is_any_of(&self, bits: &[GrantsBit]) -> bool {
-        for bit in bits {
-            if self.is(*bit) {
-                return true;
-            }
-        }
-        return false;
+    pub fn is_any_of(&self, _bits: &[GrantsBit]) -> bool {
+        false
+        // for bit in bits {
+        //     if self.is(*bit) {
+        //         return true;
+        //     }
+        // }
+        // return false;
     }
 
     /**
-     * Returns whether all of given `GrantsBit`s is active
+     * Returns whether all of given `GrantsBit`s are active
      */
-    pub fn is_all_of(&self, bits: &[GrantsBit]) -> bool {
-        !self.is_any_of(bits)
+    pub fn is_all_of(&self, _bits: &[GrantsBit]) -> bool {
+        false
+        // !self.is_any_of(bits)
     }
 }
 
 impl<T> Clone for Grants<T> where T: Object {
     fn clone(&self) -> Self {
-        Self { m_bits: self.m_bits,
+        Self { m_bits: self.m_bits.clone(),
                _unused: Default::default() }
     }
 }
@@ -132,7 +138,7 @@ impl<T> Copy for Grants<T> where T: Object {
 
 impl<T> From<u32> for Grants<T> where T: Object {
     fn from(raw_bits: u32) -> Self {
-        Self { m_bits: raw_bits,
+        Self { m_bits: BitFlags::from_raw_truncate(raw_bits),
                _unused: Default::default() }
     }
 }
@@ -142,6 +148,11 @@ impl Default for Grants<Dir> {
      * Returns the default `Grants` for a `Dir`
      */
     fn default() -> Self {
+        // let grants = Self::new().m_bits
+        //              | GrantsBit::UserCanOpenIt
+        //              | GrantsBit::UserCanReadData
+        //              | GrantsBit::UserCanWriteData;
+
         Self::new().set_enabled(GrantsBit::UserCanOpenIt)
                    .set_enabled(GrantsBit::UserCanReadData)
                    .set_enabled(GrantsBit::UserCanWriteData)
@@ -368,4 +379,7 @@ pub enum GrantsBit {
     OtherCanReadInfo,
     OtherCanWriteInfo,
     OtherCanSeeIt
+}
+
+impl BitFlagsValues for GrantsBit {
 }

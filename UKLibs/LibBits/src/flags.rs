@@ -1,6 +1,9 @@
 /*! Bit flags wrapper */
 
 use core::{
+    convert::TryFrom,
+    fmt,
+    fmt::Debug,
     marker::PhantomData,
     ops::{
         BitAnd,
@@ -19,7 +22,6 @@ use crate::fields::BitFields;
  * Safe wrapper for a bit flags
  */
 #[repr(transparent)]
-#[derive(Debug, Copy, Clone)]
 pub struct BitFlags<B, T>
     where B: BitFields + Default + Copy,
           T: BitFlagsValues {
@@ -46,7 +48,7 @@ impl<B, T> BitFlags<B, T>
      */
     pub fn from_raw(raw_bits: B) -> Option<Self> {
         for bit_index in 0..B::BIT_LEN {
-            if !T::is_bit_significant(bit_index) {
+            if let Err(_) = T::try_from(bit_index) {
                 return None;
             }
         }
@@ -60,7 +62,7 @@ impl<B, T> BitFlags<B, T>
      */
     pub fn from_raw_truncate(mut raw_bits: B) -> Self {
         for bit_index in 0..B::BIT_LEN {
-            if !T::is_bit_significant(bit_index) {
+            if let Err(_) = T::try_from(bit_index) {
                 raw_bits.set_bit(bit_index, false);
             }
         }
@@ -72,22 +74,24 @@ impl<B, T> BitFlags<B, T>
     /**
      * Enables the bit corresponding to the given value
      */
-    pub fn set_enabled(&mut self, value: T) {
-        self.set(value, true);
+    #[inline]
+    pub fn set_enabled(&mut self, bit: T) {
+        self.set(bit, true);
     }
 
     /**
      * Disables the bit corresponding to the given value
      */
-    pub fn set_disabled(&mut self, value: T) {
-        self.set(value, false);
+    #[inline]
+    pub fn set_disabled(&mut self, bit: T) {
+        self.set(bit, false);
     }
 
     /**
      * Sets for the bit corresponding to `value` the `enable` value
      */
-    pub fn set(&mut self, value: T, enable: bool) {
-        let bit_index = value.into_raw_bit_index();
+    pub fn set(&mut self, bit: T, enable: bool) {
+        let bit_index = bit.into();
         assert!(bit_index < B::BIT_LEN);
 
         self.m_bits.set_bit(bit_index, enable);
@@ -96,8 +100,8 @@ impl<B, T> BitFlags<B, T>
     /**
      * Returns whether the bit corresponding to `value` is enabled
      */
-    pub fn is_enabled(&self, value: T) -> bool {
-        let bit_index = value.into_raw_bit_index();
+    pub fn is_enabled(&self, bit: T) -> bool {
+        let bit_index = bit.into();
         assert!(bit_index < B::BIT_LEN);
 
         self.m_bits.bit_at(bit_index)
@@ -106,9 +110,59 @@ impl<B, T> BitFlags<B, T>
     /**
      * Returns whether the bit corresponding to `value` is disabled
      */
-    pub fn is_disabled(&self, value: T) -> bool {
-        !self.is_enabled(value)
+    #[inline]
+    pub fn is_disabled(&self, bit: T) -> bool {
+        !self.is_enabled(bit)
     }
+
+    /**
+     * Returns whether any of the given bits is enabled
+     */
+    pub fn is_any_of(&self, bits: &[T]) -> bool {
+        for &bit in bits {
+            if self.is_enabled(bit) {
+                return true;
+            }
+        }
+        false
+    }
+
+    /**
+     * Returns whether all the given bits are enabled
+     */
+    pub fn is_all_of(&self, bits: &[T]) -> bool {
+        for &bit in bits {
+            if self.is_disabled(bit) {
+                return false;
+            }
+        }
+        true
+    }
+
+    /**
+     * Returns this `BitFlags` as raw value
+     */
+    #[inline]
+    pub fn raw_bits(&self) -> B {
+        self.m_bits
+    }
+}
+
+impl<B, T> Clone for BitFlags<B, T>
+    where B: BitFields + Default + Copy,
+          T: BitFlagsValues
+{
+    fn clone(&self) -> Self {
+        Self { m_bits: self.m_bits,
+               _unused: PhantomData }
+    }
+}
+
+impl<B, T> Copy for BitFlags<B, T>
+    where B: BitFields + Default + Copy,
+          T: BitFlagsValues
+{
+    /* No methods to implement */
 }
 
 impl<B, T> BitOr for BitFlags<B, T>
@@ -117,6 +171,7 @@ impl<B, T> BitOr for BitFlags<B, T>
 {
     type Output = Self;
 
+    #[inline]
     fn bitor(self, rhs: Self) -> Self::Output {
         Self { m_bits: self.m_bits | rhs.m_bits,
                _unused: PhantomData }
@@ -127,6 +182,7 @@ impl<B, T> BitOrAssign for BitFlags<B, T>
     where B: BitFields + Default + Copy + BitOrAssign,
           T: BitFlagsValues
 {
+    #[inline]
     fn bitor_assign(&mut self, rhs: Self) {
         self.m_bits |= rhs.m_bits
     }
@@ -138,6 +194,7 @@ impl<B, T> BitOr<T> for BitFlags<B, T>
 {
     type Output = Self;
 
+    #[inline]
     fn bitor(self, rhs: T) -> Self::Output {
         let mut self_clone = self.clone();
 
@@ -150,6 +207,7 @@ impl<B, T> BitOrAssign<T> for BitFlags<B, T>
     where B: BitFields + Default + Copy,
           T: BitFlagsValues
 {
+    #[inline]
     fn bitor_assign(&mut self, rhs: T) {
         self.set_enabled(rhs);
     }
@@ -161,6 +219,7 @@ impl<B, T> BitAnd for BitFlags<B, T>
 {
     type Output = Self;
 
+    #[inline]
     fn bitand(self, rhs: Self) -> Self::Output {
         Self { m_bits: self.m_bits & rhs.m_bits,
                _unused: PhantomData }
@@ -171,6 +230,7 @@ impl<B, T> BitAndAssign for BitFlags<B, T>
     where B: BitFields + Default + Copy + BitAndAssign,
           T: BitFlagsValues
 {
+    #[inline]
     fn bitand_assign(&mut self, rhs: Self) {
         self.m_bits &= rhs.m_bits
     }
@@ -178,10 +238,11 @@ impl<B, T> BitAndAssign for BitFlags<B, T>
 
 impl<B, T> BitAnd<T> for BitFlags<B, T>
     where B: BitFields + Default + Copy,
-          T: BitFlagsValues + Copy
+          T: BitFlagsValues
 {
     type Output = Self;
 
+    #[inline]
     fn bitand(self, rhs: T) -> Self::Output {
         let mut self_zero = Self::new_zero();
 
@@ -195,8 +256,9 @@ impl<B, T> BitAnd<T> for BitFlags<B, T>
 
 impl<B, T> BitAndAssign<T> for BitFlags<B, T>
     where B: BitFields + Default + Copy,
-          T: BitFlagsValues + Copy
+          T: BitFlagsValues
 {
+    #[inline]
     fn bitand_assign(&mut self, rhs: T) {
         self.set(rhs, self.is_enabled(rhs));
     }
@@ -204,10 +266,11 @@ impl<B, T> BitAndAssign<T> for BitFlags<B, T>
 
 impl<B, T> BitXor for BitFlags<B, T>
     where B: BitFields + Default + Copy + BitXor<Output = B>,
-          T: BitFlagsValues + Copy
+          T: BitFlagsValues
 {
     type Output = Self;
 
+    #[inline]
     fn bitxor(self, rhs: Self) -> Self::Output {
         Self { m_bits: self.m_bits ^ rhs.m_bits,
                _unused: PhantomData }
@@ -216,8 +279,9 @@ impl<B, T> BitXor for BitFlags<B, T>
 
 impl<B, T> BitXorAssign for BitFlags<B, T>
     where B: BitFields + Default + Copy + BitXorAssign,
-          T: BitFlagsValues + Copy
+          T: BitFlagsValues
 {
+    #[inline]
     fn bitxor_assign(&mut self, rhs: Self) {
         self.m_bits ^= rhs.m_bits;
     }
@@ -225,10 +289,11 @@ impl<B, T> BitXorAssign for BitFlags<B, T>
 
 impl<B, T> BitXor<T> for BitFlags<B, T>
     where B: BitFields + Default + Copy + BitXor<Output = B>,
-          T: BitFlagsValues + Copy
+          T: BitFlagsValues
 {
     type Output = Self;
 
+    #[inline]
     fn bitxor(self, rhs: T) -> Self::Output {
         let mut rhs_bf = Self::new_zero();
         rhs_bf.set_enabled(rhs);
@@ -240,8 +305,9 @@ impl<B, T> BitXor<T> for BitFlags<B, T>
 
 impl<B, T> BitXorAssign<T> for BitFlags<B, T>
     where B: BitFields + Default + Copy + BitXorAssign,
-          T: BitFlagsValues + Copy
+          T: BitFlagsValues
 {
+    #[inline]
     fn bitxor_assign(&mut self, rhs: T) {
         let mut rhs_bf = Self::new_zero();
         rhs_bf.set_enabled(rhs);
@@ -251,28 +317,58 @@ impl<B, T> BitXorAssign<T> for BitFlags<B, T>
 }
 
 impl<B, T> Not for BitFlags<B, T>
-    where B: BitFields + Default + Copy,
-          T: BitFlagsValues + Copy
+    where B: BitFields + Default + Copy + Not<Output = B>,
+          T: BitFlagsValues
 {
     type Output = Self;
 
+    #[inline]
     fn not(self) -> Self::Output {
         Self { m_bits: !self.m_bits,
                _unused: PhantomData }
     }
 }
 
+impl<B, T> PartialEq for BitFlags<B, T>
+    where B: BitFields + Default + Copy + PartialEq,
+          T: BitFlagsValues
+{
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        self.m_bits == other.m_bits
+    }
+}
+
+impl<B, T> Eq for BitFlags<B, T>
+    where B: BitFields + Default + Copy + PartialEq,
+          T: BitFlagsValues
+{
+    /* No methods to implement */
+}
+
+impl<B, T> Debug for BitFlags<B, T>
+    where B: BitFields + Default + Copy + PartialEq,
+          T: BitFlagsValues + Debug
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "BitFlags {{ m_bits: ")?;
+        for bit_index in 0..B::BIT_LEN {
+            if self.m_bits.bit_at(bit_index) {
+                if let Ok(bit_value) = T::try_from(bit_index) {
+                    write!(f, "{:?}", bit_value)?;
+                    if bit_index < B::BIT_LEN - 1 {
+                        write!(f, " | ")?;
+                    }
+                }
+            }
+        }
+        write!(f, " }}")
+    }
+}
+
 /**
  * Interface which must be implemented by the enumeration values
  */
-pub trait BitFlagsValues {
-    /**
-     * Returns the index of the bit which the variant represent
-     */
-    fn into_raw_bit_index(self) -> usize;
-
-    /**
-     * Returns whether the given `bit_index` represent a flag value
-     */
-    fn is_bit_significant(bit_index: usize) -> bool;
+pub trait BitFlagsValues: Copy + Clone + Into<usize> + TryFrom<usize> {
+    /* No additional methods are requested */
 }

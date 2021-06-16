@@ -5,7 +5,10 @@ use core::{
     str::FromStr
 };
 
-use crate::os::str_utils;
+use helps::str::{
+    copy_str_to_u8_buf,
+    u8_ptr_to_str_slice
+};
 
 /**
  * Maximum amount of command line arguments that `BootInfoInner` could
@@ -124,7 +127,7 @@ impl CmdLineArg {
      */
     pub fn new(arg: &str) -> Self {
         let mut arg_buf = [0; BOOT_CMDLINE_ARGS_LEN_MAX];
-        str_utils::copy_str_to_u8_buf(&mut arg_buf, arg);
+        copy_str_to_u8_buf(&mut arg_buf, arg);
 
         Self { m_arg: arg_buf,
                m_len: arg.len(),
@@ -135,7 +138,7 @@ impl CmdLineArg {
      * Returns this argument as string slice
      */
     pub fn as_str(&self) -> &str {
-        str_utils::u8_ptr_to_str_slice(self.m_arg.as_ptr(), self.m_len)
+        u8_ptr_to_str_slice(self.m_arg.as_ptr(), self.m_len)
     }
 
     /**

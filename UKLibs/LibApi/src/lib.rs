@@ -16,7 +16,6 @@ pub mod bits;
 pub mod caller;
 pub mod ents;
 pub mod errors;
-pub mod namespace;
 pub mod objs;
 pub mod path;
 pub mod tasks;

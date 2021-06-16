@@ -1,9 +1,6 @@
 /*! x86_64 I/O port */
 
-use core::{
-    fmt,
-    marker::PhantomData
-};
+use core::marker::PhantomData;
 
 use crate::arch::x86_64::io_port::impls::HwIOPort;
 

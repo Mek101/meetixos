@@ -25,7 +25,7 @@ use crate::{
             VirtFrameRange
         },
         table::{
-            PTFlags,
+            PTFlagsBits,
             PageTable,
             PageTableEntry,
             PageTableEntryErr,
@@ -38,6 +38,7 @@ use crate::{
         PageSize
     }
 };
+use bits::flags::BitFlags;
 
 /**
  * "Middle" level address space manager.
@@ -273,7 +274,9 @@ impl PageDir {
     /**
      * Returns the `PTFlags` of the given `VirtFrame`
      */
-    pub fn flags_of<S>(&self, virt_frame: VirtFrame<S>) -> Result<PTFlags, PageDirErr>
+    pub fn flags_of<S>(&self,
+                       virt_frame: VirtFrame<S>)
+                       -> Result<BitFlags<usize, PTFlagsBits>, PageDirErr>
         where S: PageSize {
         /* iterate each level of the page tables to reach the requested one */
         let mut table = self.root_page_table();
@@ -353,7 +356,7 @@ impl PageDir {
          * demand paging)
          */
         if table_entry.is_unused()
-           || !table_entry.flags().is_present()
+           || !table_entry.flags().is_enabled(PTFlagsBits::Present)
            || pd_flags.is_remap()
         {
             /* we have now to distinguish the two cases here:
@@ -461,17 +464,21 @@ impl PageDir {
                  * resolution miss by the MMU, that could start resolve the
                  * virtual addresses and fail with the last level
                  */
-                let table_flags = if flags.is_user() {
-                    PTFlags::READABLE
-                    | PTFlags::WRITEABLE
-                    | PTFlags::PRESENT
-                    | PTFlags::USER
+                let pt_flags = if flags.is_user() {
+                    BitFlags::new_zero()
+                    | PTFlagsBits::Readable
+                    | PTFlagsBits::Writeable
+                    | PTFlagsBits::Present
+                    | PTFlagsBits::User
                 } else {
-                    PTFlags::READABLE | PTFlags::WRITEABLE | PTFlags::PRESENT
+                    BitFlags::new_zero()
+                    | PTFlagsBits::Readable
+                    | PTFlagsBits::Writeable
+                    | PTFlagsBits::Present
                 };
 
                 /* set now the mapping */
-                entry.set_mapping(table_phys_frame, table_flags);
+                entry.set_mapping(table_phys_frame, pt_flags);
                 new_table_created = true;
             } else {
                 return Err(PageDirErr::PhysAllocFailed);
@@ -578,7 +585,7 @@ impl Debug for PageDir {
 
             writeln!(f, "\tL4{:?}", l4_entry)?;
 
-            if l4_entry.flags().is_present() {
+            if l4_entry.flags().is_enabled(PTFlagsBits::Present) {
                 if let Ok(l3_page_table) = self.next_page_table(l4_entry) {
                     for (l3_index, l3_entry) in l3_page_table.iter_mut().enumerate() {
                         if l3_entry.is_unused() {
@@ -587,7 +594,7 @@ impl Debug for PageDir {
 
                         write!(f, "\t\tL3{:?}", l3_entry)?;
 
-                        if l3_entry.flags().is_huge_page() {
+                        if l3_entry.flags().is_enabled(PTFlagsBits::HugePage) {
                             let frame = VirtFrame::<Page1GiB>::from_table_indexes(PageTableIndex::new(l4_index as u16),
                                                                                   PageTableIndex::new(l3_index as u16));
                             writeln!(f, " VirtFrame<1GiB>({:?})", frame.start_addr())?;
@@ -596,7 +603,7 @@ impl Debug for PageDir {
                             write!(f, "\n")?;
                         }
 
-                        if l3_entry.flags().is_present() && !l3_entry.flags().is_huge_page() {
+                        if l3_entry.flags().is_enabled(PTFlagsBits::Present) && !l3_entry.flags().is_enabled(PTFlagsBits::HugePage) {
                             if let Ok(l2_page_table) = self.next_page_table(l3_entry) {
                                 for (l2_index, l2_entry) in l2_page_table.iter_mut().enumerate() {
                                     if l2_entry.is_unused() {
@@ -604,7 +611,7 @@ impl Debug for PageDir {
                                     }
 
                                     write!(f, "\t\t\tL2{:?}", l2_entry)?;
-                                    if l2_entry.flags().is_huge_page() {
+                                    if l2_entry.flags().is_enabled(PTFlagsBits::HugePage) {
                                         let frame = VirtFrame::<Page2MiB>::from_table_indexes(PageTableIndex::new(l4_index as u16),
                                                                                               PageTableIndex::new(l3_index as u16),
                                                                                               PageTableIndex::new(l2_index as u16));
@@ -614,7 +621,7 @@ impl Debug for PageDir {
                                         write!(f, "\n")?;
                                     }
 
-                                    if l2_entry.flags().is_present() && !l2_entry.flags().is_huge_page() {
+                                    if l2_entry.flags().is_enabled(PTFlagsBits::Present) && !l2_entry.flags().is_enabled(PTFlagsBits::HugePage) {
                                         if let Ok(l1_page_table) = self.next_page_table(l2_entry) {
                                             for (l1_index, l1_entry) in l1_page_table.iter_mut().enumerate() {
                                                 if l1_entry.is_unused() {

@@ -1,5 +1,10 @@
 /*! Boot information descriptor */
 
+use helps::str::{
+    copy_str_to_u8_buf,
+    u8_ptr_to_str_slice
+};
+
 use shared::{
     info::{
         args::CmdLineArgs,
@@ -8,8 +13,7 @@ use shared::{
     mem::paging::{
         frame::VirtFrameRangeIncl,
         Page2MiB
-    },
-    os::str_utils
+    }
 };
 
 use crate::info::mem_area::BootMemAreas;
@@ -39,7 +43,7 @@ impl BootInfo {
                bootloader_name: &str)
                -> Self {
         let mut name_buffer = [0; BOOTLOADER_NAME_LEN_MAX];
-        str_utils::copy_str_to_u8_buf(&mut name_buffer, bootloader_name);
+        copy_str_to_u8_buf(&mut name_buffer, bootloader_name);
 
         Self { m_mem_areas: mem_areas,
                m_cmdline_args: CmdLineArgs::new(raw_cmdline),
@@ -87,8 +91,7 @@ impl BootInfo {
      * Returns the bootloader's name
      */
     pub fn bootloader_name(&self) -> &str {
-        str_utils::u8_ptr_to_str_slice(self.m_bootloader_name.as_ptr(),
-                                       self.m_bootloader_name_len)
+        u8_ptr_to_str_slice(self.m_bootloader_name.as_ptr(), self.m_bootloader_name_len)
     }
 }
 

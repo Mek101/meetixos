@@ -18,11 +18,6 @@ macro_rules! impl_bit_fields_for_numeric {
             const BIT_LEN: usize = Self::BITS as usize;
 
             #[inline]
-            fn clear_bits(&mut self) {
-                *self = 0;
-            }
-
-            #[inline]
             fn bit_at(&self, bit_index: usize) -> bool {
                 assert!(bit_index < Self::BIT_LEN);
 
@@ -118,11 +113,6 @@ impl<T> BitArray<T> for [T] where T: BitFields + Default {
     #[inline]
     fn bit_len(&self) -> usize {
         self.len() * T::BIT_LEN
-    }
-
-    #[inline]
-    fn clear_bits(&mut self) {
-        self.fill(T::default())
     }
 
     #[inline]

@@ -37,11 +37,6 @@ pub trait BitFields: Sized {
     const BIT_LEN: usize;
 
     /**
-     * Clears all the bits into this bit fields
-     */
-    fn clear_bits(&mut self);
-
-    /**
      * Obtains the bit value at the index `bit_index`
      */
     fn bit_at(&self, bit_index: usize) -> bool;
@@ -80,11 +75,6 @@ pub trait BitArray<T>
      * Returns the bits in this bit array
      */
     fn bit_len(&self) -> usize;
-
-    /**
-     * Clears all the bits into this bit fields array
-     */
-    fn clear_bits(&mut self);
 
     /**
      * Obtains the bit value at the index `bit_index`

@@ -2,6 +2,16 @@
 
 use core::fmt;
 
+use num_enum::{
+    IntoPrimitive,
+    TryFromPrimitive
+};
+
+use bits::flags::{
+    BitFlags,
+    BitFlagsValues
+};
+
 use crate::{
     arch::x86_64::io_port::IOPort,
     uart::HwUartBase
@@ -29,6 +39,36 @@ pub struct HwUart {
 }
 
 impl HwUart {
+    fn line_status(&self) -> BitFlags<u8, LineStatusBits> {
+        let raw_line_status_value = unsafe { self.m_line_status.read() };
+
+        BitFlags::from_raw_truncate(raw_line_status_value)
+    }
+
+    fn wait_for_empty(&self) {
+        while self.line_status().is_disabled(LineStatusBits::OutputEmpty) {
+            core::hint::spin_loop();
+        }
+    }
+
+    fn send(&mut self, byte_to_send: u8) {
+        unsafe {
+            match byte_to_send {
+                8 | 0x7F => {
+                    self.wait_for_empty();
+                    self.m_data.write(8);
+                    self.wait_for_empty();
+                    self.m_data.write(b' ');
+                    self.wait_for_empty();
+                    self.m_data.write(8);
+                },
+                _ => {
+                    self.wait_for_empty();
+                    self.m_data.write(byte_to_send);
+                }
+            }
+        }
+    }
 }
 
 impl HwUartBase for HwUart {
@@ -73,8 +113,33 @@ impl HwUartBase for HwUart {
 
 impl fmt::Write for HwUart {
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        self.m_serial_port.write_str(s)
+        for byte_to_send in s.bytes() {
+            self.send(byte_to_send);
+        }
+        Ok(())
     }
 }
 
-enum
+#[repr(usize)]
+#[derive(Copy, Clone)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+enum IntrEnabledBits {
+    Received,
+    Sent,
+    Errored,
+    StatusChange
+}
+
+impl BitFlagsValues for IntrEnabledBits {
+}
+
+#[repr(usize)]
+#[derive(Copy, Clone)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+enum LineStatusBits {
+    InputFull,
+    OutputEmpty = 5
+}
+
+impl BitFlagsValues for LineStatusBits {
+}

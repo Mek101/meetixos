@@ -2,7 +2,7 @@
 
 use crate::arch::x86_64::io_port::impls::HwIOPort;
 
-impl HwIOPortRead for u8 {
+impl HwIOPort for u8 {
     #[inline]
     unsafe fn io_port_read(port: u16) -> Self {
         let value: u8;

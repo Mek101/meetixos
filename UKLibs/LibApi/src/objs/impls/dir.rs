@@ -6,10 +6,9 @@ use core::{
     str
 };
 
-use helps::str::{
-    copy_str_to_u8_buf,
-    u8_ptr_to_str_slice
-};
+#[cfg(feature = "enable_kernel_methods")]
+use helps::str::copy_str_to_u8_buf;
+use helps::str::u8_ptr_to_str_slice;
 use os::{
     limits::VFS_NAME_LEN_MAX,
     sysc::{

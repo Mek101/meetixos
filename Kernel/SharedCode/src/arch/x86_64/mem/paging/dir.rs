@@ -20,15 +20,15 @@ pub struct HwPageDirSupport;
 
 impl HwPageDirSupportBase for HwPageDirSupport {
     /* Page Table Entry flags */
-    const PTE_PRESENT: usize = 1 << 0;
-    const PTE_READABLE: usize = 0;
-    const PTE_WRITEABLE: usize = 1 << 1;
-    const PTE_GLOBAL: usize = 1 << 8;
-    const PTE_HUGE: usize = 1 << 7;
-    const PTE_ACCESSED: usize = 1 << 5;
-    const PTE_DIRTY: usize = 1 << 6;
-    const PTE_NO_EXECUTE: usize = 1 << 63;
-    const PTE_USER: usize = 1 << 2;
+    const PTE_PRESENT: usize = 0;
+    const PTE_READABLE: usize = 9;
+    const PTE_WRITEABLE: usize = 1;
+    const PTE_GLOBAL: usize = 8;
+    const PTE_HUGE: usize = 7;
+    const PTE_ACCESSED: usize = 5;
+    const PTE_DIRTY: usize = 6;
+    const PTE_NO_EXECUTE: usize = 63;
+    const PTE_USER: usize = 2;
 
     /* Page Table Entry mask */
     const PTE_ADDR_MASK: usize = 0x000F_FFFF_FFFF_F000;
