@@ -31,10 +31,15 @@ pub trait BitFields: Sized {
      * Number of bits which composes `Self`
      *
      * NOTE: I know that a `BITS` property exists for any integer type, but
-     *       is typed as `i32`, which ports to continuous casts, this is
+     *       is typed as `i32`, which forces to continuous casts, this is
      *       just a convenience
      */
     const BIT_LEN: usize;
+
+    /**
+     * Clears all the bits into this bit fields
+     */
+    fn clear_bits(&mut self);
 
     /**
      * Obtains the bit value at the index `bit_index`
@@ -75,6 +80,11 @@ pub trait BitArray<T>
      * Returns the bits in this bit array
      */
     fn bit_len(&self) -> usize;
+
+    /**
+     * Clears all the bits into this bit fields array
+     */
+    fn clear_bits(&mut self);
 
     /**
      * Obtains the bit value at the index `bit_index`
