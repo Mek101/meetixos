@@ -9,7 +9,6 @@ members = [
     "UKLibs/LibBits",
     "UKLibs/LibHeap",
     "UKLibs/LibHelps",
-    "UKLibs/LibMacros",
     "UKLibs/LibOS",
     "UKLibs/LibSymbols",
     "UKLibs/LibSync",
