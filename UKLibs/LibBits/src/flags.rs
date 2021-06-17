@@ -3,7 +3,10 @@
 use core::{
     convert::TryFrom,
     fmt,
-    fmt::Debug,
+    fmt::{
+        Binary,
+        Debug
+    },
     marker::PhantomData,
     ops::{
         BitAnd,
@@ -75,26 +78,27 @@ impl<B, T> BitFlags<B, T>
      * Enables the bit corresponding to the given value
      */
     #[inline]
-    pub fn set_enabled(&mut self, bit: T) {
-        self.set(bit, true);
+    pub fn set_enabled(&mut self, bit: T) -> &mut Self {
+        self.set(bit, true)
     }
 
     /**
      * Disables the bit corresponding to the given value
      */
     #[inline]
-    pub fn set_disabled(&mut self, bit: T) {
-        self.set(bit, false);
+    pub fn set_disabled(&mut self, bit: T) -> &mut Self {
+        self.set(bit, false)
     }
 
     /**
      * Sets for the bit corresponding to `value` the `enable` value
      */
-    pub fn set(&mut self, bit: T, enable: bool) {
+    pub fn set(&mut self, bit: T, bit_value: bool) -> &mut Self {
         let bit_index = bit.into();
         assert!(bit_index < B::BIT_LEN);
 
-        self.m_bits.set_bit(bit_index, enable);
+        self.m_bits.set_bit(bit_index, bit_value);
+        self
     }
 
     /**
@@ -152,6 +156,7 @@ impl<B, T> Clone for BitFlags<B, T>
     where B: BitFields + Default + Copy,
           T: BitFlagsValues
 {
+    #[inline]
     fn clone(&self) -> Self {
         Self { m_bits: self.m_bits,
                _unused: PhantomData }
@@ -347,20 +352,36 @@ impl<B, T> Eq for BitFlags<B, T>
 }
 
 impl<B, T> Debug for BitFlags<B, T>
-    where B: BitFields + Default + Copy + PartialEq,
+    where B: BitFields + Default + Copy + Binary,
           T: BitFlagsValues + Debug
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "BitFlags {{ m_bits: ")?;
+
+        let mut is_first = true;
         for bit_index in 0..B::BIT_LEN {
             if self.m_bits.bit_at(bit_index) {
+                /* here we safe construct the value using <TryFrom> but if we come at
+                 * this point is ensured that each bit enabled in <m_bits> corresponds
+                 * to a valid variant of <T>
+                 */
                 if let Ok(bit_value) = T::try_from(bit_index) {
-                    write!(f, "{:?}", bit_value)?;
-                    if bit_index < B::BIT_LEN - 1 {
+                    /* write the pipe before only if is not the first */
+                    if !is_first {
                         write!(f, " | ")?;
+                    } else {
+                        is_first = false;
                     }
+
+                    /* write the current variant with his value now */
+                    write!(f, "{:?}", bit_value)?;
                 }
             }
+        }
+
+        /* if <is_first> is still true means that no bits are present */
+        if is_first {
+            write!(f, "0")?;
         }
         write!(f, " }}")
     }
