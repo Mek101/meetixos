@@ -1,4 +1,4 @@
-/*! Tasks management */
+/*! `Task` management data */
 
 pub mod config;
 pub mod impls;

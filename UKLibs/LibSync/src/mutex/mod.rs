@@ -71,7 +71,7 @@ impl<R, T> Mutex<R, T>
      * Acquires the `Mutex`, blocking the current thread until it is able to
      * do so.
      *
-     * Returns the `MutexDataGuard` RAII object, which automatically unlocks
+     * Returns the `MutexDataGuard` RAII obj, which automatically unlocks
      * the `Mutex` when goes out of scope (calls `Drop::drop()`)
      */
     #[inline]
@@ -83,7 +83,7 @@ impl<R, T> Mutex<R, T>
 
     /**
      * Tries to acquire the `Mutex`, if success returns the `MutexDataGuard`
-     * RAII object
+     * RAII obj
      */
     #[inline]
     pub fn try_lock(&self) -> Option<MutexDataGuard<'_, R, T>> {

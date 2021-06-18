@@ -1,22 +1,22 @@
-/*! Operating System user entity */
+/*! Operating System user ent */
 
 use os::sysc::{
-    codes::KernOSUserFnId,
+    codes::KernOsUserFnId,
     fn_path::KernFnPath
 };
 
 use crate::{
-    bits::ent::types::OSEntityType,
+    bits::ent::types::OsEntityType,
     caller::{
         KernCaller,
         Result
     },
     ents::{
         entity::{
-            OSEntity,
-            OSEntityId
+            OsEntity,
+            OsEntityId
         },
-        impls::group::OSGroup
+        impls::group::OsGroup
     }
 };
 
@@ -25,36 +25,36 @@ use crate::{
  * have grants over the `Object`s that owns
  */
 #[derive(Debug, Default, Copy, Clone)]
-pub struct OSUser(OSEntityId);
+pub struct OsUser(OsEntityId);
 
-impl OSUser {
+impl OsUser {
     /**
      * Obtains the `OSUser`'s groups
      */
-    pub fn groups<'a>(&self, groups: &'a mut [OSGroup]) -> Result<&'a [OSGroup]> {
-        self.kern_call_2(KernFnPath::OSUser(KernOSUserFnId::Groups),
+    pub fn groups<'a>(&self, groups: &'a mut [OsGroup]) -> Result<&'a [OsGroup]> {
+        self.kern_call_2(KernFnPath::OsUser(KernOsUserFnId::Groups),
                          groups.as_mut_ptr() as usize,
                          groups.len())
             .map(move |count| &groups[..count])
     }
 }
 
-impl KernCaller for OSUser {
+impl KernCaller for OsUser {
     fn caller_handle_bits(&self) -> u32 {
         self.0.caller_handle_bits()
     }
 }
 
-impl From<OSEntityId> for OSUser {
-    fn from(ent: OSEntityId) -> Self {
+impl From<OsEntityId> for OsUser {
+    fn from(ent: OsEntityId) -> Self {
         Self(ent)
     }
 }
 
-impl OSEntity for OSUser {
-    const TYPE: OSEntityType = OSEntityType::User;
+impl OsEntity for OsUser {
+    const TYPE: OsEntityType = OsEntityType::User;
 
-    fn os_entity_handle(&self) -> &OSEntityId {
+    fn os_entity_handle(&self) -> &OsEntityId {
         &self.0
     }
 }

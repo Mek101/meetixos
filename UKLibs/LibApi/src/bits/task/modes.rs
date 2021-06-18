@@ -19,7 +19,7 @@ use crate::{
 #[derive(Clone, Copy)]
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
-pub enum SchedPolicy {
+pub enum TaskSchedPolicy {
     /**
      * The default policy when no other policy are specified.
      *
@@ -50,7 +50,7 @@ pub enum SchedPolicy {
 #[derive(Clone, Copy)]
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
-pub enum TaskPrio {
+pub enum TaskExecPrio {
     Idle     = 0,
     VeryLow  = 1,
     Low      = 2,
@@ -70,7 +70,7 @@ pub enum TaskPrio {
 #[derive(Debug)]
 #[derive(Clone, Copy)]
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
-pub enum TaskCpu {
+pub enum TaskExecCpu {
     /**
      * The default affinity when no other are specified.
      *
@@ -96,14 +96,14 @@ pub enum TaskCpu {
     Mask(u64)
 }
 
-impl TaskCpu {
+impl TaskExecCpu {
     /**
      * Returns the variant cardinal value
      */
     pub fn option(&self) -> usize {
         match self {
-            TaskCpu::Any => 0,
-            TaskCpu::Mask(_) => 1
+            TaskExecCpu::Any => 0,
+            TaskExecCpu::Mask(_) => 1
         }
     }
 
@@ -112,8 +112,8 @@ impl TaskCpu {
      */
     pub fn mask_bits(&self) -> Option<u64> {
         match *self {
-            TaskCpu::Any => None,
-            TaskCpu::Mask(mask) => Some(mask)
+            TaskExecCpu::Any => None,
+            TaskExecCpu::Mask(mask) => Some(mask)
         }
     }
 }
@@ -155,7 +155,7 @@ pub enum MountMode {
      * The filesystem is visible to all the processes in any of the active
      * sessions
      */
-    OSGlobal,
+    OsGlobal,
 
     /**
      * The filesystem is visible only by the processes in the current

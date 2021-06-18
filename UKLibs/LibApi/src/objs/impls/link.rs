@@ -28,16 +28,16 @@ use crate::{
  * returned as `Any`, or link a new VFS visible element.
  *
  * The `Link`, under MeetiX OS, acts like:
- * * an hard link - because it keeps the reference to the linked object (so
+ * * an hard link - because it keeps the reference to the linked obj (so
  *   when it is deleted still remain reachable through this link, only if it
- *   isn't a volatile object like the `MMap`s and the `IpcChan`nels)
+ *   isn't a volatile obj like the `MMap`s and the `IpcChan`nels)
  * * a soft link - because allows cross filesystem reference and can link
- *   any object represented into the filesystem (not only files)
+ *   any obj represented into the filesystem (not only files)
  *
- * When a `Link` is opened (via `ObjConfig`) as a non-`Link` object
+ * When a `Link` is opened (via `ObjConfig`) as a non-`Link` obj
  * (i.e a `File`), the Kernel tries to automatically dereference it
- * to the linked object, if the type matches the open returns the
- * object, otherwise fails
+ * to the linked obj, if the type matches the open returns the
+ * obj, otherwise fails
  */
 #[repr(transparent)]
 #[derive(Debug, Default, Clone, Eq, PartialEq)]
@@ -61,10 +61,10 @@ impl Link {
     /**
      * Reference a new `Object`.
      *
-     * The given object must have a name (created with
+     * The given obj must have a name (created with
      * `ObjConfig::apply_for()`), otherwise an error is returned.
      *
-     * If the `Link` already references an object it is overwritten
+     * If the `Link` already references an obj it is overwritten
      * (definitively deleted if it have no more references)
      */
     pub fn refer_to<T: Object>(&self, object: &T) -> Result<()> {

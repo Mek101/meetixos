@@ -15,7 +15,7 @@ use sync::{
 use crate::{
     bits::obj::types::ObjType,
     caller::KernCaller,
-    errors::error::Error,
+    errors::error::OsError,
     objs::object::{
         ObjId,
         Object,
@@ -58,7 +58,7 @@ impl OsRawMutex {
 }
 
 impl FallibleCreatBackRawMutex for OsRawMutex {
-    type CreatError = Error;
+    type CreatError = OsError;
 
     fn creat_raw() -> Result<Self, Self::CreatError> {
         Self::creat().for_read().for_write().apply_for_anon()
@@ -68,7 +68,7 @@ impl FallibleCreatBackRawMutex for OsRawMutex {
 unsafe impl BackRawMutex for OsRawMutex {
     /**
      * The `Mutex` cannot be send across different threads using rust
-     * primitives, because each thread have his own open object table, but
+     * primitives, because each thread have his own open obj table, but
      * is obviously possible using `Object::send()` system call
      */
     type LockGuardShareabilityMark = LockGuardNonSendable;

@@ -11,7 +11,7 @@ xmas-elf  = "*"
 num_enum  = { version = "*", default-features = false}
 
 # ------------------------------ MeetiX Libraries Crates ------------------------------- #
-os     = { path = "../../UKLibs/LibOS" }
-bits   = { path = "../../UKLibs/LibBits" }
-helps  = { path = "../../UKLibs/LibHelps" }
+bits     = { path = "../../UKLibs/LibBits" }
+helps    = { path = "../../UKLibs/LibHelps" }
+api_data = { path = "../../UKLibs/LibApiData" }
 

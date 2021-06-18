@@ -29,7 +29,7 @@ use crate::{
 /**
  * Reference to an open communication channel on the VFS.
  *
- * With this object it is possible to send and/or receive arbitrary sized
+ * With this obj it is possible to send and/or receive arbitrary sized
  * binary messages between different processes/threads.
  */
 #[repr(transparent)]

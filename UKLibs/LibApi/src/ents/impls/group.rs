@@ -1,22 +1,22 @@
 /*! `OSUser`'s Group */
 
 use os::sysc::{
-    codes::KernOSGroupFnId,
+    codes::KernOsGroupFnId,
     fn_path::KernFnPath
 };
 
 use crate::{
-    bits::ent::types::OSEntityType,
+    bits::ent::types::OsEntityType,
     caller::{
         KernCaller,
         Result
     },
     ents::{
         entity::{
-            OSEntity,
-            OSEntityId
+            OsEntity,
+            OsEntityId
         },
-        impls::user::OSUser
+        impls::user::OsUser
     }
 };
 
@@ -25,9 +25,9 @@ use crate::{
  * `Object`s that the group owns
  */
 #[derive(Debug, Default, Copy, Clone)]
-pub struct OSGroup(OSEntityId);
+pub struct OsGroup(OsEntityId);
 
-impl OSGroup {
+impl OsGroup {
     /**
      * Adds the given `OSUser` to this `OSGroup`
      *
@@ -37,29 +37,29 @@ impl OSGroup {
      * This call affects only the runtime tables of the Kernel, update the
      * `/MeetiX/Configs/users_groups.xml` file to make it permanent
      */
-    pub fn add_user(&self, user: &OSUser) -> Result<()> {
-        self.kern_call_1(KernFnPath::OSGroup(KernOSGroupFnId::AddUser),
+    pub fn add_user(&self, user: &OsUser) -> Result<()> {
+        self.kern_call_1(KernFnPath::OsGroup(KernOsGroupFnId::AddUser),
                          user.os_entity_handle().as_raw_usize())
             .map(|_| ())
     }
 }
 
-impl KernCaller for OSGroup {
+impl KernCaller for OsGroup {
     fn caller_handle_bits(&self) -> u32 {
         self.0.caller_handle_bits()
     }
 }
 
-impl From<OSEntityId> for OSGroup {
-    fn from(ent: OSEntityId) -> Self {
+impl From<OsEntityId> for OsGroup {
+    fn from(ent: OsEntityId) -> Self {
         Self(ent)
     }
 }
 
-impl OSEntity for OSGroup {
-    const TYPE: OSEntityType = OSEntityType::Group;
+impl OsEntity for OsGroup {
+    const TYPE: OsEntityType = OsEntityType::Group;
 
-    fn os_entity_handle(&self) -> &OSEntityId {
+    fn os_entity_handle(&self) -> &OsEntityId {
         &self.0
     }
 }

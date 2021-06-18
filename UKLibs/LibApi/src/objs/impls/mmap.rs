@@ -46,7 +46,7 @@ use crate::{
  * because the Kernel manages accesses via `RWLock`, so multiple threads can
  * read, but only one can write a time.
  *
- * When the `MMap` object goes out of scope the memory is unmapped from the
+ * When the `MMap` obj goes out of scope the memory is unmapped from the
  * caller process
  */
 #[repr(transparent)]
@@ -64,11 +64,11 @@ impl MMap {
      * already a writer the thread waits until someone releases the memory
      */
     pub fn get_ptr<T>(&self) -> Result<ConstMMapBox<T>> {
-        self.get(MMapPtrMode::Readable).map(|(raw_ptr, size)| {
-                                           ConstMMapBox::new(self,
-                                                             raw_ptr as *const T,
-                                                             size)
-                                       })
+        self.get(MMapPtrMode::ForRead).map(|(raw_ptr, size)| {
+                                          ConstMMapBox::new(self,
+                                                            raw_ptr as *const T,
+                                                            size)
+                                      })
     }
 
     /**
@@ -78,7 +78,7 @@ impl MMap {
      * thread waits until all releases the memory
      */
     pub fn get_ptr_mut<T>(&self) -> Result<MutMMapBox<T>> {
-        self.get(MMapPtrMode::Writeable)
+        self.get(MMapPtrMode::ForWrite)
             .map(|(raw_ptr, size)| MutMMapBox::new(self, raw_ptr as *mut T, size))
     }
 
@@ -97,10 +97,10 @@ impl MMap {
      * `File` backed `MMap` with active sync to the underling `File`.
      *
      * The method consumes the instance and forget about it, so the Kernel
-     * will not close this object until the process dies
+     * will not close this obj until the process dies
      */
     pub fn leak_ptr<T>(self) -> &'static mut [T] {
-        let ref_slice = self.get(MMapPtrMode::Writeable)
+        let ref_slice = self.get(MMapPtrMode::ForWrite)
                             .map(|(raw_ptr, size)| unsafe {
                                 slice::from_raw_parts_mut(raw_ptr as *mut T,
                                                           size / size_of::<T>())
@@ -177,7 +177,7 @@ impl UserCreatable for MMap {
  * RAII immutable box that holds the reference to the `MMap`'s memory
  * allowing read-only access to it.
  *
- * This object is obtainable calling `MMap::get_ptr()`
+ * This obj is obtainable calling `MMap::get_ptr()`
  */
 pub struct ConstMMapBox<'a, T> {
     m_mmap: &'a MMap,
@@ -218,7 +218,7 @@ impl<'a, T> Drop for ConstMMapBox<'a, T> {
  * RAII mutable box that holds the reference to the `MMap`'s memory allowing
  * read/write access to it.
  *
- * This object is obtainable calling `MMap::get_ptr_mut()`
+ * This obj is obtainable calling `MMap::get_ptr_mut()`
  */
 pub struct MutMMapBox<'a, T> {
     m_mmap: &'a MMap,

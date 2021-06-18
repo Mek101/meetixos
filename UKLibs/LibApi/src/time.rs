@@ -29,7 +29,7 @@ use crate::caller::KernCaller;
 /**
  * Precise timestamp unit used both in Kernel and userspace.
  *
- * Internally encapsulates a `Duration` object that is accessible through
+ * Internally encapsulates a `Duration` obj that is accessible through
  * `Instant::as_duration()`/`Instant::as_duration_mut()` or the
  * `Deref`/`DerefMut`
  */

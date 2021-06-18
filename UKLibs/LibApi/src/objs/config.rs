@@ -63,7 +63,7 @@ impl<T> ObjConfig<T, CreatMode> where T: Object + UserCreatable {
     }
 
     /**
-     * Sets custom `Grants` for the creation of the new object.
+     * Sets custom `Grants` for the creation of the new obj.
      *
      * The caller `OSUser` (or at least one of his joined `OSGroup`s)
      * must have write grants for the parent directory
@@ -75,13 +75,13 @@ impl<T> ObjConfig<T, CreatMode> where T: Object + UserCreatable {
 
     /**
      * Dispatches the configuration to the Kernel that creates a new
-     * anonymous object.
+     * anonymous obj.
      *
-     * An anonymous object is an object that have no name but can be
+     * An anonymous obj is an obj that have no name but can be
      * shared among other tasks with `Object::send()`.
      *
      * The life of the objects created with this method is the scope that
-     * contains the handle, when the object goes out of scope (from all the
+     * contains the handle, when the obj goes out of scope (from all the
      * tasks that owns it) it is definitely destroyed
      */
     pub fn apply_for_anon(&self) -> Result<T> {
@@ -104,9 +104,9 @@ impl<T> ObjConfig<T, FindMode> where T: Object {
     }
 
     /**
-     * Fails to open the object if it is already open by someone else.
+     * Fails to open the obj if it is already open by someone else.
      *
-     * The other tasks that tries to open the same object after a successful
+     * The other tasks that tries to open the same obj after a successful
      * exclusive open by someone will fail
      */
     pub fn exclusive(&mut self) -> &mut Self {
@@ -120,7 +120,7 @@ impl<T, M> ObjConfig<T, M>
           M: ConfigMode
 {
     /**
-     * Give a size to the object's data, both if it already exists or it
+     * Give a size to the obj's data, both if it already exists or it
      * must be created.
      *
      * Like the exec bit this configuration is meaningless for certain type
@@ -179,9 +179,9 @@ impl<T, M> ObjConfig<T, M>
      * `TaskConfig<Proc>::run()` and `MMap`'s pages are mapped without
      * `PTFlags::NO_EXECUTE` bit).
      *
-     * Calling this method for the other object types only tell to the
+     * Calling this method for the other obj types only tell to the
      * Kernel to ensure the caller user have the data execution
-     * permissions for the object to open
+     * permissions for the obj to open
      */
     pub fn for_exec(&mut self) -> &mut Self {
         self.m_flags.set_bit(Self::CFG_EXEC_BIT, true);
@@ -190,7 +190,7 @@ impl<T, M> ObjConfig<T, M>
 
     /**
      * Dispatches the configuration to the Kernel that opens (or creates if
-     * `Object::creat()` was called) the object referenced by `path`.
+     * `Object::creat()` was called) the obj referenced by `path`.
      *
      * The life of the objects created with this method varies by type:
      * Permanent objects, like `File`s, `Dir`ectories, `Link`s and

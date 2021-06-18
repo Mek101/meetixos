@@ -1,6 +1,6 @@
 /*! # Kernel API library
  *
- * Implements an object oriented interface to interact with the MeetiX's
+ * Implements an obj oriented interface to interact with the MeetiX's
  * Kernel
  */
 

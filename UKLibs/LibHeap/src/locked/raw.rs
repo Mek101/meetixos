@@ -53,7 +53,7 @@ impl<M> RawLazyLockedHeap<M> where M: BackRawMutex + 'static {
     }
 
     /**
-     * Forces the initialization of this lazy object
+     * Forces the initialization of this lazy obj
      */
     pub fn force_init(&self) {
         self.m_lazy_locked_heap.lock().allocated_mem();

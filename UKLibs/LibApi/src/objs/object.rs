@@ -12,7 +12,7 @@ use crate::{
         obj::{
             modes::RecvMode,
             types::ObjType,
-            uses::ObjUse
+            uses::ObjUseBits
         },
         task::data::thread::{
             RWatchCBThreadEntry,
@@ -38,7 +38,7 @@ use crate::{
 /**
  * Object opaque handle.
  *
- * This object that takes place of the old style file descriptor
+ * This obj that takes place of the old style file descriptor
  * integer, used by all the Unix-like OS to keep reference to an
  * open resource  
  */
@@ -73,7 +73,7 @@ impl ObjId {
     }
 
     /**  
-     * Updates the info of this object.
+     * Updates the info of this obj.
      *
      * Internally used by `ObjInfo::update()`
      */
@@ -85,7 +85,7 @@ impl ObjId {
     }
 
     /**
-     * Makes the object no longer reachable via the VFS.
+     * Makes the obj no longer reachable via the VFS.
      *
      * When all the tasks, that keep a reference to it, drop it, it will be
      * definitively destroyed by the Kernel
@@ -98,7 +98,7 @@ impl ObjId {
      * Registers the given `callback` to be executed whenever one of the
      * bitwise given `ObjUse` happen
      */
-    fn watch(&self, filter: ObjUse, callback_fn: RWatchCBThreadEntry) -> Result<()> {
+    fn watch(&self, filter: ObjUseBits, callback_fn: RWatchCBThreadEntry) -> Result<()> {
         let thread_entry_data = ThreadEntryData::new_watch_callback(callback_fn);
         self.kern_call_2(KernFnPath::Object(KernObjectFnId::Watch),
                          filter.into(),
@@ -107,7 +107,7 @@ impl ObjId {
     }
 
     /**
-     * Returns the `ObjInfo` of this object
+     * Returns the `ObjInfo` of this obj
      */
     pub(crate) fn info<T>(&self) -> Result<ObjInfo<T>>
         where T: Object {
@@ -121,8 +121,8 @@ impl ObjId {
     }
 
     /**
-     * Returns whether this object instance references a still valid Kernel
-     * object
+     * Returns whether this obj instance references a still valid Kernel
+     * obj
      */
     pub fn is_valid(&self) -> bool {
         self.m_raw != 0
@@ -148,11 +148,11 @@ impl ObjId {
 
 impl Clone for ObjId {
     /**
-     * Increases the references count to the object referenced.
+     * Increases the references count to the obj referenced.
      *
      * The returned `ObjId` is a new instance but reference the same
-     * Kernel's object, so changes on any of the cloned instances affect the
-     * same Kernel's object
+     * Kernel's obj, so changes on any of the cloned instances affect the
+     * same Kernel's obj
      */
     fn clone(&self) -> Self {
         self.kern_call_0(KernFnPath::Object(KernObjectFnId::AddRef))
@@ -164,7 +164,7 @@ impl Clone for ObjId {
 impl Drop for ObjId {
     /**
      * Decreases by one the references count to the referenced Kernel's
-     * object.
+     * obj.
      *
      * The life of the objects varies by type:
      *
@@ -232,7 +232,7 @@ pub trait Object: From<ObjId> + Default + Clone + Sync + Send {
     }
 
     /**
-     * Consumes the object into his `ObjId` instance
+     * Consumes the obj into his `ObjId` instance
      */
     fn into_id(self) -> ObjId {
         let raw_id = self.obj_handle().as_raw();
@@ -241,14 +241,14 @@ pub trait Object: From<ObjId> + Default + Clone + Sync + Send {
     }
 
     /**
-     * Consumes the object upcasting it to an `Any` instance
+     * Consumes the obj upcasting it to an `Any` instance
      */
     fn into_any(self) -> Any {
         Any::from(self.into_id())
     }
 
     /**
-     * Makes the object no longer reachable via the VFS.
+     * Makes the obj no longer reachable via the VFS.
      *
      * When all the tasks, that keep a reference to it, drop it, it will be
      * definitively destroyed by the Kernel
@@ -273,12 +273,12 @@ pub trait Object: From<ObjId> + Default + Clone + Sync + Send {
      * given filters overlaps a previously registered callback an error will
      * be returned
      */
-    fn watch(&self, filter: ObjUse, callback_fn: RWatchCBThreadEntry) -> Result<()> {
+    fn watch(&self, filter: ObjUseBits, callback_fn: RWatchCBThreadEntry) -> Result<()> {
         self.obj_handle().watch(filter, callback_fn)
     }
 
     /**
-     * Sends this object instance to another `Task` to share the same
+     * Sends this obj instance to another `Task` to share the same
      * resource.
      *
      * The concurrency is managed internally by the Kernel with two
@@ -302,7 +302,7 @@ pub trait Object: From<ObjId> + Default + Clone + Sync + Send {
     }
 
     /**
-     * Convenience method that internally creates an uninitialized object
+     * Convenience method that internally creates an uninitialized obj
      * instance then performs an `Object::recv()` using the given `RecvMode`
      */
     fn recv_new(mode: RecvMode) -> Result<Self> {
@@ -311,7 +311,7 @@ pub trait Object: From<ObjId> + Default + Clone + Sync + Send {
     }
 
     /**
-     * Returns the `ObjInfo` of this object
+     * Returns the `ObjInfo` of this obj
      */
     fn info(&self) -> Result<ObjInfo<Self>> {
         self.obj_handle().info()

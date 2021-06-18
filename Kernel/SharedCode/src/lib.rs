@@ -8,7 +8,6 @@
 #![feature(asm,
            array_methods,
            step_trait,
-           abi_x86_interrupt,
            const_fn_fn_ptr_basics,
            const_mut_refs,
            const_fn_trait_bound)]
@@ -19,7 +18,6 @@ pub mod elf;
 pub mod info;
 pub mod logger;
 pub mod mem;
-pub mod os;
 pub mod random;
 pub mod uart;
 

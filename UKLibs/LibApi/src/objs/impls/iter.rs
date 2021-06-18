@@ -26,10 +26,10 @@ use crate::{
 /**
  * Reference to a double linked Kernel's iteration pool.
  *
- * The Kernel iterator could iterate different object types, from object
+ * The Kernel iterator could iterate different obj types, from obj
  * handles to more complex objects (like the `DirEntry`).
  *
- * This type of Kernel's object is not creatable by the userspace, but
+ * This type of Kernel's obj is not creatable by the userspace, but
  * only by the Kernel as response of system calls which return more
  * than one result (like the `Task::find()`).
  *

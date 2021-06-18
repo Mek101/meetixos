@@ -6,6 +6,7 @@ members = [
     "Kernel/SharedCode",
     # User/Kernel Libraries
     "UKLibs/LibApi",
+    "UKLibs/LibApiData",
     "UKLibs/LibBits",
     "UKLibs/LibHeap",
     "UKLibs/LibHelps",

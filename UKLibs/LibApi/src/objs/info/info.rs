@@ -23,8 +23,8 @@ use crate::{
  * This struct takes the place of the old-style Unix-like's `stat struct`
  * with a little improvement:
  * * There is no more need of tons of single system calls to update small
- *   piece of object's metadata, there is only one cumulative info update
- *   call that overwrites the previous one
+ *   piece of obj's metadata, there is only one cumulative info update call
+ *   that overwrites the previous one
  * * Using `RAII` the information are updated when the struct goes out of
  *   scope or when called explicitly `ObjInfo::update()`
  */
@@ -70,7 +70,7 @@ impl<T> ObjInfo<T> where T: Object {
     }
 
     /**
-     * Returns the concrete `ObjType` of the object
+     * Returns the concrete `ObjType` of the obj
      */
     pub fn obj_type(&self) -> ObjType {
         self.m_type
@@ -140,14 +140,14 @@ impl<T> ObjInfo<T> where T: Object {
     /**
      * Commits the changed fields to the Kernel.
      *
-     * This operation can be performed only if the referenced object is
+     * This operation can be performed only if the referenced obj is
      * valid and the caller have information write grants.
      */
     pub fn update(&mut self) -> Result<()> {
         if self.m_to_update {
             self.m_obj.update_info(self).map(|_| self.reset_update())
         } else {
-            /* the object is not modified, so return okay anyway */
+            /* the obj is not modified, so return okay anyway */
             Ok(())
         }
     }
@@ -166,6 +166,6 @@ impl<T> Drop for ObjInfo<T> where T: Object {
      */
     fn drop(&mut self) {
         self.update()
-            .unwrap_or_else(|err| panic!("Failed to update object infos: cause: {}", err))
+            .unwrap_or_else(|err| panic!("Failed to update obj infos: cause: {}", err))
     }
 }

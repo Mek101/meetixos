@@ -1,7 +1,7 @@
 /*! `Object` usage instant */
 
 use crate::{
-    bits::obj::uses::ObjUse,
+    bits::obj::uses::ObjUseBits,
     tasks::impls::thread::Thread,
     time::Instant
 };
@@ -11,7 +11,7 @@ use crate::{
  */
 #[derive(Debug, Default, Copy, Clone)]
 pub struct ObjUseInstant {
-    m_obj_use: ObjUse,
+    m_obj_use: ObjUseBits,
     m_user: Thread,
     m_use_start: Instant
 }
@@ -21,7 +21,7 @@ impl ObjUseInstant {
     /**
      * Constructs an `ObjUseInstant` with the given parameters
      */
-    pub fn new(obj_use: ObjUse, user: Thread, use_start: Instant) -> Self {
+    pub fn new(obj_use: ObjUseBits, user: Thread, use_start: Instant) -> Self {
         Self { m_obj_use: obj_use,
                m_user: user,
                m_use_start: use_start }
@@ -32,7 +32,7 @@ impl ObjUseInstant {
     /**
      * Returns the `ObjUse` performed by the referred user
      */
-    pub fn obj_use(&self) -> ObjUse {
+    pub fn obj_use(&self) -> ObjUseBits {
         self.m_obj_use
     }
 

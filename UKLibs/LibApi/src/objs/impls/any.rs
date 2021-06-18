@@ -21,7 +21,7 @@ use crate::{
 };
 
 /**
- * Wrapper that can contains any type of `Object` based object.
+ * Wrapper that can contains any type of `Object` based obj.
  *
  * The `Any` can be safely downcast to his real type with his methods
  */
@@ -32,7 +32,7 @@ pub struct Any {
 
 impl Any {
     /**
-     * Safe downcast fails whenever the underling real type of the object is
+     * Safe downcast fails whenever the underling real type of the obj is
      * not the downcast destination one.
      */
     pub fn downcast<T: Object>(self) -> result::Result<T, Self> {
@@ -71,7 +71,7 @@ impl Any {
     }
 
     /**
-     * Convenience method that internally creates an uninitialized object
+     * Convenience method that internally creates an uninitialized obj
      * instance then performs an `Any::recv()` using the given `RecvMode`
      */
     pub fn recv_new(mode: RecvMode) -> Result<Self> {

@@ -1,0 +1,13 @@
+[package]
+name = "api_data"
+version = "0.1.0"
+edition = "2018"
+authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
+
+[dependencies]
+# ---------------------------- External Thirdy Party Crates ---------------------------- #
+num_enum = { version = "*", default-features = false }
+
+# ------------------------------ MeetiX Libraries Crates ------------------------------- #
+bits  = { path = "../LibBits" }
+helps = { path = "../LibHelps" }

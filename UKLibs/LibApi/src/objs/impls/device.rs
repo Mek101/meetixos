@@ -111,7 +111,7 @@ impl Device {
     pub fn set_pos(&self, mode: SeekMode) -> Result<u64> {
         self.kern_call_2(KernFnPath::Device(KernDeviceFnId::SetPos),
                          mode.mode(),
-                         mode.off().unwrap_or(0))
+                         mode.offset().unwrap_or(0))
             .map(|off| off as u64)
     }
 

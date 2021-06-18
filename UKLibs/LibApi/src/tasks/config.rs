@@ -11,9 +11,9 @@ use crate::{
     bits::task::{
         data::spec::TaskSpecData,
         modes::{
-            SchedPolicy,
-            TaskCpu,
-            TaskPrio
+            TaskExecCpu,
+            TaskExecPrio,
+            TaskSchedPolicy
         }
     },
     caller::{
@@ -27,8 +27,8 @@ use crate::{
         FindMode
     },
     ents::impls::{
-        group::OSGroup,
-        user::OSUser
+        group::OsGroup,
+        user::OsUser
     },
     objs::impls::file::File,
     tasks::{
@@ -53,12 +53,12 @@ pub struct TaskConfig<T, M>
           M: ConfigMode {
     m_id: Option<u32>,
     m_children_of: Option<T>,
-    m_sched_policy: SchedPolicy,
-    m_prio: TaskPrio,
-    m_cpu: TaskCpu,
+    m_sched_policy: TaskSchedPolicy,
+    m_prio: TaskExecPrio,
+    m_cpu: TaskExecCpu,
     m_spec: TaskSpecData,
-    m_os_user: Option<OSUser>,
-    m_os_group: Option<OSGroup>,
+    m_os_user: Option<OsUser>,
+    m_os_group: Option<OsGroup>,
     _unused: PhantomData<T>,
     _unused2: PhantomData<M>
 }
@@ -73,9 +73,9 @@ impl<T, M> TaskConfig<T, M>
     pub(crate) fn new() -> Self {
         Self { m_id: None,
                m_children_of: None,
-               m_sched_policy: SchedPolicy::Preemptive,
-               m_prio: TaskPrio::Normal,
-               m_cpu: TaskCpu::Any,
+               m_sched_policy: TaskSchedPolicy::Preemptive,
+               m_prio: TaskExecPrio::Normal,
+               m_cpu: TaskExecCpu::Any,
                m_spec: TaskSpecData::None,
                m_os_user: None,
                m_os_group: None,
@@ -103,14 +103,14 @@ impl<T: Task, M: ConfigMode> TaskConfig<T, M> {
     /**
      * Returns the `SchedPolicy` chosen for the new `Task`
      */
-    pub fn sched_policy(&self) -> SchedPolicy {
+    pub fn sched_policy(&self) -> TaskSchedPolicy {
         self.m_sched_policy
     }
 
     /**
      * Returns the `TaskCpu` chosen for the new `Task`
      */
-    pub fn task_cpu(&self) -> TaskCpu {
+    pub fn task_cpu(&self) -> TaskExecCpu {
         self.m_cpu
     }
 
@@ -124,14 +124,14 @@ impl<T: Task, M: ConfigMode> TaskConfig<T, M> {
     /**
      * Returns the optional `OSUser` chosen
      */
-    pub fn os_user(&self) -> Option<OSUser> {
+    pub fn os_user(&self) -> Option<OsUser> {
         self.m_os_user
     }
 
     /**
      * Returns the optional `OSGroup` chosen
      */
-    pub fn os_group(&self) -> Option<OSGroup> {
+    pub fn os_group(&self) -> Option<OsGroup> {
         self.m_os_group
     }
 }
@@ -141,7 +141,7 @@ impl<T> TaskConfig<T, CreatMode> where T: Task {
      * The variant of `SchedPolicy` given tells to the Kernel which
      * scheduling algorithm must be used for the new `Task`
      */
-    pub fn with_sched_policy(&mut self, sched_policy: SchedPolicy) -> &mut Self {
+    pub fn with_sched_policy(&mut self, sched_policy: TaskSchedPolicy) -> &mut Self {
         self.m_sched_policy = sched_policy;
         self
     }
@@ -151,7 +151,7 @@ impl<T> TaskConfig<T, CreatMode> where T: Task {
      * class of priority that the new `Task` must have for all his
      * execution life
      */
-    pub fn with_prio(&mut self, priority: TaskPrio) -> &mut Self {
+    pub fn with_prio(&mut self, priority: TaskExecPrio) -> &mut Self {
         self.m_prio = priority;
         self
     }
@@ -161,7 +161,7 @@ impl<T> TaskConfig<T, CreatMode> where T: Task {
      * the new `Task` must be affine to a subset of the available CPUs
      * in a SMP environment
      */
-    pub fn with_cpu(&mut self, cpu: TaskCpu) -> &mut Self {
+    pub fn with_cpu(&mut self, cpu: TaskExecCpu) -> &mut Self {
         self.m_cpu = cpu;
         self
     }
@@ -201,7 +201,7 @@ impl<T> TaskConfig<T, FindMode> where T: Task {
      * Enables the owner `OSUser` filter to tell the Kernel which
      * `Task`s select
      */
-    pub fn owned_by_user(&mut self, user: OSUser) -> &mut Self {
+    pub fn owned_by_user(&mut self, user: OsUser) -> &mut Self {
         self.m_os_user = Some(user);
         self
     }
@@ -210,7 +210,7 @@ impl<T> TaskConfig<T, FindMode> where T: Task {
      * Enables the owner `OSGroup` filter to tell the Kernel which
      * `Task`s select
      */
-    pub fn owned_by_group(&mut self, group: OSGroup) -> &mut Self {
+    pub fn owned_by_group(&mut self, group: OsGroup) -> &mut Self {
         self.m_os_group = Some(group);
         self
     }
@@ -236,7 +236,7 @@ impl TaskConfig<Proc, CreatMode> {
      * Overrides the owner `OSUser` which, otherwise, will be inherited by
      * the parent `Proc`
      */
-    pub fn owned_by_user(&mut self, user: OSUser) -> &mut Self {
+    pub fn owned_by_user(&mut self, user: OsUser) -> &mut Self {
         self.m_os_user = Some(user);
         self
     }
@@ -245,7 +245,7 @@ impl TaskConfig<Proc, CreatMode> {
      * Overrides the owner `OSGroup` which, otherwise, will be inherited
      * by the parent `Proc`
      */
-    pub fn owned_by_group(&mut self, group: OSGroup) -> &mut Self {
+    pub fn owned_by_group(&mut self, group: OsGroup) -> &mut Self {
         self.m_os_group = Some(group);
         self
     }

@@ -31,14 +31,14 @@ pub enum KernTaskConfigFnId {
 }
 
 /**
- * Lists the system call codes for the `LibApi::ents::OSEntConfig` struct
+ * Lists the system call codes for the `LibApi::ent::OSEntConfig` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
-pub enum KernOSEntConfigFnId {
+pub enum KernOsEntConfigFnId {
     CreateEntity,
     InitFind
 }
@@ -218,38 +218,38 @@ pub enum KernPathFnId {
 }
 
 /**
- * Lists the system call codes for the `LibApi::ents::OSEntity` trait
+ * Lists the system call codes for the `LibApi::ent::OSEntity` trait
  */
 #[repr(u16)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
-pub enum KernOSEntFnId {
+pub enum KernOsEntFnId {
     Name
 }
 
 /**
- * Lists the system call codes for the `LibApi::ents::impls::OSUser` struct
+ * Lists the system call codes for the `LibApi::ent::impls::OSUser` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
-pub enum KernOSUserFnId {
+pub enum KernOsUserFnId {
     Groups
 }
 
 /**
- * Lists the system call codes for the `LibApi::ents::impls::OSGroup` struct
+ * Lists the system call codes for the `LibApi::ent::impls::OSGroup` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
-pub enum KernOSGroupFnId {
+pub enum KernOsGroupFnId {
     AddUser
 }
 

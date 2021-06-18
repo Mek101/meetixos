@@ -7,12 +7,12 @@ use helps::str::{
     u8_slice_to_str_slice
 };
 use os::{
-    limits::ERROR_MESSAGE_LEN_MAX,
+    limits::OS_ERROR_MESSAGE_LEN_MAX,
     sysc::id::SysCallId
 };
 
 use crate::{
-    errors::class::ErrorClass,
+    errors::class::OsErrorClass,
     tasks::{
         impls::{
             proc::Proc,
@@ -26,21 +26,21 @@ use crate::{
  * Standard way to represent an OS error in MeetiX
  */
 #[derive(Debug, Default)]
-pub struct Error {
-    m_class: ErrorClass,
+pub struct OsError {
+    m_class: OsErrorClass,
     m_syscall: SysCallId,
-    m_message: Option<[u8; ERROR_MESSAGE_LEN_MAX]>
+    m_message: Option<[u8; OS_ERROR_MESSAGE_LEN_MAX]>
 }
 
-impl Error {
+impl OsError {
     /**
-     * Constructs an `Error` filled with the given data
+     * Constructs an `OsError` filled with the given data
      */
-    pub fn new(class: ErrorClass, syscall: SysCallId, message: Option<&str>) -> Self {
+    pub fn new(class: OsErrorClass, syscall: SysCallId, message: Option<&str>) -> Self {
         Self { m_class: class,
                m_syscall: syscall,
                m_message: message.map(|str_buf| {
-                                     let mut buf = [0; ERROR_MESSAGE_LEN_MAX];
+                                     let mut buf = [0; OS_ERROR_MESSAGE_LEN_MAX];
                                      copy_str_to_u8_buf(&mut buf, str_buf);
                                      buf
                                  }) }
@@ -49,7 +49,7 @@ impl Error {
     /**
      * Returns the `ErrorClass`
      */
-    pub fn class(&self) -> ErrorClass {
+    pub fn class(&self) -> OsErrorClass {
         self.m_class
     }
 
@@ -75,7 +75,7 @@ impl Error {
     }
 }
 
-impl fmt::Display for Error {
+impl fmt::Display for OsError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let pid = Proc::this().id();
         let tid = Thread::this().id();
@@ -84,12 +84,10 @@ impl fmt::Display for Error {
          * [<pid>:<tid>] Error: <Human readable error class>\n
          *       : Reason: <Optional error message from the Kernel>
          */
-        let mut res = writeln!(f, "[{}:{}] Error: {}", pid, tid, self.m_class);
-        if res.is_ok() {
-            if let Some(message) = self.message() {
-                res = writeln!(f, "\t: Reason: {}", message);
-            }
+        writeln!(f, "[{}:{}] Error: {}", pid, tid, self.m_class)?;
+        if let Some(message) = self.message() {
+            writeln!(f, "\t: Reason: {}", message)?;
         }
-        res
+        Ok(())
     }
 }

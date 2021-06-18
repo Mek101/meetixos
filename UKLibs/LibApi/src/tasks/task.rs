@@ -21,7 +21,7 @@ use crate::{
 /**
  * Task opaque handle.
  *
- * This object takes place of the old style `pid_t` and `pthread_t`
+ * This obj takes place of the old style `pid_t` and `pthread_t`
  * types, used by all the Unix-like OS to identify processes and threads
  */
 #[repr(transparent)]

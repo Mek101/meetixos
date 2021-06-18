@@ -15,12 +15,12 @@ use os::{
     }
 };
 
-use crate::errors::error::Error;
+use crate::errors::error::OsError;
 
 /**
  * Exports the custom result type used across all the LibApi library
  */
-pub type Result<T> = core::result::Result<T, Error>;
+pub type Result<T> = core::result::Result<T, OsError>;
 
 /**
  * Exposes, for the objects that implement it, the ability to perform system
@@ -30,13 +30,13 @@ pub type Result<T> = core::result::Result<T, Error>;
  *
  * When implemented this trait gives too the ability to perform instance
  * calls which are system calls referred to a particular instance of an
- * object owned by the caller thread/process in user/Kernel space
+ * obj owned by the caller thread/process in user/Kernel space
  */
 pub(crate) trait KernCaller {
     /**
      * Returns the upper 32bits of the 64bit identifier of a system call.
      *
-     * Normally the data returned is the value of the handle of the object
+     * Normally the data returned is the value of the handle of the obj
      * that requests the Kernel service, otherwise 0 is returned
      */
     fn caller_handle_bits(&self) -> u32 {
@@ -59,7 +59,7 @@ pub(crate) trait KernCaller {
      * `KernCaller::call_id()`
      */
     fn kern_call_0(&self, id: KernFnPath) -> Result<usize> {
-        let mut error_value = Error::default();
+        let mut error_value = OsError::default();
         unsafe {
             syscall_0(self.call_id(id), error_value.as_ptr()).map_err(|_| error_value)
         }
@@ -73,7 +73,7 @@ pub(crate) trait KernCaller {
      * `KernCaller::call_id()`
      */
     fn kern_call_1(&self, id: KernFnPath, a1: usize) -> Result<usize> {
-        let mut error_value = Error::default();
+        let mut error_value = OsError::default();
         unsafe {
             syscall_1(self.call_id(id), a1, error_value.as_ptr()).map_err(|_| error_value)
         }
@@ -87,7 +87,7 @@ pub(crate) trait KernCaller {
      * `KernCaller::call_id()`
      */
     fn kern_call_2(&self, id: KernFnPath, a1: usize, a2: usize) -> Result<usize> {
-        let mut error_value = Error::default();
+        let mut error_value = OsError::default();
         unsafe {
             syscall_2(self.call_id(id), a1, a2, error_value.as_ptr()).map_err(|_| {
                                                                          error_value
@@ -108,7 +108,7 @@ pub(crate) trait KernCaller {
                    a2: usize,
                    a3: usize)
                    -> Result<usize> {
-        let mut error_value = Error::default();
+        let mut error_value = OsError::default();
         unsafe {
             syscall_3(self.call_id(id), a1, a2, a3, error_value.as_ptr()).map_err(|_| {
                                                                              error_value
@@ -130,7 +130,7 @@ pub(crate) trait KernCaller {
                    a3: usize,
                    a4: usize)
                    -> Result<usize> {
-        let mut error_value = Error::default();
+        let mut error_value = OsError::default();
         unsafe {
             syscall_4(self.call_id(id), a1, a2, a3, a4, error_value.as_ptr()).map_err(|_| error_value)
         }
@@ -151,7 +151,7 @@ pub(crate) trait KernCaller {
                    a4: usize,
                    a5: usize)
                    -> Result<usize> {
-        let mut error_value = Error::default();
+        let mut error_value = OsError::default();
         unsafe {
             syscall_5(self.call_id(id),
                       a1,

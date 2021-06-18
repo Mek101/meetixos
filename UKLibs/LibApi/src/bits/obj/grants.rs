@@ -30,7 +30,7 @@ use crate::objs::{
 #[derive(Debug)]
 pub struct Grants<T>
     where T: Object {
-    m_bits: BitFlags<u32, GrantsBit>,
+    m_bits: BitFlags<u32, ObjGrantsBits>,
     _unused: PhantomData<T>
 }
 
@@ -49,7 +49,7 @@ impl<T> Grants<T> where T: Object {
      * Allows, for the interested user/group, the actions associated with
      * the grant
      */
-    pub fn set_enabled(&mut self, bit: GrantsBit) -> &mut Self {
+    pub fn set_enabled(&mut self, bit: ObjGrantsBits) -> &mut Self {
         self.set(bit, true)
     }
 
@@ -59,7 +59,7 @@ impl<T> Grants<T> where T: Object {
      * Disallow, for the interested user/group, the actions associated with
      * the grant
      */
-    pub fn set_disabled(&mut self, bit: GrantsBit) -> &mut Self {
+    pub fn set_disabled(&mut self, bit: ObjGrantsBits) -> &mut Self {
         self.set(bit, false)
     }
 
@@ -69,7 +69,7 @@ impl<T> Grants<T> where T: Object {
      * According to the `allow` value allows or disallow the actions
      * associated with the given `GrantsBit`
      */
-    pub fn set(&mut self, _bit: GrantsBit, _allow: bool) -> &mut Self {
+    pub fn set(&mut self, _bit: ObjGrantsBits, _allow: bool) -> &mut Self {
         // self.m_bits.set_bit(bit.into(), allow);
         self
     }
@@ -98,7 +98,7 @@ impl<T> Grants<T> where T: Object {
     /**
      * Returns the bit value for the given `GrantsBits`
      */
-    pub fn is(&self, _bit: GrantsBit) -> bool {
+    pub fn is(&self, _bit: ObjGrantsBits) -> bool {
         // self.m_bits.bit_at(bit.into())
         false
     }
@@ -106,7 +106,7 @@ impl<T> Grants<T> where T: Object {
     /**
      * Returns whether any of given `GrantsBit`s are active
      */
-    pub fn is_any_of(&self, _bits: &[GrantsBit]) -> bool {
+    pub fn is_any_of(&self, _bits: &[ObjGrantsBits]) -> bool {
         false
         // for bit in bits {
         //     if self.is(*bit) {
@@ -119,7 +119,7 @@ impl<T> Grants<T> where T: Object {
     /**
      * Returns whether all of given `GrantsBit`s are active
      */
-    pub fn is_all_of(&self, _bits: &[GrantsBit]) -> bool {
+    pub fn is_all_of(&self, _bits: &[ObjGrantsBits]) -> bool {
         false
         // !self.is_any_of(bits)
     }
@@ -153,29 +153,29 @@ impl Default for Grants<Dir> {
         //              | GrantsBit::UserCanReadData
         //              | GrantsBit::UserCanWriteData;
 
-        Self::new().set_enabled(GrantsBit::UserCanOpenIt)
-                   .set_enabled(GrantsBit::UserCanReadData)
-                   .set_enabled(GrantsBit::UserCanWriteData)
-                   .set_enabled(GrantsBit::UserCanExecTraversData)
-                   .set_enabled(GrantsBit::UserCanReadInfo)
-                   .set_enabled(GrantsBit::UserCanWriteInfo)
-                   .set_enabled(GrantsBit::UserCanSeeIt)
+        Self::new().set_enabled(ObjGrantsBits::UserCanOpenIt)
+                   .set_enabled(ObjGrantsBits::UserCanReadData)
+                   .set_enabled(ObjGrantsBits::UserCanWriteData)
+                   .set_enabled(ObjGrantsBits::UserCanExecTraversData)
+                   .set_enabled(ObjGrantsBits::UserCanReadInfo)
+                   .set_enabled(ObjGrantsBits::UserCanWriteInfo)
+                   .set_enabled(ObjGrantsBits::UserCanSeeIt)
             /* Owner's Group Grants */
-                   .set_enabled(GrantsBit::GroupCanOpenIt)
-                   .set_enabled(GrantsBit::GroupCanReadData)
-                   .set_disabled(GrantsBit::GroupCanWriteData)
-                   .set_enabled(GrantsBit::GroupCanExecTraversData)
-                   .set_enabled(GrantsBit::GroupCanReadInfo)
-                   .set_enabled(GrantsBit::GroupCanWriteInfo)
-                   .set_enabled(GrantsBit::GroupCanSeeIt)
+                   .set_enabled(ObjGrantsBits::GroupCanOpenIt)
+                   .set_enabled(ObjGrantsBits::GroupCanReadData)
+                   .set_disabled(ObjGrantsBits::GroupCanWriteData)
+                   .set_enabled(ObjGrantsBits::GroupCanExecTraversData)
+                   .set_enabled(ObjGrantsBits::GroupCanReadInfo)
+                   .set_enabled(ObjGrantsBits::GroupCanWriteInfo)
+                   .set_enabled(ObjGrantsBits::GroupCanSeeIt)
             /* Other users/groups Grants */
-                   .set_enabled(GrantsBit::OtherCanOpenIt)
-                   .set_enabled(GrantsBit::OtherCanReadData)
-                   .set_disabled(GrantsBit::OtherCanWriteData)
-                   .set_enabled(GrantsBit::OtherCanExecTraversData)
-                   .set_enabled(GrantsBit::OtherCanReadInfo)
-                   .set_enabled(GrantsBit::OtherCanWriteInfo)
-                   .set_enabled(GrantsBit::OtherCanSeeIt)
+                   .set_enabled(ObjGrantsBits::OtherCanOpenIt)
+                   .set_enabled(ObjGrantsBits::OtherCanReadData)
+                   .set_disabled(ObjGrantsBits::OtherCanWriteData)
+                   .set_enabled(ObjGrantsBits::OtherCanExecTraversData)
+                   .set_enabled(ObjGrantsBits::OtherCanReadInfo)
+                   .set_enabled(ObjGrantsBits::OtherCanWriteInfo)
+                   .set_enabled(ObjGrantsBits::OtherCanSeeIt)
                    .build()
     }
 }
@@ -185,29 +185,29 @@ impl Default for Grants<File> {
      * Returns the default `Grants` for a `File`
      */
     fn default() -> Self {
-        Self::new().set_enabled(GrantsBit::UserCanOpenIt)
-                   .set_enabled(GrantsBit::UserCanReadData)
-                   .set_enabled(GrantsBit::UserCanWriteData)
-                   .set_enabled(GrantsBit::UserCanExecTraversData)
-                   .set_enabled(GrantsBit::UserCanReadInfo)
-                   .set_enabled(GrantsBit::UserCanWriteInfo)
-                   .set_enabled(GrantsBit::UserCanSeeIt)
+        Self::new().set_enabled(ObjGrantsBits::UserCanOpenIt)
+                   .set_enabled(ObjGrantsBits::UserCanReadData)
+                   .set_enabled(ObjGrantsBits::UserCanWriteData)
+                   .set_enabled(ObjGrantsBits::UserCanExecTraversData)
+                   .set_enabled(ObjGrantsBits::UserCanReadInfo)
+                   .set_enabled(ObjGrantsBits::UserCanWriteInfo)
+                   .set_enabled(ObjGrantsBits::UserCanSeeIt)
             /* Owner's Group Grants */
-                   .set_enabled(GrantsBit::GroupCanOpenIt)
-                   .set_enabled(GrantsBit::GroupCanReadData)
-                   .set_enabled(GrantsBit::GroupCanWriteData)
-                   .set_disabled(GrantsBit::GroupCanExecTraversData)
-                   .set_enabled(GrantsBit::GroupCanReadInfo)
-                   .set_disabled(GrantsBit::GroupCanWriteInfo)
-                   .set_enabled(GrantsBit::GroupCanSeeIt)
+                   .set_enabled(ObjGrantsBits::GroupCanOpenIt)
+                   .set_enabled(ObjGrantsBits::GroupCanReadData)
+                   .set_enabled(ObjGrantsBits::GroupCanWriteData)
+                   .set_disabled(ObjGrantsBits::GroupCanExecTraversData)
+                   .set_enabled(ObjGrantsBits::GroupCanReadInfo)
+                   .set_disabled(ObjGrantsBits::GroupCanWriteInfo)
+                   .set_enabled(ObjGrantsBits::GroupCanSeeIt)
             /* Other users/groups Grants */
-                   .set_enabled(GrantsBit::OtherCanOpenIt)
-                   .set_enabled(GrantsBit::OtherCanReadData)
-                   .set_disabled(GrantsBit::OtherCanWriteData)
-                   .set_disabled(GrantsBit::OtherCanExecTraversData)
-                   .set_disabled(GrantsBit::OtherCanReadInfo)
-                   .set_disabled(GrantsBit::OtherCanWriteInfo)
-                   .set_enabled(GrantsBit::OtherCanSeeIt)
+                   .set_enabled(ObjGrantsBits::OtherCanOpenIt)
+                   .set_enabled(ObjGrantsBits::OtherCanReadData)
+                   .set_disabled(ObjGrantsBits::OtherCanWriteData)
+                   .set_disabled(ObjGrantsBits::OtherCanExecTraversData)
+                   .set_disabled(ObjGrantsBits::OtherCanReadInfo)
+                   .set_disabled(ObjGrantsBits::OtherCanWriteInfo)
+                   .set_enabled(ObjGrantsBits::OtherCanSeeIt)
                    .build()
     }
 }
@@ -217,29 +217,29 @@ impl Default for Grants<IpcChan> {
      * Returns the default `Grants` for a `IpcChan`
      */
     fn default() -> Self {
-        Self::new().set_enabled(GrantsBit::UserCanOpenIt)
-                   .set_enabled(GrantsBit::UserCanReadData)
-                   .set_enabled(GrantsBit::UserCanWriteData)
-                   .set_disabled(GrantsBit::UserCanExecTraversData)
-                   .set_enabled(GrantsBit::UserCanReadInfo)
-                   .set_disabled(GrantsBit::UserCanWriteInfo)
-                   .set_enabled(GrantsBit::UserCanSeeIt)
+        Self::new().set_enabled(ObjGrantsBits::UserCanOpenIt)
+                   .set_enabled(ObjGrantsBits::UserCanReadData)
+                   .set_enabled(ObjGrantsBits::UserCanWriteData)
+                   .set_disabled(ObjGrantsBits::UserCanExecTraversData)
+                   .set_enabled(ObjGrantsBits::UserCanReadInfo)
+                   .set_disabled(ObjGrantsBits::UserCanWriteInfo)
+                   .set_enabled(ObjGrantsBits::UserCanSeeIt)
             /* Owner's Group Grants */
-                   .set_enabled(GrantsBit::GroupCanOpenIt)
-                   .set_enabled(GrantsBit::GroupCanReadData)
-                   .set_enabled(GrantsBit::GroupCanWriteData)
-                   .set_disabled(GrantsBit::GroupCanExecTraversData)
-                   .set_enabled(GrantsBit::GroupCanReadInfo)
-                   .set_disabled(GrantsBit::GroupCanWriteInfo)
-                   .set_enabled(GrantsBit::GroupCanSeeIt)
+                   .set_enabled(ObjGrantsBits::GroupCanOpenIt)
+                   .set_enabled(ObjGrantsBits::GroupCanReadData)
+                   .set_enabled(ObjGrantsBits::GroupCanWriteData)
+                   .set_disabled(ObjGrantsBits::GroupCanExecTraversData)
+                   .set_enabled(ObjGrantsBits::GroupCanReadInfo)
+                   .set_disabled(ObjGrantsBits::GroupCanWriteInfo)
+                   .set_enabled(ObjGrantsBits::GroupCanSeeIt)
             /* Other users/groups Grants */
-                   .set_enabled(GrantsBit::OtherCanOpenIt)
-                   .set_enabled(GrantsBit::OtherCanReadData)
-                   .set_enabled(GrantsBit::OtherCanWriteData)
-                   .set_disabled(GrantsBit::OtherCanExecTraversData)
-                   .set_enabled(GrantsBit::OtherCanReadInfo)
-                   .set_disabled(GrantsBit::OtherCanWriteInfo)
-                   .set_enabled(GrantsBit::OtherCanSeeIt)
+                   .set_enabled(ObjGrantsBits::OtherCanOpenIt)
+                   .set_enabled(ObjGrantsBits::OtherCanReadData)
+                   .set_enabled(ObjGrantsBits::OtherCanWriteData)
+                   .set_disabled(ObjGrantsBits::OtherCanExecTraversData)
+                   .set_enabled(ObjGrantsBits::OtherCanReadInfo)
+                   .set_disabled(ObjGrantsBits::OtherCanWriteInfo)
+                   .set_enabled(ObjGrantsBits::OtherCanSeeIt)
                    .build()
     }
 }
@@ -249,29 +249,29 @@ impl Default for Grants<Link> {
      * Returns the default `Grants` for a `Link`
      */
     fn default() -> Self {
-        Self::new().set_enabled(GrantsBit::UserCanOpenIt)
-                   .set_enabled(GrantsBit::UserCanReadData)
-                   .set_enabled(GrantsBit::UserCanWriteData)
-                   .set_enabled(GrantsBit::UserCanExecTraversData)
-                   .set_enabled(GrantsBit::UserCanReadInfo)
-                   .set_enabled(GrantsBit::UserCanWriteInfo)
-                   .set_enabled(GrantsBit::UserCanSeeIt)
+        Self::new().set_enabled(ObjGrantsBits::UserCanOpenIt)
+                   .set_enabled(ObjGrantsBits::UserCanReadData)
+                   .set_enabled(ObjGrantsBits::UserCanWriteData)
+                   .set_enabled(ObjGrantsBits::UserCanExecTraversData)
+                   .set_enabled(ObjGrantsBits::UserCanReadInfo)
+                   .set_enabled(ObjGrantsBits::UserCanWriteInfo)
+                   .set_enabled(ObjGrantsBits::UserCanSeeIt)
             /* Owner's Group Grants */
-                   .set_enabled(GrantsBit::GroupCanOpenIt)
-                   .set_enabled(GrantsBit::GroupCanReadData)
-                   .set_enabled(GrantsBit::GroupCanWriteData)
-                   .set_enabled(GrantsBit::GroupCanExecTraversData)
-                   .set_enabled(GrantsBit::GroupCanReadInfo)
-                   .set_disabled(GrantsBit::GroupCanWriteInfo)
-                   .set_enabled(GrantsBit::GroupCanSeeIt)
+                   .set_enabled(ObjGrantsBits::GroupCanOpenIt)
+                   .set_enabled(ObjGrantsBits::GroupCanReadData)
+                   .set_enabled(ObjGrantsBits::GroupCanWriteData)
+                   .set_enabled(ObjGrantsBits::GroupCanExecTraversData)
+                   .set_enabled(ObjGrantsBits::GroupCanReadInfo)
+                   .set_disabled(ObjGrantsBits::GroupCanWriteInfo)
+                   .set_enabled(ObjGrantsBits::GroupCanSeeIt)
             /* Other users/groups Grants */
-                   .set_enabled(GrantsBit::OtherCanOpenIt)
-                   .set_enabled(GrantsBit::OtherCanReadData)
-                   .set_disabled(GrantsBit::OtherCanWriteData)
-                   .set_enabled(GrantsBit::OtherCanExecTraversData)
-                   .set_enabled(GrantsBit::OtherCanReadInfo)
-                   .set_disabled(GrantsBit::OtherCanWriteInfo)
-                   .set_enabled(GrantsBit::OtherCanSeeIt)
+                   .set_enabled(ObjGrantsBits::OtherCanOpenIt)
+                   .set_enabled(ObjGrantsBits::OtherCanReadData)
+                   .set_disabled(ObjGrantsBits::OtherCanWriteData)
+                   .set_enabled(ObjGrantsBits::OtherCanExecTraversData)
+                   .set_enabled(ObjGrantsBits::OtherCanReadInfo)
+                   .set_disabled(ObjGrantsBits::OtherCanWriteInfo)
+                   .set_enabled(ObjGrantsBits::OtherCanSeeIt)
                    .build()
     }
 }
@@ -281,29 +281,29 @@ impl Default for Grants<MMap> {
      * Returns the default `Grants` for a `MMap`
      */
     fn default() -> Self {
-        Self::new().set_enabled(GrantsBit::UserCanOpenIt)
-                   .set_enabled(GrantsBit::UserCanReadData)
-                   .set_enabled(GrantsBit::UserCanWriteData)
-                   .set_disabled(GrantsBit::UserCanExecTraversData)
-                   .set_enabled(GrantsBit::UserCanReadInfo)
-                   .set_enabled(GrantsBit::UserCanWriteInfo)
-                   .set_enabled(GrantsBit::UserCanSeeIt)
+        Self::new().set_enabled(ObjGrantsBits::UserCanOpenIt)
+                   .set_enabled(ObjGrantsBits::UserCanReadData)
+                   .set_enabled(ObjGrantsBits::UserCanWriteData)
+                   .set_disabled(ObjGrantsBits::UserCanExecTraversData)
+                   .set_enabled(ObjGrantsBits::UserCanReadInfo)
+                   .set_enabled(ObjGrantsBits::UserCanWriteInfo)
+                   .set_enabled(ObjGrantsBits::UserCanSeeIt)
             /* Owner's Group Grants */
-                   .set_enabled(GrantsBit::GroupCanOpenIt)
-                   .set_enabled(GrantsBit::GroupCanReadData)
-                   .set_enabled(GrantsBit::GroupCanWriteData)
-                   .set_disabled(GrantsBit::GroupCanExecTraversData)
-                   .set_enabled(GrantsBit::GroupCanReadInfo)
-                   .set_enabled(GrantsBit::GroupCanWriteInfo)
-                   .set_enabled(GrantsBit::GroupCanSeeIt)
+                   .set_enabled(ObjGrantsBits::GroupCanOpenIt)
+                   .set_enabled(ObjGrantsBits::GroupCanReadData)
+                   .set_enabled(ObjGrantsBits::GroupCanWriteData)
+                   .set_disabled(ObjGrantsBits::GroupCanExecTraversData)
+                   .set_enabled(ObjGrantsBits::GroupCanReadInfo)
+                   .set_enabled(ObjGrantsBits::GroupCanWriteInfo)
+                   .set_enabled(ObjGrantsBits::GroupCanSeeIt)
             /* Other users/groups Grants */
-                   .set_disabled(GrantsBit::OtherCanOpenIt)
-                   .set_enabled(GrantsBit::OtherCanReadData)
-                   .set_enabled(GrantsBit::OtherCanWriteData)
-                   .set_enabled(GrantsBit::OtherCanExecTraversData)
-                   .set_enabled(GrantsBit::OtherCanReadInfo)
-                   .set_disabled(GrantsBit::OtherCanWriteInfo)
-                   .set_enabled(GrantsBit::OtherCanSeeIt)
+                   .set_disabled(ObjGrantsBits::OtherCanOpenIt)
+                   .set_enabled(ObjGrantsBits::OtherCanReadData)
+                   .set_enabled(ObjGrantsBits::OtherCanWriteData)
+                   .set_enabled(ObjGrantsBits::OtherCanExecTraversData)
+                   .set_enabled(ObjGrantsBits::OtherCanReadInfo)
+                   .set_disabled(ObjGrantsBits::OtherCanWriteInfo)
+                   .set_enabled(ObjGrantsBits::OtherCanSeeIt)
                    .build()
     }
 }
@@ -313,29 +313,29 @@ impl Default for Grants<OsRawMutex> {
      * Returns the default `Grants` for a `OsRawMutex`
      */
     fn default() -> Self {
-        Self::new().set_enabled(GrantsBit::UserCanOpenIt)
-                   .set_enabled(GrantsBit::UserCanReadData)
-                   .set_enabled(GrantsBit::UserCanWriteData)
-                   .set_disabled(GrantsBit::UserCanExecTraversData)
-                   .set_enabled(GrantsBit::UserCanReadInfo)
-                   .set_enabled(GrantsBit::UserCanWriteInfo)
-                   .set_enabled(GrantsBit::UserCanSeeIt)
+        Self::new().set_enabled(ObjGrantsBits::UserCanOpenIt)
+                   .set_enabled(ObjGrantsBits::UserCanReadData)
+                   .set_enabled(ObjGrantsBits::UserCanWriteData)
+                   .set_disabled(ObjGrantsBits::UserCanExecTraversData)
+                   .set_enabled(ObjGrantsBits::UserCanReadInfo)
+                   .set_enabled(ObjGrantsBits::UserCanWriteInfo)
+                   .set_enabled(ObjGrantsBits::UserCanSeeIt)
             /* Owner's Group Grants */
-                   .set_enabled(GrantsBit::GroupCanOpenIt)
-                   .set_enabled(GrantsBit::GroupCanReadData)
-                   .set_enabled(GrantsBit::GroupCanWriteData)
-                   .set_disabled(GrantsBit::GroupCanExecTraversData)
-                   .set_enabled(GrantsBit::GroupCanReadInfo)
-                   .set_disabled(GrantsBit::GroupCanWriteInfo)
-                   .set_enabled(GrantsBit::GroupCanSeeIt)
+                   .set_enabled(ObjGrantsBits::GroupCanOpenIt)
+                   .set_enabled(ObjGrantsBits::GroupCanReadData)
+                   .set_enabled(ObjGrantsBits::GroupCanWriteData)
+                   .set_disabled(ObjGrantsBits::GroupCanExecTraversData)
+                   .set_enabled(ObjGrantsBits::GroupCanReadInfo)
+                   .set_disabled(ObjGrantsBits::GroupCanWriteInfo)
+                   .set_enabled(ObjGrantsBits::GroupCanSeeIt)
             /* Other users/groups Grants */
-                   .set_enabled(GrantsBit::OtherCanOpenIt)
-                   .set_enabled(GrantsBit::OtherCanReadData)
-                   .set_enabled(GrantsBit::OtherCanWriteData)
-                   .set_enabled(GrantsBit::OtherCanExecTraversData)
-                   .set_enabled(GrantsBit::OtherCanReadInfo)
-                   .set_disabled(GrantsBit::OtherCanWriteInfo)
-                   .set_enabled(GrantsBit::OtherCanSeeIt)
+                   .set_enabled(ObjGrantsBits::OtherCanOpenIt)
+                   .set_enabled(ObjGrantsBits::OtherCanReadData)
+                   .set_enabled(ObjGrantsBits::OtherCanWriteData)
+                   .set_enabled(ObjGrantsBits::OtherCanExecTraversData)
+                   .set_enabled(ObjGrantsBits::OtherCanReadInfo)
+                   .set_disabled(ObjGrantsBits::OtherCanWriteInfo)
+                   .set_enabled(ObjGrantsBits::OtherCanSeeIt)
                    .build()
     }
 }
@@ -355,7 +355,7 @@ impl<T> Default for Grants<T> where T: Object {
 #[derive(Clone, Copy)]
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
-pub enum GrantsBit {
+pub enum ObjGrantsBits {
     UserCanOpenIt,
     UserCanReadData,
     UserCanWriteData,
@@ -381,5 +381,5 @@ pub enum GrantsBit {
     OtherCanSeeIt
 }
 
-impl BitFlagsValues for GrantsBit {
+impl BitFlagsValues for ObjGrantsBits {
 }

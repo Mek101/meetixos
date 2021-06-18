@@ -3,8 +3,8 @@
 use crate::{
     bits::obj::grants::Grants,
     ents::impls::{
-        group::OSGroup,
-        user::OSUser
+        group::OsGroup,
+        user::OsUser
     },
     objs::object::Object
 };
@@ -15,8 +15,8 @@ use crate::{
 #[derive(Debug, Default, Copy, Clone)]
 pub struct ObjOwner<T>
     where T: Object {
-    m_os_user: OSUser,
-    m_os_group: OSGroup,
+    m_os_user: OsUser,
+    m_os_group: OsGroup,
     m_protection: Grants<T>
 }
 
@@ -25,7 +25,7 @@ impl<T> ObjOwner<T> where T: Object {
     /**
      * Constructs a `ObjUser` with the given parameters
      */
-    pub const fn new(os_user: OSUser, os_group: OSGroup, protection: Grants<T>) -> Self {
+    pub const fn new(os_user: OsUser, os_group: OsGroup, protection: Grants<T>) -> Self {
         Self { m_os_user: os_user,
                m_os_group: os_group,
                m_protection: protection }
@@ -36,28 +36,28 @@ impl<T> ObjOwner<T> where T: Object {
     /**
      * Returns the owner `OSUser` reference
      */
-    pub fn os_user(&self) -> &OSUser {
+    pub fn os_user(&self) -> &OsUser {
         &self.m_os_user
     }
 
     /**
      * Updates the owner `OSUser`
      */
-    pub fn set_os_user(&mut self, new_owner_user: OSUser) {
+    pub fn set_os_user(&mut self, new_owner_user: OsUser) {
         self.m_os_user = new_owner_user;
     }
 
     /**
      * Returns the owner `OSGroup` reference
      */
-    pub fn os_group(&self) -> &OSGroup {
+    pub fn os_group(&self) -> &OsGroup {
         &self.m_os_group
     }
 
     /**
      * Updates the owner `OSGroup`
      */
-    pub fn set_os_group(&mut self, new_owner_group: OSGroup) {
+    pub fn set_os_group(&mut self, new_owner_group: OsGroup) {
         self.m_os_group = new_owner_group;
     }
 

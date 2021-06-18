@@ -41,7 +41,7 @@ impl CodeSymbol {
             usize::from_str_radix(str_virt_addr, 16).ok()?
         };
 
-        /* obtains and puts the demangled symbol name into a <String> object */
+        /* obtains and puts the demangled symbol name into a <String> obj */
         let symbol_name = {
             let str_symbol_name = line_parts.next()?;
             if str_symbol_name.is_empty() {

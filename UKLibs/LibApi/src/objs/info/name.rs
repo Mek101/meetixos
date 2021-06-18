@@ -50,7 +50,7 @@ impl ObjNameInfo {
     }
 
     /**
-     * The new name will be applied to the object when `ObjInfo::update()`
+     * The new name will be applied to the obj when `ObjInfo::update()`
      * will be called
      */
     pub fn set_name(&mut self, new_name: &str) {
@@ -58,7 +58,7 @@ impl ObjNameInfo {
     }
 
     /**
-     * Returns the number of `Link`s that refers this object
+     * Returns the number of `Link`s that refers this obj
      */
     pub fn links_count(&self) -> u32 {
         self.m_links

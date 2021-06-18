@@ -17,7 +17,7 @@ use crate::sysc::fn_path::KernFnPath;
  * register can be quietly used to store more than one think, it is enough
  * play with bits.
  *
- * In particular the syscall-id register stores the `KernFnPath`, which is
+ * In particular the sys-id register stores the `KernFnPath`, which is
  * 32bit wide, and the `LibApi::caller::KernCaller::caller_handle_bits`,
  * which fills the remaining upper 32bits
  */
