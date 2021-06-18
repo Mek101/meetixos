@@ -1,6 +1,11 @@
 /*! Context wide limit constants */
 
 /**
+ * Maximum amount of arguments that the kernel accepts
+ */
+pub const SYSCALL_ARGS_COUNT_MAX: usize = 6;
+
+/**
  * Maximum length in for a filesystem path managed by the VFS Kernel module
  */
 pub const VFS_PATH_LEN_MAX: usize = 1024;

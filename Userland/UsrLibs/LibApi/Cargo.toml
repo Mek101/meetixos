@@ -1,0 +1,12 @@
+[package]
+name = "uapi"
+version = "0.1.0"
+edition = "2018"
+authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
+
+[dependencies]
+# ------------------------------ MeetiX Libraries Crates ------------------------------- #
+sync     = { path = "../../../UKLibs/LibSync" }
+bits     = { path = "../../../UKLibs/LibBits" }
+helps    = { path = "../../../UKLibs/LibHelps" }
+api_data = { path = "../../../UKLibs/LibApiData" }

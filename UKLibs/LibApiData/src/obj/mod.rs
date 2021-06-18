@@ -1,5 +1,7 @@
 /*! `Object` related data */
 
+use crate::sys::KernHandle;
+
 pub mod config;
 pub mod grants;
 pub mod info;
@@ -10,4 +12,4 @@ pub mod uses;
 /**
  * Convenience type renaming for `Object` reference
  */
-pub type RawObjId = u32;
+pub type RawObjId = KernHandle;

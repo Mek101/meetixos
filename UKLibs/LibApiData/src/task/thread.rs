@@ -37,6 +37,7 @@ pub type RCleanerThreadEntry = fn(RawTaskId);
  * Each variant contains the executable entry-point and the data needed by
  * the context that represents
  */
+#[derive(Debug)]
 pub enum ThreadEntryData {
     /**
      * Data to execute a user `Thread` using `Thread::spawn()`

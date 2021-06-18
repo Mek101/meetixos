@@ -23,6 +23,8 @@ pub type ObjConfigFlags = BitFlags<usize, ObjConfigBits>;
 /**
  * Userland/Kernel interchangeable `Object` configuration
  */
+#[derive(Debug)]
+#[derive(Copy, Clone)]
 pub struct RawObjConfig<'a> {
     m_type: ObjType,
     m_path: Option<&'a str>,

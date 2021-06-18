@@ -10,7 +10,10 @@ use helps::str::{
 use crate::{
     error::class::OsErrorClass,
     limit::OS_ERROR_MESSAGE_LEN_MAX,
-    sys::id::SysCallId,
+    sys::{
+        fn_path::KernFnPath,
+        KernHandle
+    },
     task::RawTaskId
 };
 
@@ -19,10 +22,12 @@ pub mod class;
 /**
  * Standard way to represent an OS error in MeetiX
  */
-#[derive(Debug, Default)]
+#[derive(Debug)]
+#[derive(Default)]
 pub struct OsError {
     m_class: OsErrorClass,
-    m_syscall: SysCallId,
+    m_kern_fn_path: KernFnPath,
+    m_inst_handle: Option<KernHandle>,
     m_proc_id: RawTaskId,
     m_thread_id: RawTaskId,
     m_message: Option<[u8; OS_ERROR_MESSAGE_LEN_MAX]>
@@ -33,13 +38,15 @@ impl OsError {
      * Constructs an `OsError` filled with the given data
      */
     pub fn new(class: OsErrorClass,
-               syscall: SysCallId,
+               kern_fn_path: KernFnPath,
+               inst_handle: Option<KernHandle>,
                proc_id: RawTaskId,
                thread_id: RawTaskId,
                message: Option<&str>)
                -> Self {
         Self { m_class: class,
-               m_syscall: syscall,
+               m_kern_fn_path: kern_fn_path,
+               m_inst_handle: inst_handle,
                m_proc_id: proc_id,
                m_thread_id: thread_id,
                m_message: message.map(|str_buf| {
@@ -57,10 +64,17 @@ impl OsError {
     }
 
     /**
-     * Returns the `SysCallId` which originates this `OsError`
+     * Returns the `KernFnPath` which originates this `OsError`
      */
-    pub fn syscall(&self) -> SysCallId {
-        self.m_syscall
+    pub fn kern_fn_path(&self) -> KernFnPath {
+        self.m_kern_fn_path
+    }
+
+    /**
+     * Returns the `KernHandle` which originates this `OsError` if any
+     */
+    pub fn inst_handle(&self) -> Option<KernHandle> {
+        self.m_inst_handle
     }
 
     /**
@@ -84,7 +98,9 @@ impl fmt::Display for OsError {
          * [<pid>:<tid>] Error: <Human readable error class>\n
          *       : Reason: <Optional error message from the Kernel>
          */
-        writeln!(f, "[{}:{}] Error: {}", self.m_proc_id, self.m_thread_id, self.m_class)?;
+        writeln!(f,
+                 "[{}:{}] Error: {} - {}",
+                 self.m_proc_id, self.m_thread_id, self.m_kern_fn_path, self.m_class)?;
         if let Some(message) = self.message() {
             writeln!(f, "\t: Reason: {}", message)?;
         }

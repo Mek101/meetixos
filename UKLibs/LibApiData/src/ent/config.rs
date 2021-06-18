@@ -23,6 +23,8 @@ pub type OsEntityConfigFlags = BitFlags<usize, OsEntityConfigBits>;
 /**
  * Userland/Kernel interchangeable `OsEntity` configuration
  */
+#[derive(Debug)]
+#[derive(Copy, Clone)]
 pub struct RawOsEntityConfig<'a> {
     m_id: Option<RawOsEntityId>,
     m_type: OsEntityType,

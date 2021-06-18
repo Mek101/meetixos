@@ -25,6 +25,7 @@ use crate::fields::BitFields;
  * Safe wrapper for a bit flags
  */
 #[repr(transparent)]
+#[derive(Default)]
 pub struct BitFlags<B, T>
     where B: BitFields + Default + Copy,
           T: BitFlagsValues {
@@ -168,6 +169,15 @@ impl<B, T> Copy for BitFlags<B, T>
           T: BitFlagsValues
 {
     /* No methods to implement */
+}
+
+impl<B, T> From<B> for BitFlags<B, T>
+    where B: BitFields + Default + Copy,
+          T: BitFlagsValues
+{
+    fn from(raw_bits: B) -> Self {
+        Self::from_raw_truncate(raw_bits)
+    }
 }
 
 impl<B, T> BitOr for BitFlags<B, T>

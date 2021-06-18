@@ -4,7 +4,7 @@ members = [
     "Kernel",
     "Kernel/HHLoader",
     "Kernel/SharedCode",
-    # User/Kernel Libraries
+    # Userland/Kernel Libraries
     "UKLibs/LibApi",
     "UKLibs/LibApiData",
     "UKLibs/LibBits",
@@ -13,6 +13,8 @@ members = [
     "UKLibs/LibOS",
     "UKLibs/LibSymbols",
     "UKLibs/LibSync",
+    # Userland Libraries
+    "Userland/UsrLibs/LibApi",
     # App Crates
     "Userland/Apps/ExampleApp",
     # Binary Crates

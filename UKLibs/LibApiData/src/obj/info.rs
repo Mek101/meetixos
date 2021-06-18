@@ -20,6 +20,8 @@ use crate::{
 /**
  * Userland/Kernel interchangeable `Object` metadata information
  */
+#[derive(Debug)]
+#[derive(Copy, Clone)]
 pub struct RawObjInfo {
     m_type: ObjType,
     m_ref_count: usize,

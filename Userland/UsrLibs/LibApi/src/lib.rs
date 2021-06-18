@@ -5,15 +5,13 @@
  */
 
 #![no_std]
-#![feature(asm,
-           array_methods,
-           min_specialization,
-           core_intrinsics,
-           iter_advance_by,
-           const_fn_trait_bound)]
+#![feature(asm)]
+
+pub mod arch;
+pub mod caller;
+pub mod obj;
 
 pub mod bits;
-pub mod caller;
 pub mod ents;
 pub mod errors;
 pub mod objs;

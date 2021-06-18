@@ -34,6 +34,8 @@ pub type TaskConfigFlags = BitFlags<usize, TaskConfigBits>;
 /**
  * Userland/Kernel interchangeable `Task` configuration
  */
+#[derive(Debug)]
+#[derive(Copy, Clone)]
 pub struct RawTaskConfig<'a> {
     m_id: Option<RawTaskId>,
 
