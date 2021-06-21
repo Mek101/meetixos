@@ -15,6 +15,7 @@ use num_enum::{
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernHandleFnId {
     IsValid,
+    Clone,
     Drop
 }
 

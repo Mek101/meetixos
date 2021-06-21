@@ -12,7 +12,7 @@ pub mod fn_path;
 /**
  * Invalid kernel handle value
  */
-pub const INVALID_KERN_HANDLE: RawKernHandle = -1 as RawKernHandle;
+pub const INVALID_KERN_HANDLE: RawKernHandle = RawKernHandle::MAX;
 
 /**
  * Convenience type renaming for kernel handles
@@ -94,7 +94,7 @@ impl SysCallPayload {
      */
     #[inline]
     pub fn arg_ref<T>(&self, arg_index: usize) -> &T {
-        unsafe { &*(self.m_raw_args(arg_index) as *const T) }
+        unsafe { &*(self.raw_arg(arg_index) as *const T) }
     }
 
     /**

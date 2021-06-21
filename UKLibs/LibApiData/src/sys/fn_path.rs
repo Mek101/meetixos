@@ -1,9 +1,6 @@
 /*! Kernel function call paths */
 
-use core::{
-    convert::TryFrom,
-    fmt
-};
+use core::fmt;
 
 use crate::sys::codes::{
     KernDeviceFnId,
@@ -37,7 +34,8 @@ use crate::sys::codes::{
  * for the call class, which is the secondary key of the Kernel's routines
  * table
  */
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
+#[derive(Copy, Clone)]
 pub enum KernFnPath {
     KernHandle(KernHandleFnId),
     ObjConfig(KernObjConfigFnId),
@@ -59,7 +57,8 @@ pub enum KernFnPath {
     OsUser(KernOsUserFnId),
     OsGroup(KernOsGroupFnId),
     Proc(KernProcFnId),
-    Thread(KernThreadFnId)
+    Thread(KernThreadFnId),
+    Invalid
 }
 
 impl KernFnPath {
@@ -88,7 +87,8 @@ impl KernFnPath {
             Self::OsUser(_) => 17,
             Self::OsGroup(_) => 18,
             Self::Proc(_) => 19,
-            Self::Thread(_) => 20
+            Self::Thread(_) => 20,
+            _ => u16::MAX
         }
     }
 
@@ -117,8 +117,15 @@ impl KernFnPath {
             Self::OsUser(fn_id) => fn_id.into(),
             Self::OsGroup(fn_id) => fn_id.into(),
             Self::Proc(fn_id) => fn_id.into(),
-            Self::Thread(fn_id) => fn_id.into()
+            Self::Thread(fn_id) => fn_id.into(),
+            _ => u16::MAX
         }
+    }
+}
+
+impl Default for KernFnPath {
+    fn default() -> Self {
+        Self::Invalid
     }
 }
 
@@ -145,7 +152,8 @@ impl fmt::Display for KernFnPath {
             Self::OsUser(fn_id) => write!(f, "KernFnPath::OSUser({:?})", fn_id),
             Self::OsGroup(fn_id) => write!(f, "KernFnPath::OSGroup({:?})", fn_id),
             Self::Proc(fn_id) => write!(f, "KernFnPath::Proc({:?})", fn_id),
-            Self::Thread(fn_id) => write!(f, "KernFnPath::Thread({:?})", fn_id)
+            Self::Thread(fn_id) => write!(f, "KernFnPath::Thread({:?})", fn_id),
+            Self::Invalid => write!(f, "KernFnPath::Invalid")
         }
     }
 }
