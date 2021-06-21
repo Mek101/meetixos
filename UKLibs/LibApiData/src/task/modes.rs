@@ -7,7 +7,7 @@ use num_enum::{
     TryFromPrimitive
 };
 
-use crate::task::RawTaskId;
+use crate::task::RawTaskHandle;
 
 /**
  * Lists the available options for `TaskConfig::with_cpu()`.
@@ -82,7 +82,7 @@ pub enum WaitFor {
      *
      * The `Thread` must not be the same
      */
-    Join(RawTaskId),
+    Join(RawTaskHandle),
 
     /**
      * The current `Thread` sleeps until the interrupt identified by the

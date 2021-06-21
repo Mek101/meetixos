@@ -9,6 +9,7 @@ use crate::sys::codes::{
     KernDeviceFnId,
     KernDirFnId,
     KernFileFnId,
+    KernHandleFnId,
     KernIpcChanFnId,
     KernLinkFnId,
     KernMMapFnId,
@@ -38,6 +39,7 @@ use crate::sys::codes::{
  */
 #[derive(Debug, Copy, Clone)]
 pub enum KernFnPath {
+    KernHandle(KernHandleFnId),
     ObjConfig(KernObjConfigFnId),
     TaskConfig(KernTaskConfigFnId),
     OsEntConfig(KernOsEntConfigFnId),
@@ -66,26 +68,27 @@ impl KernFnPath {
      */
     pub fn raw_fn_class(&self) -> u16 {
         match self {
-            Self::ObjConfig(_) => 0,
-            Self::TaskConfig(_) => 1,
-            Self::OsEntConfig(_) => 2,
-            Self::Object(_) => 3,
-            Self::Task(_) => 4,
-            Self::Device(_) => 5,
-            Self::Dir(_) => 6,
-            Self::File(_) => 7,
-            Self::IpcChan(_) => 8,
-            Self::Iterator(_) => 9,
-            Self::Link(_) => 10,
-            Self::MMap(_) => 11,
-            Self::Mutex(_) => 12,
-            Self::TimeInst(_) => 13,
-            Self::Path(_) => 14,
-            Self::OsEntity(_) => 15,
-            Self::OsUser(_) => 16,
-            Self::OsGroup(_) => 17,
-            Self::Proc(_) => 18,
-            Self::Thread(_) => 19
+            Self::KernHandle(_) => 0,
+            Self::ObjConfig(_) => 1,
+            Self::TaskConfig(_) => 2,
+            Self::OsEntConfig(_) => 3,
+            Self::Object(_) => 4,
+            Self::Task(_) => 5,
+            Self::Device(_) => 6,
+            Self::Dir(_) => 7,
+            Self::File(_) => 8,
+            Self::IpcChan(_) => 9,
+            Self::Iterator(_) => 10,
+            Self::Link(_) => 11,
+            Self::MMap(_) => 12,
+            Self::Mutex(_) => 13,
+            Self::TimeInst(_) => 14,
+            Self::Path(_) => 15,
+            Self::OsEntity(_) => 16,
+            Self::OsUser(_) => 17,
+            Self::OsGroup(_) => 18,
+            Self::Proc(_) => 19,
+            Self::Thread(_) => 20
         }
     }
 
@@ -94,6 +97,7 @@ impl KernFnPath {
      */
     pub fn raw_fn_id(&self) -> u16 {
         match *self {
+            Self::KernHandle(fn_id) => fn_id.into(),
             Self::ObjConfig(fn_id) => fn_id.into(),
             Self::TaskConfig(fn_id) => fn_id.into(),
             Self::OsEntConfig(fn_id) => fn_id.into(),
@@ -121,26 +125,27 @@ impl KernFnPath {
 impl fmt::Display for KernFnPath {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::ObjConfig(code) => write!(f, "KernFnPath::ObjConfig({:?})", code),
-            Self::TaskConfig(code) => write!(f, "KernFnPath::TaskConfig({:?})", code),
-            Self::OsEntConfig(code) => write!(f, "KernFnPath::OSEntConfig({:?})", code),
-            Self::Object(code) => write!(f, "KernFnPath::Object({:?})", code),
-            Self::Task(code) => write!(f, "KernFnPath::Task({:?})", code),
-            Self::Device(code) => write!(f, "KernFnPath::Device({:?})", code),
-            Self::Dir(code) => write!(f, "KernFnPath::Dir({:?})", code),
-            Self::File(code) => write!(f, "KernFnPath::File({:?})", code),
-            Self::IpcChan(code) => write!(f, "KernFnPath::IpcChan({:?})", code),
-            Self::Iterator(code) => write!(f, "KernFnPath::Iterator({:?})", code),
-            Self::Link(code) => write!(f, "KernFnPath::Link({:?})", code),
-            Self::MMap(code) => write!(f, "KernFnPath::MMap({:?})", code),
-            Self::Mutex(code) => write!(f, "KernFnPath::Mutex({:?})", code),
-            Self::TimeInst(code) => write!(f, "KernFnPath::Time({:?})", code),
-            Self::Path(code) => write!(f, "KernFnPath::Path({:?})", code),
-            Self::OsEntity(code) => write!(f, "KernFnPath::OSEntity({:?})", code),
-            Self::OsUser(code) => write!(f, "KernFnPath::OSUser({:?})", code),
-            Self::OsGroup(code) => write!(f, "KernFnPath::OSGroup({:?})", code),
-            Self::Proc(code) => write!(f, "KernFnPath::Proc({:?})", code),
-            Self::Thread(code) => write!(f, "KernFnPath::Thread({:?})", code)
+            Self::KernHandle(fn_id) => write!(f, "KernFnPath::KernHandle({:?})", fn_id),
+            Self::ObjConfig(fn_id) => write!(f, "KernFnPath::ObjConfig({:?})", fn_id),
+            Self::TaskConfig(fn_id) => write!(f, "KernFnPath::TaskConfig({:?})", fn_id),
+            Self::OsEntConfig(fn_id) => write!(f, "KernFnPath::OSEntConfig({:?})", fn_id),
+            Self::Object(fn_id) => write!(f, "KernFnPath::Object({:?})", fn_id),
+            Self::Task(fn_id) => write!(f, "KernFnPath::Task({:?})", fn_id),
+            Self::Device(fn_id) => write!(f, "KernFnPath::Device({:?})", fn_id),
+            Self::Dir(fn_id) => write!(f, "KernFnPath::Dir({:?})", fn_id),
+            Self::File(fn_id) => write!(f, "KernFnPath::File({:?})", fn_id),
+            Self::IpcChan(fn_id) => write!(f, "KernFnPath::IpcChan({:?})", fn_id),
+            Self::Iterator(fn_id) => write!(f, "KernFnPath::Iterator({:?})", fn_id),
+            Self::Link(fn_id) => write!(f, "KernFnPath::Link({:?})", fn_id),
+            Self::MMap(fn_id) => write!(f, "KernFnPath::MMap({:?})", fn_id),
+            Self::Mutex(fn_id) => write!(f, "KernFnPath::Mutex({:?})", fn_id),
+            Self::TimeInst(fn_id) => write!(f, "KernFnPath::Time({:?})", fn_id),
+            Self::Path(fn_id) => write!(f, "KernFnPath::Path({:?})", fn_id),
+            Self::OsEntity(fn_id) => write!(f, "KernFnPath::OSEntity({:?})", fn_id),
+            Self::OsUser(fn_id) => write!(f, "KernFnPath::OSUser({:?})", fn_id),
+            Self::OsGroup(fn_id) => write!(f, "KernFnPath::OSGroup({:?})", fn_id),
+            Self::Proc(fn_id) => write!(f, "KernFnPath::Proc({:?})", fn_id),
+            Self::Thread(fn_id) => write!(f, "KernFnPath::Thread({:?})", fn_id)
         }
     }
 }

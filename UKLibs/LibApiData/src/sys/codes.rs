@@ -6,7 +6,20 @@ use num_enum::{
 };
 
 /**
- * Lists the system call codes for the `LibApi::objs::ObjConfig` struct
+ * Lists the system call codes for the `KernHandle` struct
+ */
+#[repr(u16)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum KernHandleFnId {
+    IsValid,
+    Drop
+}
+
+/**
+ * Lists the system call codes for the `ObjConfig` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -18,7 +31,7 @@ pub enum KernObjConfigFnId {
 }
 
 /**
- * Lists the system call codes for the `LibApi::tasks::TaskConfig` struct
+ * Lists the system call codes for the `TaskConfig` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -31,7 +44,7 @@ pub enum KernTaskConfigFnId {
 }
 
 /**
- * Lists the system call codes for the `LibApi::ent::OSEntConfig` struct
+ * Lists the system call codes for the `OSEntConfig` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -44,7 +57,7 @@ pub enum KernOsEntConfigFnId {
 }
 
 /**
- * Lists the system call codes for the `LibApi::objs::Object` trait
+ * Lists the system call codes for the `Object` trait
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -53,7 +66,6 @@ pub enum KernOsEntConfigFnId {
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernObjectFnId {
     AddRef,
-    Drop,
     DropName,
     Info,
     UpdateInfo,
@@ -64,7 +76,7 @@ pub enum KernObjectFnId {
 }
 
 /**
- * Lists the system call codes for the `LibApi::tasks::Task` trait
+ * Lists the system call codes for the `Task` trait
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -79,7 +91,7 @@ pub enum KernTaskFnId {
 }
 
 /**
- * Lists the system call codes for the `LibApi::objs::impls::Device` struct
+ * Lists the system call codes for the `Device` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -95,7 +107,7 @@ pub enum KernDeviceFnId {
 }
 
 /**
- * Lists the system call codes for the `LibApi::objs::impls::Dir` struct
+ * Lists the system call codes for the `Dir` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -107,7 +119,7 @@ pub enum KernDirFnId {
 }
 
 /**
- * Lists the system call codes for the `LibApi::objs::impls::File` struct
+ * Lists the system call codes for the `File` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -124,7 +136,7 @@ pub enum KernFileFnId {
 }
 
 /**
- * Lists the system call codes for the `LibApi::objs::impls::IpcChan` struct
+ * Lists the system call codes for the `IpcChan` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -137,7 +149,7 @@ pub enum KernIpcChanFnId {
 }
 
 /**
- * Lists the system call codes for the `LibApi::objs::impls::KrnIterator`
+ * Lists the system call codes for the `KrnIterator`
  * struct
  */
 #[repr(u16)]
@@ -152,7 +164,7 @@ pub enum KrnIteratorFnId {
 }
 
 /**
- * Lists the system call codes for the `LibApi::objs::impls::Link` struct
+ * Lists the system call codes for the `Link` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -165,7 +177,7 @@ pub enum KernLinkFnId {
 }
 
 /**
- * Lists the system call codes for the `LibApi::objs::impls::MMap` struct
+ * Lists the system call codes for the `MMap` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -175,11 +187,12 @@ pub enum KernLinkFnId {
 pub enum KernMMapFnId {
     GetPtr,
     DropPtr,
-    IsFile
+    IsFile,
+    IsDevice
 }
 
 /**
- * Lists the system call codes for the `LibApi::objs::impls::Mutex` struct
+ * Lists the system call codes for the `Mutex` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -194,7 +207,7 @@ pub enum KernMutexFnId {
 }
 
 /**
- * Lists the system call codes for the `LibApi::time::Instant` struct
+ * Lists the system call codes for the `Instant` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -206,7 +219,7 @@ pub enum KernTimeInstFnId {
 }
 
 /**
- * Lists the system call codes for the `LibApi::path::Path` struct
+ * Lists the system call codes for the `Path` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -218,7 +231,7 @@ pub enum KernPathFnId {
 }
 
 /**
- * Lists the system call codes for the `LibApi::ent::OSEntity` trait
+ * Lists the system call codes for the `OsEntity` trait
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -230,7 +243,7 @@ pub enum KernOsEntFnId {
 }
 
 /**
- * Lists the system call codes for the `LibApi::ent::impls::OSUser`
+ * Lists the system call codes for the `OsUser`
  * struct
  */
 #[repr(u16)]
@@ -243,7 +256,7 @@ pub enum KernOsUserFnId {
 }
 
 /**
- * Lists the system call codes for the `LibApi::ent::impls::OSGroup`
+ * Lists the system call codes for the `OsGroup`
  * struct
  */
 #[repr(u16)]
@@ -256,7 +269,7 @@ pub enum KernOsGroupFnId {
 }
 
 /**
- * Lists the system call codes for the `LibApi::tasks::impls::Proc` struct
+ * Lists the system call codes for the `Proc` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -270,7 +283,7 @@ pub enum KernProcFnId {
 }
 
 /**
- * Lists the system call codes for the `LibApi::tasks::impls::Thread` struct
+ * Lists the system call codes for the `Thread` struct
  */
 #[repr(u16)]
 #[derive(Debug)]

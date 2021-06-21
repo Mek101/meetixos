@@ -4,12 +4,13 @@ use api_data::{
     obj::{
         modes::RecvMode,
         types::ObjType,
-        uses::ObjUseBits
+        uses::ObjUseBits,
+        RawObjHandle
     },
     sys::{
         codes::KernObjectFnId,
         fn_path::KernFnPath,
-        KernHandle
+        RawKernHandle
     },
     task::thread::RWatchThreadEntry
 };
@@ -24,10 +25,11 @@ pub type ObjUseFilters = BitFlags<usize, ObjUseBits>;
 
 #[repr(transparent)]
 #[derive(Debug)]
+#[derive(Default)]
 #[derive(Eq, PartialEq)]
 #[derive(Ord, PartialOrd)]
 pub struct ObjHandle {
-    m_raw_handle: KernHandle
+    m_raw_handle: RawObjHandle
 }
 
 impl ObjHandle {
@@ -53,7 +55,15 @@ impl ObjHandle {
              use_filter: ObjUseFilters,
              callback_fn: RWatchThreadEntry)
              -> Result<()> {
-        Ok(())
+        extern "C" fn c_callback_entry() -> ! {
+            unreachable!();
+        }
+
+        self.inst_kern_call_3(KernFnPath::Object(KernObjectFnId::Watch),
+                              use_filter.raw_bits(),
+                              callback_fn as usize,
+                              c_callback_entry as usize)
+            .map(|_| ())
     }
 }
 
@@ -93,20 +103,20 @@ impl Drop for ObjHandle {
     }
 }
 
-impl From<KernHandle> for ObjHandle {
-    fn from(raw_handle: KernHandle) -> Self {
+impl From<RawKernHandle> for ObjHandle {
+    fn from(raw_handle: RawKernHandle) -> Self {
         Self { m_raw_handle: raw_handle }
     }
 }
 
 impl From<usize> for ObjHandle {
     fn from(raw_handle: usize) -> Self {
-        Self::from(raw_handle as KernHandle)
+        Self::from(raw_handle as RawKernHandle)
     }
 }
 
 impl KernCaller for ObjHandle {
-    fn raw_handle(&self) -> KernHandle {
+    fn raw_handle(&self) -> RawKernHandle {
         self.m_raw_handle
     }
 }

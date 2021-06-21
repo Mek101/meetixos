@@ -10,9 +10,14 @@ pub mod codes;
 pub mod fn_path;
 
 /**
+ * Invalid kernel handle value
+ */
+pub const INVALID_KERN_HANDLE: RawKernHandle = -1 as RawKernHandle;
+
+/**
  * Convenience type renaming for kernel handles
  */
-pub type KernHandle = u32;
+pub type RawKernHandle = u32;
 
 /**
  * Fixed collector of system call arguments
@@ -20,7 +25,7 @@ pub type KernHandle = u32;
 #[derive(Debug)]
 pub struct SysCallPayload {
     m_kern_fn_path: KernFnPath,
-    m_raw_handle: Option<KernHandle>, /* TODO tables with inst_required = <> */
+    m_raw_handle: Option<RawKernHandle>, /* TODO tables with inst_required = <> */
     m_raw_args: [usize; SYSCALL_ARGS_COUNT_MAX],
     m_error_modified: bool,
     m_error: OsError,
@@ -33,7 +38,7 @@ impl SysCallPayload {
      */
     #[inline]
     pub fn new(kern_fn_path: KernFnPath,
-               raw_handle: Option<KernHandle>,
+               raw_handle: Option<RawKernHandle>,
                arg0: usize,
                arg1: usize,
                arg2: usize,
@@ -61,7 +66,7 @@ impl SysCallPayload {
      * Returns the kernel handle instance if any
      */
     #[inline]
-    pub fn raw_handle(&self) -> Option<KernHandle> {
+    pub fn raw_handle(&self) -> Option<RawKernHandle> {
         self.m_raw_handle
     }
 
@@ -122,6 +127,7 @@ impl SysCallPayload {
     /**
      * Returns `self` as `usize` pointer
      */
+    #[inline]
     pub fn as_syscall_ptr(&mut self) -> usize {
         self as *mut Self as usize
     }

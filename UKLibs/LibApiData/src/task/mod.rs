@@ -1,7 +1,5 @@
 /*! Tasks management */
 
-use crate::sys::KernHandle;
-
 pub mod config;
 pub mod fs_types;
 pub mod modes;
@@ -11,4 +9,4 @@ pub mod types;
 /**
  * Convenience type renaming for `Task` reference
  */
-pub type RawTaskId = KernHandle;
+pub type RawTaskHandle = crate::sys::RawKernHandle;

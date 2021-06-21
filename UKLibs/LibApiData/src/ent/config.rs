@@ -12,7 +12,7 @@ use bits::flags::{
 
 use crate::ent::{
     types::OsEntityType,
-    RawOsEntityId
+    RawOsEntityHandle
 };
 
 /**
@@ -26,7 +26,7 @@ pub type OsEntityConfigFlags = BitFlags<usize, OsEntityConfigBits>;
 #[derive(Debug)]
 #[derive(Copy, Clone)]
 pub struct RawOsEntityConfig<'a> {
-    m_id: Option<RawOsEntityId>,
+    m_id: Option<RawOsEntityHandle>,
     m_type: OsEntityType,
     m_name: Option<&'a str>,
     m_flags: OsEntityConfigFlags
@@ -46,14 +46,14 @@ impl<'a> RawOsEntityConfig<'a> {
     /**
      * Returns the optionally stored `OsEntity` identifier
      */
-    pub fn id(&self) -> Option<RawOsEntityId> {
+    pub fn id(&self) -> Option<RawOsEntityHandle> {
         self.m_id
     }
 
     /**
      * Sets an explicit `OsEntity` identifier
      */
-    pub fn set_id(&mut self, raw_id: RawOsEntityId) {
+    pub fn set_id(&mut self, raw_id: RawOsEntityHandle) {
         self.m_id = Some(raw_id);
     }
 

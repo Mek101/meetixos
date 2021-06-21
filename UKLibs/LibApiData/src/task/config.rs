@@ -13,8 +13,8 @@ use bits::flags::{
 };
 
 use crate::{
-    ent::RawOsEntityId,
-    obj::RawObjId,
+    ent::RawOsEntityHandle,
+    obj::RawObjHandle,
     task::{
         modes::TaskExecCpu,
         thread::{
@@ -22,7 +22,7 @@ use crate::{
             RUserThreadEntry,
             UserThreadArg
         },
-        RawTaskId
+        RawTaskHandle
     }
 };
 
@@ -37,18 +37,18 @@ pub type TaskConfigFlags = BitFlags<usize, TaskConfigBits>;
 #[derive(Debug)]
 #[derive(Copy, Clone)]
 pub struct RawTaskConfig<'a> {
-    m_id: Option<RawTaskId>,
+    m_id: Option<RawTaskHandle>,
 
     /* task execution related fields */
     m_flags: TaskConfigFlags,
     m_exec_cpu: TaskExecCpu,
 
     /* owner related fields */
-    m_os_user: Option<RawOsEntityId>,
-    m_os_group: Option<RawOsEntityId>,
+    m_os_user: Option<RawOsEntityHandle>,
+    m_os_group: Option<RawOsEntityHandle>,
 
     /* process specific parameters */
-    m_file_to_exec: RawObjId,
+    m_file_to_exec: RawObjHandle,
     m_cmdline_args: Option<&'a [&'a str]>,
 
     /* thread specific parameters */
@@ -77,14 +77,14 @@ impl<'a> RawTaskConfig<'a> {
     /**
      * Returns the preferred `RawTaskId`
      */
-    pub fn id(&self) -> Option<RawTaskId> {
+    pub fn id(&self) -> Option<RawTaskHandle> {
         self.m_id
     }
 
     /**
      * Sets the preferred `RawTaskId`
      */
-    pub fn set_id(&mut self, id: RawTaskId) {
+    pub fn set_id(&mut self, id: RawTaskHandle) {
         self.m_id = Some(id);
     }
 
@@ -119,42 +119,42 @@ impl<'a> RawTaskConfig<'a> {
     /**
      * Returns the owner user's `RawOsEntityId`
      */
-    pub fn os_user(&self) -> Option<RawOsEntityId> {
+    pub fn os_user(&self) -> Option<RawOsEntityHandle> {
         self.m_os_user
     }
 
     /**
      * Sets the owner user's `RawOsEntityId`
      */
-    pub fn set_os_user(&mut self, os_user: RawOsEntityId) {
+    pub fn set_os_user(&mut self, os_user: RawOsEntityHandle) {
         self.m_os_user = Some(os_user);
     }
 
     /**
      * Returns the owner group's `RawOsEntityId`
      */
-    pub fn os_group(&self) -> Option<RawOsEntityId> {
+    pub fn os_group(&self) -> Option<RawOsEntityHandle> {
         self.m_os_group
     }
 
     /**
      * Sets the owner group's `RawOsEntityId`
      */
-    pub fn set_os_group(&mut self, os_group: RawOsEntityId) {
+    pub fn set_os_group(&mut self, os_group: RawOsEntityHandle) {
         self.m_os_group = Some(os_group);
     }
 
     /**
      * Returns the `RawObjId` of the file to execute for the new process
      */
-    pub fn file_to_exec(&self) -> RawObjId {
+    pub fn file_to_exec(&self) -> RawObjHandle {
         self.m_file_to_exec
     }
 
     /**
      * Sets the `RawObjId` of the file to execute for the new process
      */
-    pub fn set_file_to_exec(&mut self, file_to_exec: RawObjId) {
+    pub fn set_file_to_exec(&mut self, file_to_exec: RawObjHandle) {
         self.m_file_to_exec = file_to_exec;
     }
 

@@ -9,7 +9,9 @@
 
 pub mod arch;
 pub mod caller;
+pub mod handle;
 pub mod obj;
+pub mod task;
 
 pub mod bits;
 pub mod ents;

@@ -12,9 +12,9 @@ use crate::{
     limit::OS_ERROR_MESSAGE_LEN_MAX,
     sys::{
         fn_path::KernFnPath,
-        KernHandle
+        RawKernHandle
     },
-    task::RawTaskId
+    task::RawTaskHandle
 };
 
 pub mod class;
@@ -27,9 +27,9 @@ pub mod class;
 pub struct OsError {
     m_class: OsErrorClass,
     m_kern_fn_path: KernFnPath,
-    m_inst_handle: Option<KernHandle>,
-    m_proc_id: RawTaskId,
-    m_thread_id: RawTaskId,
+    m_inst_handle: Option<RawKernHandle>,
+    m_proc_id: RawTaskHandle,
+    m_thread_id: RawTaskHandle,
     m_message: Option<[u8; OS_ERROR_MESSAGE_LEN_MAX]>
 }
 
@@ -39,9 +39,9 @@ impl OsError {
      */
     pub fn new(class: OsErrorClass,
                kern_fn_path: KernFnPath,
-               inst_handle: Option<KernHandle>,
-               proc_id: RawTaskId,
-               thread_id: RawTaskId,
+               inst_handle: Option<RawKernHandle>,
+               proc_id: RawTaskHandle,
+               thread_id: RawTaskHandle,
                message: Option<&str>)
                -> Self {
         Self { m_class: class,
@@ -73,7 +73,7 @@ impl OsError {
     /**
      * Returns the `KernHandle` which originates this `OsError` if any
      */
-    pub fn inst_handle(&self) -> Option<KernHandle> {
+    pub fn inst_handle(&self) -> Option<RawKernHandle> {
         self.m_inst_handle
     }
 

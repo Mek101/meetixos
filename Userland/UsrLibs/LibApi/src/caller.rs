@@ -4,7 +4,7 @@ use api_data::{
     error::OsError,
     sys::{
         fn_path::KernFnPath,
-        KernHandle,
+        RawKernHandle,
         SysCallPayload
     }
 };
@@ -24,7 +24,7 @@ pub(crate) trait KernCaller {
     /**
      * Returns the raw underling kernel resource handle
      */
-    fn raw_handle(&self) -> KernHandle;
+    fn raw_handle(&self) -> RawKernHandle;
 
     /**
      * Performs the call to the kernel service described by `KernFnPath`
@@ -244,7 +244,7 @@ pub(crate) trait KernCaller {
      */
     #[inline]
     fn do_kern_call(kern_fn_path: KernFnPath,
-                    raw_handle: Option<KernHandle>,
+                    raw_handle: Option<RawKernHandle>,
                     arg0: usize,
                     arg1: usize,
                     arg2: usize,
