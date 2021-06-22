@@ -13,7 +13,7 @@ use num_enum::{
 #[derive(Clone, Copy)]
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
-pub enum RecvMode {
+pub enum ObjRecvMode {
     /**
      * Simply asks to the Kernel whether an obj of the requested type is
      * already available into the obj receiving queue, if not it returns

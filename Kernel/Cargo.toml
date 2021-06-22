@@ -11,7 +11,7 @@ shared = { path = "SharedCode" }
 # ------------------------------ MeetiX Libraries Crates ------------------------------- #
 
 bits     = { path = "../UKLibs/LibBits" }
-heap     = { path = "../UKLibs/LibHeap", features = ["disable_locked"] }
+heap     = { path = "../UKLibs/LibHeap", features = ["disable_locked"], default_features = false }
 sync     = { path = "../UKLibs/LibSync" }
 helps    = { path = "../UKLibs/LibHelps" }
 symbols  = { path = "../UKLibs/LibSymbols" }

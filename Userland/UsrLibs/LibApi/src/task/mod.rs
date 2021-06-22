@@ -12,8 +12,8 @@ use api_data::{
     }
 };
 
-use crate::caller::{
-    KernCaller,
+use crate::handle::{
+    KernHandle,
     Result
 };
 
@@ -23,7 +23,7 @@ use crate::caller::{
 #[derive(Eq, PartialEq)]
 #[derive(Ord, PartialOrd)]
 pub struct TaskHandle {
-    m_raw_handle: RawTaskHandle
+    m_handle: KernHandle
 }
 
 impl TaskHandle {
@@ -31,18 +31,17 @@ impl TaskHandle {
      * Obtains the current `TaskHandle` of the `TaskType` given
      */
     fn this(task_type: TaskType) -> Self {
-        Self::kern_call_1(KernFnPath::Task(KernTaskFnId::This), task_type.into())
-             .map(|raw_task_handle| {
-                 Self { m_raw_handle: raw_task_handle as RawTaskHandle }
-             })
-             .expect("Failed to obtain current task handle")
+        KernHandle::kern_call_1(KernFnPath::Task(KernTaskFnId::This), task_type.into())
+                   .map(|raw_task_handle| Self { m_handle: KernHandle::from_raw(raw_task_handle) })
+                   .expect("Failed to obtain current Task handle")
     }
 
     /**
-     * Terminates this `TaskId`
+     * Terminates this `TaskHandle`
      */
     fn terminate(&self, call_cleanup: bool) -> Result<()> {
-        self.inst_kern_call_1(KernFnPath::Task(KernTaskFnId::Terminate),
+        self.m_handle
+            .inst_kern_call_1(KernFnPath::Task(KernTaskFnId::Terminate),
                               call_cleanup as usize)
             .map(|_| ())
     }
@@ -51,23 +50,95 @@ impl TaskHandle {
      * Yields the execution
      */
     fn yield_next(&self) {
-        self.inst_kern_call_0(KernFnPath::Task(KernTaskFnId::Yield))
+        self.m_handle
+            .inst_kern_call_0(KernFnPath::Task(KernTaskFnId::Yield))
             .expect("Failed to yield to next task");
     }
 
     /**
-     * Returns whether the referenced task is alive
+     * Returns whether the referenced task is valid and alive
      */
     fn is_alive(&self) -> bool {
-        self.m_raw_handle != 0
-        && self.inst_kern_call_0(KernFnPath::Task(KernTaskFnId::IsAlive))
-               .map(|res| res != 0)
-               .expect("Failed to obtain task handle validity")
+        self.m_handle.is_valid()
     }
 }
 
-impl KernCaller for TaskHandle {
-    fn raw_handle(&self) -> RawKernHandle {
-        self.m_raw_handle
+/**
+ * Common interface implemented by all the `TaskHandle` based objects.
+ *
+ * It mainly exposes the private methods of the `TaskHandle` for safe
+ * calling and provides convenient methods to easily perform works that
+ * normally implies more than one call
+ */
+pub trait Task: From<TaskHandle> {
+    /**
+     * The value of the `TaskType` that matches the implementation
+     */
+    const TASK_TYPE: TaskType;
+
+    /**
+     * Returns the immutable reference to the underling `TaskHandle`
+     * instance
+     */
+    fn task_handle(&self) -> &TaskHandle;
+
+    /**
+     * Returns the mutable reference to the underling `TaskHandle` instance
+     */
+    fn task_handle_mut(&mut self) -> &mut TaskHandle;
+
+    /**
+     * Returns an uninitialized `TaskConfig` to spawn a new `Task`
+     */
+    fn spawn() -> TaskConfig<Self, CreatMode> {
+        TaskConfig::new()
+    }
+
+    /**
+     * Returns an uninitialized `TaskConfig` to find an existing `Task`
+     */
+    fn find() -> TaskConfig<Self, FindMode> {
+        TaskConfig::new()
+    }
+
+    /**
+     * Obtains the current `Task` reference according to the wrapping type
+     * (i.e `Proc` or `Thread`)
+     */
+    fn this() -> Self {
+        Self::from(TaskHandle::this(Self::TASK_TYPE))
+    }
+
+    /**
+     * Terminates the task referenced by this `Task` if the caller
+     * user/group is the same of the `Task` to terminate or it's the
+     * administrator.
+     *
+     * The `call_cleanup` flag tells to the Kernel whether it must call the
+     * registered cleanup function(s) (if any) before definitively terminate
+     * the target.
+     *
+     * If the target is a `Proc` and it have more than one active
+     * `Thread` the Kernel first terminates them all, then terminates
+     * the `Proc`
+     */
+    fn terminate(&self, call_cleanup: bool) -> Result<()> {
+        self.task_handle().terminate(call_cleanup)
+    }
+
+    /**
+     * Preempts the remaining CPU quantum of this `Task` if it was spawned
+     * with `SchedPolicy::Preemptive`, or to release the CPU for the
+     * other tasks if it was spawner with `SchedPolicy::Cooperative`
+     */
+    fn yield_next(&self) {
+        self.task_handle().yield_next()
+    }
+
+    /**
+     * Returns whether the referenced `Task` is alive
+     */
+    fn is_alive(&self) -> bool {
+        self.task_handle().is_alive()
     }
 }

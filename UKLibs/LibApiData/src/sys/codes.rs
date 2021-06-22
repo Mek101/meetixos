@@ -66,7 +66,6 @@ pub enum KernOsEntConfigFnId {
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernObjectFnId {
-    AddRef,
     DropName,
     Info,
     UpdateInfo,
@@ -87,8 +86,7 @@ pub enum KernObjectFnId {
 pub enum KernTaskFnId {
     This,
     Terminate,
-    Yield,
-    IsAlive
+    Yield
 }
 
 /**

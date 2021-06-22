@@ -58,49 +58,25 @@ impl RawObjInfo {
     const EMPTY_VFS_NAME: [u8; VFS_NAME_LEN_MAX] = [0; VFS_NAME_LEN_MAX];
 
     /**
-     * Constructs an empty `RawObjInfo`
-     */
-    pub fn new() -> Self {
-        Self { m_type: ObjType::default(),
-               m_ref_count: 0,
-               m_has_name: false,
-               m_name_id: 0,
-               m_name_buffer: Self::EMPTY_VFS_NAME,
-               m_name_len: 0,
-               m_links: 0,
-               m_data_block_size: 0,
-               m_data_blocks_used: 0,
-               m_data_bytes_used: 0,
-               m_os_user_id: 0,
-               m_os_group_id: 0,
-               m_prot_grants: RawObjGrants::new_zero(),
-               m_creat_inst: RawInstant::default(),
-               m_last_data_access_inst: RawInstant::default(),
-               m_last_data_modify_inst: RawInstant::default(),
-               m_last_info_access_inst: RawInstant::default(),
-               m_last_info_modify_inst: RawInstant::default() }
-    }
-
-    /**
      * Constructs a `RawObjInfo` filled with the given parameters
      */
-    pub fn new_filled(obj_type: ObjType,
-                      ref_count: usize,
-                      name_id: u64,
-                      name: Option<&str>,
-                      links: u32,
-                      data_block_size: usize,
-                      data_blocks_used: usize,
-                      data_bytes_used: usize,
-                      os_user_id: RawOsEntityHandle,
-                      os_group_id: RawOsEntityHandle,
-                      prot_grants: RawObjGrants,
-                      creat_inst: RawInstant,
-                      last_data_access_inst: RawInstant,
-                      last_data_modify_inst: RawInstant,
-                      last_info_access_inst: RawInstant,
-                      last_info_modify_inst: RawInstant)
-                      -> Self {
+    pub fn new(obj_type: ObjType,
+               ref_count: usize,
+               name_id: u64,
+               name: Option<&str>,
+               links: u32,
+               data_block_size: usize,
+               data_blocks_used: usize,
+               data_bytes_used: usize,
+               os_user_id: RawOsEntityHandle,
+               os_group_id: RawOsEntityHandle,
+               prot_grants: RawObjGrants,
+               creat_inst: RawInstant,
+               last_data_access_inst: RawInstant,
+               last_data_modify_inst: RawInstant,
+               last_info_access_inst: RawInstant,
+               last_info_modify_inst: RawInstant)
+               -> Self {
         Self { m_type: obj_type,
                m_ref_count: ref_count,
                m_has_name: name.is_some(),
@@ -334,6 +310,29 @@ impl RawObjInfo {
      */
     pub fn as_syscall_ptr(&self) -> usize {
         self as *const Self as usize
+    }
+}
+
+impl Default for RawObjInfo {
+    fn default() -> Self {
+        Self { m_type: ObjType::default(),
+               m_ref_count: 0,
+               m_has_name: false,
+               m_name_id: 0,
+               m_name_buffer: Self::EMPTY_VFS_NAME,
+               m_name_len: 0,
+               m_links: 0,
+               m_data_block_size: 0,
+               m_data_blocks_used: 0,
+               m_data_bytes_used: 0,
+               m_os_user_id: 0,
+               m_os_group_id: 0,
+               m_prot_grants: RawObjGrants::new_zero(),
+               m_creat_inst: RawInstant::default(),
+               m_last_data_access_inst: RawInstant::default(),
+               m_last_data_modify_inst: RawInstant::default(),
+               m_last_info_access_inst: RawInstant::default(),
+               m_last_info_modify_inst: RawInstant::default() }
     }
 }
 

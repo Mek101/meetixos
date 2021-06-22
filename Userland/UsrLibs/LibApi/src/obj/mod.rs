@@ -2,7 +2,8 @@
 
 use api_data::{
     obj::{
-        modes::RecvMode,
+        info::RawObjInfo,
+        modes::ObjRecvMode,
         types::ObjType,
         uses::ObjUseBits,
         RawObjHandle
@@ -16,39 +17,55 @@ use api_data::{
 };
 use bits::flags::BitFlags;
 
-use crate::caller::{
-    KernCaller,
-    Result
+use crate::{
+    handle::{
+        KernHandle,
+        Result
+    },
+    obj::info::ObjInfo,
+    task::Task
 };
+
+pub mod config;
+pub mod grants;
+pub mod impls;
+pub mod info;
 
 pub type ObjUseFilters = BitFlags<usize, ObjUseBits>;
 
 #[repr(transparent)]
 #[derive(Debug)]
+#[derive(Clone)]
 #[derive(Default)]
 #[derive(Eq, PartialEq)]
 #[derive(Ord, PartialOrd)]
 pub struct ObjHandle {
-    m_raw_handle: RawObjHandle
+    m_handle: KernHandle
 }
 
 impl ObjHandle {
-    fn send<T>(&self, recv_task: &T) -> Result<()> {
-        self.inst_kern_call_1(KernFnPath::Object(KernObjectFnId::Send), 0).map(|_| ())
+    fn send<T>(&self, recv_task: &T) -> Result<()>
+        where T: Task {
+        self.m_handle
+            .inst_kern_call_1(KernFnPath::Object(KernObjectFnId::Send), 0)
+            .map(|_| ())
     }
 
-    fn recv(&mut self, obj_type: ObjType, recv_mode: RecvMode) -> Result<()> {
-        self.inst_kern_call_2(KernFnPath::Object(KernObjectFnId::Recv),
+    fn recv(&mut self, obj_type: ObjType, recv_mode: ObjRecvMode) -> Result<()> {
+        self.m_handle
+            .inst_kern_call_2(KernFnPath::Object(KernObjectFnId::Recv),
                               obj_type.into(),
                               recv_mode.into())
-            .map(|obj_handle| {
-                *self = Self::from(obj_handle);
+            .map(|raw_obj_handle| {
+                *self = Self { m_handle: KernHandle::from_raw(raw_obj_handle) };
                 ()
             })
     }
 
     fn drop_name(&self) -> Result<()> {
-        self.inst_kern_call_0(KernFnPath::Object(KernObjectFnId::DropName)).map(|_| ())
+        self.m_handle
+            .inst_kern_call_0(KernFnPath::Object(KernObjectFnId::DropName))
+            .map(|_| ())
     }
 
     fn watch(&self,
@@ -59,65 +76,32 @@ impl ObjHandle {
             unreachable!();
         }
 
-        self.inst_kern_call_3(KernFnPath::Object(KernObjectFnId::Watch),
+        self.m_handle
+            .inst_kern_call_3(KernFnPath::Object(KernObjectFnId::Watch),
                               use_filter.raw_bits(),
                               callback_fn as usize,
                               c_callback_entry as usize)
             .map(|_| ())
     }
-}
 
-impl Clone for ObjHandle {
-    /**
-     * Increases the references count to the object referenced.
-     *
-     * The returned `ObjHandle` is a new user instance but reference the
-     * same Kernel's object, so changes to any of the cloned instances
-     * affect the same Kernel's object
-     */
-    fn clone(&self) -> Self {
-        self.inst_kern_call_0(KernFnPath::Object(KernObjectFnId::AddRef))
-            .map(|_| Self::from(self.m_raw_handle))
-            .expect("Kernel failed to clone Object")
+    fn info(&self) -> Result<RawObjInfo>
+        where T: Object {
+        let mut raw_obj_info = RawObjInfo::default();
+        self.m_handle
+            .inst_kern_call_1(KernFnPath::Object(KernObjectFnId::Info),
+                              raw_obj_info.as_syscall_ptr())
+            .map(|_| raw_obj_info)
     }
-}
 
-impl Drop for ObjHandle {
-    /**
-     * Decreases by one the references count to the referenced Kernel's
-     * object.
-     *
-     * The life of the objects varies by type:
-     *
-     * Permanent objects, like `File`s, `Dir`ectories, `Link`s and
-     * `OsRawMutex`es, persists until they are explicitly destroyed with
-     * `Object::drop_name()`.
-     *
-     * The other kind of objects, like `MMap`s and `IpcChan`nels, live
-     * until there is a reference to them. When the references reaches the 0
-     * they are definitely destroyed
-     */
-    fn drop(&mut self) {
-        self.inst_kern_call_0(KernFnPath::Object(KernObjectFnId::Drop))
-            .expect("Kernel failed to drop Object");
+    fn update_info(&self, raw_obj_info: &mut RawObjInfo) -> Result<()> {
+        self.m_handle
+            .inst_kern_call_1(KernFnPath::Object(KernObjectFnId::UpdateInfo),
+                              raw_obj_info.as_syscall_ptr())
+            .map(|_| ())
     }
-}
 
-impl From<RawKernHandle> for ObjHandle {
-    fn from(raw_handle: RawKernHandle) -> Self {
-        Self { m_raw_handle: raw_handle }
-    }
-}
-
-impl From<usize> for ObjHandle {
-    fn from(raw_handle: usize) -> Self {
-        Self::from(raw_handle as RawKernHandle)
-    }
-}
-
-impl KernCaller for ObjHandle {
-    fn raw_handle(&self) -> RawKernHandle {
-        self.m_raw_handle
+    pub fn kern_handle(&self) -> &KernHandle {
+        &self.m_handle
     }
 }
 
@@ -128,7 +112,7 @@ impl KernCaller for ObjHandle {
  * and provides convenient methods to easily perform works that normally
  * implies more than one call
  */
-pub trait Object: From<ObjHandle> + Default + Clone + KernCaller {
+pub trait Object: From<ObjHandle> + Default + Clone {
     /**
      * The value of the `ObjType` that matches the implementation
      */
@@ -143,4 +127,48 @@ pub trait Object: From<ObjHandle> + Default + Clone + KernCaller {
      * Returns the mutable reference to the underling `ObjHandle` instance
      */
     fn obj_handle_mut(&mut self) -> &mut ObjHandle;
+
+    /**
+     * Sends this `Object` instance to another `Task` to share the same
+     * resource.
+     *
+     * The concurrency is managed internally by the Kernel with two
+     * `RWLock`s (one for the data and one for the information), so
+     * multiple tasks can read the data or the info but only one a time
+     * can write them
+     */
+    fn send(&self, recv_task: &T) -> Result<()>
+        where T: Task {
+        self.obj_handle().send(recv_task)
+    }
+
+    /**  
+     * Accepts an incoming `Object`
+     *
+     * The previous handle is first released with `Drop` then overwritten
+     * with the new handle received according to the `RecvMode` given
+     */
+    fn recv(&mut self, recv_mode: ObjRecvMode) -> Result<()> {
+        self.obj_handle_mut().recv(Self::TYPE, recv_mode)
+    }
+
+    /**
+     * Convenience method that internally creates an uninitialized obj
+     * instance then performs an `Object::recv()` using the given `RecvMode`
+     */
+    fn recv_new(recv_mode: ObjRecvMode) -> Result<Self> {
+        let mut obj_handle = Self::default();
+        obj_handle.recv(recv_mode).map(|_| obj_handle)
+    }
+
+    /**
+     * Returns the `ObjInfo` of this `Object`
+     */
+    fn info(&self) -> Result<ObjInfo<Self>> {
+        self.obj_handle()
+            .info()
+            .map(|raw_obj_info| ObjInfo::new(raw_obj_info, self.obj_handle().clone()))
+    }
 }
+
+trait UserCreatableObject {}
