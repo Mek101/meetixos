@@ -35,6 +35,11 @@ use crate::handle::KernHandle;
  * `Instant::as_duration()`/`Instant::as_duration_mut()` or the
  * `Deref`/`DerefMut`
  */
+#[derive(Default)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
+#[derive(Hash)]
 pub struct Instant {
     m_raw_instant: RawInstant
 }
@@ -67,11 +72,36 @@ impl Instant {
     }
 
     /**
+     * Returns the reference to the underling `RawInstant` instance
+     */
+    #[inline]
+    pub fn as_raw_instant(&self) -> &RawInstant {
+        &self.m_raw_instant
+    }
+
+    /**
      * Returns the mutable reference to the underling `Duration` instance
      */
     #[inline]
     pub fn as_duration_mut(&mut self) -> &mut Duration {
         &mut self.m_raw_instant
+    }
+
+    /**
+     * Returns the mutable reference to the underling `RawInstant` instance
+     */
+    #[inline]
+    pub fn as_raw_instant_mut(&mut self) -> &mut RawInstant {
+        &mut self.m_raw_instant
+    }
+}
+
+impl From<RawInstant> for Instant {
+    /**
+     * Implemented to perform `RawInstant::into() -> Instant`
+     */
+    fn from(raw_instant: RawInstant) -> Self {
+        Self { m_raw_instant: raw_instant }
     }
 }
 

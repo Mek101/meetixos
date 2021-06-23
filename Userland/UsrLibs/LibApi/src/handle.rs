@@ -48,6 +48,13 @@ impl KernHandle {
     }
 
     /**
+     * Returns the underling `RawKernHandle`
+     */
+    pub(crate) fn raw_handle(&self) -> RawKernHandle {
+        self.m_raw_handle
+    }
+
+    /**
      * Performs the call to the kernel service described by `KernFnPath`
      * without additional parameters
      */

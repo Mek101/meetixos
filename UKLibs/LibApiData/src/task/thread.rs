@@ -3,7 +3,7 @@
 use crate::{
     error::OsError,
     obj::info::ObjUseInstant,
-    task::RawTaskHandle
+    task::TaskId
 };
 
 /**
@@ -14,7 +14,7 @@ pub type CThreadEntry = extern "C" fn() -> !;
 /**
  * Rust `Thread`'s user entry point prototype
  */
-pub type RUserThreadEntry = fn(UserThreadArg, RawTaskHandle) -> Result<usize, OsError>;
+pub type RUserThreadEntry = fn(UserThreadArg, TaskId) -> Result<usize, OsError>;
 
 /**
  * Rust entry point for user threads expects this type of argument
@@ -24,12 +24,12 @@ pub type UserThreadArg = *const ();
 /**
  * Rust `Thread`'s entry point for `Object::watch()` callbacks
  */
-pub type RWatchThreadEntry = fn(ObjUseInstant, RawTaskHandle) -> bool;
+pub type RWatchThreadEntry = fn(ObjUseInstant, TaskId) -> bool;
 
 /**
  * Rust `Thread`'s entry point for `Thread::add_cleaner()` callbacks
  */
-pub type RCleanerThreadEntry = fn(RawTaskHandle);
+pub type RCleanerThreadEntry = fn(TaskId);
 
 /**
  * Context dependent `Thread`'s execution data.
@@ -45,7 +45,7 @@ pub enum ThreadEntryData {
     User {
         m_entry_point: RUserThreadEntry,
         m_entry_arg: UserThreadArg,
-        m_thread_id: RawTaskHandle
+        m_thread_id: TaskId
     },
 
     /**
@@ -54,7 +54,7 @@ pub enum ThreadEntryData {
     WatchCallback {
         m_entry_point: RWatchThreadEntry,
         m_entry_arg: ObjUseInstant,
-        m_thread_id: RawTaskHandle
+        m_thread_id: TaskId
     },
 
     /**
@@ -62,7 +62,7 @@ pub enum ThreadEntryData {
      */
     CleanerCallback {
         m_entry_point: RCleanerThreadEntry,
-        m_thread_id: RawTaskHandle
+        m_thread_id: TaskId
     },
 
     /**

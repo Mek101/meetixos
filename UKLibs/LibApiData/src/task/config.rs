@@ -22,7 +22,7 @@ use crate::{
             RUserThreadEntry,
             UserThreadArg
         },
-        RawTaskHandle
+        TaskId
     }
 };
 
@@ -37,7 +37,7 @@ pub type TaskConfigFlags = BitFlags<usize, TaskConfigBits>;
 #[derive(Debug)]
 #[derive(Copy, Clone)]
 pub struct RawTaskConfig<'a> {
-    m_id: Option<RawTaskHandle>,
+    m_id: Option<TaskId>,
 
     /* task execution related fields */
     m_flags: TaskConfigFlags,
@@ -77,14 +77,14 @@ impl<'a> RawTaskConfig<'a> {
     /**
      * Returns the preferred `RawTaskId`
      */
-    pub fn id(&self) -> Option<RawTaskHandle> {
+    pub fn id(&self) -> Option<TaskId> {
         self.m_id
     }
 
     /**
      * Sets the preferred `RawTaskId`
      */
-    pub fn set_id(&mut self, id: RawTaskHandle) {
+    pub fn set_id(&mut self, id: TaskId) {
         self.m_id = Some(id);
     }
 

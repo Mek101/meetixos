@@ -6,14 +6,14 @@ use helps::str::{
 };
 
 use crate::{
-    ent::RawOsEntityHandle,
+    ent::OsEntityId,
     limit::VFS_NAME_LEN_MAX,
     obj::{
         grants::RawObjGrants,
         types::ObjType,
         uses::ObjUseBits
     },
-    task::RawTaskHandle,
+    task::TaskId,
     time::RawInstant
 };
 
@@ -39,8 +39,8 @@ pub struct RawObjInfo {
     m_data_bytes_used: usize,
 
     /* protection related fields */
-    m_os_user_id: RawOsEntityHandle,
-    m_os_group_id: RawOsEntityHandle,
+    m_os_user_id: OsEntityId,
+    m_os_group_id: OsEntityId,
     m_prot_grants: RawObjGrants,
 
     /* timestamps related fields */
@@ -68,8 +68,8 @@ impl RawObjInfo {
                data_block_size: usize,
                data_blocks_used: usize,
                data_bytes_used: usize,
-               os_user_id: RawOsEntityHandle,
-               os_group_id: RawOsEntityHandle,
+               os_user_id: OsEntityId,
+               os_group_id: OsEntityId,
                prot_grants: RawObjGrants,
                creat_inst: RawInstant,
                last_data_access_inst: RawInstant,
@@ -194,30 +194,30 @@ impl RawObjInfo {
     }
 
     /**
-     * Returns the `RawOsEntityId` of the `OsUser` which owns the `Object`
+     * Returns the `OsEntityId` of the `OsUser` which owns the `Object`
      */
-    pub fn os_user_id(&self) -> RawOsEntityHandle {
+    pub fn os_user(&self) -> OsEntityId {
         self.m_os_user_id
     }
 
     /**
-     * Sets the `RawOsEntityId` of the `OsUser` which owns the `Object`
+     * Sets the `OsEntityId` of the `OsUser` which owns the `Object`
      */
-    pub fn set_os_user_id(&mut self, os_user_id: RawOsEntityHandle) {
+    pub fn set_os_user(&mut self, os_user_id: OsEntityId) {
         self.m_os_user_id = os_user_id;
     }
 
     /**
-     * Returns the `RawOsEntityId` of the `OsGroup` which owns the `Object`
+     * Returns the `OsEntityId` of the `OsGroup` which owns the `Object`
      */
-    pub fn os_group_id(&self) -> RawOsEntityHandle {
+    pub fn os_group(&self) -> OsEntityId {
         self.m_os_group_id
     }
 
     /**
-     * Sets the `RawOsEntityId` of the `OsGroup` which owns the `Object`
+     * Sets the `OsEntityId` of the `OsGroup` which owns the `Object`
      */
-    pub fn set_os_group_id(&mut self, os_group_id: RawOsEntityHandle) {
+    pub fn set_os_group(&mut self, os_group_id: OsEntityId) {
         self.m_os_group_id = os_group_id;
     }
 
@@ -342,7 +342,7 @@ impl Default for RawObjInfo {
 #[derive(Debug, Default, Copy, Clone)]
 pub struct ObjUseInstant {
     m_obj_use: ObjUseBits,
-    m_thread_id: RawTaskHandle,
+    m_thread_id: TaskId,
     m_use_start: RawInstant
 }
 
@@ -350,10 +350,7 @@ impl ObjUseInstant {
     /**
      * Constructs an `ObjUseInstant` with the given parameters
      */
-    pub fn new(obj_use: ObjUseBits,
-               thread_id: RawTaskHandle,
-               use_start: RawInstant)
-               -> Self {
+    pub fn new(obj_use: ObjUseBits, thread_id: TaskId, use_start: RawInstant) -> Self {
         Self { m_obj_use: obj_use,
                m_thread_id: thread_id,
                m_use_start: use_start }
@@ -369,7 +366,7 @@ impl ObjUseInstant {
     /**
      * Returns the raw thread identifier that have performed the usage
      */
-    pub fn thread_id(&self) -> RawTaskHandle {
+    pub fn thread_id(&self) -> TaskId {
         self.m_thread_id
     }
 

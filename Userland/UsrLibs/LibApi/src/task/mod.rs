@@ -8,7 +8,7 @@ use api_data::{
     },
     task::{
         types::TaskType,
-        RawTaskHandle
+        TaskId
     }
 };
 

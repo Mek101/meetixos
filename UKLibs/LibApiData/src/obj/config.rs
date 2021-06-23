@@ -37,11 +37,20 @@ impl<'a> RawObjConfig<'a> {
     /**
      * Constructs and empty `RawObjConfig`
      */
-    pub fn new() -> Self {
-        Self { m_flags: ObjConfigFlags::new_zero(),
+    pub fn new(obj_type: ObjType, is_creat: bool) -> Self {
+        /* construct the init */
+        let config_flags = if is_creat {
+            let mut config_flags = ObjConfigFlags::new_zero();
+            config_flags.set_enabled(ObjConfigBits::Creat);
+            config_flags
+        } else {
+            ObjConfigFlags::new_zero()
+        };
+
+        Self { m_flags: config_flags,
                m_data_size: None,
                m_grants: RawObjGrants::new_zero(),
-               m_type: ObjType::default(),
+               m_type: obj_type,
                m_path: None }
     }
 

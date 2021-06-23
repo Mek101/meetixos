@@ -10,3 +10,8 @@ pub mod types;
  * Convenience type renaming for `Task` reference
  */
 pub type RawTaskHandle = crate::sys::RawKernHandle;
+
+/**
+ * System wide unique `Task` identifier
+ */
+pub type TaskId = u64;

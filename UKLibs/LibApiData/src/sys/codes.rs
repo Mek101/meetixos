@@ -53,8 +53,7 @@ pub enum KernTaskConfigFnId {
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernOsEntConfigFnId {
-    CreateEntity,
-    InitFind
+    Apply
 }
 
 /**
@@ -238,12 +237,12 @@ pub enum KernPathFnId {
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernOsEntFnId {
+    OsId,
     Name
 }
 
 /**
- * Lists the system call codes for the `OsUser`
- * struct
+ * Lists the system call codes for the `OsUser` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -255,8 +254,7 @@ pub enum KernOsUserFnId {
 }
 
 /**
- * Lists the system call codes for the `OsGroup`
- * struct
+ * Lists the system call codes for the `OsGroup` struct
  */
 #[repr(u16)]
 #[derive(Debug)]

@@ -18,11 +18,18 @@ use api_data::{
 use bits::flags::BitFlags;
 
 use crate::{
+    config::{
+        CreatMode,
+        OpenMode
+    },
     handle::{
         KernHandle,
         Result
     },
-    obj::info::ObjInfo,
+    obj::{
+        config::ObjConfig,
+        info::ObjInfo
+    },
     task::Task
 };
 
@@ -31,8 +38,14 @@ pub mod grants;
 pub mod impls;
 pub mod info;
 
+/**
+ * `Object::watch()` use filter flags
+ */
 pub type ObjUseFilters = BitFlags<usize, ObjUseBits>;
 
+/**
+ * Generic opaque `Object` handle
+ */
 #[repr(transparent)]
 #[derive(Debug)]
 #[derive(Clone)]
@@ -44,6 +57,16 @@ pub struct ObjHandle {
 }
 
 impl ObjHandle {
+    /**
+     * Constructs an `ObjHandle` from the `raw_handle` value given
+     */
+    pub(crate) fn from_raw(raw_handle: usize) -> Self {
+        Self { m_handle: KernHandle::from_raw(raw_handle) }
+    }
+
+    /**
+     * Shares this handle with the given `Task`
+     */
     fn send<T>(&self, recv_task: &T) -> Result<()>
         where T: Task {
         self.m_handle
@@ -51,6 +74,10 @@ impl ObjHandle {
             .map(|_| ())
     }
 
+    /**
+     * Overwrites this handle with an incoming one according to the given
+     * `ObjType` and the `ObjRecvMode`
+     */
     fn recv(&mut self, obj_type: ObjType, recv_mode: ObjRecvMode) -> Result<()> {
         self.m_handle
             .inst_kern_call_2(KernFnPath::Object(KernObjectFnId::Recv),
@@ -62,12 +89,19 @@ impl ObjHandle {
             })
     }
 
+    /**
+     * Makes this named `Object` no longer reachable via the VFS
+     */
     fn drop_name(&self) -> Result<()> {
         self.m_handle
             .inst_kern_call_0(KernFnPath::Object(KernObjectFnId::DropName))
             .map(|_| ())
     }
 
+    /**
+     * Registers the given `callback` to be executed whenever one of the
+     * given `ObjUseBits` happen
+     */
     fn watch(&self,
              use_filter: ObjUseFilters,
              callback_fn: RWatchThreadEntry)
@@ -84,8 +118,10 @@ impl ObjHandle {
             .map(|_| ())
     }
 
-    fn info(&self) -> Result<RawObjInfo>
-        where T: Object {
+    /**
+     * Returns the `ObjInfo` metadata of this `Object`
+     */
+    fn info(&self) -> Result<RawObjInfo> {
         let mut raw_obj_info = RawObjInfo::default();
         self.m_handle
             .inst_kern_call_1(KernFnPath::Object(KernObjectFnId::Info),
@@ -93,13 +129,19 @@ impl ObjHandle {
             .map(|_| raw_obj_info)
     }
 
-    fn update_info(&self, raw_obj_info: &mut RawObjInfo) -> Result<()> {
+    /**
+     * Updates the `Object`'s metadata
+     */
+    pub(crate) fn update_info(&self, raw_obj_info: &mut RawObjInfo) -> Result<()> {
         self.m_handle
             .inst_kern_call_1(KernFnPath::Object(KernObjectFnId::UpdateInfo),
                               raw_obj_info.as_syscall_ptr())
             .map(|_| ())
     }
 
+    /**
+     * Returns the reference to the underling `KernHandle`
+     */
     pub fn kern_handle(&self) -> &KernHandle {
         &self.m_handle
     }
@@ -129,36 +171,65 @@ pub trait Object: From<ObjHandle> + Default + Clone {
     fn obj_handle_mut(&mut self) -> &mut ObjHandle;
 
     /**
-     * Sends this `Object` instance to another `Task` to share the same
-     * resource.
-     *
-     * The concurrency is managed internally by the Kernel with two
-     * `RWLock`s (one for the data and one for the information), so
-     * multiple tasks can read the data or the info but only one a time
-     * can write them
+     * Returns an `ObjConfig` for `Object` opening
+     */
+    fn open() -> ObjConfig<Self, OpenMode> {
+        ObjConfig::<Self, OpenMode>::new()
+    }
+
+    /**
+     * Shares this `Object` instance with the given `Task`
      */
     fn send(&self, recv_task: &T) -> Result<()>
         where T: Task {
         self.obj_handle().send(recv_task)
     }
 
-    /**  
-     * Accepts an incoming `Object`
-     *
-     * The previous handle is first released with `Drop` then overwritten
-     * with the new handle received according to the `RecvMode` given
+    /**
+     * Overwrites this `Object` with an incoming one according to the given
+     * `ObjRecvMode`
      */
     fn recv(&mut self, recv_mode: ObjRecvMode) -> Result<()> {
         self.obj_handle_mut().recv(Self::TYPE, recv_mode)
     }
 
     /**
-     * Convenience method that internally creates an uninitialized obj
+     * Convenience method that internally creates an uninitialized object
      * instance then performs an `Object::recv()` using the given `RecvMode`
      */
     fn recv_new(recv_mode: ObjRecvMode) -> Result<Self> {
         let mut obj_handle = Self::default();
         obj_handle.recv(recv_mode).map(|_| obj_handle)
+    }
+
+    /**
+     * Makes this named `Object` no longer reachable via the VFS
+     */
+    fn drop_name(&self) -> Result<()> {
+        self.obj_handle().drop_name()
+    }
+
+    /**
+     * Registers the given `callback` to be executed whenever one of the
+     * given `ObjUseBits` happen
+     *
+     * The caller must have info-read grants to successfully call
+     * this method.
+     *
+     * The given `callback` must accept an `ObjUseInstant` as argument and
+     * must return a boolean that tells to the Kernel whether the callback
+     * must be re-called for the next event given via `filter` or must
+     * be unregistered.
+     *
+     * Multiple `callback`s can be registered for different uses, but if the
+     * given filters overlaps a previously registered callback an error will
+     * be returned
+     */
+    fn watch(&self,
+             use_filter: ObjUseFilters,
+             callback_fn: RWatchThreadEntry)
+             -> Result<()> {
+        self.obj_handle().watch(use_filter, callback_fn)
     }
 
     /**
@@ -171,4 +242,29 @@ pub trait Object: From<ObjHandle> + Default + Clone {
     }
 }
 
-trait UserCreatableObject {}
+/**
+ * Marker interface for `Object`s which support `Object::creat()`
+ */
+trait UserCreatableObject: Object {
+    /**
+     * Returns an `ObjConfig` for `Object` creation
+     */
+    fn creat() -> ObjConfig<Self, CreatMode> {
+        ObjConfig::<Self, CreatMode>::new()
+    }
+}
+
+/**
+ * Marker interface for `Object`s which support
+ * `ObjConfig::with_data_size()`
+ */
+pub trait SizeableDataObject {
+    /* No methods, just a marker trait */
+}
+
+/**
+ * Marker interface for `Object`s which support `ObjConfig::for_exec()`
+ */
+pub trait ExecutableDataObject {
+    /* No methods, just a marker trait */
+}

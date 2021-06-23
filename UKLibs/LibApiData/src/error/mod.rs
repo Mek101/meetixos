@@ -14,7 +14,7 @@ use crate::{
         fn_path::KernFnPath,
         RawKernHandle
     },
-    task::RawTaskHandle
+    task::TaskId
 };
 
 pub mod class;
@@ -28,8 +28,8 @@ pub struct OsError {
     m_class: OsErrorClass,
     m_kern_fn_path: KernFnPath,
     m_inst_handle: Option<RawKernHandle>,
-    m_proc_id: RawTaskHandle,
-    m_thread_id: RawTaskHandle,
+    m_proc_id: TaskId,
+    m_thread_id: TaskId,
     m_message: Option<[u8; OS_ERROR_MESSAGE_LEN_MAX]>
 }
 
@@ -40,8 +40,8 @@ impl OsError {
     pub fn new(class: OsErrorClass,
                kern_fn_path: KernFnPath,
                inst_handle: Option<RawKernHandle>,
-               proc_id: RawTaskHandle,
-               thread_id: RawTaskHandle,
+               proc_id: TaskId,
+               thread_id: TaskId,
                message: Option<&str>)
                -> Self {
         Self { m_class: class,

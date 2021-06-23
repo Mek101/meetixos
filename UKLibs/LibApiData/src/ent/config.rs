@@ -12,7 +12,7 @@ use bits::flags::{
 
 use crate::ent::{
     types::OsEntityType,
-    RawOsEntityHandle
+    OsEntityId
 };
 
 /**
@@ -26,7 +26,7 @@ pub type OsEntityConfigFlags = BitFlags<usize, OsEntityConfigBits>;
 #[derive(Debug)]
 #[derive(Copy, Clone)]
 pub struct RawOsEntityConfig<'a> {
-    m_id: Option<RawOsEntityHandle>,
+    m_id: Option<OsEntityId>,
     m_type: OsEntityType,
     m_name: Option<&'a str>,
     m_flags: OsEntityConfigFlags
@@ -36,24 +36,33 @@ impl<'a> RawOsEntityConfig<'a> {
     /**
      * Constructs and empty `RawOsEntityConfig`
      */
-    pub fn new() -> Self {
-        Self { m_flags: OsEntityConfigFlags::new_zero(),
+    pub fn new(os_ent_type: OsEntityType, is_creat: bool) -> Self {
+        let config_flags = if is_creat {
+            let mut config_flags = OsEntityConfigFlags::new_zero();
+
+            config_flags.set_enabled(OsEntityConfigBits::Creat);
+            config_flags
+        } else {
+            OsEntityConfigFlags::new_zero()
+        };
+
+        Self { m_flags: config_flags,
                m_id: None,
                m_name: None,
-               m_type: OsEntityType::default() }
+               m_type: os_ent_type }
     }
 
     /**
-     * Returns the optionally stored `OsEntity` identifier
+     * Returns the optionally stored `OsEntityId`
      */
-    pub fn id(&self) -> Option<RawOsEntityHandle> {
+    pub fn id(&self) -> Option<OsEntityId> {
         self.m_id
     }
 
     /**
-     * Sets an explicit `OsEntity` identifier
+     * Sets an explicit `OsEntityId`
      */
-    pub fn set_id(&mut self, raw_id: RawOsEntityHandle) {
+    pub fn set_id(&mut self, raw_id: OsEntityId) {
         self.m_id = Some(raw_id);
     }
 
