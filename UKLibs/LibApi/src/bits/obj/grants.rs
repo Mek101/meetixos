@@ -148,11 +148,6 @@ impl Default for Grants<Dir> {
      * Returns the default `Grants` for a `Dir`
      */
     fn default() -> Self {
-        // let grants = Self::new().m_bits
-        //              | GrantsBit::UserCanOpenIt
-        //              | GrantsBit::UserCanReadData
-        //              | GrantsBit::UserCanWriteData;
-
         Self::new().set_enabled(ObjGrantsBits::UserCanOpenIt)
                    .set_enabled(ObjGrantsBits::UserCanReadData)
                    .set_enabled(ObjGrantsBits::UserCanWriteData)

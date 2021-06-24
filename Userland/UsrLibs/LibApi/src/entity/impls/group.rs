@@ -1,5 +1,15 @@
 /*! Group of `OSUser`s */
 
+use alloc::vec::Vec;
+
+use api_data::{
+    ent::types::OsEntityType,
+    sys::{
+        codes::KernOsGroupFnId,
+        fn_path::KernFnPath
+    }
+};
+
 use crate::{
     entity::{
         impls::user::OsUser,
@@ -7,13 +17,6 @@ use crate::{
         OsEntityHandle
     },
     handle::Result
-};
-use api_data::{
-    ent::types::OsEntityType,
-    sys::{
-        codes::KernOsGroupFnId,
-        fn_path::KernFnPath
-    }
 };
 
 /**
@@ -26,6 +29,7 @@ use api_data::{
 #[derive(Default)]
 #[derive(Eq, PartialEq)]
 #[derive(Ord, PartialOrd)]
+#[derive(Hash)]
 pub struct OsGroup {
     m_ent_handle: OsEntityHandle
 }
@@ -41,11 +45,33 @@ impl OsGroup {
      * `/MeetiX/Configs/users_groups.xml` file to make it permanent
      */
     pub fn add_user(&self, os_user: &OsUser) -> Result<()> {
-        self.m_ent_handle
-            .m_handle
+        self.os_entity_handle()
+            .kern_handle()
             .inst_kern_call_1(KernFnPath::OsGroup(KernOsGroupFnId::AddUser),
                               os_user.os_entity_handle().m_handle.raw_handle() as usize)
             .map(|_| ())
+    }
+
+    pub fn users(&self) -> Result<Vec<OsUser>> {
+        let mut users_vec: Vec<OsUser> = Vec::with_capacity(self.users_count()?);
+
+        self.os_entity_handle()
+            .kern_handle()
+            .inst_kern_call_2(KernFnPath::OsGroup(KernOsGroupFnId::Users),
+                              users_vec.as_mut_ptr() as usize,
+                              users_vec.capacity())
+            .map(|users_count| {
+                unsafe {
+                    users_vec.set_len(users_count);
+                }
+                users_vec
+            })
+    }
+
+    pub fn users_count(&self) -> Result<usize> {
+        self.os_entity_handle()
+            .kern_handle()
+            .inst_kern_call_0(KernFnPath::OsGroup(KernOsGroupFnId::UsersCount))
     }
 }
 

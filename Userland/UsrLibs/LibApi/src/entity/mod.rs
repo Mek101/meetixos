@@ -1,5 +1,7 @@
 /*! Operating System entities */
 
+use alloc::string::String;
+
 use api_data::{
     ent::{
         types::OsEntityType,
@@ -23,6 +25,7 @@ use crate::{
         Result
     }
 };
+use api_data::limit::OS_ENTITY_NAME_LEN_MAX;
 
 pub mod config;
 pub mod impls;
@@ -36,6 +39,7 @@ pub mod impls;
 #[derive(Default)]
 #[derive(Eq, PartialEq)]
 #[derive(Ord, PartialOrd)]
+#[derive(Hash)]
 pub struct OsEntityHandle {
     m_handle: KernHandle
 }
@@ -60,11 +64,30 @@ impl OsEntityHandle {
     /**
      * Puts into `buf` the name of this `OsEntityHandle`
      */
-    fn name<'a>(&self, buf: &'a mut [u8]) -> Result<&'a str> {
-        self.inst_kern_call_2(KernFnPath::OsEntity(KernOsEntFnId::Name),
-                              buf.as_mut_ptr() as usize,
-                              buf.len())
-            .map(move |buf_len| u8_slice_to_str_slice(&buf[..buf_len]))
+    fn name(&self) -> Result<String> {
+        let mut name_str = String::with_capacity(OS_ENTITY_NAME_LEN_MAX);
+
+        self.m_handle
+            .inst_kern_call_2(KernFnPath::OsEntity(KernOsEntFnId::Name),
+                              name_str.as_mut_ptr() as usize,
+                              name_str.capacity())
+            .map(|name_len| {
+                let mut byte_vec = name_str.into_bytes();
+                unsafe {
+                    byte_vec.set_len(name_len);
+
+                    let (byte_buf_ptr, len, capacity) = byte_vec.into_raw_parts();
+                    String::from_raw_parts(byte_buf_ptr, len, capacity)
+                }
+            })
+    }
+
+    /**
+     * Returns the reference to the underling `KernHandle`
+     */
+    #[inline]
+    pub fn kern_handle(&self) -> &KernHandle {
+        &self.m_handle
     }
 }
 

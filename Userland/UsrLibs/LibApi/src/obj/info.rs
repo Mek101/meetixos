@@ -51,6 +51,7 @@ impl<T> ObjInfo<T> where T: Object {
      */
     pub fn update(&mut self) -> Result<()> {
         if self.m_modified {
+            *self.m_raw_info.prot_grants_mut() = *self.m_obj_prot_grants;
             self.m_obj_handle.update_info(&mut self.m_raw_info)
         } else {
             Ok(())

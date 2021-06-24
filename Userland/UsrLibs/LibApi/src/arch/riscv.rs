@@ -1,13 +1,10 @@
 /*! riscv Kernel function call */
 
-use api_data::sys::{
-    id::SysCallId,
-    SysCallPayload
-};
+use api_data::sys::SysCallPayload;
 
 /**
- * Performs the necessary instructions to switch to the kernel mode with the
- * given `SysCallPayload` and execute the requested kernel function
+ * Performs the `ecall` instruction to switch to the kernel with the given
+ * payload
  */
 #[inline(always)]
 pub(crate) fn do_syscall(payload: &mut SysCallPayload) {

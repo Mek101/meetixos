@@ -6,6 +6,9 @@
 
 #![no_std]
 #![feature(asm)]
+#![feature(vec_into_raw_parts)]
+
+extern crate alloc;
 
 pub mod arch;
 pub mod config;

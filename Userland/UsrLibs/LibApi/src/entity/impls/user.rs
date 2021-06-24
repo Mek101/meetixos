@@ -1,5 +1,7 @@
 /*! Operating System user entity */
 
+use alloc::vec::Vec;
+
 use api_data::{
     ent::types::OsEntityType,
     sys::{
@@ -27,6 +29,7 @@ use crate::{
 #[derive(Default)]
 #[derive(Eq, PartialEq)]
 #[derive(Ord, PartialOrd)]
+#[derive(Hash)]
 pub struct OsUser {
     m_ent_handle: OsEntityHandle
 }
@@ -35,14 +38,26 @@ impl OsUser {
     /**
      * Fills `groups_buf` with the joined `OsGroup`s by this `OsUser`
      */
-    pub fn joined_groups<'a>(&self,
-                             groups_buf: &'a mut [OsGroup])
-                             -> Result<&'a [OsGroup]> {
-        self.m_ent_handle
-            .m_handle
-            .inst_kern_call_1(KernFnPath::OsUser(KernOsUserFnId::Groups),
-                              groups_buf.as_mut_ptr() as usize)
-            .map(move |count| &groups_buf[..count])
+    pub fn joined_groups<'a>(&self) -> Result<Vec<OsGroup>> {
+        let mut groups_vec: Vec<OsGroup> = Vec::with_capacity(self.groups_count()?);
+
+        self.os_entity_handle()
+            .kern_handle()
+            .inst_kern_call_2(KernFnPath::OsUser(KernOsUserFnId::Groups),
+                              groups_vec.as_mut_ptr() as usize,
+                              groups_vec.capacity())
+            .map(|joined_groups| {
+                unsafe {
+                    groups_vec.set_len(joined_groups);
+                }
+                groups_vec
+            })
+    }
+
+    pub fn groups_count(&self) -> Result<usize> {
+        self.os_entity_handle()
+            .kern_handle()
+            .inst_kern_call_0(KernFnPath::OsUser(KernOsUserFnId::GroupsCount))
     }
 }
 

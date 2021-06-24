@@ -86,13 +86,13 @@ pub enum SeekMode {
     /**
      * The given offset will be interpreted as an absolute offset
      */
-    Absolute(u64),
+    Absolute(usize),
 
     /**
      * The given offset will be added to the current offset (position
      * relative)
      */
-    Relative(i64),
+    Relative(isize),
 
     /**
      * The cursor of the obj will be moved to the end
@@ -117,7 +117,7 @@ impl SeekMode {
      */
     pub fn offset(&self) -> Option<usize> {
         match *self {
-            Self::Absolute(off) => Some(off as usize),
+            Self::Absolute(off) => Some(off),
             Self::Relative(off) => Some(off as usize),
             Self::End => None
         }

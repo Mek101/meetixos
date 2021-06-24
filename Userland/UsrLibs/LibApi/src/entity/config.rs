@@ -119,7 +119,7 @@ impl<'a, T, M> OsEntityConfig<'a, T, M>
      * Requests to the kernel to apply the given configuration
      */
     fn apply_config(&mut self) -> Result<T> {
-        KernHandle::kern_call_1(KernFnPath::OsEntConfig(KernOsEntConfigFnId::Apply),
+        KernHandle::kern_call_1(KernFnPath::OsEntConfig(KernOsEntConfigFnId::ApplyConfig),
                                 self.m_raw_config.as_syscall_ptr())
                    .map(|raw_entity_handle| T::from(OsEntityHandle::from_raw(raw_entity_handle)))
     }

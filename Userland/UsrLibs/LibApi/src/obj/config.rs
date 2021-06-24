@@ -74,7 +74,7 @@ impl<'a, T> ObjConfig<'a, T, CreatMode> where T: Object + UserCreatableObject {
      * which contains the handle, when the `Object` goes out of scope
      * (from all the tasks that owns it) it is definitely destroyed
      */
-    pub fn apply_for_anon(&mut self) -> Result<T> {
+    pub fn apply_for_anon(&self) -> Result<T> {
         self.apply_builder_config()
     }
 }
@@ -175,7 +175,7 @@ impl<T, M> ObjConfig<T, M>
     /**
      * Requests to the kernel to apply the given configuration
      */
-    fn apply_builder_config(&mut self) -> Result<T> {
+    fn apply_builder_config(&self) -> Result<T> {
         KernHandle::kern_call_1(KernFnPath::ObjConfig(KernObjConfigFnId::ApplyConfig),
                                 self.m_raw_config.as_syscall_ptr())
                    .map(|raw_obj_handle| T::from(ObjHandle::from_raw(raw_obj_handle)))

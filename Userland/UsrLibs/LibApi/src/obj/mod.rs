@@ -1,4 +1,5 @@
 /*! Objects management */
+use core::any::type_name;
 
 use api_data::{
     obj::{
@@ -52,6 +53,7 @@ pub type ObjUseFilters = BitFlags<usize, ObjUseBits>;
 #[derive(Default)]
 #[derive(Eq, PartialEq)]
 #[derive(Ord, PartialOrd)]
+#[derive(Hash)]
 pub struct ObjHandle {
     m_handle: KernHandle
 }
@@ -142,8 +144,24 @@ impl ObjHandle {
     /**
      * Returns the reference to the underling `KernHandle`
      */
+    #[inline]
     pub fn kern_handle(&self) -> &KernHandle {
         &self.m_handle
+    }
+}
+
+impl<T> Into<T> for ObjHandle where T: Object {
+    fn into(self) -> T {
+        let real_obj_type = self.info().unwrap_or_default().obj_type();
+        if real_obj_type == T::TYPE {
+            T::from(self)
+        } else {
+            panic!("ObjHandle({})::into::<{}>() - Failed, {} != {}",
+                   self.kern_handle().raw_handle(),
+                   type_name::<T>(),
+                   real_obj_type,
+                   T::TYPE);
+        }
     }
 }
 

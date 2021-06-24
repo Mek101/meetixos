@@ -17,16 +17,30 @@ use crate::handle::{
     Result
 };
 
+pub mod config;
+
+/**
+ * Generic opaque `Task` handle
+ */
 #[repr(transparent)]
 #[derive(Debug)]
+#[derive(Clone)]
 #[derive(Default)]
 #[derive(Eq, PartialEq)]
 #[derive(Ord, PartialOrd)]
+#[derive(Hash)]
 pub struct TaskHandle {
     m_handle: KernHandle
 }
 
 impl TaskHandle {
+    /**
+     * Constructs an `TaskHandle` from the `raw_handle` value given
+     */
+    pub(crate) fn from_raw(raw_handle: usize) -> Self {
+        Self { m_handle: KernHandle::from_raw(raw_handle) }
+    }
+
     /**
      * Obtains the current `TaskHandle` of the `TaskType` given
      */

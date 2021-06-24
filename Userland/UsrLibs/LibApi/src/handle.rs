@@ -25,6 +25,7 @@ pub type Result<T> = core::result::Result<T, OsError>;
 #[derive(Debug)]
 #[derive(Eq, PartialEq)]
 #[derive(Ord, PartialOrd)]
+#[derive(Hash)]
 pub struct KernHandle {
     m_raw_handle: RawKernHandle
 }

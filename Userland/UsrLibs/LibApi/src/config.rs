@@ -17,11 +17,6 @@ use num_enum::{
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum ConfigModeType {
     /**
-     * Used as default value
-     */
-    Unknown,
-
-    /**
      * Identifies the `CreatMode`
      */
     Create,

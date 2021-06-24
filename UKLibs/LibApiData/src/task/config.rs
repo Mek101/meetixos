@@ -22,6 +22,7 @@ use crate::{
             RUserThreadEntry,
             UserThreadArg
         },
+        types::TaskType,
         TaskId
     }
 };
@@ -38,6 +39,7 @@ pub type TaskConfigFlags = BitFlags<usize, TaskConfigBits>;
 #[derive(Copy, Clone)]
 pub struct RawTaskConfig<'a> {
     m_id: Option<TaskId>,
+    m_task_type: TaskType,
 
     /* task execution related fields */
     m_flags: TaskConfigFlags,
@@ -61,8 +63,9 @@ impl<'a> RawTaskConfig<'a> {
     /**
      * Constructs an empty `RawTaskConfig`
      */
-    pub fn new() -> Self {
+    pub fn new(task_type: TaskType) -> Self {
         Self { m_id: None,
+               m_task_type: task_type,
                m_flags: TaskConfigFlags::new_zero(),
                m_exec_cpu: TaskExecCpu::Any,
                m_os_user: None,
@@ -79,6 +82,20 @@ impl<'a> RawTaskConfig<'a> {
      */
     pub fn id(&self) -> Option<TaskId> {
         self.m_id
+    }
+
+    /**
+     * Returns the `TaskType`
+     */
+    pub fn task_type(&self) -> TaskType {
+        self.m_task_type
+    }
+
+    /**
+     * Sets the `TaskType`
+     */
+    pub fn set_task_type(&mut self, task_type: TaskType) {
+        self.m_task_type = task_type;
     }
 
     /**

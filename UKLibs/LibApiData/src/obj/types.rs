@@ -42,11 +42,6 @@ pub enum ObjType {
     IpcChan,
 
     /**
-     * Identifies an `KrnIterator` obj
-     */
-    KrnIterator,
-
-    /**
      * Identifies a `Link` obj
      */
     Link,
@@ -76,7 +71,6 @@ impl fmt::Display for ObjType {
             Self::Dir => write!(f, "Dir"),
             Self::File => write!(f, "File"),
             Self::IpcChan => write!(f, "IpcChan"),
-            Self::KrnIterator => write!(f, "KrnIterator"),
             Self::Link => write!(f, "Link"),
             Self::MMap => write!(f, "MMap"),
             Self::OsRawMutex => write!(f, "OsRawMutex")

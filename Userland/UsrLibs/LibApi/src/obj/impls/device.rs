@@ -2,24 +2,35 @@
 
 use core::ptr::NonNull;
 
-/**
- * Reference to an open device on the VFS.
- *
- * VFS representation of a driver into the Kernel space, it exposes the
- * system calls to communicate with the driver according to the expected
- * protocol.
- *
- * A `Device` could be a character device (like a terminal, a network device
- * or a graphic framebuffer) or a block device, like a disk.
- *
- * For character devices, `Device::read()`/`Device::write()` accepts
- * arbitrary sized buffers, but for block devices the buffers must be
- * multiple of the block_size
- */
+use api_data::{
+    obj::{
+        modes::SeekMode,
+        types::ObjType
+    },
+    sys::{
+        codes::KernDeviceFnId,
+        fn_path::KernFnPath
+    }
+};
+
+use crate::{
+    handle::Result,
+    obj::{
+        impls::mmap::MMap,
+        ObjHandle,
+        Object
+    }
+};
+
 #[repr(transparent)]
-#[derive(Debug, Default, Clone, Eq, PartialEq)]
+#[derive(Debug)]
+#[derive(Clone)]
+#[derive(Default)]
+#[derive(Eq, PartialEq)]
+#[derive(Ord, PartialOrd)]
+#[derive(Hash)]
 pub struct Device {
-    m_handle: ObjId
+    m_obj_handle: ObjHandle
 }
 
 impl Device {
@@ -28,12 +39,17 @@ impl Device {
      * `buf.len()` bytes reading them from the source of the driver (like
      * the disk, the network or the framebuffer).
      *
-     * For block devices `buf.len()` must be a multiple of the block_size
+     * For block devices `buf.len()` must be a multiple of the block_size.
+     *
+     * Returns the filled sub-slice of the given buffer
      */
-    pub fn read(&self, buf: &mut [u8]) -> Result<usize> {
-        self.kern_call_2(KernFnPath::Device(KernDeviceFnId::Read),
-                         buf.as_mut_ptr() as usize,
-                         buf.len())
+    pub fn read<'a>(&self, buf: &'a mut [u8]) -> Result<&'a [u8]> {
+        self.obj_handle()
+            .kern_handle()
+            .inst_kern_call_2(KernFnPath::Device(KernDeviceFnId::Read),
+                              buf.as_mut_ptr() as usize,
+                              buf.len())
+            .map(|read_bytes| &buf[..read_bytes])
     }
 
     /**
@@ -41,12 +57,17 @@ impl Device {
      * his content into the source of the driver (like the disk, the network
      * or the framebuffer).
      *
-     * For block devices `buf.len()` must be a multiple of the block_size
+     * For block devices `buf.len()` must be a multiple of the block_size.
+     *
+     * Returns the unwritten sub-slice of the given buffer
      */
-    pub fn write(&self, buf: &[u8]) -> Result<usize> {
-        self.kern_call_2(KernFnPath::Device(KernDeviceFnId::Write),
-                         buf.as_ptr() as usize,
-                         buf.len())
+    pub fn write<'a>(&self, buf: &'a [u8]) -> Result<&'a [u8]> {
+        self.obj_handle()
+            .kern_handle()
+            .inst_kern_call_2(KernFnPath::Device(KernDeviceFnId::Read),
+                              buf.as_ptr() as usize,
+                              buf.len())
+            .map(|written_bytes| &buf[written_bytes..])
     }
 
     /**  
@@ -54,15 +75,18 @@ impl Device {
      * implementation (which could be not available, i.e not supported).
      */
     pub fn map_to_memory(&self,
-                         addr: Option<NonNull<u8>>,
-                         from: u64,
-                         size: u64)
+                         map_addr: Option<NonNull<()>>,
+                         from_off: usize,
+                         mmap_size: usize)
                          -> Result<MMap> {
-        self.kern_call_3(KernFnPath::Device(KernDeviceFnId::MapToMem),
-                         addr.map(|nn_ptr| nn_ptr.as_ptr() as usize).unwrap_or_default(),
-                         from as usize,
-                         size as usize)
-            .map(|obj_id| MMap::from(ObjId::from(obj_id)))
+        self.obj_handle()
+            .kern_handle()
+            .inst_kern_call_3(KernFnPath::Device(KernDeviceFnId::MapToMem),
+                              map_addr.map(|nn_ptr| nn_ptr.as_ptr() as usize)
+                                      .unwrap_or_default(),
+                              from_off,
+                              mmap_size)
+            .map(|raw_obj_handle| MMap::from(ObjHandle::from_raw(raw_obj_handle)))
     }
 
     /**
@@ -72,68 +96,62 @@ impl Device {
                     cmd_value: usize,
                     arg_ptr: Option<NonNull<()>>)
                     -> Result<usize> {
-        self.kern_call_2(KernFnPath::Device(KernDeviceFnId::IOSetup),
-                         cmd_value,
-                         arg_ptr.map(|nn_ptr| nn_ptr.as_ptr() as usize)
-                                .unwrap_or_default())
+        self.obj_handle()
+            .kern_handle()
+            .inst_kern_call_2(KernFnPath::Device(KernDeviceFnId::IOSetup),
+                              cmd_value,
+                              arg_ptr.map(|nn_ptr| nn_ptr.as_ptr() as usize)
+                                     .unwrap_or_default())
     }
 
     /**
-     * According to the `SeekMode` given, it updates the read/write
-     * position.
+     * Updates the read/write position according to the `SeekMode` given
      *
      * The offsets are expected in block units, i.e for char devices the
-     * block unit is 1, for block devices use the block_size
+     * block unit is 1, for block devices use the `block_size`
      */
-    pub fn set_pos(&self, mode: SeekMode) -> Result<u64> {
+    pub fn set_pos(&self, mode: SeekMode) -> Result<usize> {
         self.kern_call_2(KernFnPath::Device(KernDeviceFnId::SetPos),
                          mode.mode(),
-                         mode.offset().unwrap_or(0))
-            .map(|off| off as u64)
+                         mode.offset().unwrap_or_default())
     }
 
     /**
      * Returns the current cursor position
      */
-    pub fn pos(&self) -> u64 {
-        self.set_pos(SeekMode::Absolute(0)).unwrap_or(0)
+    pub fn pos(&self) -> Result<usize> {
+        self.set_pos(SeekMode::Absolute(0))
     }
 
     /**
      * Returns whether this `Device` is a char device
      */
     pub fn is_char_device(&self) -> Result<bool> {
-        self.info().map(|obj_info| obj_info.mem_info().block_size() == 1)
+        self.info().map(|obj_info| obj_info.data_block_size() == 1)
     }
 
     /**
      * Returns whether this `Device` is a block device
      */
     pub fn is_block_device(&self) -> Result<bool> {
-        self.info().map(|obj_info| obj_info.mem_info().block_size().is_power_of_two())
+        self.info().map(|obj_info| obj_info.data_block_size().is_power_of_two())
+    }
+}
+
+impl From<ObjHandle> for Device {
+    fn from(obj_handle: ObjHandle) -> Self {
+        Self { m_obj_handle: obj_handle }
     }
 }
 
 impl Object for Device {
     const TYPE: ObjType = ObjType::Device;
 
-    fn obj_handle(&self) -> &ObjId {
-        &self.m_handle
+    fn obj_handle(&self) -> &ObjHandle {
+        &self.m_obj_handle
     }
 
-    fn obj_handle_mut(&mut self) -> &mut ObjId {
-        &mut self.m_handle
-    }
-}
-
-impl From<ObjId> for Device {
-    fn from(id: ObjId) -> Self {
-        Self { m_handle: id }
-    }
-}
-
-impl KernCaller for Device {
-    fn caller_handle_bits(&self) -> u32 {
-        self.obj_handle().caller_handle_bits()
+    fn obj_handle_mut(&mut self) -> &mut ObjHandle {
+        &mut self.m_obj_handle
     }
 }

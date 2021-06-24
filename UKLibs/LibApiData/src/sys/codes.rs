@@ -40,8 +40,7 @@ pub enum KernObjConfigFnId {
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernTaskConfigFnId {
-    CreateTask,
-    InitFind
+    ApplyConfig
 }
 
 /**
@@ -53,7 +52,7 @@ pub enum KernTaskConfigFnId {
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernOsEntConfigFnId {
-    Apply
+    ApplyConfig
 }
 
 /**
@@ -113,7 +112,8 @@ pub enum KernDeviceFnId {
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernDirFnId {
-    InitIter
+    NextChild,
+    SetPos
 }
 
 /**
@@ -147,21 +147,6 @@ pub enum KernIpcChanFnId {
 }
 
 /**
- * Lists the system call codes for the `KrnIterator`
- * struct
- */
-#[repr(u16)]
-#[derive(Debug)]
-#[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
-#[derive(IntoPrimitive, TryFromPrimitive)]
-pub enum KrnIteratorFnId {
-    NextValue,
-    SetBeginToEndPos,
-    SetEndToBeginPos
-}
-
-/**
  * Lists the system call codes for the `Link` struct
  */
 #[repr(u16)]
@@ -171,7 +156,7 @@ pub enum KrnIteratorFnId {
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernLinkFnId {
     Deref,
-    ReferTo
+    BindTo
 }
 
 /**
@@ -250,7 +235,8 @@ pub enum KernOsEntFnId {
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernOsUserFnId {
-    Groups
+    Groups,
+    GroupsCount
 }
 
 /**
@@ -262,7 +248,9 @@ pub enum KernOsUserFnId {
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernOsGroupFnId {
-    AddUser
+    AddUser,
+    Users,
+    UsersCount
 }
 
 /**
