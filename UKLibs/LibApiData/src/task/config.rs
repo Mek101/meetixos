@@ -13,7 +13,7 @@ use bits::flags::{
 };
 
 use crate::{
-    ent::RawOsEntityHandle,
+    entity::RawOsEntityHandle,
     obj::RawObjHandle,
     task::{
         modes::TaskExecCpu,
@@ -56,17 +56,27 @@ pub struct RawTaskConfig<'a> {
     /* thread specific parameters */
     m_c_thread_entry: Option<CThreadEntry>,
     m_thread_entry: Option<RUserThreadEntry>,
-    m_thread_arg: UserThreadArg
+    m_thread_arg: UserThreadArg,
+    m_thread_name: Option<&'a str>
 }
 
 impl<'a> RawTaskConfig<'a> {
     /**
      * Constructs an empty `RawTaskConfig`
      */
-    pub fn new(task_type: TaskType) -> Self {
+    pub fn new(task_type: TaskType, is_spawn: bool) -> Self {
+        let config_flags = if is_spawn {
+            let mut config_flags = TaskConfigFlags::new_zero();
+
+            config_flags.set_enabled(TaskConfigBits::IsSpawn);
+            config_flags
+        } else {
+            TaskConfigFlags::new_zero()
+        };
+
         Self { m_id: None,
                m_task_type: task_type,
-               m_flags: TaskConfigFlags::new_zero(),
+               m_flags: config_flags,
                m_exec_cpu: TaskExecCpu::Any,
                m_os_user: None,
                m_os_group: None,
@@ -74,7 +84,8 @@ impl<'a> RawTaskConfig<'a> {
                m_cmdline_args: None,
                m_c_thread_entry: None,
                m_thread_entry: None,
-               m_thread_arg: ptr::null() }
+               m_thread_arg: ptr::null(),
+               m_thread_name: None }
     }
 
     /**
@@ -233,6 +244,20 @@ impl<'a> RawTaskConfig<'a> {
     }
 
     /**
+     * Returns the custom thread name
+     */
+    pub fn thread_name(&self) -> Option<&'a str> {
+        self.m_thread_name
+    }
+
+    /**
+     * Sets the custom thread name
+     */
+    pub fn set_thread_name(&mut self, thread_name: &'a str) {
+        self.m_thread_name = Some(thread_name);
+    }
+
+    /**
      * Returns `&self` as usize pointer value
      */
     pub fn as_syscall_ptr(&self) -> usize {
@@ -248,6 +273,11 @@ impl<'a> RawTaskConfig<'a> {
 #[derive(Clone, Copy)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum TaskConfigBits {
+    /**
+     * Enabled when called `Task::spawn()`
+     */
+    IsSpawn,
+
     /**
      * Forces the use of a cooperative scheduling policy, which means that
      * the `Task` becomes uninterruptible by the kernel until it explicitly
@@ -269,7 +299,12 @@ pub enum TaskConfigBits {
      *
      * Useful for background `Task`s or services
      */
-    LowPrioTask
+    LowPrioTask,
+
+    /**
+     * Forces the kernel to spawn the new task in a paused state
+     */
+    StartPaused
 }
 
 impl BitFlagsValues for TaskConfigBits {

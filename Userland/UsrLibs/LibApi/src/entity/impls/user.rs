@@ -3,7 +3,7 @@
 use alloc::vec::Vec;
 
 use api_data::{
-    ent::types::OsEntityType,
+    entity::types::OsEntityType,
     sys::{
         codes::KernOsUserFnId,
         fn_path::KernFnPath
@@ -39,7 +39,7 @@ impl OsUser {
      * Fills `groups_buf` with the joined `OsGroup`s by this `OsUser`
      */
     pub fn joined_groups<'a>(&self) -> Result<Vec<OsGroup>> {
-        let mut groups_vec: Vec<OsGroup> = Vec::with_capacity(self.groups_count()?);
+        let mut groups_vec = Vec::with_capacity(self.groups_count()?);
 
         self.os_entity_handle()
             .kern_handle()

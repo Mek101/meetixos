@@ -3,7 +3,7 @@
 use alloc::string::String;
 
 use api_data::{
-    ent::{
+    entity::{
         types::OsEntityType,
         OsEntityId
     },

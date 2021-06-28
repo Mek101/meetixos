@@ -2,13 +2,24 @@
 
 use core::marker::PhantomData;
 
-use api_data::task::{
-    config::{
-        RawTaskConfig,
-        TaskConfigBits
+use api_data::{
+    sys::{
+        codes::KernTaskConfigFnId,
+        fn_path::KernFnPath
     },
-    modes::TaskExecCpu,
-    TaskId
+    task::{
+        config::{
+            RawTaskConfig,
+            TaskConfigBits
+        },
+        modes::TaskExecCpu,
+        thread::{
+            RUserThreadEntry,
+            ThreadEntryData,
+            UserThreadArg
+        },
+        TaskId
+    }
 };
 
 use crate::{
@@ -28,14 +39,19 @@ use crate::{
         KernHandle,
         Result
     },
+    obj::{
+        impls::file::File,
+        Object
+    },
     task::{
+        proc::Proc,
+        thread::{
+            c_thread_entry,
+            Thread
+        },
         Task,
         TaskHandle
     }
-};
-use api_data::sys::{
-    codes::KernTaskConfigFnId,
-    fn_path::KernFnPath
 };
 
 /**
@@ -50,30 +66,44 @@ pub struct TaskConfig<'a, T, M>
     _unused: PhantomData<(T, M)>
 }
 
+impl<'a, T> TaskConfig<'a, T, CreatMode> where T: Task {
+    pub(crate) fn new() -> Self {
+        Self { m_raw_config: RawTaskConfig::new(T::TASK_TYPE, true),
+               _unused: PhantomData }
+    }
+}
+
 impl<'a, T, M> TaskConfig<'a, T, M>
     where T: Task,
           M: ConfigMode
 {
-    pub(crate) fn new() -> Self {
-        Self { m_raw_config: RawTaskConfig::new(T::TASK_TYPE),
-               _unused: PhantomData }
-    }
-
     pub fn with_id(&mut self, task_id: TaskId) -> &mut Self {
         self.m_raw_config.set_id(task_id);
         self
     }
 
-    fn apply(&self) -> Result<T> {
+    fn dispatch_config(&self) -> Result<T> {
         KernHandle::kern_call_1(KernFnPath::TaskConfig(KernTaskConfigFnId::ApplyConfig),
                                 self.m_raw_config.as_syscall_ptr())
                    .map(|raw_task_handle| T::from(TaskHandle::from_raw(raw_task_handle)))
     }
 }
 
+impl<'a, M> TaskConfig<'a, Thread, M> where M: ConfigMode {
+    pub fn with_name(&mut self, thread_name: &'a str) -> &mut Self {
+        self.m_raw_config.set_thread_name(thread_name);
+        self
+    }
+}
+
 impl<'a, T> TaskConfig<'a, T, OpenMode> where T: Task {
+    pub(crate) fn new() -> Self {
+        Self { m_raw_config: RawTaskConfig::new(T::TASK_TYPE, false),
+               _unused: PhantomData }
+    }
+
     pub fn find(&self) -> Result<T> {
-        self.apply()
+        self.dispatch_config()
     }
 }
 
@@ -97,6 +127,11 @@ impl<'a, T> TaskConfig<'a, T, CreatMode> where T: Task {
         self
     }
 
+    pub fn start_paused(&mut self) -> &mut Self {
+        self.m_raw_config.flags_mut().set_enabled(TaskConfigBits::StartPaused);
+        self
+    }
+
     pub fn with_exec_cpu(&mut self, exec_cpu: TaskExecCpu) -> &mut Self {
         self.m_raw_config.set_exec_cpu(exec_cpu);
         self
@@ -115,7 +150,28 @@ impl<'a> TaskConfig<'a, Proc, CreatMode> {
             .set_os_user(os_group.os_entity_handle().kern_handle().raw_handle());
         self
     }
+
+    pub fn run(&mut self,
+               file_to_exec: File,
+               cmdline_args: &'a [&'a str])
+               -> Result<Proc> {
+        self.m_raw_config
+            .set_file_to_exec(file_to_exec.obj_handle().kern_handle().raw_handle());
+        self.m_raw_config.set_cmdline_args(cmdline_args);
+
+        self.dispatch_config()
+    }
 }
 
 impl<'a> TaskConfig<'a, Thread, CreatMode> {
+    pub fn run(&mut self,
+               entry_point: RUserThreadEntry,
+               thread_arg: UserThreadArg)
+               -> Result<Thread> {
+        self.m_raw_config.set_c_thread_entry(c_thread_entry);
+        self.m_raw_config.set_thread_entry(entry_point);
+        self.m_raw_config.set_thread_arg(thread_arg);
+
+        self.dispatch_config()
+    }
 }

@@ -12,12 +12,22 @@ use api_data::{
     }
 };
 
-use crate::handle::{
-    KernHandle,
-    Result
+use crate::{
+    config::{
+        CreatMode,
+        OpenMode
+    },
+    handle::{
+        KernHandle,
+        Result
+    },
+    task::config::TaskConfig
 };
+use api_data::task::exit::TaskExitStatus;
 
 pub mod config;
+pub mod proc;
+pub mod thread;
 
 /**
  * Generic opaque `Task` handle
@@ -50,13 +60,25 @@ impl TaskHandle {
                    .expect("Failed to obtain current Task handle")
     }
 
+    fn exit(task_type: TaskType, exit_status: TaskExitStatus) -> ! {
+        let _ = KernHandle::kern_call_2(KernFnPath::Task(KernTaskFnId::Exit),
+                                        task_type.into(),
+                                        exit_status.as_syscall_ptr());
+        unreachable!()
+    }
+
+    pub fn os_id(&self) -> Result<TaskId> {
+        self.m_handle
+            .inst_kern_call_0(KernFnPath::Task(KernTaskFnId::OsId))
+            .map(|task_id| task_id as TaskId)
+    }
+
     /**
      * Terminates this `TaskHandle`
      */
-    fn terminate(&self, call_cleanup: bool) -> Result<()> {
+    fn kill(&self, call_cleanup: bool) -> Result<()> {
         self.m_handle
-            .inst_kern_call_1(KernFnPath::Task(KernTaskFnId::Terminate),
-                              call_cleanup as usize)
+            .inst_kern_call_1(KernFnPath::Task(KernTaskFnId::Kill), call_cleanup as usize)
             .map(|_| ())
     }
 
@@ -74,6 +96,10 @@ impl TaskHandle {
      */
     fn is_alive(&self) -> bool {
         self.m_handle.is_valid()
+    }
+
+    pub fn kern_handle(&self) -> &KernHandle {
+        &self.m_handle
     }
 }
 
@@ -105,14 +131,14 @@ pub trait Task: From<TaskHandle> {
      * Returns an uninitialized `TaskConfig` to spawn a new `Task`
      */
     fn spawn() -> TaskConfig<Self, CreatMode> {
-        TaskConfig::new()
+        TaskConfig::<Self, CreatMode>::new()
     }
 
     /**
      * Returns an uninitialized `TaskConfig` to find an existing `Task`
      */
-    fn find() -> TaskConfig<Self, FindMode> {
-        TaskConfig::new()
+    fn open() -> TaskConfig<Self, OpenMode> {
+        TaskConfig::<Self, OpenMode>::new()
     }
 
     /**
@@ -121,6 +147,14 @@ pub trait Task: From<TaskHandle> {
      */
     fn this() -> Self {
         Self::from(TaskHandle::this(Self::TASK_TYPE))
+    }
+
+    fn exit(exit_status: TaskExitStatus) -> ! {
+        TaskHandle::exit(Self::TASK_TYPE, exit_status)
+    }
+
+    fn os_id(&self) -> Result<TaskId> {
+        self.os_id()
     }
 
     /**
@@ -136,8 +170,8 @@ pub trait Task: From<TaskHandle> {
      * `Thread` the Kernel first terminates them all, then terminates
      * the `Proc`
      */
-    fn terminate(&self, call_cleanup: bool) -> Result<()> {
-        self.task_handle().terminate(call_cleanup)
+    fn kill(&self, call_cleanup: bool) -> Result<()> {
+        self.task_handle().kill(call_cleanup)
     }
 
     /**

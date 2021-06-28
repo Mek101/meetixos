@@ -31,7 +31,7 @@ pub enum KernTaskConfigFnId {
 }
 
 /**
- * Lists the system call codes for the `LibApi::ent::OSEntConfig` struct
+ * Lists the system call codes for the `LibApi::entity::OSEntConfig` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -218,7 +218,7 @@ pub enum KernPathFnId {
 }
 
 /**
- * Lists the system call codes for the `LibApi::ent::OSEntity` trait
+ * Lists the system call codes for the `LibApi::entity::OSEntity` trait
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -230,7 +230,8 @@ pub enum KernOsEntFnId {
 }
 
 /**
- * Lists the system call codes for the `LibApi::ent::impls::OSUser` struct
+ * Lists the system call codes for the `LibApi::entity::impls::OSUser`
+ * struct
  */
 #[repr(u16)]
 #[derive(Debug)]
@@ -242,7 +243,8 @@ pub enum KernOsUserFnId {
 }
 
 /**
- * Lists the system call codes for the `LibApi::ent::impls::OSGroup` struct
+ * Lists the system call codes for the `LibApi::entity::impls::OSGroup`
+ * struct
  */
 #[repr(u16)]
 #[derive(Debug)]

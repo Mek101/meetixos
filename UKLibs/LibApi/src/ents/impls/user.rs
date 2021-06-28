@@ -1,4 +1,4 @@
-/*! Operating System user ent */
+/*! Operating System user entity */
 
 use os::sysc::{
     codes::KernOsUserFnId,

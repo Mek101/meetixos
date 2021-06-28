@@ -3,7 +3,10 @@
 use crate::{
     error::OsError,
     obj::info::ObjUseInstant,
-    task::TaskId
+    task::{
+        exit::TaskExitStatus,
+        TaskId
+    }
 };
 
 /**
@@ -14,7 +17,7 @@ pub type CThreadEntry = extern "C" fn() -> !;
 /**
  * Rust `Thread`'s user entry point prototype
  */
-pub type RUserThreadEntry = fn(UserThreadArg, TaskId) -> Result<usize, OsError>;
+pub type RUserThreadEntry = fn(UserThreadArg, TaskId) -> TaskExitStatus;
 
 /**
  * Rust entry point for user threads expects this type of argument
@@ -69,6 +72,20 @@ pub enum ThreadEntryData {
      * Default value, usable only for un-initialized `ThreadEntryData`
      */
     None
+}
+
+impl ThreadEntryData {
+    pub fn is_user_entry(&self) -> bool {
+        matches!(*self, Self::User { .. })
+    }
+
+    pub fn is_watch_callback_entry(&self) -> bool {
+        matches!(*self, Self::WatchCallback { .. })
+    }
+
+    pub fn is_cleaner_callback_entry(&self) -> bool {
+        matches!(*self, Self::CleanerCallback { .. })
+    }
 }
 
 impl Default for ThreadEntryData {

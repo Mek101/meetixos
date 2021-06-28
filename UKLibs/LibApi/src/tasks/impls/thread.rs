@@ -25,7 +25,7 @@ use crate::{
 /**
  * Reference to an execution flow inside a running `Proc`.
  *
- * This represents the execution ent on which the Kernel's scheduler
+ * This represents the execution entity on which the Kernel's scheduler
  * operates
  */
 #[repr(transparent)]

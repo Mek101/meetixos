@@ -3,7 +3,7 @@
 use core::marker::PhantomData;
 
 use api_data::{
-    ent::{
+    entity::{
         config::{
             OsEntityConfigBits,
             RawOsEntityConfig

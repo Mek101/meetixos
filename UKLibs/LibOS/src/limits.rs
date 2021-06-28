@@ -22,13 +22,13 @@ pub const OBJ_WATCHERS_COUNT_MAX: usize = 64;
 pub const OBJ_OPENED_COUNT_MAX: usize = 1024;
 
 /**
- * Maximum length in bytes for an `LibApi::ent::OSEntity` name
+ * Maximum length in bytes for an `LibApi::entity::OSEntity` name
  */
 pub const OS_ENTITY_NAME_LEN_MAX: usize = 64;
 
 /**
- * Maximum amount of `LibApi::ent::impls::OSGroup`s for each
- * `LibApi::ent::impls::OSUser`
+ * Maximum amount of `LibApi::entity::impls::OSGroup`s for each
+ * `LibApi::entity::impls::OSUser`
  */
 pub const OS_USER_GROUPS_COUNT_MAX: usize = 64;
 

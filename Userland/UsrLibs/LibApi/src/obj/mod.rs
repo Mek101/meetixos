@@ -31,7 +31,10 @@ use crate::{
         config::ObjConfig,
         info::ObjInfo
     },
-    task::Task
+    task::{
+        thread::c_thread_entry,
+        Task
+    }
 };
 
 pub mod config;
@@ -72,7 +75,8 @@ impl ObjHandle {
     fn send<T>(&self, recv_task: &T) -> Result<()>
         where T: Task {
         self.m_handle
-            .inst_kern_call_1(KernFnPath::Object(KernObjectFnId::Send), 0)
+            .inst_kern_call_1(KernFnPath::Object(KernObjectFnId::Send),
+                              recv_task.task_handle().kern_handle() as usize)
             .map(|_| ())
     }
 
@@ -108,15 +112,11 @@ impl ObjHandle {
              use_filter: ObjUseFilters,
              callback_fn: RWatchThreadEntry)
              -> Result<()> {
-        extern "C" fn c_callback_entry() -> ! {
-            unreachable!();
-        }
-
         self.m_handle
             .inst_kern_call_3(KernFnPath::Object(KernObjectFnId::Watch),
                               use_filter.raw_bits(),
                               callback_fn as usize,
-                              c_callback_entry as usize)
+                              c_thread_entry as usize)
             .map(|_| ())
     }
 
@@ -153,6 +153,7 @@ impl ObjHandle {
 impl<T> Into<T> for ObjHandle where T: Object {
     fn into(self) -> T {
         let real_obj_type = self.info().unwrap_or_default().obj_type();
+
         if real_obj_type == T::TYPE {
             T::from(self)
         } else {

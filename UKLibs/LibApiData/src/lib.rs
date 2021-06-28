@@ -6,7 +6,7 @@
 
 #![no_std]
 
-pub mod ent;
+pub mod entity;
 pub mod error;
 pub mod limit;
 pub mod obj;

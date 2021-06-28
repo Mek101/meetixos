@@ -7,7 +7,7 @@ use num_enum::{
     TryFromPrimitive
 };
 
-use crate::task::TaskId;
+use crate::task::RawTaskHandle;
 
 /**
  * Lists the available options for `TaskConfig::with_cpu()`.
@@ -70,7 +70,7 @@ impl TaskExecCpu {
 /**
  * Lists the available reasons for which a `Thread` can wait
  */
-pub enum WaitFor {
+pub enum WaitReason {
     /**
      * The current `Thread` sleeps for a precise quantum of time expressed
      * by the given `Duration`
@@ -78,11 +78,14 @@ pub enum WaitFor {
     Quantum(Duration),
 
     /**
-     * The current `Thread` sleeps until the given one is not terminated.
-     *
-     * The `Thread` must not be the same
+     * The current `Thread` sleeps until the given one is not terminated
      */
-    Join(TaskId),
+    Join(RawTaskHandle),
+
+    /**
+     * The `Thread` is put in pause state
+     */
+    Pause(RawTaskHandle),
 
     /**
      * The current `Thread` sleeps until the interrupt identified by the
@@ -99,7 +102,7 @@ pub enum WaitFor {
 #[derive(Clone, Copy)]
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
-pub enum MountMode {
+pub enum FsMountMode {
     /**
      * The filesystem is visible to all the processes in any of the active
      * sessions

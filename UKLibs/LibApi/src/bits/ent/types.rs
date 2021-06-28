@@ -22,12 +22,12 @@ pub enum OsEntityType {
     Unknown,
 
     /**
-     * Identifies an `OSUser` ent
+     * Identifies an `OSUser` entity
      */
     User,
 
     /**
-     * Identifies an `OSGroup` ent
+     * Identifies an `OSGroup` entity
      */
     Group
 }

@@ -1,6 +1,7 @@
 /*! Tasks management */
 
 pub mod config;
+pub mod exit;
 pub mod fs_types;
 pub mod modes;
 pub mod thread;

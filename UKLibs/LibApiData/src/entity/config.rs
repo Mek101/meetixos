@@ -10,7 +10,7 @@ use bits::flags::{
     BitFlagsValues
 };
 
-use crate::ent::{
+use crate::entity::{
     types::OsEntityType,
     OsEntityId
 };

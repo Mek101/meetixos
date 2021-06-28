@@ -3,7 +3,7 @@
 use alloc::vec::Vec;
 
 use api_data::{
-    ent::types::OsEntityType,
+    entity::types::OsEntityType,
     sys::{
         codes::KernOsGroupFnId,
         fn_path::KernFnPath
@@ -53,7 +53,7 @@ impl OsGroup {
     }
 
     pub fn users(&self) -> Result<Vec<OsUser>> {
-        let mut users_vec: Vec<OsUser> = Vec::with_capacity(self.users_count()?);
+        let mut users_vec = Vec::with_capacity(self.users_count()?);
 
         self.os_entity_handle()
             .kern_handle()

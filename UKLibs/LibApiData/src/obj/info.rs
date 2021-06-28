@@ -6,7 +6,7 @@ use helps::str::{
 };
 
 use crate::{
-    ent::OsEntityId,
+    entity::OsEntityId,
     limit::VFS_NAME_LEN_MAX,
     obj::{
         grants::RawObjGrants,

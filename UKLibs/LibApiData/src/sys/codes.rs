@@ -56,6 +56,19 @@ pub enum KernOsEntConfigFnId {
 }
 
 /**
+ * Lists the system call codes for the `OsEntity` trait
+ */
+#[repr(u16)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum KernOsEntFnId {
+    OsId,
+    Name
+}
+
+/**
  * Lists the system call codes for the `Object` trait
  */
 #[repr(u16)]
@@ -82,8 +95,10 @@ pub enum KernObjectFnId {
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernTaskFnId {
+    OsId,
     This,
-    Terminate,
+    Exit,
+    Kill,
     Yield
 }
 
@@ -214,19 +229,6 @@ pub enum KernPathFnId {
 }
 
 /**
- * Lists the system call codes for the `OsEntity` trait
- */
-#[repr(u16)]
-#[derive(Debug)]
-#[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
-#[derive(IntoPrimitive, TryFromPrimitive)]
-pub enum KernOsEntFnId {
-    OsId,
-    Name
-}
-
-/**
  * Lists the system call codes for the `OsUser` struct
  */
 #[repr(u16)]
@@ -263,6 +265,8 @@ pub enum KernOsGroupFnId {
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernProcFnId {
     MainThread,
+    SubThreads,
+    ThreadsCount,
     Mount,
     UnMount
 }
@@ -277,6 +281,7 @@ pub enum KernProcFnId {
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernThreadFnId {
     WaitFor,
+    Resume,
     AddCleaner,
     CallbackReturn,
     GetEntryData

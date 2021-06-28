@@ -15,7 +15,7 @@ use num_enum::{
 #[derive(Clone, Copy)]
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
-pub enum FSType {
+pub enum FsType {
     /**
      * Old `File Allocation Table` filesystem.
      *
@@ -54,13 +54,13 @@ pub enum FSType {
     Devices
 }
 
-impl Default for FSType {
+impl Default for FsType {
     fn default() -> Self {
         Self::MeetiX
     }
 }
 
-impl fmt::Display for FSType {
+impl fmt::Display for FsType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::FatX => write!(f, "FatX Filesystem"),

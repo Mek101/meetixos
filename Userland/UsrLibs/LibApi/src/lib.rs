@@ -15,5 +15,7 @@ pub mod config;
 pub mod entity;
 pub mod handle;
 pub mod obj;
+pub mod path;
+pub mod path_2;
 pub mod task;
 pub mod time;

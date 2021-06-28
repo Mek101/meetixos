@@ -1,4 +1,4 @@
-/*! Operating System base ent */
+/*! Operating System base entity */
 
 use core::str;
 
@@ -22,7 +22,7 @@ use crate::{
 };
 
 /**
- * Registered operating system ent handle.
+ * Registered operating system entity handle.
  *
  * It intended as something to which permissions can be applied and have
  * relation with other entities.
