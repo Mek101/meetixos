@@ -137,21 +137,6 @@ pub enum KernIpcChanFnId {
 }
 
 /**
- * Lists the system call codes for the `LibApi::objs::impls::KrnIterator`
- * struct
- */
-#[repr(u16)]
-#[derive(Debug)]
-#[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
-#[derive(IntoPrimitive, TryFromPrimitive)]
-pub enum KrnIteratorFnId {
-    NextValue,
-    SetBeginToEndPos,
-    SetEndToBeginPos
-}
-
-/**
  * Lists the system call codes for the `LibApi::objs::impls::Link` struct
  */
 #[repr(u16)]

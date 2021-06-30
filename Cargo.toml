@@ -5,7 +5,6 @@ members = [
     "Kernel/HHLoader",
     "Kernel/SharedCode",
     # Userland/Kernel Libraries
-    "UKLibs/LibApi",
     "UKLibs/LibApiData",
     "UKLibs/LibBits",
     "UKLibs/LibHeap",

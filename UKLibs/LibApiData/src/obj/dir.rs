@@ -29,7 +29,7 @@ impl DirEntry {
      */
     pub fn new(entry_name: &str, obj_type: ObjType) -> Self {
         let mut name_buffer = [0; VFS_NAME_LEN_MAX];
-        copy_str_to_u8_buf(&mut name_buffer, name);
+        copy_str_to_u8_buf(&mut name_buffer, entry_name);
 
         Self { m_name: name_buffer,
                m_name_len: entry_name.len(),

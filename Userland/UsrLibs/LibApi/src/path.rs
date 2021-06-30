@@ -1,6 +1,16 @@
 /*! Path Management */
 
-use alloc::string::String;
+use alloc::{
+    string::{
+        String,
+        ToString
+    },
+    vec::Vec
+};
+use core::{
+    fmt,
+    fmt::Display
+};
 
 use api_data::{
     path::PathExistsState,
@@ -10,402 +20,339 @@ use api_data::{
     }
 };
 
-use core::{
-    convert::TryFrom,
-    fmt,
-    fmt::{
-        Display,
-        Formatter
-    },
-    iter::Filter,
-    ops::{
-        Add,
-        AddAssign,
-        Index,
-        Sub,
-        SubAssign
-    },
-    str::Split
+use crate::handle::{
+    KernHandle,
+    Result
 };
 
 /**
- * Implements a simple way to manage VFS paths.
- *
- * The struct allows the following operations:
- *
- * # Normalization
- * Consecutive separators, self links and parent links are removed/resolved
- * when is possible without query the Kernel (i.e
- * `/Path/To///.././Something` becomes `/Path/Something`,
- * `../Stuffs/./To/../Searched` becomes `../Stuffs/Searched`)
- *
- * # Concatenation
- * It is possible to concatenate more than one `Path`/`&str` (with
- * `Path::append()` & `Path::append_raw()`) when is not known at compile
- * time all the components of a `Path`. When a `Path`/`&str` is appended it
- * is normalized according to the first point too
- *
- * # Component iteration
- * It is possible to iterate the components of the normalized path in a
- * comfortable for-loop with `Path::components()`
- *
- * # Printing
- * As string with `Display`
+ * Safe filesystem path wrapper
  */
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
+#[derive(Clone)]
 pub struct Path {
-    m_path_buf: String,
-    m_absolute: bool
+    m_components: Vec<PathComponent>,
+    m_str_len: usize
 }
 
 impl Path {
     /**
-     * The path separator character, MeetiX uses the same path schema of
-     * Unix
-     */
-    pub const SEPARATOR: &'static str = "/";
-
-    /**
-     * The path parent link string, MeetiX uses the same path schema of Unix
-     */
-    pub const PARENT_LINK: &'static str = "..";
-
-    /**
-     * The path self link string, MeetiX uses the same path schema of Unix
-     */
-    pub const SELF_LINK: &'static str = ".";
-
-    /**  
-     * Appends a new `Path`.
+     * Pushes `string_path` to this `Path`.
      *
-     * The given `Path` is evaluated, if it is absolute overwrites the
-     * current one (if contains something), otherwise it is appended to
-     * this one.
-     *
-     * The parent links are resolved until it is possible
+     * If the `string_path` contain an absolute path the `Path`'s content is
+     * cleared and re-evaluated
      */
-    pub fn append_path(&mut self, path: &Path) {
-        self.append_raw(path.as_str());
+    pub fn push_string(&mut self, string_path: String) {
+        self.push(string_path.as_str())
     }
 
-    pub fn append_str(&mut self, str_path: String) {
-        self.append_raw(str_path.as_str());
-    }
-
-    /**  
-     * Appends a new raw path.
+    /**
+     * Pushes `str_path` to this `Path`.
      *
-     * The given raw path is evaluated, if it is absolute overwrites the
-     * current one (if contains something), otherwise it is resolved then
-     * appended to this one.
-     *
-     * The parent links are resolved until it is possible
+     * If the `str_path` contain an absolute path the `Path`'s content is
+     * cleared and re-evaluated
      */
-    pub fn append_raw(&mut self, raw_path: &str) {
-        /* check for absolute path, it overwrites the previous one */
-        if raw_path.starts_with(Self::SEPARATOR) {
-            self.m_absolute = true;
+    pub fn push(&mut self, str_path: &str) {
+        /* check whether the string path given starts with the separator (root) */
+        if str_path.starts_with(PathComponent::SEPARATOR) {
+            self.do_push_component(PathComponent::Root)
         }
 
-        /* special case: only the separator character is given */
-        if raw_path == Self::SEPARATOR {
-            self.m_path_buf += Self::SEPARATOR;
-            return;
-        }
-
-        /* iterate for each component, ignoring empty values (i.e multiple contiguous
-         * separators produces empty components)
-         */
-        for sub_path_component in
-            raw_path.split(Self::SEPARATOR).filter(|uc| !uc.is_empty())
+        /* split the string path components given and add to the vector */
+        for str_path_component in
+            str_path.split(PathComponent::SEPARATOR)
+                    .filter(|path_component| !path_component.is_empty())
         {
-            /* check whether the separator must be prepended */
-            let need_separator = {
-                (self.is_empty() && self.is_absolute())
-                || (!self.is_empty() && !self.last_is_separator())
-            };
+            /* push the component into the components vector */
+            self.do_push_component(PathComponent::from(str_path_component))
+        }
+    }
 
-            /* insert, remove, or ignore the component */
-            match sub_path_component {
-                Self::SELF_LINK => continue,
-                Self::PARENT_LINK if self.can_pop_last() => {
-                    self.pop();
+    /**
+     * Wipes out any `PathComponent::SelfLink`s and tries to lexically
+     * resolve the `PathComponent::ParentLink`s without any request to the
+     * kernel.
+     *
+     * A normalized path have no existence guarantees
+     */
+    pub fn normalize(&mut self) {
+        /* start from an empty path */
+        let mut normalized_path = Path::default();
+
+        /* iterate each component currently stored into this instance */
+        for path_component in self.iter() {
+            match path_component {
+                PathComponent::Root | PathComponent::ObjectName(_) => {
+                    /* root and standard components are always added */
+                    normalized_path.do_push_component(path_component.clone())
                 },
-                sub_path_component => {
-                    if need_separator {
-                        self.m_path_buf += Self::SEPARATOR;
+                PathComponent::ParentLink => {
+                    if normalized_path.is_empty() {
+                        /* when the path is still empty (is relative) add the self link
+                         * component as Root and ObjectName
+                         */
+                        normalized_path.do_push_component(path_component.clone());
+                    } else if let Some(last_path_component) =
+                        normalized_path.m_components.last()
+                    {
+                        /* pop the last component if is an ObjectName component */
+                        if last_path_component.is_object_name() {
+                            normalized_path.pop_component();
+                        }
                     }
-                    self.m_path_buf += sub_path_component;
-                }
+                },
+                PathComponent::SelfLink => { /* self links are wiped out */ }
             }
         }
+
+        /* when no values are present put the SelfLink */
+        if normalized_path.is_empty() {
+            normalized_path.do_push_component(PathComponent::SelfLink);
+        }
+
+        /* overwrite self with the normalized path */
+        *self = normalized_path;
     }
 
     /**
-     * Returns `Some(Path)` until this `Path` contains elements.
-     *
-     * When the `Path` have no more elements return `None`
+     * Removes the last component and returns it
      */
-    pub fn pop(&mut self) -> Option<Path> {
-        self.components()
-            .last()
-            .map(|last| last.len())
-            .map(|last_len| {
-                let parent = self.basename();
+    pub fn pop_component(&mut self) -> Option<PathComponent> {
+        self.m_components.pop().map(|path_component| {
+                                   /* calculate the length to subtract */
+                                   let len_to_subtract =
+                                       if path_component.need_separator_before() {
+                                           path_component.len() + 1
+                                       } else {
+                                           path_component.len()
+                                       };
 
-                /* remove the last component */
-                self.m_len -= last_len;
-
-                /* to avoid that the next call to pop() returns an empty element remove
-                 * the path separator, if any.
-                 */
-                if self.last_is_separator() {
-                    self.m_len -= 1;
-                }
-                parent
-            })
-            .unwrap_or(None)
+                                   self.m_str_len -= len_to_subtract;
+                                   path_component
+                               })
     }
 
     /**
-     * Asks to the Kernel to resolve the stored path and return a
-     * `PathExistsState` which tells with his variants the result
+     * Returns the `PathExistsState` for this `Path`
      */
-    pub fn exists(&self) -> PathExistsState {
-        let mut index = 0usize;
-        self.kern_call_2(KernFnPath::Path(KernPathFnId::Exists),
-                         self.as_str().as_str().as_ptr() as usize,
-                         &mut index as *mut _ as usize)
-            .map(|variant| PathExistsState::try_from((variant, index)).unwrap())
-            .unwrap()
+    pub fn exists(&self) -> Result<PathExistsState> {
+        let string_repr = self.as_string();
+        let mut path_exist_state = PathExistsState::EmptyPath;
+
+        KernHandle::kern_call_3(KernFnPath::Path(KernPathFnId::Exists),
+                                string_repr.as_ptr() as usize,
+                                string_repr.len(),
+                                path_exist_state.as_syscall_ptr()).map(|_| {
+                                                                      path_exist_state
+                                                                  })
     }
 
     /**
-     * Constructs a path component `Iterator`
+     * Wipes out the content of this `Path`
      */
-    pub fn components(&self) -> impl Iterator<Item = PathComponent<'_>> {
-        PathComponentIter::new(self.as_str())
+    pub fn clear(&mut self) {
+        self.m_components.clear();
+        self.m_str_len = 0;
     }
 
     /**
-     * Returns the last component of the `Path`
+     * Iterates the `PathComponent`s inside this `Path`
      */
-    pub fn basename(&self) -> Option<Path> {
-        self.components().last().map(Path::from)
+    pub fn iter(&self) -> impl Iterator<Item = &PathComponent> {
+        self.m_components.iter()
     }
 
     /**
-     * Returns the `Path` as string slice
+     * Returns the lexical `String` representation of this `Path`
      */
-    pub fn as_str(&self) -> &String {
-        &self.m_path_buf
+    pub fn as_string(&self) -> String {
+        let mut path_string = String::with_capacity(self.m_str_len);
+
+        /* compose the <Path> as <String> */
+        for (i, path_component) in self.m_components.iter().enumerate() {
+            path_string += path_component.as_string().as_str();
+            if path_component.need_separator_before() && i < self.m_components.len() - 1 {
+                path_string += PathComponent::SEPARATOR;
+            }
+        }
+        path_string
     }
 
     /**
-     * Returns the length of this `Path`
+     * Returns the amount of `PathComponents` stored into this `Path`
+     */
+    pub fn components_len(&self) -> usize {
+        self.m_components.len()
+    }
+
+    /**
+     * Returns the length in bytes of the lexical `String` representation
      */
     pub fn len(&self) -> usize {
-        self.m_path_buf.len()
+        self.m_str_len
     }
 
     /**
-     * Returns whether this `Path` is empty
+     * Returns whether this `Path` doesn't contains any `PathComponent`
      */
     pub fn is_empty(&self) -> bool {
-        self.len() == 0
+        self.m_components.is_empty()
     }
 
     /**
-     * Returns whether this `Path` is absolute
+     * Effectively append the given path_component
      */
-    pub fn is_absolute(&self) -> bool {
-        self.m_absolute
-    }
+    fn do_push_component(&mut self, path_component: PathComponent) {
+        /* root component resets the Path instance */
+        if path_component.is_root() {
+            self.clear();
+        }
 
-    /**
-     * Returns whether a parent link can pop the last element
-     */
-    fn can_pop_last(&self) -> bool {
-        (self.len() > 0 || self.is_absolute())
-        && self.components().last().map(|last| last != Self::PARENT_LINK).unwrap_or(true)
-    }
+        /* add the component and update the instance fields */
+        self.m_components.push(path_component.clone());
+        self.m_str_len += path_component.len();
 
-    /**
-     * Returns whether the last character is a separator
-     */
-    fn last_is_separator(&self) -> bool {
-        self.as_str()
-            .chars()
-            .last()
-            .map(|c| c == Self::SEPARATOR.chars().next().unwrap())
-            .unwrap_or(false)
+        /* add the length of the separator when needed */
+        if path_component.need_separator_before() {
+            self.m_str_len += PathComponent::SEPARATOR.len();
+        }
     }
-
-    /**
-     * Appends a new component without checks
-     */
-    fn append_unchecked(&mut self, c: &str) {
-        self.m_path_buf += c;
-    }
-}
-
-impl KernCaller for Path {
-    /* Nothing to implement */
 }
 
 impl Default for Path {
     fn default() -> Self {
-        Self { m_path_buf: String::new(),
-               m_absolute: false }
+        Self { m_components: Vec::new(),
+               m_str_len: 0 }
     }
 }
 
 impl From<&str> for Path {
-    fn from(raw_path: &str) -> Self {
-        let mut path = Self::default();
-        path.append_raw(raw_path);
+    fn from(str_path: &str) -> Self {
+        let mut path = Path::default();
+        path.push(str_path);
         path
     }
 }
 
-impl From<&Path> for Path {
-    fn from(other_path: &Path) -> Self {
-        let mut path = Self::default();
-        path.append_path(other_path);
-        path
+impl From<String> for Path {
+    fn from(string_path: String) -> Self {
+        Self::from(string_path.as_str())
     }
 }
 
-impl Add<&str> for Path {
-    type Output = Path;
-
-    fn add(self, rhs: &str) -> Self::Output {
-        let mut new_path = Self::from(self);
-        new_path.append_raw(rhs);
-        new_path
-    }
-}
-
-impl Add<Path> for Path {
-    type Output = Path;
-
-    fn add(self, rhs: Path) -> Self::Output {
-        let mut new_path = Self::from(self);
-        new_path.append_path(&rhs);
-        new_path
-    }
-}
-
-impl Add<&Path> for Path {
-    type Output = Path;
-
-    fn add(self, rhs: &Path) -> Self::Output {
-        let mut new_path = Self::from(self);
-        new_path.append_path(rhs);
-        new_path
-    }
-}
-
-impl AddAssign<&str> for Path {
-    fn add_assign(&mut self, rhs: &str) {
-        self.append_raw(rhs)
-    }
-}
-
-impl AddAssign<Path> for Path {
-    fn add_assign(&mut self, rhs: Path) {
-        self.append_path(&rhs)
-    }
-}
-
-impl AddAssign<&Path> for Path {
-    fn add_assign(&mut self, rhs: &Path) {
-        self.append_path(rhs)
-    }
-}
-
-impl Sub<usize> for Path {
-    type Output = Path;
-
-    fn sub(self, rhs: usize) -> Self::Output {
-        let mut new_path = Self::from(self);
-        for _ in 0..rhs {
-            if new_path.pop().is_none() {
-                break;
-            }
-        }
-        new_path
-    }
-}
-
-impl SubAssign<usize> for Path {
-    fn sub_assign(&mut self, rhs: usize) {
-        for _ in 0..rhs {
-            if self.pop().is_none() {
-                break;
-            }
-        }
-    }
-}
-
-impl PartialEq for Path {
-    fn eq(&self, other: &Self) -> bool {
-        self.as_str().eq(other.as_str())
-    }
-}
-
-impl Eq for Path {
-    /* No methods to implement, just a marker */
-}
-
-impl AsRef<[u8]> for Path {
-    fn as_ref(&self) -> &[u8] {
-        self.as_str().as_bytes()
-    }
-}
-
-impl<'a> Index<usize> for Path {
-    type Output = str;
-
-    fn index(&self, index: usize) -> &Self::Output {
-        for (i, component) in self.components().enumerate() {
-            if i == index {
-                return component;
-            }
-        }
-        panic!("Path::index(): Index out of bound");
-    }
-}
-
-impl fmt::Display for Path {
+impl Display for Path {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(self.as_str())
+        write!(f, "{}", self.as_string())
     }
 }
 
-pub enum PathComponent<'a> {
+/**
+ * Lists the possibly parts of a lexical path
+ */
+#[derive(Debug)]
+#[derive(Clone)]
+pub enum PathComponent {
     Root,
     SelfLink,
     ParentLink,
-    ObjectName(&'a str)
+    ObjectName(String)
 }
 
-impl<'a> PathComponent<'a> {
+impl PathComponent {
+    /**
+     * Lexical value to indicate the current directory
+     */
     pub const SELF_LINK: &'static str = ".";
+
+    /**
+     * Lexical value to indicate the parent directory
+     */
     pub const PARENT_LINK: &'static str = "..";
+
+    /**
+     * Lexical value to separate the path components
+     */
     pub const SEPARATOR: &'static str = "/";
 
+    /**
+     * Returns whether `self` is `PathComponent::Root`
+     */
+    pub fn is_root(&self) -> bool {
+        matches!(*self, Self::Root)
+    }
+
+    /**
+     * Returns whether `self` is `PathComponent::SelfLink`
+     */
+    pub fn is_self_link(&self) -> bool {
+        matches!(*self, Self::SelfLink)
+    }
+
+    /**
+     * Returns whether `self` is `PathComponent::ParentLink`
+     */
+    pub fn is_parent_link(&self) -> bool {
+        matches!(*self, Self::ParentLink)
+    }
+
+    /**
+     * Returns whether `self` is `PathComponent::ObjectName`
+     */
+    pub fn is_object_name(&self) -> bool {
+        matches!(&self, Self::ObjectName(_))
+    }
+
+    /**
+     * Returns whether the component need a separator
+     */
+    pub fn need_separator_before(&self) -> bool {
+        !self.is_root()
+    }
+
+    /**
+     * Returns the `String` representation for this `PathComponent`
+     */
+    pub fn as_string(&self) -> String {
+        match self {
+            Self::Root => Self::SEPARATOR.to_string(),
+            Self::SelfLink => Self::SELF_LINK.to_string(),
+            Self::ParentLink => Self::PARENT_LINK.to_string(),
+            Self::ObjectName(obj_name) => obj_name.to_string()
+        }
+    }
+
+    /**
+     * Returns the length in bytes of `String` representation for this
+     * `PathComponent`
+     */
     pub fn len(&self) -> usize {
         match self {
-            PathComponent::Root => Self::SEPARATOR.len(),
-            PathComponent::SelfLink => Self::SELF_LINK.len(),
-            PathComponent::ParentLink => Self::PARENT_LINK.len(),
-            PathComponent::ObjectName(obj_name) => obj_name.len()
+            Self::Root => Self::SEPARATOR.len(),
+            Self::SelfLink => Self::SELF_LINK.len(),
+            Self::ParentLink => Self::PARENT_LINK.len(),
+            Self::ObjectName(obj_name) => obj_name.len()
         }
     }
 }
 
-impl<'a> Display for PathComponent<'a> {
+impl From<&str> for PathComponent {
+    fn from(str_path_component: &str) -> Self {
+        match str_path_component {
+            Self::SEPARATOR => Self::Root,
+            Self::SELF_LINK => Self::SelfLink,
+            Self::PARENT_LINK => Self::ParentLink,
+            _ => Self::ObjectName(String::from(str_path_component))
+        }
+    }
+}
+
+impl From<String> for PathComponent {
+    fn from(string_path_component: String) -> Self {
+        Self::from(string_path_component.as_str())
+    }
+}
+
+impl Display for PathComponent {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Root => write!(f, "{}", Self::SEPARATOR),
@@ -413,51 +360,5 @@ impl<'a> Display for PathComponent<'a> {
             Self::ParentLink => write!(f, "{}", Self::PARENT_LINK),
             Self::ObjectName(obj_name) => write!(f, "{}", obj_name)
         }
-    }
-}
-
-struct PathComponentIt<'a> {
-    m_filtered_split: Filter<Split<'a, &'a str>, fn(&&str) -> bool>,
-    m_absolute: bool
-}
-
-impl<'a> Iterator for PathComponentIt<'a> {
-    type Item = PathComponent<'a>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.m_absolute {
-            self.m_absolute = false;
-            Some(PathComponent::Root)
-        } else {
-            self.m_filtered_split.next().map(|raw_component| match raw_component {})
-        }
-    }
-}
-
-/**
- * Allows to iterate the components of the `Path` that have originated
- * this without empty units.
- *
- * It essentially consists in a `str::Split` and a `iter::Filter`
- */
-struct PathComponentIter<'a> {
-    m_filtered_split: Filter<Split<'a, &'a str>, fn(&&str) -> bool>
-}
-
-impl<'a> PathComponentIter<'a> {
-    /**
-     * Constructs a new `PathComponentIter` from the given `str` slice
-     */
-    fn new(raw_path: &'a str) -> Self {
-        Self { m_filtered_split: raw_path.split(Path::SEPARATOR)
-                                         .filter(|c| !c.is_empty()) }
-    }
-}
-
-impl<'a> Iterator for PathComponentIter<'a> {
-    type Item = &'a str;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.m_filtered_split.next()
     }
 }

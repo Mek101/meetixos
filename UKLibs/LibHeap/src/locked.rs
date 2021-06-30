@@ -63,7 +63,7 @@ impl<M> RawLazyLockedHeap<M> where M: BackRawMutex + 'static {
      * Returns the size of the current managed area in bytes
      */
     pub fn managed_mem(&self) -> usize {
-        self.m_lazy_locked_heap.lock().managed_mem()
+        self.m_lazy_locked_heap.lock().supplier_managed_mem()
     }
 
     /**
@@ -129,6 +129,8 @@ impl<T> FnOnce<()> for LazyHeapInitializer<T> where T: BackRawMutex {
     extern "rust-call" fn call_once(self, _args: ()) -> Self::Output {
         let raw_mutex =
             (self.m_raw_mutex_supplier)().expect("Failed to lazy obtain `BackRawMutex`");
-        Mutex::raw_new(raw_mutex, unsafe { Heap::new(self.m_mem_supplier) })
+        Mutex::raw_new(raw_mutex, unsafe {
+            Heap::new(self.m_mem_supplier).expect("Failed to lazy initialize the Heap")
+        })
     }
 }

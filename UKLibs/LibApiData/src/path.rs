@@ -37,22 +37,8 @@ pub enum PathExistsState {
     EmptyPath
 }
 
-impl TryFrom<(usize, usize)> for PathExistsState {
-    type Error = ();
-
-    fn try_from((variant, value): (usize, usize)) -> Result<Self, Self::Error> {
-        match variant {
-            0 => {
-                if let Ok(obj_type) = ObjType::try_from(value) {
-                    Ok(Self::Exists(obj_type))
-                } else {
-                    Err(())
-                }
-            },
-            1 => Ok(Self::ExistsUntil(value)),
-            2 => Ok(Self::NotExists),
-            3 => Ok(Self::EmptyPath),
-            _ => Err(())
-        }
+impl PathExistsState {
+    pub fn as_syscall_ptr(&mut self) -> usize {
+        self as *mut Self as usize
     }
 }

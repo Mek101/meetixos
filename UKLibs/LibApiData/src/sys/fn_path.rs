@@ -22,8 +22,7 @@ use crate::sys::codes::{
     KernTaskConfigFnId,
     KernTaskFnId,
     KernThreadFnId,
-    KernTimeInstFnId,
-    KrnIteratorFnId
+    KernTimeInstFnId
 };
 
 /**
@@ -47,7 +46,6 @@ pub enum KernFnPath {
     Dir(KernDirFnId),
     File(KernFileFnId),
     IpcChan(KernIpcChanFnId),
-    Iterator(KrnIteratorFnId),
     Link(KernLinkFnId),
     MMap(KernMMapFnId),
     Mutex(KernMutexFnId),
@@ -77,17 +75,16 @@ impl KernFnPath {
             Self::Dir(_) => 7,
             Self::File(_) => 8,
             Self::IpcChan(_) => 9,
-            Self::Iterator(_) => 10,
-            Self::Link(_) => 11,
-            Self::MMap(_) => 12,
-            Self::Mutex(_) => 13,
-            Self::TimeInst(_) => 14,
-            Self::Path(_) => 15,
-            Self::OsEntity(_) => 16,
-            Self::OsUser(_) => 17,
-            Self::OsGroup(_) => 18,
-            Self::Proc(_) => 19,
-            Self::Thread(_) => 20,
+            Self::Link(_) => 10,
+            Self::MMap(_) => 11,
+            Self::Mutex(_) => 12,
+            Self::TimeInst(_) => 13,
+            Self::Path(_) => 14,
+            Self::OsEntity(_) => 15,
+            Self::OsUser(_) => 16,
+            Self::OsGroup(_) => 17,
+            Self::Proc(_) => 18,
+            Self::Thread(_) => 19,
             _ => u16::MAX
         }
     }
@@ -107,7 +104,6 @@ impl KernFnPath {
             Self::Dir(fn_id) => fn_id.into(),
             Self::File(fn_id) => fn_id.into(),
             Self::IpcChan(fn_id) => fn_id.into(),
-            Self::Iterator(fn_id) => fn_id.into(),
             Self::Link(fn_id) => fn_id.into(),
             Self::MMap(fn_id) => fn_id.into(),
             Self::Mutex(fn_id) => fn_id.into(),
@@ -142,7 +138,6 @@ impl fmt::Display for KernFnPath {
             Self::Dir(fn_id) => write!(f, "KernFnPath::Dir({:?})", fn_id),
             Self::File(fn_id) => write!(f, "KernFnPath::File({:?})", fn_id),
             Self::IpcChan(fn_id) => write!(f, "KernFnPath::IpcChan({:?})", fn_id),
-            Self::Iterator(fn_id) => write!(f, "KernFnPath::Iterator({:?})", fn_id),
             Self::Link(fn_id) => write!(f, "KernFnPath::Link({:?})", fn_id),
             Self::MMap(fn_id) => write!(f, "KernFnPath::MMap({:?})", fn_id),
             Self::Mutex(fn_id) => write!(f, "KernFnPath::Mutex({:?})", fn_id),

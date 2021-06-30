@@ -4,5 +4,5 @@ version = "0.1.0"
 edition = "2018"
 authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
 
-[dependencies.api]
-path = "../../../UKLibs/LibApi"
+[dependencies]
+api = { path = "../../UsrLibs/LibApi" }

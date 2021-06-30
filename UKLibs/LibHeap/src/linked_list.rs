@@ -14,11 +14,10 @@ use helps::{
     misc::force_move
 };
 
+use crate::SubHeapAllocator;
+
 /**
- * Sorted single linked list of `Hole`s.
- *
- * Internally uses a first fit algorithm to find the first available block
- * that satisfies the requested size
+ * Sorted single linked list of `Hole`s
  */
 pub struct LinkedList {
     m_first_hole: Hole
@@ -28,12 +27,13 @@ impl LinkedList {
     /**
      * Constructs a `LinkedList` from the given parameters
      */
-    pub unsafe fn new(hole_addr: usize, hole_size: usize) -> LinkedList {
+    pub unsafe fn new(hole_addr: NonNull<u8>, hole_size: usize) -> LinkedList {
         let first_real_hole_ptr = {
-            let aligned_hole_addr = align_up(hole_addr, align_of::<Hole>());
+            let raw_hole_addr = hole_addr.as_ptr() as usize;
+            let aligned_hole_addr = align_up(raw_hole_addr, align_of::<Hole>());
             let aligned_hole_ptr = aligned_hole_addr as *mut Hole;
             let hole_to_write =
-                Hole::new(hole_size - (aligned_hole_addr - hole_addr), None);
+                Hole::new(hole_size - (aligned_hole_addr - raw_hole_addr), None);
 
             aligned_hole_ptr.write(hole_to_write);
             aligned_hole_ptr
@@ -43,37 +43,9 @@ impl LinkedList {
     }
 
     /**
-     * Searches for the first big-enough hole to serve the given `Layout`
-     * request
-     */
-    pub fn allocate_first_fit(&mut self, layout: Layout) -> Result<NonNull<u8>, ()> {
-        let aligned_layout = Self::align_layout(layout);
-
-        allocate_first_fit(&mut self.m_first_hole, aligned_layout).map(|allocation| {
-            if let Some(padding) = allocation.m_front_padding {
-                deallocate(&mut self.m_first_hole, padding.m_addr, padding.m_size);
-            }
-            if let Some(padding) = allocation.m_back_padding {
-                deallocate(&mut self.m_first_hole, padding.m_addr, padding.m_size);
-            }
-
-            unsafe { NonNull::new_unchecked(allocation.m_hole_info.m_addr as *mut u8) }
-        })
-    }
-
-    /**
-     * Frees the allocation given by `ptr` and `layout`
-     */
-    pub unsafe fn deallocate(&mut self, ptr: NonNull<u8>, layout: Layout) -> Layout {
-        let aligned_layout = Self::align_layout(layout);
-        deallocate(&mut self.m_first_hole, ptr.as_ptr() as usize, aligned_layout.size());
-        aligned_layout
-    }
-
-    /**
      * Returns the minimal allocation size
      */
-    pub fn block_size() -> usize {
+    pub const fn block_size() -> usize {
         size_of::<usize>() * 2
     }
 
@@ -93,10 +65,47 @@ impl LinkedList {
     }
 }
 
+impl SubHeapAllocator for LinkedList {
+    const PREFERRED_EXTEND_SIZE: usize = 8192; /* 8KiB for each extension */
+
+    fn allocate(&mut self, layout: Layout) -> Option<NonNull<u8>> {
+        allocate_first_fit(&mut self.m_first_hole, Self::align_layout(layout))
+            .map(|allocation| {
+                /* deallocate eventual front padding of the Allocation */
+                if let Some(padding) = allocation.m_front_padding {
+                    deallocate(&mut self.m_first_hole, padding.m_addr, padding.m_size);
+                }
+
+                /* deallocate eventual back padding of the Allocation */
+                if let Some(padding) = allocation.m_back_padding {
+                    deallocate(&mut self.m_first_hole, padding.m_addr, padding.m_size);
+                }
+
+                unsafe { NonNull::new_unchecked(allocation.m_hole_info.m_addr as *mut u8) }
+            })
+    }
+
+    unsafe fn deallocate(&mut self, nn_ptr: NonNull<u8>, layout: Layout) {
+        deallocate(&mut self.m_first_hole,
+                   nn_ptr.as_ptr() as usize,
+                   Self::align_layout(layout).size());
+    }
+
+    unsafe fn add_region(&mut self,
+                         start_area_ptr: NonNull<u8>,
+                         area_size: usize)
+                         -> Option<(NonNull<u8>, usize)> {
+        self.deallocate(start_area_ptr, Layout::from_size_align_unchecked(area_size, 1));
+        None
+    }
+
+    fn block_size(&self) -> Option<usize> {
+        None
+    }
+}
+
 /**
- * A block of usable (allocatable) memory.
- *
- * It may point to the next available memory
+ * A block of usable (allocatable) memory
  */
 struct Hole {
     m_size: usize,
@@ -140,10 +149,7 @@ impl HoleInfo {
 }
 
 /**
- * Result returned by `split_hole()` and `allocate_first_fit()`.
- *
- * May contains valid front and back paddings when the requests are not
- * properly aligned
+ * Result returned by `split_hole()` and `allocate_first_fit()`
  */
 struct Allocation {
     m_hole_info: HoleInfo,
@@ -213,9 +219,7 @@ fn split_hole(hole: HoleInfo, required_layout: Layout) -> Option<Allocation> {
 /**
  * Searches for the first available `Hole` which fits the requested `Layout`
  */
-fn allocate_first_fit(mut prev_hole: &mut Hole,
-                      layout: Layout)
-                      -> Result<Allocation, ()> {
+fn allocate_first_fit(mut prev_hole: &mut Hole, layout: Layout) -> Option<Allocation> {
     loop {
         let allocation: Option<Allocation> =
             prev_hole.m_next_hole
@@ -226,17 +230,17 @@ fn allocate_first_fit(mut prev_hole: &mut Hole,
                 /* remove from the previous one the Hole, which is big enough */
                 prev_hole.m_next_hole =
                     prev_hole.m_next_hole.as_mut().unwrap().m_next_hole.take();
-                return Ok(allocation);
+                return Some(allocation);
             },
             None if prev_hole.m_next_hole.is_some() => {
                 /* try next hole */
                 prev_hole = force_move(prev_hole).m_next_hole.as_mut().unwrap();
             },
-            None => {
+            _ => {
                 /* no allocation possible, we may have exhausted the memory or the list
                  * fragmentation involved a non-big enough hole to serve the request
                  */
-                return Err(());
+                return None;
             }
         }
     }

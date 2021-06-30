@@ -1,7 +1,6 @@
 /*! `Thread` specific entry point data */
 
 use crate::{
-    error::OsError,
     obj::info::ObjUseInstant,
     task::{
         exit::TaskExitStatus,
