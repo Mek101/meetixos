@@ -316,7 +316,8 @@ impl BitFlagsValues for PTFlagsBits {
  */
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 pub enum PageTableEntryErr {
     /**
      * The `PhysFrame` is not present (i.e the entry haven't the
@@ -340,7 +341,8 @@ pub enum PageTableEntryErr {
  */
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 pub enum PageTableLevel {
     Level4,
     Level3,

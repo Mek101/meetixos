@@ -1,7 +1,7 @@
-/*! # Userland/Kernel Shared Data Types And Structures
+/*! # Userland/Kernel Shared Data Types And Structures Library
  *
- * This library collects all the data structures which are shared among the
- * userland (used by the `Userland/Libs/LibApi`) and the `Kernel`
+ * Collection of all the data structures which are shared among the userland
+ * (used by the `Userland/Libs/LibApi`) and the `Kernel` for system calls
  */
 
 #![no_std]

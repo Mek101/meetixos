@@ -61,6 +61,13 @@ impl CodeSymbol {
     pub fn virt_addr(&self) -> usize {
         self.m_virt_addr
     }
+
+    /**
+     * Returns the demangled symbol name `String`
+     */
+    pub fn symbol_name(&self) -> &String {
+        &self.m_symbol_name
+    }
 }
 
 impl PartialEq for CodeSymbol {

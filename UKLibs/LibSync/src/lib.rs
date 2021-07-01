@@ -1,7 +1,6 @@
-/*! # Cumulative Synchronization Library
+/*! # Synchronization Library
  *
- * Exposes context independent primitives to implement thread
- * synchronization from different external crates
+ * Exposes generic primitives to implement thread synchronization
  */
 
 #![no_std]

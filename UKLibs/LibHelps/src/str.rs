@@ -7,7 +7,8 @@ use core::{
 };
 
 /**
- * Copies an `&str` into a `&mut [u8]` buffer using the min of the two lens
+ * Copies an `&str` into a `&mut [u8]` buffer using the min of the two
+ * lengths
  */
 pub fn copy_str_to_u8_buf(dst: &mut [u8], src: &str) {
     let min = min(dst.len(), src.len());
@@ -19,7 +20,7 @@ pub fn copy_str_to_u8_buf(dst: &mut [u8], src: &str) {
  * UTF-8 conversion
  */
 pub fn u8_slice_to_str_slice<'a>(slice: &[u8]) -> &'a str {
-    u8_ptr_to_str_slice(slice.as_ptr(), slice.len())
+    unsafe { str::from_utf8_unchecked(slice) }
 }
 
 /**

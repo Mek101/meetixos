@@ -78,8 +78,15 @@ macro_rules! impl_bit_fields_for_numeric {
 
             #[inline]
             fn find_bit(&self, bit_value: bool, find_mode: BitFindMode) -> Option<usize> {
-                if !bit_value && find_mode == BitFindMode::Regular && *self == 0 {
-                    Some(0)
+                if (!bit_value && *self == 0) || (bit_value && *self == Self::MAX) {
+                    /* when searching a <bit_value = 0> or a <bit_value = 1> and <self>
+                     * is respectively all 0 or all 1 immediately return the first or the
+                     * last bit according to the <find_mode>
+                     */
+                    match find_mode {
+                        BitFindMode::Regular => Some(0),
+                        BitFindMode::Reverse => Some(Self::BIT_LEN - 1)
+                    }
                 } else {
                     match find_mode {
                         BitFindMode::Regular => {
@@ -109,7 +116,7 @@ impl_bit_fields_for_numeric! {
     u8 u16 u32 u64 usize u128 i8 i16 i32 i64 isize i128
 }
 
-impl<T> BitArray<T> for [T] where T: BitFields + Default {
+impl<T> BitArray<T> for [T] where T: BitFields {
     #[inline]
     fn bit_len(&self) -> usize {
         self.len() * T::BIT_LEN

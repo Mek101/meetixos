@@ -73,20 +73,6 @@ pub enum ThreadEntryData {
     None
 }
 
-impl ThreadEntryData {
-    pub fn is_user_entry(&self) -> bool {
-        matches!(*self, Self::User { .. })
-    }
-
-    pub fn is_watch_callback_entry(&self) -> bool {
-        matches!(*self, Self::WatchCallback { .. })
-    }
-
-    pub fn is_cleaner_callback_entry(&self) -> bool {
-        matches!(*self, Self::CleanerCallback { .. })
-    }
-}
-
 impl Default for ThreadEntryData {
     fn default() -> Self {
         Self::None

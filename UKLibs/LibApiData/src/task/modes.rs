@@ -10,7 +10,7 @@ use num_enum::{
 use crate::task::RawTaskHandle;
 
 /**
- * Lists the available options for `TaskConfig::with_cpu()`.
+ * Lists the available options for `TaskConfig::with_exec_cpu()`.
  *
  * Allow the user to specify whether a `Task` must be affine to a
  * restricted set of CPUs in an SMP environment or can be executed
@@ -18,14 +18,15 @@ use crate::task::RawTaskHandle;
  */
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 pub enum TaskExecCpu {
     /**
      * The default affinity when no other are specified.
      *
-     * The use of this variant tells to the Kernel that the task can
-     * be executed on any available CPU according to the Kernel's
-     * affinity algorithm
+     * The use of this variant tells to the Kernel that the `Task` can be
+     * executed on any available CPU according to the Kernel's affinity
+     * algorithm
      */
     Any,
 
@@ -33,11 +34,12 @@ pub enum TaskExecCpu {
      * Usable when the task must be executed by a deterministic subset of
      * the CPUs available (in SMP environment) for optimizations.
      *
-     * The variant contains a 64bit unsigned integer usable as bitfield mask
-     * to enable the CPU(s) that can execute the task.
+     * The variant contains a 64bit unsigned integer usable as `BitFields`
+     * mask to enable the CPU(s) that can execute the `Task`.
      *
-     * The less significant bit is the first core, so b0101 means: the task
-     * will be executed ONLY by the first and the third CPU's cores.
+     * The less significant bit is the first core, so `b0101` means: the
+     * `Task` will be executed ONLY by the first and the third CPU's
+     * cores.
      *
      * When enabled more bit than the actually available CPUs these bits are
      * ignored by the Kernel.
@@ -100,7 +102,8 @@ pub enum WaitReason {
 #[repr(usize)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum FsMountMode {
     /**

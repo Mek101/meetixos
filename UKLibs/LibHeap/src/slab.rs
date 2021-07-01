@@ -25,7 +25,7 @@ impl<const BLOCK_SIZE: usize> Slab<BLOCK_SIZE> {
     }
 
     /**
-     * Constructs a `Slab` with the preferred extend size
+     * Constructs a `Slab` with the `PREFERRED_EXTEND_SIZE`
      */
     pub unsafe fn with_preferred_size(start_area_addr: NonNull<u8>) -> Self {
         Self::new(start_area_addr, Self::PREFERRED_EXTEND_SIZE)
@@ -43,13 +43,6 @@ impl<const BLOCK_SIZE: usize> Slab<BLOCK_SIZE> {
      */
     pub fn is_empty(&self) -> bool {
         self.m_free_blocks.is_emtpy()
-    }
-
-    /**
-     * Returns the allocation block size
-     */
-    pub fn block_size(&self) -> usize {
-        BLOCK_SIZE
     }
 }
 
@@ -132,19 +125,19 @@ impl FreeBlockList {
      * Returns the first available memory `Block` reference
      */
     fn pop(&mut self) -> Option<&'static mut SlabBlock> {
-        self.m_first.take().map(|element| {
-                               self.m_first = element.m_next.take();
+        self.m_first.take().map(|slab_block| {
+                               self.m_first = slab_block.m_next.take();
                                self.m_count -= 1;
-                               element
+                               slab_block
                            })
     }
 
     /**
      * Pushes the given `Block` into this `FreeBlockList`
      */
-    fn push(&mut self, block: &'static mut SlabBlock) {
-        block.m_next = self.m_first.take();
-        self.m_first = Some(block);
+    fn push(&mut self, slab_block: &'static mut SlabBlock) {
+        slab_block.m_next = self.m_first.take();
+        self.m_first = Some(slab_block);
         self.m_count += 1;
     }
 

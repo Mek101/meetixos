@@ -8,12 +8,13 @@ use num_enum::{
 };
 
 /**
- * Lists the available obj types represented by an `ObjId`
+ * Lists the available object types represented by a `Object`
  */
 #[repr(usize)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum ObjType {
     /**
@@ -22,37 +23,37 @@ pub enum ObjType {
     Unknown,
 
     /**
-     * Identifies a `Device` obj
+     * Identifies a `Device` object
      */
     Device,
 
     /**
-     * Identifies a `Dir` obj
+     * Identifies a `Dir` object
      */
     Dir,
 
     /**
-     * Identifies a `File` obj
+     * Identifies a `File` object
      */
     File,
 
     /**
-     * Identifies an `IpcChan` obj
+     * Identifies an `IpcChan` object
      */
     IpcChan,
 
     /**
-     * Identifies a `Link` obj
+     * Identifies a `Link` object
      */
     Link,
 
     /**
-     * Identifies a `MMap` obj
+     * Identifies a `MMap` object
      */
     MMap,
 
     /**
-     * Identifies an `OsRawMutex` obj
+     * Identifies an `OsRawMutex` object
      */
     OsRawMutex
 }

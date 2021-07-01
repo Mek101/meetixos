@@ -16,8 +16,8 @@ pub const VFS_PATH_LEN_MAX: usize = 1024;
 pub const VFS_NAME_LEN_MAX: usize = 256;
 
 /**
- * Maximum amount of threads that could call `LibApi::objs::Object::watch()`
- * at the same time for the same obj
+ * Maximum amount of threads that could call `Object::watch()` at the same
+ * time for the same object
  */
 pub const OBJ_WATCHERS_COUNT_MAX: usize = 64;
 
@@ -27,18 +27,17 @@ pub const OBJ_WATCHERS_COUNT_MAX: usize = 64;
 pub const OBJ_OPENED_COUNT_MAX: usize = 1024;
 
 /**
- * Maximum length in bytes for an `LibApi::entity::OSEntity` name
+ * Maximum length in bytes for an `OsEntity` name
  */
 pub const OS_ENTITY_NAME_LEN_MAX: usize = 64;
 
 /**
- * Maximum amount of `LibApi::entity::impls::OSGroup`s for each
- * `LibApi::entity::impls::OSUser`
+ * Maximum amount of `OsGroup`s for each `OsUser`
  */
 pub const OS_USER_GROUPS_COUNT_MAX: usize = 64;
 
 /**
- * Maximum length in bytes for a `LibApi::tasks::impls::Thread` name
+ * Maximum length in bytes for a `Thread` name
  */
 pub const THREAD_NAME_LEN_MAX: usize = 32;
 
@@ -53,6 +52,6 @@ pub const PROC_ARG_COUNT_MAX: usize = 32;
 pub const PROC_ARG_LEN_MAX: usize = 64;
 
 /**
- * Maximum length in bytes for the error message in `LibApi::errors::Error`
+ * Maximum length in bytes for the error message in `OsError`
  */
 pub const OS_ERROR_MESSAGE_LEN_MAX: usize = 64;

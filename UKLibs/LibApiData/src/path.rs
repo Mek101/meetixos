@@ -9,7 +9,8 @@ use crate::obj::types::ObjType;
  */
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 pub enum PathExistsState {
     /**
      * The path exists from the current directory (or the root if the `Path`
@@ -38,6 +39,9 @@ pub enum PathExistsState {
 }
 
 impl PathExistsState {
+    /**
+     * Returns `&self` as usize pointer value
+     */
     pub fn as_syscall_ptr(&mut self) -> usize {
         self as *mut Self as usize
     }

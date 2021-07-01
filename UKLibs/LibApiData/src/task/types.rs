@@ -8,12 +8,13 @@ use num_enum::{
 };
 
 /**
- * Lists the available obj types represented by an `TaskId`
+ * Lists the available object types represented by a `Task`
  */
 #[repr(usize)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum TaskType {
     /**

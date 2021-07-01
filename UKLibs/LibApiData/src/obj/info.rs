@@ -1,4 +1,4 @@
-/*! `Object` information related data structures */
+/*! `Object` metadata information structures */
 
 use helps::str::{
     copy_str_to_u8_buf,
@@ -6,12 +6,17 @@ use helps::str::{
 };
 
 use crate::{
-    entity::OsEntityId,
+    entity::{
+        OsEntityId,
+        RawOsEntityHandle
+    },
     limit::VFS_NAME_LEN_MAX,
     obj::{
+        device::DeviceId,
         grants::RawObjGrants,
         types::ObjType,
-        uses::ObjUseBits
+        uses::ObjUseBits,
+        RawObjHandle
     },
     task::TaskId,
     time::RawInstant
@@ -25,6 +30,7 @@ use crate::{
 pub struct RawObjInfo {
     m_type: ObjType,
     m_ref_count: usize,
+    m_device: DeviceId,
 
     /* name related field */
     m_has_name: bool,
@@ -42,6 +48,10 @@ pub struct RawObjInfo {
     m_os_user_id: OsEntityId,
     m_os_group_id: OsEntityId,
     m_prot_grants: RawObjGrants,
+
+    /* OsEntity handles for updates */
+    m_update_os_user_handle: RawOsEntityHandle,
+    m_update_os_group_handle: RawOsEntityHandle,
 
     /* timestamps related fields */
     m_creat_inst: RawInstant,
@@ -62,6 +72,7 @@ impl RawObjInfo {
      */
     pub fn new(obj_type: ObjType,
                ref_count: usize,
+               device: DeviceId,
                name_id: u64,
                name: Option<&str>,
                links: u32,
@@ -79,6 +90,7 @@ impl RawObjInfo {
                -> Self {
         Self { m_type: obj_type,
                m_ref_count: ref_count,
+               m_device: device,
                m_has_name: name.is_some(),
                m_name_id: name_id,
                m_name_buffer: name.map_or(Self::EMPTY_VFS_NAME, |str_buf| {
@@ -95,6 +107,8 @@ impl RawObjInfo {
                m_os_user_id: os_user_id,
                m_os_group_id: os_group_id,
                m_prot_grants: prot_grants,
+               m_update_os_user_handle: 0,
+               m_update_os_group_handle: 0,
                m_creat_inst: creat_inst,
                m_last_data_access_inst: last_data_access_inst,
                m_last_data_modify_inst: last_data_modify_inst,
@@ -118,10 +132,27 @@ impl RawObjInfo {
     }
 
     /**
-     * Returns whether the object is a named `Object` or an anonymous one
+     * Returns the `DeviceId` of the `Object`.
+     *
+     * For normal objects the `DeviceId` identifies the back `Device` driver
+     * which manages it, for `Device` `Object`s refers to itself
+     */
+    pub fn device(&self) -> &DeviceId {
+        &self.m_device
+    }
+
+    /**
+     * Returns whether the object is a named `Object`
      */
     pub fn has_name(&self) -> bool {
         self.m_has_name
+    }
+
+    /**
+     * Returns whether the `Object` is an anonymous object
+     */
+    pub fn is_anonymous(&self) -> bool {
+        !self.has_name()
     }
 
     /**
@@ -201,10 +232,10 @@ impl RawObjInfo {
     }
 
     /**
-     * Sets the `OsEntityId` of the `OsUser` which owns the `Object`
+     * Sets the `RawOsEntityHandle` of the `OsUser` which owns the `Object`
      */
-    pub fn set_os_user(&mut self, os_user_id: OsEntityId) {
-        self.m_os_user_id = os_user_id;
+    pub fn set_os_user(&mut self, os_user_handle: RawOsEntityHandle) {
+        self.m_update_os_user_handle = os_user_handle;
     }
 
     /**
@@ -215,10 +246,10 @@ impl RawObjInfo {
     }
 
     /**
-     * Sets the `OsEntityId` of the `OsGroup` which owns the `Object`
+     * Sets the `RawOsEntityHandle` of the `OsGroup` which owns the `Object`
      */
-    pub fn set_os_group(&mut self, os_group_id: OsEntityId) {
-        self.m_os_group_id = os_group_id;
+    pub fn set_os_group(&mut self, os_group_handle: RawOsEntityHandle) {
+        self.m_update_os_group_handle = os_group_handle;
     }
 
     /**
@@ -317,6 +348,7 @@ impl Default for RawObjInfo {
     fn default() -> Self {
         Self { m_type: ObjType::default(),
                m_ref_count: 0,
+               m_device: 0,
                m_has_name: false,
                m_name_id: 0,
                m_name_buffer: Self::EMPTY_VFS_NAME,
@@ -327,7 +359,9 @@ impl Default for RawObjInfo {
                m_data_bytes_used: 0,
                m_os_user_id: 0,
                m_os_group_id: 0,
-               m_prot_grants: RawObjGrants::new_zero(),
+               m_prot_grants: RawObjGrants::default(),
+               m_update_os_user_handle: 0,
+               m_update_os_group_handle: 0,
                m_creat_inst: RawInstant::default(),
                m_last_data_access_inst: RawInstant::default(),
                m_last_data_modify_inst: RawInstant::default(),
@@ -339,7 +373,9 @@ impl Default for RawObjInfo {
 /**
  * Data container with usage instant related to an `Object`
  */
-#[derive(Debug, Default, Copy, Clone)]
+#[derive(Debug)]
+#[derive(Default)]
+#[derive(Copy, Clone)]
 pub struct ObjUseInstant {
     m_obj_use: ObjUseBits,
     m_thread_id: TaskId,

@@ -13,7 +13,7 @@ use crate::{
 };
 
 /**
- * Child unit inside a `Dir`
+ * Child unit inside a `Dir` object
  */
 #[derive(Debug)]
 #[derive(Copy, Clone)]

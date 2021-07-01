@@ -1,4 +1,4 @@
-/*! # Bit Extensions
+/*! # High Level Bit Management Library
  *
  * Provides abstractions and simplifications for bit accessing and bitfields
  */

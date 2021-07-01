@@ -66,10 +66,7 @@ impl<'a> RawTaskConfig<'a> {
      */
     pub fn new(task_type: TaskType, is_spawn: bool) -> Self {
         let config_flags = if is_spawn {
-            let mut config_flags = TaskConfigFlags::new_zero();
-
-            config_flags.set_enabled(TaskConfigBits::IsSpawn);
-            config_flags
+            TaskConfigFlags::new_zero() | TaskConfigBits::IsSpawn
         } else {
             TaskConfigFlags::new_zero()
         };
@@ -145,28 +142,28 @@ impl<'a> RawTaskConfig<'a> {
     }
 
     /**
-     * Returns the owner user's `RawOsEntityId`
+     * Returns the owner user's `RawOsEntityHandle`
      */
     pub fn os_user(&self) -> Option<RawOsEntityHandle> {
         self.m_os_user
     }
 
     /**
-     * Sets the owner user's `RawOsEntityId`
+     * Sets the owner user's `RawOsEntityHandle`
      */
     pub fn set_os_user(&mut self, os_user: RawOsEntityHandle) {
         self.m_os_user = Some(os_user);
     }
 
     /**
-     * Returns the owner group's `RawOsEntityId`
+     * Returns the owner group's `RawOsEntityHandle`
      */
     pub fn os_group(&self) -> Option<RawOsEntityHandle> {
         self.m_os_group
     }
 
     /**
-     * Sets the owner group's `RawOsEntityId`
+     * Sets the owner group's `RawOsEntityHandle`
      */
     pub fn set_os_group(&mut self, os_group: RawOsEntityHandle) {
         self.m_os_group = Some(os_group);

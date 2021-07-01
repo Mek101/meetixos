@@ -40,27 +40,27 @@ impl<'a> StackBackTrace<'a> {
 
 impl<'a> fmt::Display for StackBackTrace<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut current_ret_ptr = self.m_return_ptr;
-        let mut current_frm_ptr = self.m_frame_ptr;
+        let mut current_return_ptr = self.m_return_ptr;
+        let mut current_frame_ptr = self.m_frame_ptr;
 
         /* be sure we are into the text */
-        while current_ret_ptr >= self.m_text_begin
-              && current_ret_ptr <= self.m_text_end
-              && current_frm_ptr != 0
+        while current_return_ptr >= self.m_text_begin
+              && current_return_ptr <= self.m_text_end
+              && current_frame_ptr != 0
         {
             /* obtain the symbol for the current pointer and display it */
-            if let Some(code_sym) = self.m_symbols_list.symbol_at(current_ret_ptr) {
-                writeln!(f, "{:#018x} - {}", current_ret_ptr, code_sym)?;
+            if let Some(code_sym) = self.m_symbols_list.symbol_at(current_return_ptr) {
+                writeln!(f, "{:#018x} - {}", current_return_ptr, code_sym)?;
             } else {
-                writeln!(f, "{:#018x} - (???)", current_ret_ptr)?;
+                writeln!(f, "{:#018x} - (???)", current_return_ptr)?;
             }
 
             /* step to the previous frame pointer */
-            current_frm_ptr = unsafe {
-                *(current_frm_ptr as *const usize).offset(HwTracerHelper::PREV_FRAME_PTR_OFFSET)
+            current_frame_ptr = unsafe {
+                *(current_frame_ptr as *const usize).offset(HwTracerHelper::PREV_FRAME_PTR_OFFSET)
             };
-            current_ret_ptr = unsafe {
-                *(current_frm_ptr as *const usize).offset(HwTracerHelper::PREV_RETURN_PTR_OFFSET)
+            current_return_ptr = unsafe {
+                *(current_frame_ptr as *const usize).offset(HwTracerHelper::PREV_RETURN_PTR_OFFSET)
             };
         }
 

@@ -1,4 +1,4 @@
-/*! `OSEntity` configuration */
+/*! `OsEntity` configuration */
 
 use num_enum::{
     IntoPrimitive,
@@ -38,10 +38,7 @@ impl<'a> RawOsEntityConfig<'a> {
      */
     pub fn new(os_ent_type: OsEntityType, is_creat: bool) -> Self {
         let config_flags = if is_creat {
-            let mut config_flags = OsEntityConfigFlags::new_zero();
-
-            config_flags.set_enabled(OsEntityConfigBits::Creat);
-            config_flags
+            OsEntityConfigFlags::new_zero() | OsEntityConfigBits::Creat
         } else {
             OsEntityConfigFlags::new_zero()
         };
@@ -124,7 +121,14 @@ impl<'a> RawOsEntityConfig<'a> {
 #[derive(Clone, Copy)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum OsEntityConfigBits {
+    /**
+     * Enabled when called `OsEntity::creat()`
+     */
     Creat,
+
+    /**
+     * Marks the `OsEntity` as administrative entity
+     */
     Admin
 }
 

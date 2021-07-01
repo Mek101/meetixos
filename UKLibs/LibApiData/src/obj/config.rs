@@ -40,9 +40,7 @@ impl<'a> RawObjConfig<'a> {
     pub fn new(obj_type: ObjType, is_creat: bool) -> Self {
         /* construct the init */
         let config_flags = if is_creat {
-            let mut config_flags = ObjConfigFlags::new_zero();
-            config_flags.set_enabled(ObjConfigBits::Creat);
-            config_flags
+            ObjConfigFlags::new_zero() | ObjConfigBits::Creat
         } else {
             ObjConfigFlags::new_zero()
         };
@@ -140,10 +138,29 @@ impl<'a> RawObjConfig<'a> {
 #[derive(Clone, Copy)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum ObjConfigBits {
+    /**
+     * Enabled when called `Object::creat()`
+     */
     Creat,
+
+    /**
+     * Enables data-read operations on the `Object`
+     */
     Read,
+
+    /**
+     * Enables data-write operations on the `Object`
+     */
     Write,
+
+    /**
+     * Enables data-exec operations on the `Object`
+     */
     Exec,
+
+    /**
+     * Ensures that the `Object` is opened by one thread a time
+     */
     Exclusive
 }
 

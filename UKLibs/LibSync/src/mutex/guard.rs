@@ -78,7 +78,7 @@ impl<'a, R, T> Drop for MutexDataGuard<'a, R, T>
     #[inline]
     fn drop(&mut self) {
         unsafe {
-            self.m_mutex.m_back_mutex.do_unlock();
+            self.m_mutex.m_back_raw_mutex.do_unlock();
         }
     }
 }

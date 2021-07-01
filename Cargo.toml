@@ -9,7 +9,6 @@ members = [
     "UKLibs/LibBits",
     "UKLibs/LibHeap",
     "UKLibs/LibHelps",
-    "UKLibs/LibOS",
     "UKLibs/LibSymbols",
     "UKLibs/LibSync",
     # Userland Libraries

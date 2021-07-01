@@ -7,6 +7,7 @@ use crate::sys::codes::{
     KernDirFnId,
     KernFileFnId,
     KernHandleFnId,
+    KernInstantFnId,
     KernIpcChanFnId,
     KernLinkFnId,
     KernMMapFnId,
@@ -21,8 +22,7 @@ use crate::sys::codes::{
     KernProcFnId,
     KernTaskConfigFnId,
     KernTaskFnId,
-    KernThreadFnId,
-    KernTimeInstFnId
+    KernThreadFnId
 };
 
 /**
@@ -49,7 +49,7 @@ pub enum KernFnPath {
     Link(KernLinkFnId),
     MMap(KernMMapFnId),
     Mutex(KernMutexFnId),
-    TimeInst(KernTimeInstFnId),
+    Instant(KernInstantFnId),
     Path(KernPathFnId),
     OsEntity(KernOsEntFnId),
     OsUser(KernOsUserFnId),
@@ -78,7 +78,7 @@ impl KernFnPath {
             Self::Link(_) => 10,
             Self::MMap(_) => 11,
             Self::Mutex(_) => 12,
-            Self::TimeInst(_) => 13,
+            Self::Instant(_) => 13,
             Self::Path(_) => 14,
             Self::OsEntity(_) => 15,
             Self::OsUser(_) => 16,
@@ -107,7 +107,7 @@ impl KernFnPath {
             Self::Link(fn_id) => fn_id.into(),
             Self::MMap(fn_id) => fn_id.into(),
             Self::Mutex(fn_id) => fn_id.into(),
-            Self::TimeInst(fn_id) => fn_id.into(),
+            Self::Instant(fn_id) => fn_id.into(),
             Self::Path(fn_id) => fn_id.into(),
             Self::OsEntity(fn_id) => fn_id.into(),
             Self::OsUser(fn_id) => fn_id.into(),
@@ -141,7 +141,7 @@ impl fmt::Display for KernFnPath {
             Self::Link(fn_id) => write!(f, "KernFnPath::Link({:?})", fn_id),
             Self::MMap(fn_id) => write!(f, "KernFnPath::MMap({:?})", fn_id),
             Self::Mutex(fn_id) => write!(f, "KernFnPath::Mutex({:?})", fn_id),
-            Self::TimeInst(fn_id) => write!(f, "KernFnPath::Time({:?})", fn_id),
+            Self::Instant(fn_id) => write!(f, "KernFnPath::Time({:?})", fn_id),
             Self::Path(fn_id) => write!(f, "KernFnPath::Path({:?})", fn_id),
             Self::OsEntity(fn_id) => write!(f, "KernFnPath::OSEntity({:?})", fn_id),
             Self::OsUser(fn_id) => write!(f, "KernFnPath::OSUser({:?})", fn_id),

@@ -18,29 +18,39 @@ pub type RawObjGrants = BitFlags<usize, ObjGrantsBits>;
 /**
  * Lists the valid `ObjGrants` bits.
  *
- * * `XxxCanOpenIt` - The caller can effectively open the obj reference
- *   (which can be opened without read/write/exec features, for example if
- *   only information are requested)
- * * `XxxCanReadData` - The caller can call data-read related system calls
- *   (obviously the read feature must be enabled in the originating
- *   configuration)
- * * `XxxCanWriteData` - The caller can call data-write related system calls
- *   (obviously the write feature must be enabled in the originating
- *   configuration)
- * * `XxxCanExecTraversData` - The caller can execute/traverse the data of
- *   the `Object`. Traverse the data have meaning with objects which data is
- *   reference to other objects (i.e directories and links)
- * * `XxxCanReadInfo` - The caller can read the metadata information of the
- *   `Object`
- * * `XxxCanWriteInfo` - The caller can update the metadata information of
- *   the `Object`
- * * `XxxCanSeeIt` - The is listed into the parent directory iteration for
- *   the caller `OsUser`
+ * # `[User/Group/Other]CanOpenIt`
+ * The caller can effectively open the `Object` reference (which can be
+ * opened without read/write/exec features, for example if only information
+ * are requested)
+ *
+ * # `[User/Group/Other]CanReadData`
+ * The caller can execute data-read related system calls (obviously the read
+ * feature must be enabled in the originating configuration)
+ *
+ * # `[User/Group/Other]CanWriteData`
+ * The caller can execute data-write related system calls (obviously the
+ * write feature must be enabled in the originating configuration)
+ *
+ * # `[User/Group/Other]CanExecTraversData`
+ * The caller can execute/traverse the data of the `Object`. Traverse the
+ * data have meaning with objects which data is reference to other objects
+ * (i.e directories and links)
+ *
+ * # `[User/Group/Other]CanReadInfo`
+ * The caller can read the metadata information of the `Object`
+ *
+ * # `[User/Group/Other]CanWriteInfo`
+ * The caller can update the metadata information of the `Object`
+ *
+ * # `[User/Group/Other]CanSeeIt`
+ * The `Object` is listed into the parent directory iteration for the caller
+ * `OsUser`
  */
 #[repr(usize)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum ObjGrantsBits {
     UserCanOpenIt,

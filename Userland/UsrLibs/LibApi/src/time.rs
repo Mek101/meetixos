@@ -20,7 +20,7 @@ use core::{
 
 use api_data::{
     sys::{
-        codes::KernTimeInstFnId,
+        codes::KernInstantFnId,
         fn_path::KernFnPath
     },
     time::RawInstant
@@ -57,7 +57,7 @@ impl Instant {
      */
     pub fn now() -> Self {
         let mut raw_instant = RawInstant::default();
-        KernHandle::kern_call_1(KernFnPath::TimeInst(KernTimeInstFnId::Now),
+        KernHandle::kern_call_1(KernFnPath::Instant(KernInstantFnId::Now),
                                 &mut raw_instant as *mut _ as usize)
                    .map(|_| Self { m_raw_instant: raw_instant })
                    .expect("Failed to obtain updated Instant")

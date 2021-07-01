@@ -25,11 +25,10 @@ use crate::fields::BitFields;
  * Safe wrapper for a bit flags
  */
 #[repr(transparent)]
-#[derive(Default)]
 pub struct BitFlags<B, T>
     where B: BitFields + Default + Copy,
           T: BitFlagsValues {
-    m_bits: B,
+    m_raw_bits: B,
     _unused: PhantomData<T>
 }
 
@@ -41,7 +40,7 @@ impl<B, T> BitFlags<B, T>
      * Constructs a zeroed `BitFlags`
      */
     pub fn new_zero() -> Self {
-        Self { m_bits: B::default(),
+        Self { m_raw_bits: B::default(),
                _unused: PhantomData }
     }
 
@@ -56,7 +55,7 @@ impl<B, T> BitFlags<B, T>
                 return None;
             }
         }
-        Some(Self { m_bits: raw_bits,
+        Some(Self { m_raw_bits: raw_bits,
                     _unused: PhantomData })
     }
 
@@ -71,12 +70,12 @@ impl<B, T> BitFlags<B, T>
             }
         }
 
-        Self { m_bits: raw_bits,
+        Self { m_raw_bits: raw_bits,
                _unused: PhantomData }
     }
 
     /**
-     * Enables the bit corresponding to the given value
+     * Enables the bit corresponding to the given `bit`
      */
     #[inline]
     pub fn set_enabled(&mut self, bit: T) -> &mut Self {
@@ -84,7 +83,7 @@ impl<B, T> BitFlags<B, T>
     }
 
     /**
-     * Disables the bit corresponding to the given value
+     * Disables the bit corresponding to the given `bit`
      */
     #[inline]
     pub fn set_disabled(&mut self, bit: T) -> &mut Self {
@@ -92,24 +91,26 @@ impl<B, T> BitFlags<B, T>
     }
 
     /**
-     * Sets for the bit corresponding to `value` the `enable` value
+     * Sets for the bit corresponding to `bit` the `bit_value` value
      */
+    #[inline]
     pub fn set(&mut self, bit: T, bit_value: bool) -> &mut Self {
         let bit_index = bit.into();
         assert!(bit_index < B::BIT_LEN);
 
-        self.m_bits.set_bit(bit_index, bit_value);
+        self.m_raw_bits.set_bit(bit_index, bit_value);
         self
     }
 
     /**
-     * Returns whether the bit corresponding to `value` is enabled
+     * Returns whether the bit corresponding to `bit` is enabled
      */
+    #[inline]
     pub fn is_enabled(&self, bit: T) -> bool {
         let bit_index = bit.into();
         assert!(bit_index < B::BIT_LEN);
 
-        self.m_bits.bit_at(bit_index)
+        self.m_raw_bits.bit_at(bit_index)
     }
 
     /**
@@ -149,7 +150,7 @@ impl<B, T> BitFlags<B, T>
      */
     #[inline]
     pub fn raw_bits(&self) -> B {
-        self.m_bits
+        self.m_raw_bits
     }
 }
 
@@ -159,7 +160,7 @@ impl<B, T> Clone for BitFlags<B, T>
 {
     #[inline]
     fn clone(&self) -> Self {
-        Self { m_bits: self.m_bits,
+        Self { m_raw_bits: self.m_raw_bits,
                _unused: PhantomData }
     }
 }
@@ -169,6 +170,15 @@ impl<B, T> Copy for BitFlags<B, T>
           T: BitFlagsValues
 {
     /* No methods to implement */
+}
+
+impl<B, T> Default for BitFlags<B, T>
+    where B: BitFields + Default + Copy,
+          T: BitFlagsValues
+{
+    fn default() -> Self {
+        Self::new_zero()
+    }
 }
 
 impl<B, T> From<B> for BitFlags<B, T>
@@ -188,7 +198,7 @@ impl<B, T> BitOr for BitFlags<B, T>
 
     #[inline]
     fn bitor(self, rhs: Self) -> Self::Output {
-        Self { m_bits: self.m_bits | rhs.m_bits,
+        Self { m_raw_bits: self.m_raw_bits | rhs.m_raw_bits,
                _unused: PhantomData }
     }
 }
@@ -199,7 +209,7 @@ impl<B, T> BitOrAssign for BitFlags<B, T>
 {
     #[inline]
     fn bitor_assign(&mut self, rhs: Self) {
-        self.m_bits |= rhs.m_bits
+        self.m_raw_bits |= rhs.m_raw_bits
     }
 }
 
@@ -236,7 +246,7 @@ impl<B, T> BitAnd for BitFlags<B, T>
 
     #[inline]
     fn bitand(self, rhs: Self) -> Self::Output {
-        Self { m_bits: self.m_bits & rhs.m_bits,
+        Self { m_raw_bits: self.m_raw_bits & rhs.m_raw_bits,
                _unused: PhantomData }
     }
 }
@@ -247,7 +257,7 @@ impl<B, T> BitAndAssign for BitFlags<B, T>
 {
     #[inline]
     fn bitand_assign(&mut self, rhs: Self) {
-        self.m_bits &= rhs.m_bits
+        self.m_raw_bits &= rhs.m_raw_bits
     }
 }
 
@@ -287,7 +297,7 @@ impl<B, T> BitXor for BitFlags<B, T>
 
     #[inline]
     fn bitxor(self, rhs: Self) -> Self::Output {
-        Self { m_bits: self.m_bits ^ rhs.m_bits,
+        Self { m_raw_bits: self.m_raw_bits ^ rhs.m_raw_bits,
                _unused: PhantomData }
     }
 }
@@ -298,7 +308,7 @@ impl<B, T> BitXorAssign for BitFlags<B, T>
 {
     #[inline]
     fn bitxor_assign(&mut self, rhs: Self) {
-        self.m_bits ^= rhs.m_bits;
+        self.m_raw_bits ^= rhs.m_raw_bits;
     }
 }
 
@@ -313,7 +323,7 @@ impl<B, T> BitXor<T> for BitFlags<B, T>
         let mut rhs_bf = Self::new_zero();
         rhs_bf.set_enabled(rhs);
 
-        Self { m_bits: self.m_bits ^ rhs_bf.m_bits,
+        Self { m_raw_bits: self.m_raw_bits ^ rhs_bf.m_raw_bits,
                _unused: PhantomData }
     }
 }
@@ -327,7 +337,7 @@ impl<B, T> BitXorAssign<T> for BitFlags<B, T>
         let mut rhs_bf = Self::new_zero();
         rhs_bf.set_enabled(rhs);
 
-        self.m_bits ^= rhs_bf.m_bits;
+        self.m_raw_bits ^= rhs_bf.m_raw_bits;
     }
 }
 
@@ -339,7 +349,7 @@ impl<B, T> Not for BitFlags<B, T>
 
     #[inline]
     fn not(self) -> Self::Output {
-        Self { m_bits: !self.m_bits,
+        Self { m_raw_bits: !self.m_raw_bits,
                _unused: PhantomData }
     }
 }
@@ -350,7 +360,7 @@ impl<B, T> PartialEq for BitFlags<B, T>
 {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
-        self.m_bits == other.m_bits
+        self.m_raw_bits == other.m_raw_bits
     }
 }
 
@@ -370,7 +380,7 @@ impl<B, T> Debug for BitFlags<B, T>
 
         let mut is_first = true;
         for bit_index in 0..B::BIT_LEN {
-            if self.m_bits.bit_at(bit_index) {
+            if self.m_raw_bits.bit_at(bit_index) {
                 /* here we safe construct the value using <TryFrom> but if we come at
                  * this point is ensured that each bit enabled in <m_bits> corresponds
                  * to a valid variant of <T>

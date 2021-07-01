@@ -1,6 +1,7 @@
 /*! `Object` related data */
 
 pub mod config;
+pub mod device;
 pub mod dir;
 pub mod grants;
 pub mod info;

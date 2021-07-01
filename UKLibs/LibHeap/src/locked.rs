@@ -35,15 +35,15 @@ pub type RawLazyMutexSupplier<M> = fn() -> Option<M>;
  * This allow the use of the struct as `global_allocator` using constant
  * initialization
  */
-pub struct RawLazyLockedHeap<M>
-    where M: BackRawMutex + 'static {
+pub struct RawLazyLockedHeap<'a, M>
+    where M: BackRawMutex + 'a {
     m_lazy_locked_heap: Lazy<Mutex<M, Heap>, LazyHeapInitializer<M>>
 }
 
-impl<M> RawLazyLockedHeap<M> where M: BackRawMutex + 'static {
+impl<'a, M> RawLazyLockedHeap<'a, M> where M: BackRawMutex + 'a {
     /**
-     * Constructs a `RawLazyLockedHeap` without effectively initialize the
-     * internal `sync::Mutex` or `Heap`
+     * Constructs a `RawLazyLockedHeap` without initialize the internal
+     * `sync::Mutex<Heap>`
      */
     pub const unsafe fn new(raw_mutex_supplier: RawLazyMutexSupplier<M>,
                             mem_supplier: HeapMemorySupplier)
@@ -53,31 +53,32 @@ impl<M> RawLazyLockedHeap<M> where M: BackRawMutex + 'static {
     }
 
     /**
-     * Forces the initialization of this lazy obj
+     * Forces the initialization of this lazy `Heap`
      */
     pub fn force_init(&self) {
-        self.m_lazy_locked_heap.lock().allocated_mem();
+        self.m_lazy_locked_heap.lock().memory_in_use();
     }
 
     /**
-     * Returns the size of the current managed area in bytes
+     * Returns the total amount of memory returned by the
+     * `HeapMemorySupplier`
      */
-    pub fn managed_mem(&self) -> usize {
-        self.m_lazy_locked_heap.lock().supplier_managed_mem()
+    pub fn memory_from_supplier(&self) -> usize {
+        self.m_lazy_locked_heap.lock().memory_from_supplier()
     }
 
     /**
-     * Returns the currently allocated size in bytes
+     * Returns the total amount of in-use memory (allocated)
      */
-    pub fn allocated_mem(&self) -> usize {
-        self.m_lazy_locked_heap.lock().allocated_mem()
+    pub fn memory_in_use(&self) -> usize {
+        self.m_lazy_locked_heap.lock().memory_in_use()
     }
 
     /**
-     * Returns the available memory amount
+     * Returns the amount of currently available memory
      */
-    pub fn free_memory(&self) -> usize {
-        self.m_lazy_locked_heap.lock().free_memory()
+    pub fn memory_available(&self) -> usize {
+        self.m_lazy_locked_heap.lock().memory_available()
     }
 }
 
@@ -91,19 +92,15 @@ unsafe impl<M> GlobalAlloc for RawLazyLockedHeap<M> where M: BackRawMutex {
 
     unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
         if let Some(nn_ptr) = NonNull::new(ptr) {
-            self.m_lazy_locked_heap.lock().deallocate(nn_ptr, layout)
+            self.m_lazy_locked_heap.lock().deallocate(nn_ptr, layout);
+        } else {
+            panic!("GlobalAlloc::dealloc(): Tried to free a null-pointer");
         }
     }
 }
 
 /**
- * Concrete type for the `FnOnce` trait used by the `sync::Lazy`.
- *
- * Since the `sync::Lazy` by default defines his `F` generic parameter to
- * `fn()` (that cannot capture objects from his environment) and because the
- * closures have no concrete type because are implemented by the compiler
- * during build process, this is the only way (for now) to have a lazy
- * function to give to the `sync::Lazy` that captures local objects
+ * Concrete type for the `FnOnce` trait used by the `sync::Lazy`
  */
 struct LazyHeapInitializer<T>
     where T: BackRawMutex {

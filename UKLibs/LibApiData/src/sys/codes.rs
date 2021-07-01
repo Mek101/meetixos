@@ -11,7 +11,8 @@ use num_enum::{
 #[repr(u16)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernHandleFnId {
     IsValid,
@@ -25,7 +26,8 @@ pub enum KernHandleFnId {
 #[repr(u16)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernObjConfigFnId {
     ApplyConfig
@@ -37,19 +39,21 @@ pub enum KernObjConfigFnId {
 #[repr(u16)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernTaskConfigFnId {
     ApplyConfig
 }
 
 /**
- * Lists the system call codes for the `OSEntConfig` struct
+ * Lists the system call codes for the `OsEntConfig` struct
  */
 #[repr(u16)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernOsEntConfigFnId {
     ApplyConfig
@@ -61,7 +65,8 @@ pub enum KernOsEntConfigFnId {
 #[repr(u16)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernOsEntFnId {
     OsId,
@@ -74,7 +79,8 @@ pub enum KernOsEntFnId {
 #[repr(u16)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernObjectFnId {
     DropName,
@@ -92,7 +98,8 @@ pub enum KernObjectFnId {
 #[repr(u16)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernTaskFnId {
     OsId,
@@ -108,7 +115,8 @@ pub enum KernTaskFnId {
 #[repr(u16)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernDeviceFnId {
     Read,
@@ -124,7 +132,8 @@ pub enum KernDeviceFnId {
 #[repr(u16)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernDirFnId {
     NextChild,
@@ -137,7 +146,8 @@ pub enum KernDirFnId {
 #[repr(u16)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernFileFnId {
     ReadData,
@@ -154,7 +164,8 @@ pub enum KernFileFnId {
 #[repr(u16)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernIpcChanFnId {
     Send,
@@ -167,7 +178,8 @@ pub enum KernIpcChanFnId {
 #[repr(u16)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernLinkFnId {
     Deref,
@@ -180,7 +192,8 @@ pub enum KernLinkFnId {
 #[repr(u16)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernMMapFnId {
     GetPtr,
@@ -195,7 +208,8 @@ pub enum KernMMapFnId {
 #[repr(u16)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernMutexFnId {
     Lock,
@@ -210,9 +224,10 @@ pub enum KernMutexFnId {
 #[repr(u16)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
-pub enum KernTimeInstFnId {
+pub enum KernInstantFnId {
     Now
 }
 
@@ -222,7 +237,8 @@ pub enum KernTimeInstFnId {
 #[repr(u16)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernPathFnId {
     Exists
@@ -234,7 +250,8 @@ pub enum KernPathFnId {
 #[repr(u16)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernOsUserFnId {
     Groups,
@@ -247,7 +264,8 @@ pub enum KernOsUserFnId {
 #[repr(u16)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernOsGroupFnId {
     AddUser,
@@ -261,9 +279,12 @@ pub enum KernOsGroupFnId {
 #[repr(u16)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernProcFnId {
+    GetWorkDir,
+    SetWorkDir,
     MainThread,
     SubThreads,
     ThreadsCount,
@@ -277,7 +298,8 @@ pub enum KernProcFnId {
 #[repr(u16)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernThreadFnId {
     WaitFor,

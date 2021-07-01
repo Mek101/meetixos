@@ -1,0 +1,143 @@
+/*! `Device` specific data structures */
+
+use core::convert::TryFrom;
+
+use num_enum::{
+    IntoPrimitive,
+    TryFromPrimitive
+};
+
+use bits::fields::BitFields;
+
+/**
+ * `Device` identifier
+ */
+#[repr(transparent)]
+#[derive(Debug)]
+#[derive(Default)]
+#[derive(Copy, Clone)]
+pub struct DeviceId {
+    m_device_type: DeviceIdType,
+    m_device_class: DeviceIdClass,
+    m_serial_value: u32
+}
+
+impl DeviceId {
+    /**
+     * Constructs a `DeviceId` from the given parameters
+     */
+    pub fn new(device_type: DeviceIdType,
+               device_class: DeviceIdClass,
+               serial_value: u32)
+               -> Self {
+        Self { m_device_type: device_type,
+               m_device_class: device_class,
+               m_serial_value: serial_value }
+    }
+
+    /**
+     * Returns the `DeviceIdType`
+     */
+    pub fn device_type(&self) -> DeviceIdType {
+        self.m_device_type
+    }
+
+    /**
+     * Returns the `DeviceIdClass`
+     */
+    pub fn device_class(&self) -> DeviceIdClass {
+        self.m_device_class
+    }
+
+    /**
+     * Returns the serial registration value
+     */
+    pub fn serial_value(&self) -> u32 {
+        self.m_serial_value
+    }
+}
+
+impl TryFrom<usize> for DeviceId {
+    type Error = ();
+
+    fn try_from(raw_device_id: usize) -> Result<Self, ()> {
+        let device_type =
+            DeviceIdType::try_from(raw_device_id.bits_at(40..48) as u8).map_err(|_| ())?;
+        let device_class =
+            DeviceIdClass::try_from(raw_device_id.bits_at(32..40) as u8).map_err(|_| ())?;
+
+        Ok(Self { m_device_type: device_type,
+                  m_device_class: device_class,
+                  m_serial_value: raw_device_id.bits_at(0..32) as u32 })
+    }
+}
+
+impl Into<usize> for DeviceId {
+    fn into(self) -> usize {
+        (self.device_type().into() as usize) << 40
+        | (self.device_class().into() as usize) << 32
+        | (self.serial_value() as usize)
+    }
+}
+
+/**
+ * Lists the supported `Device` sub-types
+ */
+#[repr(u8)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum DeviceIdType {
+    /**
+     * Identifies a `Device` which reads & writes data in contiguous blocks
+     * of the same size
+     */
+    Block,
+
+    /**
+     * Identifies a `Device` which read & writes data in random order and
+     * with heterogeneous blocks
+     */
+    Character
+}
+
+/**
+ * Lists the supported `Device` classes
+ */
+#[repr(u8)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+pub enum DeviceIdClass {
+    /**
+     * `Device` which is able to store data into physical storage devices,
+     * like a disk, an SSD or an SD-Card
+     */
+    Storage,
+
+    /**
+     * `Device` which manages in-memory storages, like temporary filesystem
+     * device support or userland `MMap`
+     */
+    Memory,
+
+    /**
+     * `Device` which manages network communication via sockets
+     */
+    Network,
+
+    /**
+     * `Device` which manages inter-process communication network via
+     * `IpcChan`
+     */
+    Ipc,
+
+    /**
+     * `Device` which manages a screen framebuffer
+     */
+    Framebuffer
+}

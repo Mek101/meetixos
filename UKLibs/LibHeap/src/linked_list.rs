@@ -27,13 +27,13 @@ impl LinkedList {
     /**
      * Constructs a `LinkedList` from the given parameters
      */
-    pub unsafe fn new(hole_addr: NonNull<u8>, hole_size: usize) -> LinkedList {
+    pub unsafe fn new(start_area_addr: NonNull<u8>, area_size: usize) -> LinkedList {
         let first_real_hole_ptr = {
-            let raw_hole_addr = hole_addr.as_ptr() as usize;
+            let raw_hole_addr = start_area_addr.as_ptr() as usize;
             let aligned_hole_addr = align_up(raw_hole_addr, align_of::<Hole>());
             let aligned_hole_ptr = aligned_hole_addr as *mut Hole;
             let hole_to_write =
-                Hole::new(hole_size - (aligned_hole_addr - raw_hole_addr), None);
+                Hole::new(area_size - (aligned_hole_addr - raw_hole_addr), None);
 
             aligned_hole_ptr.write(hole_to_write);
             aligned_hole_ptr
@@ -116,8 +116,8 @@ impl Hole {
     /**
      * Constructs a `Hole` with the given parameters
      */
-    const fn new(size: usize, next_hole: Option<&'static mut Hole>) -> Self {
-        Self { m_size: size,
+    const fn new(hole_size: usize, next_hole: Option<&'static mut Hole>) -> Self {
+        Self { m_size: hole_size,
                m_next_hole: next_hole }
     }
 
@@ -142,9 +142,9 @@ impl HoleInfo {
     /**
      * Constructs a `HoleInfo` from the given parameters
      */
-    const fn new(addr: usize, size: usize) -> Self {
-        Self { m_addr: addr,
-               m_size: size }
+    const fn new(hole_addr: usize, hole_size: usize) -> Self {
+        Self { m_addr: hole_addr,
+               m_size: hole_size }
     }
 }
 
@@ -171,30 +171,31 @@ struct Allocation {
  * All padding must be at least `HoleList::min_size()` big or the hole is
  * unusable.
  */
-fn split_hole(hole: HoleInfo, required_layout: Layout) -> Option<Allocation> {
+fn split_hole(hole_info: HoleInfo, required_layout: Layout) -> Option<Allocation> {
     let required_size = required_layout.size();
     let required_align = required_layout.align();
 
-    let (aligned_addr, front_padding) =
-        if hole.m_addr == align_up(hole.m_addr, required_align) {
-            /* hole has already the required alignment */
-            (hole.m_addr, None)
-        } else {
-            /* the required alignment causes some padding before the allocation */
-            let aligned_addr =
-                align_up(hole.m_addr + LinkedList::block_size(), required_align);
-            let hole_info = HoleInfo::new(hole.m_addr, aligned_addr - hole.m_addr);
+    let (aligned_addr, front_padding) = if hole_info.m_addr
+                                           == align_up(hole_info.m_addr, required_align)
+    {
+        /* hole has already the required alignment */
+        (hole_info.m_addr, None)
+    } else {
+        /* the required alignment causes some padding before the allocation */
+        let aligned_addr =
+            align_up(hole_info.m_addr + LinkedList::block_size(), required_align);
+        let hole_info = HoleInfo::new(hole_info.m_addr, aligned_addr - hole_info.m_addr);
 
-            (aligned_addr, Some(hole_info))
-        };
+        (aligned_addr, Some(hole_info))
+    };
 
     let aligned_hole = {
-        if aligned_addr + required_size > hole.m_addr + hole.m_size {
+        if aligned_addr + required_size > hole_info.m_addr + hole_info.m_size {
             /* hole is too small */
             return None;
         }
 
-        HoleInfo::new(aligned_addr, hole.m_size - (aligned_addr - hole.m_addr))
+        HoleInfo::new(aligned_addr, hole_info.m_size - (aligned_addr - hole_info.m_addr))
     };
 
     let back_padding = if aligned_hole.m_size == required_size {
@@ -247,11 +248,11 @@ fn allocate_first_fit(mut prev_hole: &mut Hole, layout: Layout) -> Option<Alloca
 }
 
 /**
- * Frees the allocation given by `(addr, size)`
+ * Frees the allocation given by `(area_addr, area_size)`
  */
-fn deallocate(mut hole: &mut Hole, addr: usize, mut size: usize) {
+fn deallocate(mut hole: &mut Hole, area_addr: usize, mut area_size: usize) {
     loop {
-        assert!(size >= LinkedList::block_size());
+        assert!(area_size >= LinkedList::block_size());
 
         let hole_addr = if hole.m_size == 0 {
             /* it's the dummy hole, which is the head of the HoleList.
@@ -269,7 +270,7 @@ fn deallocate(mut hole: &mut Hole, addr: usize, mut size: usize) {
          *
          * thus the freed address must be always behind the current hole.
          */
-        assert!(hole_addr + hole.m_size <= addr,
+        assert!(hole_addr + hole.m_size <= area_addr,
                 "invalid deallocation (probably a double free)");
 
         /* get information about the next block */
@@ -277,7 +278,8 @@ fn deallocate(mut hole: &mut Hole, addr: usize, mut size: usize) {
 
         match next_hole_info {
             Some(next)
-                if hole_addr + hole.m_size == addr && addr + size == next.m_addr =>
+                if hole_addr + hole.m_size == area_addr
+                   && area_addr + area_size == next.m_addr =>
             {
                 /* block fills the gap between this hole and the next hole
                  * before: ___XXX____YYYYY____
@@ -287,10 +289,10 @@ fn deallocate(mut hole: &mut Hole, addr: usize, mut size: usize) {
                  */
 
                 /* merge the F and Y blocks to this X block, then remove te Y block */
-                hole.m_size += size + next.m_size;
+                hole.m_size += area_size + next.m_size;
                 hole.m_next_hole = hole.m_next_hole.as_mut().unwrap().m_next_hole.take();
             }
-            _ if hole_addr + hole.m_size == addr => {
+            _ if hole_addr + hole.m_size == area_addr => {
                 /* block is right behind this hole but there is used memory after it
                  * before:  ___XXX______YYYYY____
                  * after:   ___XXXFFFF__YYYYY____
@@ -305,9 +307,9 @@ fn deallocate(mut hole: &mut Hole, addr: usize, mut size: usize) {
                  */
 
                 /* merge the F block to this X block */
-                hole.m_size += size;
+                hole.m_size += area_size;
             },
-            Some(next) if addr + size == next.m_addr => {
+            Some(next) if area_addr + area_size == next.m_addr => {
                 /* block is right before the next hole but there is used memory before
                  * it
                  *
@@ -319,10 +321,10 @@ fn deallocate(mut hole: &mut Hole, addr: usize, mut size: usize) {
 
                 /* remove the Y block, then free the merged F/Y block in next iteration */
                 hole.m_next_hole = hole.m_next_hole.as_mut().unwrap().m_next_hole.take();
-                size += next.m_size;
+                area_size += next.m_size;
                 continue;
             },
-            Some(next) if next.m_addr <= addr => {
+            Some(next) if next.m_addr <= area_addr => {
                 /* block is behind the next hole, so we delegate it to the next hole
                  * before:  ___XXX__YYYYY________
                  * after:   ___XXX__YYYYY__FFFF__
@@ -348,12 +350,12 @@ fn deallocate(mut hole: &mut Hole, addr: usize, mut size: usize) {
                  * where X is this hole, Y the next hole and F the freed block
                  */
 
-                let new_hole = Hole::new(size, hole.m_next_hole.take());
+                let new_hole = Hole::new(area_size, hole.m_next_hole.take());
 
-                debug_assert_eq!(addr % align_of::<Hole>(), 0);
+                debug_assert_eq!(area_addr % align_of::<Hole>(), 0);
 
                 /* write the new hole to the freed memory */
-                let hole_ptr = addr as *mut Hole;
+                let hole_ptr = area_addr as *mut Hole;
                 unsafe { hole_ptr.write(new_hole) };
 
                 /* add the F block as the next block of the X block */

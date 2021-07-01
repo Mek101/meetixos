@@ -1,7 +1,6 @@
 /*! # Heap Management Library
  *
- * Implements a `no_std` heap manager that could be used in kernel and
- * userland
+ * Implements an heap manager that could be used in kernel and userland
  */
 
 #![no_std]
@@ -11,11 +10,6 @@ use core::{
     alloc::Layout,
     cmp::max,
     ptr::NonNull
-};
-
-use num_enum::{
-    IntoPrimitive,
-    TryFromPrimitive
 };
 
 use crate::{
@@ -30,12 +24,13 @@ pub mod slab;
 /**
  * Maximum amount of bytes that can be wasted using slab allocation,
  * exceeded the value the allocation request rollbacks to linked list
- * allocation
+ * allocation, which allocates the perfect right amount of memory (but
+ * wasting more time)
  */
 pub const SLAB_THRESHOLD: usize = 512;
 
 /**
- * Callback used by the `Heap` to obtain more memory when runs out.
+ * Callback used by the `Heap` to obtain more memory when it runs out.
  *
  * The function must return the starting address of the new virtual area
  * allocated and the up-aligned size of his minimum allocation block
@@ -43,15 +38,15 @@ pub const SLAB_THRESHOLD: usize = 512;
 pub type HeapMemorySupplier = fn(requested_size: usize) -> Option<(NonNull<u8>, usize)>;
 
 /**
- * Multi strategy heap manager capable of use as `global_allocator` in
- * single threaded environments.
+ * Multi strategy heap manager.
  *
  * Internally two main allocation strategies are used:
  * * `Slab` - fixed size block allocation, used for little allocation
  *   requests (under 8KiB) and whenever the threshold doesn't exceed
  *   `SLAB_THRESHOLD`.
- * * `LinkedList` - classic UNIX chunk allocation, used for allocation
- *   requests above the 8KiB and when slab allocation exceed the threshold.
+ * * `LinkedList` - classic UNIX first-fit-chunk allocation, used for
+ *   allocation requests above the 8KiB or when slab allocation exceed the
+ *   `SLAB_THRESHOLD`
  */
 pub struct Heap {
     m_slab_64: Slab<64>,
@@ -64,14 +59,14 @@ pub struct Heap {
     m_slab_8192: Slab<8192>,
     m_linked_list: LinkedList,
     m_mem_supplier: HeapMemorySupplier,
-    m_allocated_mem: usize,
-    m_supplier_managed_mem: usize
+    m_in_use_mem: usize,
+    m_mem_from_supplier: usize
 }
 
 impl Heap {
     /**
-     * Initial amount of memory (in bytes) requested to the
-     * `HeapMemorySupplier` by the `Heap::new()`
+     * Initial amount of memory requested to the `HeapMemorySupplier` by the
+     * `Heap::new()`
      */
     const INITIAL_REQUESTED_MEM_AMOUNT: usize = Slab::<64>::PREFERRED_EXTEND_SIZE
                                                 + Slab::<128>::PREFERRED_EXTEND_SIZE
@@ -84,7 +79,7 @@ impl Heap {
                                                 + LinkedList::PREFERRED_EXTEND_SIZE;
 
     /**
-     * Constructs an `Heap` which uses the given `HeapMemorySupplier`
+     * Constructs an `Heap` which relies on the given `HeapMemorySupplier`
      */
     pub unsafe fn new(mem_supplier: HeapMemorySupplier) -> Option<Self> {
         /* obtain from the mem_supplier the initial memory to become operative */
@@ -126,10 +121,16 @@ impl Heap {
         next_start_area_addr += Slab::<8192>::PREFERRED_EXTEND_SIZE;
 
         /* construct the linked_list allocator */
-        let linked_list =
-            LinkedList::new(next_start_area_addr,
-                            up_aligned_area_size
-                            - (next_start_area_addr - original_start_area_addr) as usize);
+        let linked_list = {
+            let linked_list_size = {
+                let requested_mem_used_amount =
+                    (next_start_area_addr - original_start_area_addr) as usize;
+
+                up_aligned_area_size - requested_mem_used_amount
+            };
+
+            LinkedList::new(next_start_area_addr, linked_list_size as usize)
+        };
 
         Some(Self { m_slab_64: slab_64,
                     m_slab_128: slab_128,
@@ -141,16 +142,15 @@ impl Heap {
                     m_slab_8192: slab_8192,
                     m_linked_list: linked_list,
                     m_mem_supplier: mem_supplier,
-                    m_allocated_mem: 0,
-                    m_supplier_managed_mem: up_aligned_area_size })
+                    m_in_use_mem: 0,
+                    m_mem_from_supplier: up_aligned_area_size })
     }
 
     /**
      * Allocates new memory that fits the given `Layout` request.
      *
-     * Returns a `NonNull<u8>` pointer when `Some`; `None` when the used
-     * allocator runs out of memory and the `HeapMemorySupplier` doesn't
-     * return valid memory
+     * Returns `None` when the used allocator runs out of memory and the
+     * `HeapMemorySupplier` returns `None` as well
      */
     pub fn allocate(&mut self, layout: Layout) -> Option<NonNull<u8>> {
         let sub_heap_allocator = self.allocator_for_layout(&layout);
@@ -160,10 +160,10 @@ impl Heap {
          * If the refill fails too return None
          */
         if let Some(alloc_nn_ptr) = sub_heap_allocator.allocate(layout) {
-            self.m_allocated_mem += layout.size();
+            self.m_in_use_mem += layout.size();
             Some(alloc_nn_ptr)
         } else if self.refill_mem_pool(sub_heap_allocator, &layout) {
-            self.allocate(layout)
+            sub_heap_allocator.allocate(layout) /* retry the allocation */
         } else {
             None
         }
@@ -174,28 +174,29 @@ impl Heap {
      */
     pub unsafe fn deallocate(&mut self, nn_ptr: NonNull<u8>, layout: Layout) {
         self.allocator_for_layout(&layout).deallocate(nn_ptr, layout);
-        self.m_allocated_mem -= layout.size();
+        self.m_in_use_mem -= layout.size();
     }
 
     /**
-     * Returns the size of the current managed area in bytes
+     * Returns the total amount of memory returned by the
+     * `HeapMemorySupplier`
      */
-    pub fn supplier_managed_mem(&self) -> usize {
-        self.m_supplier_managed_mem
+    pub fn memory_from_supplier(&self) -> usize {
+        self.m_mem_from_supplier
     }
 
     /**
-     * Returns the amount of currently allocated memory in bytes
+     * Returns the total amount of in-use memory (allocated)
      */
-    pub fn allocated_mem(&self) -> usize {
-        self.m_allocated_mem
+    pub fn memory_in_use(&self) -> usize {
+        self.m_in_use_mem
     }
 
     /**
      * Returns the amount of currently available memory
      */
-    pub fn free_memory(&self) -> usize {
-        self.m_supplier_managed_mem - self.m_allocated_mem
+    pub fn memory_available(&self) -> usize {
+        self.m_mem_from_supplier - self.m_in_use_mem
     }
 
     /**
@@ -229,9 +230,9 @@ impl Heap {
             };
 
         /* check for threshold to avoid memory waste */
-        if let Some(block_size) = selected_sub_heap_allocator.block_size() {
+        if let Some(slab_block_size) = selected_sub_heap_allocator.block_size() {
             /* rollback to linked-list if the selected slab waste too much memory */
-            if block_size - layout.size() > SLAB_THRESHOLD {
+            if slab_block_size - layout.size() > SLAB_THRESHOLD {
                 selected_sub_heap_allocator =
                     &self.m_linked_list as &mut dyn SubHeapAllocator;
             }
@@ -250,15 +251,15 @@ impl Heap {
         let mem_amount_to_request =
             max(sub_heap_allocator.preferred_extend_size(), layout.size());
 
-        /* call the memory supplier (which could be the kernel or the something else */
+        /* call the used-defined memory supplier */
         if let Some((start_area_addr, up_aligned_area_size)) =
             (self.m_mem_supplier)(mem_amount_to_request)
         {
-            /* update the managed memory amount */
-            self.m_supplier_managed_mem += up_aligned_area_size;
+            /* update the memory amount counter */
+            self.m_mem_from_supplier += up_aligned_area_size;
 
             unsafe {
-                /* add the region to the allocator and catch the eventual exceed */
+                /* add the region to the allocator and catch the eventual exceeding */
                 if let Some((exceeding_area_start_addr, exceeding_area_size)) =
                     sub_heap_allocator.add_region(start_area_addr, up_aligned_area_size)
                 {
@@ -284,7 +285,7 @@ pub trait SubHeapAllocator {
     const PREFERRED_EXTEND_SIZE: usize;
 
     /**
-     * Allocate a new chunk of memory to server the given layout
+     * Allocate a new chunk of memory to serve the given layout
      */
     fn allocate(&mut self, layout: Layout) -> Option<NonNull<u8>>;
 

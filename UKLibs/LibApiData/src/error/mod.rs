@@ -20,10 +20,11 @@ use crate::{
 pub mod class;
 
 /**
- * Standard way to represent an OS error in MeetiX
+ * Operating system error in MeetiX
  */
 #[derive(Debug)]
 #[derive(Default)]
+#[derive(Copy, Clone)]
 pub struct OsError {
     m_class: OsErrorClass,
     m_kern_fn_path: KernFnPath,
@@ -59,7 +60,7 @@ impl OsError {
     /**
      * Returns the `ErrorClass`
      */
-    pub fn class(&self) -> OsErrorClass {
+    pub fn error_class(&self) -> OsErrorClass {
         self.m_class
     }
 

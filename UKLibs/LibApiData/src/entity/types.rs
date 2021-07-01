@@ -1,4 +1,4 @@
-/*! `OSEntity` types */
+/*! `OsEntity` types */
 
 use core::fmt;
 
@@ -8,12 +8,13 @@ use num_enum::{
 };
 
 /**
- * Lists the available obj types represented by an `OSEntityId`
+ * Lists the available object types represented by a `OsEntity`
  */
 #[repr(usize)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum OsEntityType {
     /**
@@ -22,12 +23,12 @@ pub enum OsEntityType {
     Unknown,
 
     /**
-     * Identifies an `OSUser` entity
+     * Identifies an `OsUser` entity
      */
     User,
 
     /**
-     * Identifies an `OSGroup` entity
+     * Identifies an `OsGroup` entity
      */
     Group
 }

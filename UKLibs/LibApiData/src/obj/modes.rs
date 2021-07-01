@@ -11,48 +11,26 @@ use num_enum::{
 #[repr(usize)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum ObjRecvMode {
     /**
-     * Simply asks to the Kernel whether an obj of the requested type is
-     * already available into the obj receiving queue, if not it returns
-     * an `Err(NoDataAvailable)` error
+     * Simply asks to the Kernel whether an `Object` of the requested type
+     * is already available into the `Task`'s receiving queue.
+     *
+     * If any `Object` is available the system call returns an error0
      */
     Poll,
 
     /**
-     * Puts the task in a waiting state until an obj of the
-     * requested type is available into the task's receiving queue.
+     * Puts the `Task` in a waiting state until an `Object` of the requested
+     * type is available into the `Task`'s receiving queue.
      *
      * If already available the system call immediately returns and the task
      * will not fall into waiting state.
-     *
-     * If the Kernel's wait queue is full the system call returns an
-     * `Err(LimitReached)` error
      */
     Sync
-}
-
-/**
- * Lists the internally used modes to identify the direction of the
- * `KrnIterator` in use
- */
-#[repr(usize)]
-#[derive(Debug)]
-#[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
-#[derive(IntoPrimitive, TryFromPrimitive)]
-pub enum KrnIterDirection {
-    /**
-     * Internally used when called `KrnIterator::find_next()`
-     */
-    BeginToEnd,
-
-    /**
-     * Internally used when called `KrnIterator::find_next_back()`
-     */
-    EndToBegin
 }
 
 /**
@@ -62,26 +40,28 @@ pub enum KrnIterDirection {
 #[repr(usize)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum MMapPtrMode {
     /**
-     * Internally used when called `MMap::get_ptr()`
+     * Internally used when called `MMap::ptr()`
      */
     ForRead,
 
     /**
-     * Internally used when called `MMap::get_ptr_mut()`
+     * Internally used when called `MMap::ptr_mut()`
      */
     ForWrite
 }
 
 /**
- * Lists the available modes for `File::set_pos()` and `Dir::set_index()`
+ * Lists the available modes for `[Device/File/Dir]::[set_]pos()`
  */
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 pub enum SeekMode {
     /**
      * The given offset will be interpreted as an absolute offset

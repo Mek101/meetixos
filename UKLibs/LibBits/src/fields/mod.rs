@@ -1,6 +1,9 @@
 /*! Bit field support for numeric types */
 
-use core::ops::RangeBounds;
+use core::{
+    marker::PhantomData,
+    ops::RangeBounds
+};
 
 pub mod impls;
 
@@ -64,6 +67,13 @@ pub trait BitFields: Sized {
      * `BitFindMode`) which have the given `bit_value`
      */
     fn find_bit(&self, bit_value: bool, find_mode: BitFindMode) -> Option<usize>;
+
+    /**
+     * Returns an `Iterator` to iterate the bit-values
+     */
+    fn iter_bits(&self) -> BitFieldsIterator<'_, Self> {
+        BitFieldsIterator::new(self)
+    }
 }
 
 /**
@@ -104,4 +114,77 @@ pub trait BitArray<T>
      * `BitFindMode`) which have the given `bit_value`
      */
     fn find_bit(&self, bit_value: bool, find_mode: BitFindMode) -> Option<usize>;
+
+    /**
+     * Returns an `Iterator` to iterate the bit-values
+     */
+    fn iter_bits(&self) -> BitArrayIterator<'_, Self> {
+        BitArrayIterator::new(self)
+    }
+}
+
+/**
+ * `BitFields` iterator
+ */
+pub struct BitFieldsIterator<'a, T>
+    where T: BitFields {
+    m_index: usize,
+    m_bit_fields: &'a T
+}
+
+impl<'a, T> BitFieldsIterator<'a, T> where T: BitFields {
+    /**
+     * Constructs a `BitFieldsIterator` with the given `BitFields`
+     */
+    fn new(bit_fields: &'a T) -> Self {
+        Self { m_index: 0,
+               m_bit_fields: bit_fields }
+    }
+}
+
+impl<'a, T> Iterator for BitFieldsIterator<'a, T> where T: BitFields {
+    type Item = bool;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.m_index < T::BIT_LEN {
+            let bit_value = self.m_bit_fields.bit_at(self.m_index);
+            self.m_index += 1;
+            Some(bit_value)
+        } else {
+            None
+        }
+    }
+}
+
+/**
+ * `BitArray` iterator
+ */
+pub struct BitArrayIterator<'a, T>
+    where T: BitArray<T> {
+    m_index: usize,
+    m_bit_array: &'a T
+}
+
+impl<'a, T> BitArrayIterator<'a, T> where T: BitArray<T> {
+    /**
+     * Constructs a `BitArrayIterator` with the given `BitArray`
+     */
+    fn new(bit_array: &'a T) -> Self {
+        Self { m_index: 0,
+               m_bit_array: bit_array }
+    }
+}
+
+impl<'a, T> Iterator for BitArrayIterator<'a, T> where T: BitArray<T> {
+    type Item = bool;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.m_index < self.m_bit_array.bit_len() {
+            let bit_value = self.m_bit_array.bit_at(self.m_index);
+            self.m_index += 1;
+            Some(bit_value)
+        } else {
+            None
+        }
+    }
 }

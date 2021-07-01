@@ -11,7 +11,7 @@ use sync::{
     },
     mutex::{
         BackRawMutex,
-        FallibleCreatBackRawMutex
+        CreatMayFailBackRawMutex
     }
 };
 
@@ -47,10 +47,10 @@ pub struct OsRawMutex {
     m_obj_handle: ObjHandle
 }
 
-impl FallibleCreatBackRawMutex for OsRawMutex {
+impl CreatMayFailBackRawMutex for OsRawMutex {
     type CreatError = OsError;
 
-    fn creat_raw() -> Result<Self, Self::CreatError>
+    fn try_creat() -> Result<Self, Self::CreatError>
         where Self: Sized {
         Self::creat().for_read().for_write().apply_for_anon()
     }

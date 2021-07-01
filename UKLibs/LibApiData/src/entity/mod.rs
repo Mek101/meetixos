@@ -1,4 +1,4 @@
-/*! `OSEntity` related data */
+/*! `OsEntity` related data */
 
 pub mod config;
 pub mod types;

@@ -1,4 +1,4 @@
-/*! Tasks management */
+/*! `Task` related data */
 
 pub mod config;
 pub mod exit;
