@@ -1,0 +1,15 @@
+[package]
+name = "std"
+version = "0.1.0"
+edition = "2018"
+authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
+
+[dependencies]
+# ------------------------------ MeetiX Libraries Crates ------------------------------- #
+rt       = { path = "../LibRt" }
+api      = { path = "../LibApi" }
+api_data = { path = "../../../UKLibs/LibApiData" }
+bits     = { path = "../../../UKLibs/LibBits" }
+helps    = { path = "../../../UKLibs/LibHelps" }
+sync     = { path = "../../../UKLibs/LibSync" }
+symbols  = { path = "../../../UKLibs/LibSymbols" }

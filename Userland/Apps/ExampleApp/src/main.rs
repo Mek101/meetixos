@@ -1,15 +1,9 @@
-#![no_std]
-#![no_main]
-
-use core::panic::PanicInfo;
-
-use api::objs::{
+use std::obj::{
     impls::file::File,
-    object::UserCreatable
+    UserCreatableObject
 };
 
-#[no_mangle]
-pub unsafe extern "C" fn _start() {
+fn main() {
     let f = File::creat().for_read()
                          .for_write()
                          .apply_for("/Users/Marco/Docs/example.txt")
@@ -17,11 +11,4 @@ pub unsafe extern "C" fn _start() {
 
     let mut _read_buf = [0u8; 512];
     f.read(&mut _read_buf).unwrap();
-
-    /* cannot do anything for now :-( */
-}
-
-#[panic_handler]
-fn panic_handler(_info: &PanicInfo) -> ! {
-    loop { /* halt forever */ }
 }

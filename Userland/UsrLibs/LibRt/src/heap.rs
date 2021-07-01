@@ -1,0 +1,56 @@
+/*! Userland heap management */
+
+use core::ptr::NonNull;
+
+use api::obj::{
+    impls::{
+        mmap::MMap,
+        mutex::OsRawMutex
+    },
+    Object,
+    UserCreatableObject
+};
+use heap::locked::RawLazyLockedHeap;
+use sync::mutex::{
+    BackRawMutex,
+    CreatMayFailBackRawMutex
+};
+
+/**
+ * Global heap allocator
+ */
+#[global_allocator]
+static S_HEAP_ALLOCATOR: RawLazyLockedHeap<OsRawMutex> =
+    unsafe { RawLazyLockedHeap::new(raw_mutex_supplier, heap_mem_supplier) };
+
+/**
+ * Tries to create an `OsRawMutex`
+ */
+fn raw_mutex_supplier<T>() -> Option<T>
+    where T: BackRawMutex {
+    OsRawMutex::try_creat().ok()
+}
+
+/**
+ * Allocates an anonymous `MMap` to extend the `Heap` memory
+ */
+fn heap_mem_supplier(requested_size: usize) -> Option<(NonNull<u8>, usize)> {
+    MMap::creat().for_read()
+                 .for_write()
+                 .with_data_size(requested_size)
+                 .apply_for_anon()
+                 .ok()
+                 .map(|mmap| {
+                     if let Some(leak_mmap_ptr) =
+                         NonNull::new(mmap.leak::<u8>().as_mut_ptr())
+                     {
+                         if let Ok(mmap_info) = mmap.info() {
+                             (leak_mmap_ptr, mmap_info.data_bytes_used())
+                         } else {
+                             panic!("Failed to obtain MMap info for heap_allocator")
+                         }
+                     } else {
+                         panic!("Failed to obtain the NonNull_ptr for heap_allocator")
+                     }
+                 })
+}

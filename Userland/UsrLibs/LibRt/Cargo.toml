@@ -1,0 +1,13 @@
+[package]
+name = "rt"
+version = "0.1.0"
+edition = "2018"
+authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
+
+[dependencies]
+# ------------------------------ MeetiX Libraries Crates ------------------------------- #
+api      = { path = "../LibApi" }
+heap     = { path = "../../../UKLibs/LibHeap" }
+sync     = { path = "../../../UKLibs/LibSync" }
+symbols  = { path = "../../../UKLibs/LibSymbols" }
+api_data = { path = "../../../UKLibs/LibApiData" }

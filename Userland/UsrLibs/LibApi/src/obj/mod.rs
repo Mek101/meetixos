@@ -264,7 +264,7 @@ pub trait Object: From<ObjHandle> + Default + Clone {
 /**
  * Marker interface for `Object`s which support `Object::creat()`
  */
-trait UserCreatableObject: Object {
+pub trait UserCreatableObject: Object {
     /**
      * Returns an `ObjConfig` for `Object` creation
      */

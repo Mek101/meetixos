@@ -1,26 +1,21 @@
-#![no_std]
-#![no_main]
-
-use core::panic::PanicInfo;
-
-use api::{
-    bits::path::PathExistsState,
-    objs::{
-        impls::file::File,
-        object::{
-            Object,
-            UserCreatable
-        }
+use std::{
+    bits::{
+        error::OsError,
+        path::PathExistsState
     },
-    path::Path,
-    tasks::{
-        impls::thread::Thread,
-        task::Task
+    obj::{
+        impls::file::File,
+        Object,
+        UserCreatableObject
+    },
+    option::Option::None,
+    result::{
+        Result,
+        Result::Ok
     }
 };
 
-#[no_mangle]
-pub unsafe extern "C" fn _start() {
+fn main() -> Result<usize, OsError> {
     let file_path = Path::from("/Users/Marco/Docs/example.txt");
     let file = match file_path.exists() {
         PathExistsState::Exists(_) => File::open().for_read()
@@ -39,7 +34,7 @@ pub unsafe extern "C" fn _start() {
     let file_size =
         file.info().expect("Failed to retrieve file size").mem_info().used_size();
 
-    let mmap = file.map_to_memory(None, 0, file_size as u64, true)
+    let mmap = file.map_to_memory(None, 0, file_size, true)
                    .expect("Failed to map file to memory");
 
     let mut ptr_box = mmap.get_ptr_mut::<u8>().expect("Failed to obtain MMap pointer");
@@ -47,12 +42,5 @@ pub unsafe extern "C" fn _start() {
         *byte = 0;
     }
 
-    /* cannot do anything for now :-( */
-    Thread::this().terminate(true).expect("Failed to exit");
-    unreachable!();
-}
-
-#[panic_handler]
-fn panic_handler(_info: &PanicInfo) -> ! {
-    loop { /* halt forever */ }
+    Ok(0)
 }

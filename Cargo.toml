@@ -13,6 +13,8 @@ members = [
     "UKLibs/LibSync",
     # Userland Libraries
     "Userland/UsrLibs/LibApi",
+    "Userland/UsrLibs/LibRt",
+    "Userland/UsrLibs/LibStd",
     # App Crates
     "Userland/Apps/ExampleApp",
     # Binary Crates

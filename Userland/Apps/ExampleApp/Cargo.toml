@@ -5,4 +5,5 @@ edition = "2018"
 authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
 
 [dependencies]
-api = { path = "../../UsrLibs/LibApi" }
+# ------------------------------ MeetiX Libraries Crates ------------------------------- #
+std = { path = "../../UsrLibs/LibStd" }
