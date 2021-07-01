@@ -5,8 +5,7 @@
  */
 
 #![no_std]
-#![feature(asm)]
-#![feature(vec_into_raw_parts)]
+#![feature(asm, in_band_lifetimes)]
 
 extern crate alloc;
 

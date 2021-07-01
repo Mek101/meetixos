@@ -11,7 +11,13 @@ use api_data::obj::{
 };
 
 use crate::{
-    entity::impls::user::OsUser,
+    entity::{
+        impls::{
+            group::OsGroup,
+            user::OsUser
+        },
+        OsEntity
+    },
     handle::Result,
     obj::{
         grants::ObjGrants,
@@ -56,6 +62,22 @@ impl<T> ObjInfo<T> where T: Object {
         } else {
             Ok(())
         }
+    }
+
+    /**
+     * Sets the `OsUser` which owns the `Object`
+     */
+    pub fn set_os_user(&mut self, os_user: &OsUser) {
+        self.m_raw_info
+            .set_os_user(os_user.os_entity_handle().kern_handle().raw_handle());
+    }
+
+    /**
+     * Sets the `OsGroup` which owns the `Object`
+     */
+    pub fn set_os_group(&mut self, os_group: &OsGroup) {
+        self.m_raw_info
+            .set_os_group(os_group.os_entity_handle().kern_handle().raw_handle());
     }
 
     /**

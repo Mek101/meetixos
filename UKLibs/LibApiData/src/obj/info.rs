@@ -137,7 +137,7 @@ impl RawObjInfo {
      * For normal objects the `DeviceId` identifies the back `Device` driver
      * which manages it, for `Device` `Object`s refers to itself
      */
-    pub fn device(&self) -> &DeviceId {
+    pub fn device_id(&self) -> &DeviceId {
         &self.m_device
     }
 

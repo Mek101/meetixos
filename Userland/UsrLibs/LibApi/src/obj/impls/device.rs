@@ -22,6 +22,9 @@ use crate::{
     }
 };
 
+/**
+ * File-like device driver
+ */
 #[repr(transparent)]
 #[derive(Debug)]
 #[derive(Clone)]
@@ -111,9 +114,8 @@ impl Device {
      * block unit is 1, for block devices use the `block_size`
      */
     pub fn set_pos(&self, mode: SeekMode) -> Result<usize> {
-        self.kern_call_2(KernFnPath::Device(KernDeviceFnId::SetPos),
-                         mode.mode(),
-                         mode.offset().unwrap_or_default())
+        self.kern_call_1(KernFnPath::Device(KernDeviceFnId::SetPos),
+                         mode.as_syscall_ptr())
     }
 
     /**
@@ -127,14 +129,22 @@ impl Device {
      * Returns whether this `Device` is a char device
      */
     pub fn is_char_device(&self) -> Result<bool> {
-        self.info().map(|obj_info| obj_info.data_block_size() == 1)
+        self.obj_handle().info().map(|raw_obj_info| {
+                                    raw_obj_info.device_id()
+                                                .device_type()
+                                                .is_char_device()
+                                })
     }
 
     /**
      * Returns whether this `Device` is a block device
      */
     pub fn is_block_device(&self) -> Result<bool> {
-        self.info().map(|obj_info| obj_info.data_block_size().is_power_of_two())
+        self.obj_handle().info().map(|raw_obj_info| {
+                                    raw_obj_info.device_id()
+                                                .device_type()
+                                                .is_block_device()
+                                })
     }
 }
 

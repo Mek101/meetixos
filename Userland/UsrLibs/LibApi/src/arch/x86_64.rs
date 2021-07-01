@@ -7,6 +7,6 @@ use api_data::sys::SysCallPayload;
  * payload
  */
 #[inline(always)]
-pub(crate) fn do_syscall(payload: &mut SysCallPayload) {
-    asm!("syscall", in("rax") payload.as_syscall_ptr(), options(nostack));
+pub(crate) fn do_syscall(syscall_payload: &mut SysCallPayload) {
+    asm!("syscall", in("rax") syscall_payload.as_syscall_ptr(), options(nostack));
 }

@@ -57,8 +57,8 @@ impl<'a, T> OsEntityConfig<'a, T, CreatMode> where T: OsEntity {
      * Dispatches the configuration to the kernel, which creates a new
      * `OsEntity`.
      */
-    pub fn apply(&mut self, ent_name: &'a str) -> Result<T> {
-        self.m_raw_config.set_name(ent_name);
+    pub fn apply(&mut self, entity_name: &'a str) -> Result<T> {
+        self.m_raw_config.set_name(entity_name);
         self.apply_config()
     }
 }

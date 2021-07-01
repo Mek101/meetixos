@@ -2,7 +2,11 @@
 
 use api_data::{
     error::OsError,
-    obj::types::ObjType
+    obj::types::ObjType,
+    sys::{
+        codes::KernMutexFnId,
+        fn_path::KernFnPath
+    }
 };
 use sync::{
     guards::{
@@ -16,13 +20,10 @@ use sync::{
 };
 
 use crate::obj::{
+    AnonymousObject,
     ObjHandle,
     Object,
     UserCreatableObject
-};
-use api_data::sys::{
-    codes::KernMutexFnId,
-    fn_path::KernFnPath
 };
 
 /**
@@ -128,5 +129,9 @@ impl Object for OsRawMutex {
 }
 
 impl UserCreatableObject for OsRawMutex {
+    /* No methods to implement */
+}
+
+impl AnonymousObject for OsRawMutex {
     /* No methods to implement */
 }

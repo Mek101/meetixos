@@ -197,9 +197,7 @@ pub enum KernLinkFnId {
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernMMapFnId {
     GetPtr,
-    DropPtr,
-    IsFile,
-    IsDevice
+    DropPtr
 }
 
 /**

@@ -25,6 +25,7 @@ use crate::{
     },
     obj::{
         grants::ObjGrants,
+        AnonymousObject,
         ExecutableDataObject,
         ObjHandle,
         Object,
@@ -61,7 +62,11 @@ impl<'a, T> ObjConfig<'a, T, CreatMode> where T: Object + UserCreatableObject {
         *self.m_raw_config.grants_mut() = *grants;
         self
     }
+}
 
+impl<'a, T> ObjConfig<'a, T, CreatMode>
+    where T: Object + UserCreatableObject + AnonymousObject
+{
     /**
      * Dispatches the configuration to the kernel which creates a new
      * anonymous `Object`.
@@ -166,8 +171,7 @@ impl<T, M> ObjConfig<T, M>
      * `Device`s are special cases, because they are volatile `Object`s, but
      * can be destroyed only by the kernel at system shutdown
      */
-    pub fn apply_for<P>(&mut self, path: &P) -> Result<T>
-        where P: AsRef<str> {
+    pub fn apply_for(&mut self, path: &'a str) -> Result<T> {
         self.m_raw_config.set_path(path);
         self.apply_builder_config()
     }

@@ -62,7 +62,7 @@ impl OsEntityHandle {
     }
 
     /**
-     * Puts into `buf` the name of this `OsEntityHandle`
+     * Returns the name of this `OsEntityHandle`
      */
     fn name(&self) -> Result<String> {
         let mut name_str = String::with_capacity(OS_ENTITY_NAME_LEN_MAX);
@@ -75,9 +75,7 @@ impl OsEntityHandle {
                 let mut byte_vec = name_str.into_bytes();
                 unsafe {
                     byte_vec.set_len(name_len);
-
-                    let (byte_buf_ptr, len, capacity) = byte_vec.into_raw_parts();
-                    String::from_raw_parts(byte_buf_ptr, len, capacity)
+                    String::from_utf8_unchecked(byte_vec)
                 }
             })
     }
@@ -133,7 +131,7 @@ pub trait OsEntity: From<OsEntityHandle> + Default {
     /**
      * Puts into `buf` the name of this `OSEntity`
      */
-    fn name<'a>(&self, buf: &'a mut [u8]) -> Result<&'a str> {
-        self.os_entity_handle().name(buf)
+    fn name<'a>(&self) -> Result<String> {
+        self.os_entity_handle().name()
     }
 }

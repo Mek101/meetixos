@@ -103,6 +103,22 @@ pub enum DeviceIdType {
     Character
 }
 
+impl DeviceIdType {
+    /**
+     * Returns whether this is a `Block` device
+     */
+    pub fn is_block_device(&self) -> bool {
+        matches!(*self, Self::Block)
+    }
+
+    /**
+     * Returns whether this is a `Character` device
+     */
+    pub fn is_char_device(&self) -> bool {
+        matches!(*self, Self::Character)
+    }
+}
+
 /**
  * Lists the supported `Device` classes
  */
@@ -140,4 +156,41 @@ pub enum DeviceIdClass {
      * `Device` which manages a screen framebuffer
      */
     Framebuffer
+}
+
+impl DeviceIdClass {
+    /**
+     * Returns whether this is a `Storage` device
+     */
+    pub fn is_storage_device(&self) -> bool {
+        matches!(*self, Self::Storage)
+    }
+
+    /**
+     * Returns whether this is a `Memory` device
+     */
+    pub fn is_memory_device(&self) -> bool {
+        matches!(*self, Self::Memory)
+    }
+
+    /**
+     * Returns whether this is a `Network` device
+     */
+    pub fn is_network_device(&self) -> bool {
+        matches!(*self, Self::Network)
+    }
+
+    /**
+     * Returns whether this is a `Ipc` device
+     */
+    pub fn is_ipc_device(&self) -> bool {
+        matches!(*self, Self::Ipc)
+    }
+
+    /**
+     * Returns whether this is a `Framebuffer` device
+     */
+    pub fn is_framebuffer_device(&self) -> bool {
+        matches!(*self, Self::Framebuffer)
+    }
 }

@@ -1,4 +1,5 @@
 /*! Objects management */
+
 use core::any::type_name;
 
 use api_data::{
@@ -121,7 +122,7 @@ impl ObjHandle {
     }
 
     /**
-     * Returns the `ObjInfo` metadata of this `Object`
+     * Returns the `RawObjInfo` metadata of this `Object`
      */
     fn info(&self) -> Result<RawObjInfo> {
         let mut raw_obj_info = RawObjInfo::default();
@@ -285,5 +286,13 @@ pub trait SizeableDataObject {
  * Marker interface for `Object`s which support `ObjConfig::for_exec()`
  */
 pub trait ExecutableDataObject {
+    /* No methods, just a marker trait */
+}
+
+/**
+ * Marker interface for `Object`s which support
+ * `ObjConfig::apply_for_anon()`
+ */
+pub trait AnonymousObject {
     /* No methods, just a marker trait */
 }

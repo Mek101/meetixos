@@ -82,6 +82,13 @@ pub enum SeekMode {
 
 impl SeekMode {
     /**
+     * Returns `&self` as usize pointer value
+     */
+    pub fn as_syscall_ptr(&self) -> usize {
+        self as *const Self as usize
+    }
+
+    /**
      * Returns the integer which identifies the mode
      */
     pub fn mode(&self) -> usize {

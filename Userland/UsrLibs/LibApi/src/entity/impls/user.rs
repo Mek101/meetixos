@@ -36,7 +36,7 @@ pub struct OsUser {
 
 impl OsUser {
     /**
-     * Fills `groups_buf` with the joined `OsGroup`s by this `OsUser`
+     * Returns a `Vec` with the `OsGroup`s joined by this `OsUser`
      */
     pub fn joined_groups<'a>(&self) -> Result<Vec<OsGroup>> {
         let mut groups_vec = Vec::with_capacity(self.groups_count()?);
@@ -54,6 +54,9 @@ impl OsUser {
             })
     }
 
+    /**
+     * Returns the amount `OsGroup` joined by this `OsUser`
+     */
     pub fn groups_count(&self) -> Result<usize> {
         self.os_entity_handle()
             .kern_handle()

@@ -48,10 +48,14 @@ impl OsGroup {
         self.os_entity_handle()
             .kern_handle()
             .inst_kern_call_1(KernFnPath::OsGroup(KernOsGroupFnId::AddUser),
-                              os_user.os_entity_handle().m_handle.raw_handle() as usize)
+                              os_user.os_entity_handle().kern_handle().raw_handle()
+                              as usize)
             .map(|_| ())
     }
 
+    /**
+     * Returns the `Vec` of `OsUsers` which joins this `OsGroup`
+     */
     pub fn users(&self) -> Result<Vec<OsUser>> {
         let mut users_vec = Vec::with_capacity(self.users_count()?);
 
@@ -68,6 +72,9 @@ impl OsGroup {
             })
     }
 
+    /**
+     * Returns the amount of `OsUsers` which joins this `OsGroup`
+     */
     pub fn users_count(&self) -> Result<usize> {
         self.os_entity_handle()
             .kern_handle()

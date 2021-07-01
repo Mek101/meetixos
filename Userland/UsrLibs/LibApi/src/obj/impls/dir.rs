@@ -21,6 +21,9 @@ use crate::{
     }
 };
 
+/**
+ * Collection of named `Object`s
+ */
 #[repr(transparent)]
 #[derive(Debug)]
 #[derive(Clone)]
@@ -59,9 +62,8 @@ impl Dir {
     pub fn set_pos(&self, seek_mode: SeekMode) -> Result<usize> {
         self.obj_handle()
             .kern_handle()
-            .inst_kern_call_2(KernFnPath::Dir(KernDirFnId::SetPos),
-                              seek_mode.mode(),
-                              seek_mode.offset().unwrap_or_default())
+            .inst_kern_call_1(KernFnPath::Dir(KernDirFnId::SetPos),
+                              seek_mode.as_syscall_ptr())
     }
 }
 

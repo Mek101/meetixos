@@ -1,36 +1,39 @@
 /*! Open Memory Mapping `Object` */
 
 use core::{
-    mem::size_of,
+    mem::{
+        forget,
+        size_of
+    },
     ops::{
         Deref,
         DerefMut
     },
+    ptr::slice_from_raw_parts_mut,
     slice
 };
 
-use api_data::obj::{
-    modes::MMapPtrMode,
-    types::ObjType
+use api_data::{
+    obj::{
+        modes::MMapPtrMode,
+        types::ObjType
+    },
+    sys::{
+        codes::KernMMapFnId,
+        fn_path::KernFnPath
+    }
 };
 
 use crate::{
     handle::Result,
     obj::{
+        AnonymousObject,
         ExecutableDataObject,
         ObjHandle,
         Object,
         SizeableDataObject,
         UserCreatableObject
     }
-};
-use api_data::sys::{
-    codes::KernMMapFnId,
-    fn_path::KernFnPath
-};
-use core::{
-    mem::forget,
-    ptr::slice_from_raw_parts_mut
 };
 
 #[repr(transparent)]
@@ -76,20 +79,20 @@ impl MMap {
         mmap_slice_ref
     }
 
-    pub fn is_file_backed(&self) -> bool {
-        self.obj_handle()
-            .kern_handle()
-            .inst_kern_call_0(KernFnPath::MMap(KernMMapFnId::IsFile))
-            .map(|res| res != 0)
-            .unwrap_or(false)
+    pub fn is_file_backed(&self) -> Result<bool> {
+        self.obj_handle().info().map(|raw_obj_info| {
+                                    raw_obj_info.device_id()
+                                                .device_class()
+                                                .is_storage_device()
+                                })
     }
 
-    pub fn is_device_backed(&self) -> bool {
-        self.obj_handle()
-            .kern_handle()
-            .inst_kern_call_0(KernFnPath::MMap(KernMMapFnId::IsDevice))
-            .map(|res| res != 0)
-            .unwrap_or(false)
+    pub fn is_device_backed(&self) -> Result<bool> {
+        self.obj_handle().info().map(|raw_obj_info| {
+                                    !raw_obj_info.device_id()
+                                                 .device_class()
+                                                 .is_storage_device()
+                                })
     }
 
     fn obtain_area(&self, ptr_mode: MMapPtrMode) -> Result<(usize, usize)> {
@@ -137,6 +140,10 @@ impl ExecutableDataObject for MMap {
 }
 
 impl SizeableDataObject for MMap {
+    /* No methods to implement */
+}
+
+impl AnonymousObject for MMap {
     /* No methods to implement */
 }
 

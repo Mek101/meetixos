@@ -20,6 +20,7 @@ use crate::{
             dir::Dir,
             mmap::MMap
         },
+        AnonymousObject,
         ExecutableDataObject,
         ObjHandle,
         Object,
@@ -28,6 +29,9 @@ use crate::{
     }
 };
 
+/**
+ * File reference
+ */
 #[repr(transparent)]
 #[derive(Debug)]
 #[derive(Clone)]
@@ -40,6 +44,12 @@ pub struct File {
 }
 
 impl File {
+    /**
+     * Puts into `buf` at max `buf.len()` bytes reading from the current
+     * cursor position.
+     *
+     * Returns the reference to the sub-slice filled by the kernel
+     */
     pub fn read<'a>(&self, buf: &'a mut [u8]) -> Result<&'a [u8]> {
         self.obj_handle()
             .kern_handle()
@@ -49,6 +59,12 @@ impl File {
             .map(|read_bytes| &buf[..read_bytes])
     }
 
+    /**
+     * Writes into this `File` the `buf` content for at max `buf.len()`
+     * bytes from the current cursor position.
+     *
+     * Returns the reference to the sub-slice which wasn't possible to write
+     */
     pub fn write<'a>(&self, buf: &'a [u8]) -> Result<&'a [u8]> {
         self.obj_handle()
             .kern_handle()
@@ -58,6 +74,13 @@ impl File {
             .map(|written_bytes| &buf[written_bytes..])
     }
 
+    /**
+     * Copies this `File` into another `Dir`.
+     *
+     * The use of this system-call is encouraged when copying big amount of
+     * data, since the kernel optimizes this operation in background and,
+     * when available, uses filesystem copy-on-write
+     */
     pub fn copy_to(&self, dest_dir: &Dir) -> Result<Self> {
         self.obj_handle()
             .kern_handle()
@@ -68,6 +91,12 @@ impl File {
             })
     }
 
+    /**
+     * Moves this `File` to another `Dir`.
+     *
+     * The use of this system-call is encouraged because the kernel
+     * optimizes the operation when possible
+     */
     pub fn move_to(&self, dest_dir: &Dir) -> Result<()> {
         self.obj_handle()
             .kern_handle()
@@ -76,6 +105,12 @@ impl File {
             .map(|_| ())
     }
 
+    /**
+     * Maps part of this `File`'s content into a `MMap`.
+     *
+     * It is possible to keep the modification to the `MMap`'s memory synced
+     * with the on-disk `File` content, providing `keep_file_sync = true`
+     */
     pub fn map_to_memory(&self,
                          map_addr: Option<NonNull<()>>,
                          from_off: usize,
@@ -100,9 +135,8 @@ impl File {
     pub fn set_pos(&self, mode: SeekMode) -> Result<usize> {
         self.obj_handle()
             .kern_handle()
-            .inst_kern_call_2(KernFnPath::File(KernFileFnId::SetPos),
-                              mode.mode(),
-                              mode.offset().unwrap_or_default())
+            .inst_kern_call_1(KernFnPath::File(KernFileFnId::SetPos),
+                              mode.as_syscall_ptr())
     }
 
     /**
@@ -140,5 +174,9 @@ impl SizeableDataObject for File {
 }
 
 impl ExecutableDataObject for File {
+    /* No methods to implement */
+}
+
+impl AnonymousObject for File {
     /* No methods to implement */
 }
