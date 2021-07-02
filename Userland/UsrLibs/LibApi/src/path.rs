@@ -16,7 +16,8 @@ use api_data::{
     path::PathExistsState,
     sys::{
         codes::KernPathFnId,
-        fn_path::KernFnPath
+        fn_path::KernFnPath,
+        AsSysCallPtr
     }
 };
 
@@ -142,9 +143,9 @@ impl Path {
         KernHandle::kern_call_3(KernFnPath::Path(KernPathFnId::Exists),
                                 string_repr.as_ptr() as usize,
                                 string_repr.len(),
-                                path_exist_state.as_syscall_ptr()).map(|_| {
-                                                                      path_exist_state
-                                                                  })
+                                path_exist_state.as_syscall_ptr_mut()).map(|_| {
+                                                                          path_exist_state
+                                                                      })
     }
 
     /**

@@ -1,7 +1,7 @@
 /*! Userland entry-point */
 
 use api::task::{
-    proc::Proc,
+    impls::proc::Proc,
     Task
 };
 use api_data::{

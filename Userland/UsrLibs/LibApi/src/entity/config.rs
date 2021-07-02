@@ -1,4 +1,4 @@
-/*! `OSEntity` configuration */
+/*! `OsEntity` configuration */
 
 use core::marker::PhantomData;
 
@@ -12,7 +12,8 @@ use api_data::{
     },
     sys::{
         codes::KernOsEntConfigFnId,
-        fn_path::KernFnPath
+        fn_path::KernFnPath,
+        AsSysCallPtr
     }
 };
 
@@ -96,10 +97,10 @@ impl<'a, T, M> OsEntityConfig<'a, T, M>
           M: ConfigMode
 {
     /**
-     * Tells to the Kernel which unique identifier the `OSEntity` must
+     * Tells to the Kernel which unique identifier the `OsEntity` must
      * obtain in `CreatMode`.
      *
-     * Or tells exactly which identifier the searched OSEntity have in
+     * Or tells exactly which identifier the searched `OsEntity` have in
      * `FindMode`
      */
     pub fn with_id(&mut self, id: OsEntityId) -> &mut Self {

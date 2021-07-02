@@ -14,7 +14,10 @@ use helps::{
     misc::force_move
 };
 
-use crate::SubHeapAllocator;
+use crate::{
+    PreferredExtendSize,
+    SubHeapPool
+};
 
 /**
  * Sorted single linked list of `Hole`s
@@ -27,9 +30,9 @@ impl LinkedList {
     /**
      * Constructs a `LinkedList` from the given parameters
      */
-    pub unsafe fn new(start_area_addr: NonNull<u8>, area_size: usize) -> LinkedList {
+    pub unsafe fn new(start_area_addr: *mut u8, area_size: usize) -> LinkedList {
         let first_real_hole_ptr = {
-            let raw_hole_addr = start_area_addr.as_ptr() as usize;
+            let raw_hole_addr = start_area_addr as usize;
             let aligned_hole_addr = align_up(raw_hole_addr, align_of::<Hole>());
             let aligned_hole_ptr = aligned_hole_addr as *mut Hole;
             let hole_to_write =
@@ -40,6 +43,37 @@ impl LinkedList {
         };
 
         LinkedList { m_first_hole: Hole::new(0, Some(&mut *first_real_hole_ptr)) }
+    }
+
+    /**
+     * Finds and returns the first available Hole big-enough to satisfy the
+     * given layout
+     */
+    pub fn allocate(&mut self, layout: Layout) -> Option<NonNull<u8>> {
+        allocate_first_fit(&mut self.m_first_hole, Self::align_layout(layout))
+            .map(|allocation| {
+                /* deallocate eventual front padding of the Allocation */
+                if let Some(padding) = allocation.m_front_padding {
+                    deallocate(&mut self.m_first_hole, padding.m_addr, padding.m_size);
+                }
+
+                /* deallocate eventual back padding of the Allocation */
+                if let Some(padding) = allocation.m_back_padding {
+                    deallocate(&mut self.m_first_hole, padding.m_addr, padding.m_size);
+                }
+
+                unsafe { NonNull::new_unchecked(allocation.m_hole_info.m_addr as *mut u8) }
+            })
+    }
+
+    /**
+     * Merges the given chunk of memory previously allocated into the linked
+     * list
+     */
+    pub unsafe fn deallocate(&mut self, nn_ptr: NonNull<u8>, layout: Layout) {
+        deallocate(&mut self.m_first_hole,
+                   nn_ptr.as_ptr() as usize,
+                   Self::align_layout(layout).size());
     }
 
     /**
@@ -65,32 +99,7 @@ impl LinkedList {
     }
 }
 
-impl SubHeapAllocator for LinkedList {
-    const PREFERRED_EXTEND_SIZE: usize = 8192; /* 8KiB for each extension */
-
-    fn allocate(&mut self, layout: Layout) -> Option<NonNull<u8>> {
-        allocate_first_fit(&mut self.m_first_hole, Self::align_layout(layout))
-            .map(|allocation| {
-                /* deallocate eventual front padding of the Allocation */
-                if let Some(padding) = allocation.m_front_padding {
-                    deallocate(&mut self.m_first_hole, padding.m_addr, padding.m_size);
-                }
-
-                /* deallocate eventual back padding of the Allocation */
-                if let Some(padding) = allocation.m_back_padding {
-                    deallocate(&mut self.m_first_hole, padding.m_addr, padding.m_size);
-                }
-
-                unsafe { NonNull::new_unchecked(allocation.m_hole_info.m_addr as *mut u8) }
-            })
-    }
-
-    unsafe fn deallocate(&mut self, nn_ptr: NonNull<u8>, layout: Layout) {
-        deallocate(&mut self.m_first_hole,
-                   nn_ptr.as_ptr() as usize,
-                   Self::align_layout(layout).size());
-    }
-
+impl SubHeapPool for LinkedList {
     unsafe fn add_region(&mut self,
                          start_area_ptr: NonNull<u8>,
                          area_size: usize)
@@ -99,9 +108,13 @@ impl SubHeapAllocator for LinkedList {
         None
     }
 
-    fn block_size(&self) -> Option<usize> {
-        None
+    fn preferred_extend_size(&self) -> usize {
+        Self::PREFERRED_EXTEND_SIZE
     }
+}
+
+impl PreferredExtendSize for LinkedList {
+    const PREFERRED_EXTEND_SIZE: usize = 8192; /* 8KiB for each extension */
 }
 
 /**

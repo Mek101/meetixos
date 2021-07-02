@@ -10,9 +10,12 @@ use bits::flags::{
     BitFlagsValues
 };
 
-use crate::entity::{
-    types::OsEntityType,
-    OsEntityId
+use crate::{
+    entity::{
+        types::OsEntityType,
+        OsEntityId
+    },
+    sys::AsSysCallPtr
 };
 
 /**
@@ -104,13 +107,10 @@ impl<'a> RawOsEntityConfig<'a> {
     pub fn flags_mut(&mut self) -> &mut OsEntityConfigFlags {
         &mut self.m_flags
     }
+}
 
-    /**
-     * Returns `&self` as usize pointer value
-     */
-    pub fn as_syscall_ptr(&self) -> usize {
-        self as *const Self as usize
-    }
+impl<'a> AsSysCallPtr for RawOsEntityConfig<'a> {
+    /* No methods to implement */
 }
 
 /**

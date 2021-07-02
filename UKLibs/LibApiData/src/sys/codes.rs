@@ -106,7 +106,8 @@ pub enum KernTaskFnId {
     This,
     Exit,
     Kill,
-    Yield
+    Yield,
+    IsAlive
 }
 
 /**
@@ -252,7 +253,7 @@ pub enum KernPathFnId {
 #[derive(PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernOsUserFnId {
-    Groups,
+    GroupsIds,
     GroupsCount
 }
 
@@ -267,7 +268,7 @@ pub enum KernOsUserFnId {
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernOsGroupFnId {
     AddUser,
-    Users,
+    UsersIds,
     UsersCount
 }
 
@@ -300,7 +301,10 @@ pub enum KernProcFnId {
 #[derive(PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernThreadFnId {
-    WaitFor,
+    Join,
+    Pause,
+    Sleep,
+    WaitIrq,
     Resume,
     AddCleaner,
     CallbackReturn,

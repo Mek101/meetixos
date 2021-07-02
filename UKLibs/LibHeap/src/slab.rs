@@ -1,11 +1,11 @@
 /*! Slab allocator implementation */
 
-use core::{
-    alloc::Layout,
-    ptr::NonNull
-};
+use core::ptr::NonNull;
 
-use crate::SubHeapAllocator;
+use crate::{
+    PreferredExtendSize,
+    SubHeapPool
+};
 
 /**
  * Single size block allocator that serves the requests in `O(1)`
@@ -18,8 +18,8 @@ impl<const BLOCK_SIZE: usize> Slab<BLOCK_SIZE> {
     /**
      * Constructs a `Slab` from the given parameters
      */
-    pub unsafe fn new(start_area_addr: NonNull<u8>, area_size: usize) -> Self {
-        Self { m_free_blocks: FreeBlockList::new(start_area_addr.as_ptr(),
+    pub unsafe fn new(start_area_addr: *mut u8, area_size: usize) -> Self {
+        Self { m_free_blocks: FreeBlockList::new(start_area_addr,
                                                  area_size,
                                                  BLOCK_SIZE) }
     }
@@ -27,8 +27,31 @@ impl<const BLOCK_SIZE: usize> Slab<BLOCK_SIZE> {
     /**
      * Constructs a `Slab` with the `PREFERRED_EXTEND_SIZE`
      */
-    pub unsafe fn with_preferred_size(start_area_addr: NonNull<u8>) -> Self {
+    pub unsafe fn with_preferred_size(start_area_addr: *mut u8) -> Self {
         Self::new(start_area_addr, Self::PREFERRED_EXTEND_SIZE)
+    }
+
+    /**
+     * Allocates a new block of memory
+     */
+    pub fn allocate(&mut self) -> Option<NonNull<u8>> {
+        self.m_free_blocks
+            .pop()
+            .map(|block| unsafe { NonNull::new_unchecked(block.as_ptr()) })
+    }
+
+    /**
+     * Frees a previously allocated block
+     */
+    pub unsafe fn deallocate(&mut self, nn_ptr: NonNull<u8>) {
+        self.m_free_blocks.push(&mut *(nn_ptr.as_ptr() as *mut SlabBlock));
+    }
+
+    /**
+     * Returns the `BLOCK_SIZE` parameter
+     */
+    pub fn block_size(&self) -> usize {
+        BLOCK_SIZE
     }
 
     /**
@@ -46,19 +69,7 @@ impl<const BLOCK_SIZE: usize> Slab<BLOCK_SIZE> {
     }
 }
 
-impl<const BLOCK_SIZE: usize> SubHeapAllocator for Slab<BLOCK_SIZE> {
-    const PREFERRED_EXTEND_SIZE: usize = BLOCK_SIZE * 4; /* at least 4 block for each extension */
-
-    fn allocate(&mut self, _layout: Layout) -> Option<NonNull<u8>> {
-        self.m_free_blocks
-            .pop()
-            .map(|block| unsafe { NonNull::new_unchecked(block.as_ptr()) })
-    }
-
-    unsafe fn deallocate(&mut self, nn_ptr: NonNull<u8>, _layout: Layout) {
-        self.m_free_blocks.push(&mut *(nn_ptr.as_ptr() as *mut SlabBlock));
-    }
-
+impl<const BLOCK_SIZE: usize> SubHeapPool for Slab<BLOCK_SIZE> {
     unsafe fn add_region(&mut self,
                          start_area_ptr: NonNull<u8>,
                          area_size: usize)
@@ -83,9 +94,13 @@ impl<const BLOCK_SIZE: usize> SubHeapAllocator for Slab<BLOCK_SIZE> {
         }
     }
 
-    fn block_size(&self) -> Option<usize> {
-        Some(BLOCK_SIZE)
+    fn preferred_extend_size(&self) -> usize {
+        Self::PREFERRED_EXTEND_SIZE
     }
+}
+
+impl<const BLOCK_SIZE: usize> PreferredExtendSize for Slab<BLOCK_SIZE> {
+    const PREFERRED_EXTEND_SIZE: usize = BLOCK_SIZE * 4; /* at least 4 block for each extension */
 }
 
 /**

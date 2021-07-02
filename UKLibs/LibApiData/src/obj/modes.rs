@@ -1,5 +1,6 @@
 /*! `Object` modes bits */
 
+use crate::sys::AsSysCallPtr;
 use num_enum::{
     IntoPrimitive,
     TryFromPrimitive
@@ -82,13 +83,6 @@ pub enum SeekMode {
 
 impl SeekMode {
     /**
-     * Returns `&self` as usize pointer value
-     */
-    pub fn as_syscall_ptr(&self) -> usize {
-        self as *const Self as usize
-    }
-
-    /**
      * Returns the integer which identifies the mode
      */
     pub fn mode(&self) -> usize {
@@ -109,4 +103,8 @@ impl SeekMode {
             Self::End => None
         }
     }
+}
+
+impl AsSysCallPtr for SeekMode {
+    /* No methods to implement */
 }

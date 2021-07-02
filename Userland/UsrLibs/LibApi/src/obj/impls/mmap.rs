@@ -36,6 +36,19 @@ use crate::{
     }
 };
 
+/**
+ * Address space memory mapping.
+ *
+ * Acts like a `Box` & an `Arc` which can be used both mutable or not (since
+ * the kernel automatically manages concurrences) but uses memory pages
+ * directly allocated by the kernel (not by an intermediate heap-allocator,
+ * like `Box` and `Arc`).
+ *
+ * The memory is obtainable with `MMap::ptr()` and `MMap::ptr_mut()` which
+ * respectively locks in read-mode and write-mode the kernel `RwLock`, so is
+ * fundamental to hold the returned box less as possible when the `MMap` is
+ * shared among thread and processes
+ */
 #[repr(transparent)]
 #[derive(Debug)]
 #[derive(Clone)]
@@ -48,6 +61,10 @@ pub struct MMap {
 }
 
 impl MMap {
+    /**
+     * Returns an immutable RAII `MMapBox` and gains read-control of the
+     * `MMap`'s memory
+     */
     pub fn ptr<T>(&self) -> Result<MMapBox<T>> {
         self.obtain_area(MMapPtrMode::ForRead)
             .map(|(raw_area_ptr, area_size_in_bytes)| {
@@ -55,6 +72,10 @@ impl MMap {
             })
     }
 
+    /**
+     * Returns an mutable RAII `MMapBoxMut` and gains write-control of the
+     * `MMap`'s memory
+     */
     pub fn ptr_mut<T>(&self) -> Result<MMapBoxMut<T>> {
         self.obtain_area(MMapPtrMode::ForWrite)
             .map(|(raw_area_ptr, area_size_in_bytes)| {
@@ -62,11 +83,18 @@ impl MMap {
             })
     }
 
+    /**
+     * Leaks the `MMap`'s memory and returns the pointer.
+     *
+     * The lifetime of the returned memory is `'static` because the memory
+     * will not be de-allocated until the process dies
+     */
     pub fn leak<T>(self) -> &'static mut [T] {
         let mmap_slice_ref =
             self.obtain_area(MMapPtrMode::ForWrite)
                 .map(|(raw_area_ptr, area_size_in_bytes)| {
                     assert_eq!(area_size_in_bytes % size_of::<T>(), 0);
+
                     unsafe {
                         slice::from_raw_parts_mut(raw_area_ptr as *mut T,
                                                   area_size_in_bytes / size_of::<T>())

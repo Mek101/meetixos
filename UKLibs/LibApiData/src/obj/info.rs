@@ -15,9 +15,9 @@ use crate::{
         device::DeviceId,
         grants::RawObjGrants,
         types::ObjType,
-        uses::ObjUseBits,
-        RawObjHandle
+        uses::ObjUseBits
     },
+    sys::AsSysCallPtr,
     task::TaskId,
     time::RawInstant
 };
@@ -335,20 +335,17 @@ impl RawObjInfo {
     pub fn set_last_info_modify_inst(&mut self, new_inst: RawInstant) {
         self.m_last_info_modify_inst = new_inst;
     }
+}
 
-    /**
-     * Returns `&self` as usize pointer value
-     */
-    pub fn as_syscall_ptr(&self) -> usize {
-        self as *const Self as usize
-    }
+impl AsSysCallPtr for RawObjInfo {
+    /* No methods to implement */
 }
 
 impl Default for RawObjInfo {
     fn default() -> Self {
         Self { m_type: ObjType::default(),
                m_ref_count: 0,
-               m_device: 0,
+               m_device: DeviceId::default(),
                m_has_name: false,
                m_name_id: 0,
                m_name_buffer: Self::EMPTY_VFS_NAME,

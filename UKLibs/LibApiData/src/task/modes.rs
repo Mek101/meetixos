@@ -1,13 +1,9 @@
 /*! `Task` modes bits */
 
-use core::time::Duration;
-
 use num_enum::{
     IntoPrimitive,
     TryFromPrimitive
 };
-
-use crate::task::RawTaskHandle;
 
 /**
  * Lists the available options for `TaskConfig::with_exec_cpu()`.
@@ -67,33 +63,6 @@ impl TaskExecCpu {
             TaskExecCpu::Mask(mask) => Some(mask)
         }
     }
-}
-
-/**
- * Lists the available reasons for which a `Thread` can wait
- */
-pub enum WaitReason {
-    /**
-     * The current `Thread` sleeps for a precise quantum of time expressed
-     * by the given `Duration`
-     */
-    Quantum(Duration),
-
-    /**
-     * The current `Thread` sleeps until the given one is not terminated
-     */
-    Join(RawTaskHandle),
-
-    /**
-     * The `Thread` is put in pause state
-     */
-    Pause(RawTaskHandle),
-
-    /**
-     * The current `Thread` sleeps until the interrupt identified by the
-     * given number not throws
-     */
-    Irq(u32)
 }
 
 /**

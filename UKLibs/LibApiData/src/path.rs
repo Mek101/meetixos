@@ -1,8 +1,9 @@
 /*! `Path` Management */
 
-use core::convert::TryFrom;
-
-use crate::obj::types::ObjType;
+use crate::{
+    obj::types::ObjType,
+    sys::AsSysCallPtr
+};
 
 /**
  * Lists the possibly return states of `Path::exists()`
@@ -38,11 +39,6 @@ pub enum PathExistsState {
     EmptyPath
 }
 
-impl PathExistsState {
-    /**
-     * Returns `&self` as usize pointer value
-     */
-    pub fn as_syscall_ptr(&mut self) -> usize {
-        self as *mut Self as usize
-    }
+impl AsSysCallPtr for PathExistsState {
+    /* No methods to implement */
 }

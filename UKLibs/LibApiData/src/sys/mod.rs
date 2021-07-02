@@ -123,14 +123,10 @@ impl SysCallPayload {
         self.m_error_modified = true;
         &mut self.m_error
     }
+}
 
-    /**
-     * Returns `self` as `usize` pointer
-     */
-    #[inline]
-    pub fn as_syscall_ptr(&mut self) -> usize {
-        self as *mut Self as usize
-    }
+impl AsSysCallPtr for SysCallPayload {
+    /* No methods to implement */
 }
 
 impl Into<Result<usize, OsError>> for SysCallPayload {
@@ -141,5 +137,27 @@ impl Into<Result<usize, OsError>> for SysCallPayload {
         } else {
             Err(self.m_error)
         }
+    }
+}
+
+/**
+ * Interface which defines the method to cast `&self` and `&mut self` to a
+ * `usize` value
+ */
+pub trait AsSysCallPtr {
+    /**
+     * Returns `&self` as `const usize` pointer
+     */
+    #[inline]
+    fn as_syscall_ptr(&self) -> usize {
+        self as *const Self as *const u8 as usize
+    }
+
+    /**
+     * Returns `&mut self` as `mut usize` pointer
+     */
+    #[inline]
+    fn as_syscall_ptr_mut(&mut self) -> usize {
+        self as *mut Self as *mut u8 as usize
     }
 }

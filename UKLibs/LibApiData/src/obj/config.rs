@@ -10,9 +10,12 @@ use bits::flags::{
     BitFlagsValues
 };
 
-use crate::obj::{
-    grants::RawObjGrants,
-    types::ObjType
+use crate::{
+    obj::{
+        grants::RawObjGrants,
+        types::ObjType
+    },
+    sys::AsSysCallPtr
 };
 
 /**
@@ -121,13 +124,10 @@ impl<'a> RawObjConfig<'a> {
     pub fn set_data_size(&mut self, data_size: usize) {
         self.m_data_size = Some(data_size);
     }
+}
 
-    /**
-     * Returns `&self` as usize pointer value
-     */
-    pub fn as_syscall_ptr(&self) -> usize {
-        self as *const Self as usize
-    }
+impl<'a> AsSysCallPtr for RawObjConfig<'a> {
+    /* No methods to implement */
 }
 
 /**

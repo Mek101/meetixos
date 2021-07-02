@@ -37,6 +37,9 @@ pub type OsMutex<T> = sync::mutex::Mutex<OsRawMutex, T>;
  */
 pub type OsMutexGuard<'a, T> = sync::mutex::guard::MutexDataGuard<'a, OsRawMutex, T>;
 
+/**
+ * Operating System managed Mutex
+ */
 #[repr(transparent)]
 #[derive(Debug)]
 #[derive(Clone)]

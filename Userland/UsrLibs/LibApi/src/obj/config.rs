@@ -9,7 +9,8 @@ use api_data::{
     },
     sys::{
         codes::KernObjConfigFnId,
-        fn_path::KernFnPath
+        fn_path::KernFnPath,
+        AsSysCallPtr
     }
 };
 

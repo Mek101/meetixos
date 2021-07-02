@@ -4,7 +4,12 @@
  */
 
 #![no_std]
-#![feature(once_cell)]
+#![feature(once_cell,
+           unboxed_closures,
+           fn_traits,
+           const_mut_refs,
+           const_fn_trait_bound,
+           const_fn_fn_ptr_basics)]
 
 use core::{
     alloc::Layout,
@@ -27,7 +32,7 @@ pub mod slab;
  * allocation, which allocates the perfect right amount of memory (but
  * wasting more time)
  */
-pub const SLAB_THRESHOLD: usize = 512;
+pub const SLAB_THRESHOLD: usize = 384;
 
 /**
  * Callback used by the `Heap` to obtain more memory when it runs out.
@@ -83,53 +88,62 @@ impl Heap {
      */
     pub unsafe fn new(mem_supplier: HeapMemorySupplier) -> Option<Self> {
         /* obtain from the mem_supplier the initial memory to become operative */
-        let (mut next_start_area_addr, up_aligned_area_size) =
+        let (next_start_area_addr, up_aligned_area_size) =
             mem_supplier(Self::INITIAL_REQUESTED_MEM_AMOUNT)?;
 
+        let mut next_start_area_addr = next_start_area_addr.as_ptr();
         let original_start_area_addr = next_start_area_addr;
 
         /* construct the slab_64 allocator */
         let slab_64 = Slab::with_preferred_size(next_start_area_addr);
-        next_start_area_addr += Slab::<64>::PREFERRED_EXTEND_SIZE;
+        next_start_area_addr =
+            next_start_area_addr.add(Slab::<64>::PREFERRED_EXTEND_SIZE);
 
         /* construct the slab_128 allocator */
         let slab_128 = Slab::with_preferred_size(next_start_area_addr);
-        next_start_area_addr += Slab::<128>::PREFERRED_EXTEND_SIZE;
+        next_start_area_addr =
+            next_start_area_addr.add(Slab::<128>::PREFERRED_EXTEND_SIZE);
 
         /* construct the slab_256 allocator */
         let slab_256 = Slab::with_preferred_size(next_start_area_addr);
-        next_start_area_addr += Slab::<256>::PREFERRED_EXTEND_SIZE;
+        next_start_area_addr =
+            next_start_area_addr.add(Slab::<256>::PREFERRED_EXTEND_SIZE);
 
         /* construct the slab_512 allocator */
         let slab_512 = Slab::with_preferred_size(next_start_area_addr);
-        next_start_area_addr += Slab::<512>::PREFERRED_EXTEND_SIZE;
+        next_start_area_addr =
+            next_start_area_addr.add(Slab::<512>::PREFERRED_EXTEND_SIZE);
 
         /* construct the slab_1024 allocator */
         let slab_1024 = Slab::with_preferred_size(next_start_area_addr);
-        next_start_area_addr += Slab::<1024>::PREFERRED_EXTEND_SIZE;
+        next_start_area_addr =
+            next_start_area_addr.add(Slab::<1024>::PREFERRED_EXTEND_SIZE);
 
         /* construct the slab_2048 allocator */
         let slab_2048 = Slab::with_preferred_size(next_start_area_addr);
-        next_start_area_addr += Slab::<2048>::PREFERRED_EXTEND_SIZE;
+        next_start_area_addr =
+            next_start_area_addr.add(Slab::<2048>::PREFERRED_EXTEND_SIZE);
 
         /* construct the slab_4096 allocator */
         let slab_4096 = Slab::with_preferred_size(next_start_area_addr);
-        next_start_area_addr += Slab::<4096>::PREFERRED_EXTEND_SIZE;
+        next_start_area_addr =
+            next_start_area_addr.add(Slab::<4096>::PREFERRED_EXTEND_SIZE);
 
         /* construct the slab_8192 allocator */
         let slab_8192 = Slab::with_preferred_size(next_start_area_addr);
-        next_start_area_addr += Slab::<8192>::PREFERRED_EXTEND_SIZE;
+        next_start_area_addr =
+            next_start_area_addr.add(Slab::<8192>::PREFERRED_EXTEND_SIZE);
 
         /* construct the linked_list allocator */
         let linked_list = {
             let linked_list_size = {
                 let requested_mem_used_amount =
-                    (next_start_area_addr - original_start_area_addr) as usize;
+                    next_start_area_addr as usize - original_start_area_addr as usize;
 
                 up_aligned_area_size - requested_mem_used_amount
             };
 
-            LinkedList::new(next_start_area_addr, linked_list_size as usize)
+            LinkedList::new(next_start_area_addr, linked_list_size)
         };
 
         Some(Self { m_slab_64: slab_64,
@@ -153,17 +167,30 @@ impl Heap {
      * `HeapMemorySupplier` returns `None` as well
      */
     pub fn allocate(&mut self, layout: Layout) -> Option<NonNull<u8>> {
-        let sub_heap_allocator = self.allocator_for_layout(&layout);
+        /* obtain the allocator selected for the layout given */
+        let allocator_selector = AllocSelector::for_layout(&layout);
 
-        /* try to allocate to serve the given layout, if the operation fails try to
-         * refill the memory pools using the memory supplier.
-         * If the refill fails too return None
+        /* perform the allocation now */
+        let alloc_result = match allocator_selector {
+            AllocSelector::Slab64 => self.m_slab_64.allocate(),
+            AllocSelector::Slab128 => self.m_slab_128.allocate(),
+            AllocSelector::Slab256 => self.m_slab_256.allocate(),
+            AllocSelector::Slab512 => self.m_slab_512.allocate(),
+            AllocSelector::Slab1024 => self.m_slab_1024.allocate(),
+            AllocSelector::Slab2048 => self.m_slab_2048.allocate(),
+            AllocSelector::Slab4096 => self.m_slab_4096.allocate(),
+            AllocSelector::Slab8192 => self.m_slab_8192.allocate(),
+            AllocSelector::LinkedList => self.m_linked_list.allocate(layout)
+        };
+
+        /* if the alloc operation fails try to refill the memory pools using the
+         * memory supplier. If the refill fails too return None
          */
-        if let Some(alloc_nn_ptr) = sub_heap_allocator.allocate(layout) {
+        if let Some(alloc_nn_ptr) = alloc_result {
             self.m_in_use_mem += layout.size();
             Some(alloc_nn_ptr)
-        } else if self.refill_mem_pool(sub_heap_allocator, &layout) {
-            sub_heap_allocator.allocate(layout) /* retry the allocation */
+        } else if self.refill_mem_pool(allocator_selector, &layout) {
+            self.allocate(layout) /* retry the allocation */
         } else {
             None
         }
@@ -173,7 +200,17 @@ impl Heap {
      * Makes the given memory available again for further allocations
      */
     pub unsafe fn deallocate(&mut self, nn_ptr: NonNull<u8>, layout: Layout) {
-        self.allocator_for_layout(&layout).deallocate(nn_ptr, layout);
+        match AllocSelector::for_layout(&layout) {
+            AllocSelector::Slab64 => self.m_slab_64.deallocate(nn_ptr),
+            AllocSelector::Slab128 => self.m_slab_128.deallocate(nn_ptr),
+            AllocSelector::Slab256 => self.m_slab_256.deallocate(nn_ptr),
+            AllocSelector::Slab512 => self.m_slab_512.deallocate(nn_ptr),
+            AllocSelector::Slab1024 => self.m_slab_1024.deallocate(nn_ptr),
+            AllocSelector::Slab2048 => self.m_slab_2048.deallocate(nn_ptr),
+            AllocSelector::Slab4096 => self.m_slab_4096.deallocate(nn_ptr),
+            AllocSelector::Slab8192 => self.m_slab_8192.deallocate(nn_ptr),
+            AllocSelector::LinkedList => self.m_linked_list.deallocate(nn_ptr, layout)
+        }
         self.m_in_use_mem -= layout.size();
     }
 
@@ -200,53 +237,24 @@ impl Heap {
     }
 
     /**
-     * Returns the best `SubHeapAllocator` to serve the given `Layout`
-     * request.
-     *
-     * Already catches the slab-threshold and rollbacks the returned
-     * `SubHeapAllocator` to the linked-list
-     */
-    fn allocator_for_layout(&mut self, layout: &Layout) -> &mut dyn SubHeapAllocator {
-        /* select the SubHeapAllocator from the given layout size */
-        let mut selected_sub_heap_allocator =
-            if layout.size() <= 64 && layout.align() <= 64 {
-                &self.m_slab_64 as &mut dyn SubHeapAllocator
-            } else if layout.size() <= 128 && layout.align() <= 128 {
-                &self.m_slab_128 as &mut dyn SubHeapAllocator
-            } else if layout.size() <= 256 && layout.align() <= 256 {
-                &self.m_slab_256 as &mut dyn SubHeapAllocator
-            } else if layout.size() <= 512 && layout.align() <= 512 {
-                &self.m_slab_512 as &mut dyn SubHeapAllocator
-            } else if layout.size() <= 1024 && layout.align() <= 1024 {
-                &self.m_slab_1024 as &mut dyn SubHeapAllocator
-            } else if layout.size() <= 2048 && layout.align() <= 2048 {
-                &self.m_slab_2048 as &mut dyn SubHeapAllocator
-            } else if layout.size() <= 4096 && layout.align() <= 4096 {
-                &self.m_slab_4096 as &mut dyn SubHeapAllocator
-            } else if layout.size() <= 8192 && layout.align() <= 8192 {
-                &self.m_slab_8192 as &mut dyn SubHeapAllocator
-            } else {
-                &self.m_linked_list as &mut dyn SubHeapAllocator
-            };
-
-        /* check for threshold to avoid memory waste */
-        if let Some(slab_block_size) = selected_sub_heap_allocator.block_size() {
-            /* rollback to linked-list if the selected slab waste too much memory */
-            if slab_block_size - layout.size() > SLAB_THRESHOLD {
-                selected_sub_heap_allocator =
-                    &self.m_linked_list as &mut dyn SubHeapAllocator;
-            }
-        }
-        selected_sub_heap_allocator
-    }
-
-    /**
      * Refills the memory pool for the given `SubHeapAllocator`
      */
     fn refill_mem_pool(&mut self,
-                       sub_heap_allocator: &mut dyn SubHeapAllocator,
+                       allocator_selector: AllocSelector,
                        layout: &Layout)
                        -> bool {
+        let sub_heap_allocator = match allocator_selector {
+            AllocSelector::Slab64 => &mut self.m_slab_64 as &mut dyn SubHeapPool,
+            AllocSelector::Slab128 => &mut self.m_slab_128 as &mut dyn SubHeapPool,
+            AllocSelector::Slab256 => &mut self.m_slab_256 as &mut dyn SubHeapPool,
+            AllocSelector::Slab512 => &mut self.m_slab_512 as &mut dyn SubHeapPool,
+            AllocSelector::Slab1024 => &mut self.m_slab_1024 as &mut dyn SubHeapPool,
+            AllocSelector::Slab2048 => &mut self.m_slab_2048 as &mut dyn SubHeapPool,
+            AllocSelector::Slab4096 => &mut self.m_slab_4096 as &mut dyn SubHeapPool,
+            AllocSelector::Slab8192 => &mut self.m_slab_8192 as &mut dyn SubHeapPool,
+            AllocSelector::LinkedList => &mut self.m_linked_list as &mut dyn SubHeapPool
+        };
+
         /* request to the supplier the maximum amount of memory */
         let mem_amount_to_request =
             max(sub_heap_allocator.preferred_extend_size(), layout.size());
@@ -276,24 +284,9 @@ impl Heap {
 }
 
 /**
- * Base `Heap` allocator interface
+ * `Heap` sub-allocator pool
  */
-pub trait SubHeapAllocator {
-    /**
-     * Preferred amount of memory for `add_region()`
-     */
-    const PREFERRED_EXTEND_SIZE: usize;
-
-    /**
-     * Allocate a new chunk of memory to serve the given layout
-     */
-    fn allocate(&mut self, layout: Layout) -> Option<NonNull<u8>>;
-
-    /**
-     * Deallocates the given chunk of memory
-     */
-    unsafe fn deallocate(&mut self, nn_ptr: NonNull<u8>, layout: Layout);
-
+pub trait SubHeapPool {
     /**
      * Puts the given region to the memory pool of the allocator
      */
@@ -303,14 +296,74 @@ pub trait SubHeapAllocator {
                          -> Option<(NonNull<u8>, usize)>;
 
     /**
-     * Returns the block size for slabs
+     * Returns the preferred extend size value
      */
-    fn block_size(&self) -> Option<usize>;
+    fn preferred_extend_size(&self) -> usize;
+}
 
+pub trait PreferredExtendSize {
     /**
-     * Wrapper to call `PREFERRED_EXTEND_SIZE` with `self`
+     * Preferred amount of memory for `add_region()`
      */
-    fn preferred_extend_size(&self) -> usize {
-        Self::PREFERRED_EXTEND_SIZE
+    const PREFERRED_EXTEND_SIZE: usize;
+}
+
+enum AllocSelector {
+    Slab64,
+    Slab128,
+    Slab256,
+    Slab512,
+    Slab1024,
+    Slab2048,
+    Slab4096,
+    Slab8192,
+    LinkedList
+}
+
+impl AllocSelector {
+    fn for_layout(layout: &Layout) -> Self {
+        /* select the SubHeapAllocator from the given layout size */
+        let mut allocator_selected = if layout.size() <= 64 && layout.align() <= 64 {
+            Self::Slab64
+        } else if layout.size() <= 128 && layout.align() <= 128 {
+            Self::Slab128
+        } else if layout.size() <= 256 && layout.align() <= 256 {
+            Self::Slab256
+        } else if layout.size() <= 512 && layout.align() <= 512 {
+            Self::Slab512
+        } else if layout.size() <= 1024 && layout.align() <= 1024 {
+            Self::Slab1024
+        } else if layout.size() <= 2048 && layout.align() <= 2048 {
+            Self::Slab2048
+        } else if layout.size() <= 4096 && layout.align() <= 4096 {
+            Self::Slab4096
+        } else if layout.size() <= 8192 && layout.align() <= 8192 {
+            Self::Slab8192
+        } else {
+            Self::LinkedList
+        };
+
+        /* check for threshold to avoid memory waste */
+        if let Some(slab_block_size) = allocator_selected.block_size() {
+            /* rollback to linked-list if the selected slab waste too much memory */
+            if slab_block_size - layout.size() > SLAB_THRESHOLD {
+                allocator_selected = Self::LinkedList;
+            }
+        }
+        allocator_selected
+    }
+
+    fn block_size(&self) -> Option<usize> {
+        match self {
+            AllocSelector::Slab64 => Some(64),
+            AllocSelector::Slab128 => Some(128),
+            AllocSelector::Slab256 => Some(256),
+            AllocSelector::Slab512 => Some(512),
+            AllocSelector::Slab1024 => Some(1024),
+            AllocSelector::Slab2048 => Some(2048),
+            AllocSelector::Slab4096 => Some(4096),
+            AllocSelector::Slab8192 => Some(8192),
+            AllocSelector::LinkedList => None
+        }
     }
 }

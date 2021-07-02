@@ -9,7 +9,8 @@ use api_data::{
     },
     sys::{
         codes::KernDeviceFnId,
-        fn_path::KernFnPath
+        fn_path::KernFnPath,
+        AsSysCallPtr
     }
 };
 
@@ -23,7 +24,10 @@ use crate::{
 };
 
 /**
- * File-like device driver
+ * File-like device driver.
+ *
+ * Reading/writing with this kind of `Object` directly communicates (without
+ * intermediate kernel buffering) with the underling kernel driver
  */
 #[repr(transparent)]
 #[derive(Debug)]
@@ -85,8 +89,7 @@ impl Device {
         self.obj_handle()
             .kern_handle()
             .inst_kern_call_3(KernFnPath::Device(KernDeviceFnId::MapToMem),
-                              map_addr.map(|nn_ptr| nn_ptr.as_ptr() as usize)
-                                      .unwrap_or_default(),
+                              &map_addr as *const _ as usize,
                               from_off,
                               mmap_size)
             .map(|raw_obj_handle| MMap::from(ObjHandle::from_raw(raw_obj_handle)))
@@ -103,8 +106,7 @@ impl Device {
             .kern_handle()
             .inst_kern_call_2(KernFnPath::Device(KernDeviceFnId::IOSetup),
                               cmd_value,
-                              arg_ptr.map(|nn_ptr| nn_ptr.as_ptr() as usize)
-                                     .unwrap_or_default())
+                              &arg_ptr as *const _ as usize)
     }
 
     /**

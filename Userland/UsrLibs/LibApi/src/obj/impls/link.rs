@@ -17,6 +17,17 @@ use crate::{
     }
 };
 
+/**
+ * Reference to another `Object`.
+ *
+ * When the link is traversed in a path is automatically dereferenced to the
+ * bind `Object`.
+ *
+ * It's also possible to open a `Link` using the type of the bind `Object`
+ * (i.e a `Link` with points to a `File` can be directly opened with
+ * `File::open()`), the kernel automatically tries to dereference the `Link`
+ * before returning
+ */
 #[repr(transparent)]
 #[derive(Debug)]
 #[derive(Clone)]
@@ -29,6 +40,13 @@ pub struct Link {
 }
 
 impl Link {
+    /**
+     * Dereferences the link and returns the `ObjHandle` of the bind
+     * `Object`.
+     *
+     * The returned `ObjHandle` can be easily wrapped inside the his real
+     * `Object` type with `into()` or `try_into()`
+     */
     pub fn deref_link(&self) -> Result<ObjHandle> {
         self.obj_handle()
             .kern_handle()
@@ -36,6 +54,11 @@ impl Link {
             .map(|bind_raw_handle| ObjHandle::from_raw(bind_raw_handle))
     }
 
+    /**
+     * Binds a new named `Object` overwriting the previous bind.
+     *
+     * Bind of anonymous `Object`s causes the return with an error
+     */
     pub fn bind_to<T>(&self, obj_to_bind: &T) -> Result<()>
         where T: Object {
         self.obj_handle()

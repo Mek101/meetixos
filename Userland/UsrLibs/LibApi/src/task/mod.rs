@@ -4,9 +4,11 @@ use api_data::{
     sys::{
         codes::KernTaskFnId,
         fn_path::KernFnPath,
+        AsSysCallPtr,
         RawKernHandle
     },
     task::{
+        exit::TaskExitStatus,
         types::TaskType,
         TaskId
     }
@@ -23,11 +25,9 @@ use crate::{
     },
     task::config::TaskConfig
 };
-use api_data::task::exit::TaskExitStatus;
 
 pub mod config;
-pub mod proc;
-pub mod thread;
+pub mod impls;
 
 /**
  * Generic opaque `Task` handle
@@ -60,6 +60,9 @@ impl TaskHandle {
                    .expect("Failed to obtain current Task handle")
     }
 
+    /**
+     * Exists the current `TaskHandle` with the given `TaskExitStatus`
+     */
     fn exit(task_type: TaskType, exit_status: TaskExitStatus) -> ! {
         let _ = KernHandle::kern_call_2(KernFnPath::Task(KernTaskFnId::Exit),
                                         task_type.into(),
@@ -67,6 +70,9 @@ impl TaskHandle {
         unreachable!()
     }
 
+    /**
+     * Returns the `TaskId` of this `TaskHandle`
+     */
     pub fn os_id(&self) -> Result<TaskId> {
         self.m_handle
             .inst_kern_call_0(KernFnPath::Task(KernTaskFnId::OsId))
@@ -76,9 +82,10 @@ impl TaskHandle {
     /**
      * Terminates this `TaskHandle`
      */
-    fn kill(&self, call_cleanup: bool) -> Result<()> {
+    fn kill(&self, allow_cleanup: bool) -> Result<()> {
         self.m_handle
-            .inst_kern_call_1(KernFnPath::Task(KernTaskFnId::Kill), call_cleanup as usize)
+            .inst_kern_call_1(KernFnPath::Task(KernTaskFnId::Kill),
+                              allow_cleanup as usize)
             .map(|_| ())
     }
 
@@ -95,9 +102,15 @@ impl TaskHandle {
      * Returns whether the referenced task is valid and alive
      */
     fn is_alive(&self) -> bool {
-        self.m_handle.is_valid()
+        self.m_handle
+            .inst_kern_call_0(KernFnPath::Task(KernTaskFnId::IsAlive))
+            .map(|res| res != 0)
+            .unwrap_or(false)
     }
 
+    /**
+     * Returns the reference to the `KernHandle`
+     */
     pub fn kern_handle(&self) -> &KernHandle {
         &self.m_handle
     }
@@ -128,14 +141,14 @@ pub trait Task: From<TaskHandle> {
     fn task_handle_mut(&mut self) -> &mut TaskHandle;
 
     /**
-     * Returns an uninitialized `TaskConfig` to spawn a new `Task`
+     * Returns a `TaskConfig` for `Task` spawn
      */
     fn spawn() -> TaskConfig<Self, CreatMode> {
         TaskConfig::<Self, CreatMode>::new()
     }
 
     /**
-     * Returns an uninitialized `TaskConfig` to find an existing `Task`
+     * Returns a `TaskConfig` for `Task` opening
      */
     fn open() -> TaskConfig<Self, OpenMode> {
         TaskConfig::<Self, OpenMode>::new()
@@ -149,29 +162,28 @@ pub trait Task: From<TaskHandle> {
         Self::from(TaskHandle::this(Self::TASK_TYPE))
     }
 
+    /**
+     * Exists this `Task` with the given `TaskExitStatus`
+     */
     fn exit(exit_status: TaskExitStatus) -> ! {
         TaskHandle::exit(Self::TASK_TYPE, exit_status)
     }
 
+    /**
+     * Returns the `TaskId` of this `Task`
+     */
     fn os_id(&self) -> Result<TaskId> {
         self.os_id()
     }
 
     /**
-     * Terminates the task referenced by this `Task` if the caller
-     * user/group is the same of the `Task` to terminate or it's the
-     * administrator.
+     * Kills this `Task` if the caller have enough permissions to do that.
      *
-     * The `call_cleanup` flag tells to the Kernel whether it must call the
-     * registered cleanup function(s) (if any) before definitively terminate
-     * the target.
-     *
-     * If the target is a `Proc` and it have more than one active
-     * `Thread` the Kernel first terminates them all, then terminates
-     * the `Proc`
+     * When `allow_cleanup` is `true` the `Task`, before exit, calls the
+     * registered cleanup-routines
      */
-    fn kill(&self, call_cleanup: bool) -> Result<()> {
-        self.task_handle().kill(call_cleanup)
+    fn kill(&self, allow_cleanup: bool) -> Result<()> {
+        self.task_handle().kill(allow_cleanup)
     }
 
     /**

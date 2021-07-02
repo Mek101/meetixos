@@ -1,8 +1,17 @@
 /*! Objects management */
 
-use core::any::type_name;
+use alloc::fmt::format;
+use core::{
+    any::type_name,
+    convert::TryInto,
+    result
+};
 
 use api_data::{
+    error::{
+        class::OsErrorClass,
+        OsError
+    },
     obj::{
         info::RawObjInfo,
         modes::ObjRecvMode,
@@ -13,6 +22,7 @@ use api_data::{
     sys::{
         codes::KernObjectFnId,
         fn_path::KernFnPath,
+        AsSysCallPtr,
         RawKernHandle
     },
     task::thread::RWatchThreadEntry
@@ -33,7 +43,13 @@ use crate::{
         info::ObjInfo
     },
     task::{
-        thread::c_thread_entry,
+        impls::{
+            proc::Proc,
+            thread::{
+                c_thread_entry,
+                Thread
+            }
+        },
         Task
     }
 };
@@ -163,6 +179,25 @@ impl<T> Into<T> for ObjHandle where T: Object {
                    type_name::<T>(),
                    real_obj_type,
                    T::TYPE);
+        }
+    }
+}
+
+impl<T> TryInto<T> for ObjHandle where T: Object {
+    type Error = OsError;
+
+    fn try_into(self) -> result::Result<T, Self::Error> {
+        let real_obj_type = self.info()?.obj_type();
+
+        if real_obj_type == T::TYPE {
+            Ok(T::from(self))
+        } else {
+            Err(OsError::new(OsErrorClass::TypesNotMatch,
+                             KernFnPath::Invalid,
+                             Some(self.kern_handle().raw_handle()),
+                             Proc::this().os_id()?,
+                             Thread::this().os_id()?,
+                             None))
         }
     }
 }

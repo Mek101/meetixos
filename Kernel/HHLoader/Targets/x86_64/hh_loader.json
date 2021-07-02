@@ -14,8 +14,6 @@
             "--script=Kernel/HHLoader/Targets/x86_64/linker.ld"
         ]
     },
-    "eliminate-frame-pointer": false,
-    "morestack": false,
     "panic": "abort",
     "panic-strategy": "abort",
     "disable-redzone": true,

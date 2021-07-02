@@ -97,7 +97,7 @@ impl OsEntityHandle {
  */
 pub trait OsEntity: From<OsEntityHandle> + Default {
     /**
-     * Value of the `OSEntityType` that matches the implementation
+     * Value of the `OsEntityType` that matches the implementation
      */
     const TYPE: OsEntityType;
 
@@ -129,7 +129,7 @@ pub trait OsEntity: From<OsEntityHandle> + Default {
     }
 
     /**
-     * Puts into `buf` the name of this `OSEntity`
+     * Puts into `buf` the name of this `OsEntity`
      */
     fn name<'a>(&self) -> Result<String> {
         self.os_entity_handle().name()

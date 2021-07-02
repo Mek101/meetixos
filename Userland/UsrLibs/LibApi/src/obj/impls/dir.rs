@@ -8,7 +8,8 @@ use api_data::{
     },
     sys::{
         codes::KernDirFnId,
-        fn_path::KernFnPath
+        fn_path::KernFnPath,
+        AsSysCallPtr
     }
 };
 
@@ -22,7 +23,9 @@ use crate::{
 };
 
 /**
- * Collection of named `Object`s
+ * Collection of named `Object`s.
+ *
+ * Consists essentially in a list `Object` of names and identifiers
  */
 #[repr(transparent)]
 #[derive(Debug)]

@@ -118,7 +118,8 @@ pub trait BitArray<T>
     /**
      * Returns an `Iterator` to iterate the bit-values
      */
-    fn iter_bits(&self) -> BitArrayIterator<'_, Self> {
+    fn iter_bits(&self) -> BitArrayIterator<'_, T, Self>
+        where Self: Sized {
         BitArrayIterator::new(self)
     }
 }
@@ -159,23 +160,32 @@ impl<'a, T> Iterator for BitFieldsIterator<'a, T> where T: BitFields {
 /**
  * `BitArray` iterator
  */
-pub struct BitArrayIterator<'a, T>
-    where T: BitArray<T> {
+pub struct BitArrayIterator<'a, B, T>
+    where B: BitFields,
+          T: BitArray<B> {
     m_index: usize,
-    m_bit_array: &'a T
+    m_bit_array: &'a T,
+    _unused: PhantomData<B>
 }
 
-impl<'a, T> BitArrayIterator<'a, T> where T: BitArray<T> {
+impl<'a, B, T> BitArrayIterator<'a, B, T>
+    where B: BitFields,
+          T: BitArray<B>
+{
     /**
      * Constructs a `BitArrayIterator` with the given `BitArray`
      */
     fn new(bit_array: &'a T) -> Self {
         Self { m_index: 0,
-               m_bit_array: bit_array }
+               m_bit_array: bit_array,
+               _unused: PhantomData }
     }
 }
 
-impl<'a, T> Iterator for BitArrayIterator<'a, T> where T: BitArray<T> {
+impl<'a, B, T> Iterator for BitArrayIterator<'a, B, T>
+    where B: BitFields,
+          T: BitArray<B>
+{
     type Item = bool;
 
     fn next(&mut self) -> Option<Self::Item> {

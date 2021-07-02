@@ -35,12 +35,12 @@ pub type RawLazyMutexSupplier<M> = fn() -> Option<M>;
  * This allow the use of the struct as `global_allocator` using constant
  * initialization
  */
-pub struct RawLazyLockedHeap<'a, M>
-    where M: BackRawMutex + 'a {
+pub struct RawLazyLockedHeap<M>
+    where M: BackRawMutex + 'static {
     m_lazy_locked_heap: Lazy<Mutex<M, Heap>, LazyHeapInitializer<M>>
 }
 
-impl<'a, M> RawLazyLockedHeap<'a, M> where M: BackRawMutex + 'a {
+impl<M> RawLazyLockedHeap<M> where M: BackRawMutex + 'static {
     /**
      * Constructs a `RawLazyLockedHeap` without initialize the internal
      * `sync::Mutex<Heap>`

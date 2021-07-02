@@ -1,4 +1,4 @@
-/*! `Object` information related data structures */
+/*! `Object` metadata information structures */
 
 use core::ops::{
     Deref,
@@ -68,6 +68,7 @@ impl<T> ObjInfo<T> where T: Object {
      * Sets the `OsUser` which owns the `Object`
      */
     pub fn set_os_user(&mut self, os_user: &OsUser) {
+        self.m_modified = true;
         self.m_raw_info
             .set_os_user(os_user.os_entity_handle().kern_handle().raw_handle());
     }
@@ -76,6 +77,7 @@ impl<T> ObjInfo<T> where T: Object {
      * Sets the `OsGroup` which owns the `Object`
      */
     pub fn set_os_group(&mut self, os_group: &OsGroup) {
+        self.m_modified = true;
         self.m_raw_info
             .set_os_group(os_group.os_entity_handle().kern_handle().raw_handle());
     }

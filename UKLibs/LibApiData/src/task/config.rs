@@ -15,6 +15,7 @@ use bits::flags::{
 use crate::{
     entity::RawOsEntityHandle,
     obj::RawObjHandle,
+    sys::AsSysCallPtr,
     task::{
         modes::TaskExecCpu,
         thread::{
@@ -253,13 +254,10 @@ impl<'a> RawTaskConfig<'a> {
     pub fn set_thread_name(&mut self, thread_name: &'a str) {
         self.m_thread_name = Some(thread_name);
     }
+}
 
-    /**
-     * Returns `&self` as usize pointer value
-     */
-    pub fn as_syscall_ptr(&self) -> usize {
-        self as *const Self as usize
-    }
+impl<'a> AsSysCallPtr for RawTaskConfig<'a> {
+    /* No methods to implement */
 }
 
 /**

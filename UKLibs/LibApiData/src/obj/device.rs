@@ -12,7 +12,6 @@ use bits::fields::BitFields;
 /**
  * `Device` identifier
  */
-#[repr(transparent)]
 #[derive(Debug)]
 #[derive(Default)]
 #[derive(Copy, Clone)]
@@ -74,8 +73,8 @@ impl TryFrom<usize> for DeviceId {
 
 impl Into<usize> for DeviceId {
     fn into(self) -> usize {
-        (self.device_type().into() as usize) << 40
-        | (self.device_class().into() as usize) << 32
+        (Into::<u8>::into(self.device_type()) as usize) << 40
+        | (Into::<u8>::into(self.device_class()) as usize) << 32
         | (self.serial_value() as usize)
     }
 }
@@ -116,6 +115,12 @@ impl DeviceIdType {
      */
     pub fn is_char_device(&self) -> bool {
         matches!(*self, Self::Character)
+    }
+}
+
+impl Default for DeviceIdType {
+    fn default() -> Self {
+        Self::Block
     }
 }
 
@@ -192,5 +197,11 @@ impl DeviceIdClass {
      */
     pub fn is_framebuffer_device(&self) -> bool {
         matches!(*self, Self::Framebuffer)
+    }
+}
+
+impl Default for DeviceIdClass {
+    fn default() -> Self {
+        Self::Storage
     }
 }

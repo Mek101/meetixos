@@ -9,7 +9,8 @@ use helps::str::{
 
 use crate::{
     limit::VFS_NAME_LEN_MAX,
-    obj::types::ObjType
+    obj::types::ObjType,
+    sys::AsSysCallPtr
 };
 
 /**
@@ -49,13 +50,10 @@ impl DirEntry {
     pub fn obj_type(&self) -> ObjType {
         self.m_obj_type
     }
+}
 
-    /**
-     * Returns `&self` as usize pointer value
-     */
-    pub fn as_syscall_ptr(&self) -> usize {
-        self as *const Self as usize
-    }
+impl AsSysCallPtr for DirEntry {
+    /* No methods to implement */
 }
 
 impl Default for DirEntry {

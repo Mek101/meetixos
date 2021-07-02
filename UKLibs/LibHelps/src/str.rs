@@ -19,7 +19,7 @@ pub fn copy_str_to_u8_buf(dst: &mut [u8], src: &str) {
  * Constructs an `&str` from the `&[u8]` given, performing then an unchecked
  * UTF-8 conversion
  */
-pub fn u8_slice_to_str_slice<'a>(slice: &[u8]) -> &'a str {
+pub fn u8_slice_to_str_slice(slice: &[u8]) -> &str {
     unsafe { str::from_utf8_unchecked(slice) }
 }
 

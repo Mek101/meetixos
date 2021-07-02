@@ -12,6 +12,7 @@ use crate::{
     limit::OS_ERROR_MESSAGE_LEN_MAX,
     sys::{
         fn_path::KernFnPath,
+        AsSysCallPtr,
         RawKernHandle
     },
     task::TaskId
@@ -84,13 +85,10 @@ impl OsError {
     pub fn message(&self) -> Option<&str> {
         self.m_message.as_ref().map(|message_buf| u8_slice_to_str_slice(message_buf))
     }
+}
 
-    /**
-     * Returns `&self` as usize pointer value
-     */
-    pub fn as_syscall_ptr(&mut self) -> usize {
-        self as *mut _ as usize
-    }
+impl AsSysCallPtr for OsError {
+    /* No methods to implement */
 }
 
 impl fmt::Display for OsError {

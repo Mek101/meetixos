@@ -9,7 +9,8 @@ use api_data::{
     },
     sys::{
         codes::KernFileFnId,
-        fn_path::KernFnPath
+        fn_path::KernFnPath,
+        AsSysCallPtr
     }
 };
 
@@ -30,7 +31,9 @@ use crate::{
 };
 
 /**
- * File reference
+ * Open file reference.
+ *
+ * Represent the higher abstraction over `Device`s and filesystems
  */
 #[repr(transparent)]
 #[derive(Debug)]
@@ -106,10 +109,17 @@ impl File {
     }
 
     /**
-     * Maps part of this `File`'s content into a `MMap`.
+     * Maps part of this `File`'s content into a `MMap` with the same
+     * permissions.
+     *
+     * `from_off` & `mmap_size` must be 4KiB aligned.
      *
      * It is possible to keep the modification to the `MMap`'s memory synced
-     * with the on-disk `File` content, providing `keep_file_sync = true`
+     * with the on-disk `File` content, providing `keep_file_sync = true`.
+     *
+     * When `keep_file_sync` is `true` the kernel directly maps the
+     * page-cache pages, which means that concurrent accesses to the same
+     * location with `File::write()` modifies the `MMap` memory too
      */
     pub fn map_to_memory(&self,
                          map_addr: Option<NonNull<()>>,
@@ -120,8 +130,7 @@ impl File {
         self.obj_handle()
             .kern_handle()
             .inst_kern_call_4(KernFnPath::File(KernFileFnId::Move),
-                              map_addr.map(|nn_ptr| nn_ptr.as_ptr() as usize)
-                                      .unwrap_or_default(),
+                              &map_addr as *const _ as usize,
                               from_off,
                               mmap_size,
                               keep_file_sync as usize)

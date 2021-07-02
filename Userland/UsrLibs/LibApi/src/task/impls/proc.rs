@@ -10,7 +10,8 @@ use api_data::{
     task::{
         fs_types::FsType,
         modes::FsMountMode,
-        types::TaskType
+        types::TaskType,
+        TaskId
     }
 };
 
@@ -25,15 +26,19 @@ use crate::{
             device::Device,
             dir::Dir
         },
+        ObjHandle,
         Object
     },
     task::{
-        thread::Thread,
+        impls::thread::Thread,
         Task,
         TaskHandle
     }
 };
 
+/**
+ * Reference to a program in execution
+ */
 #[repr(transparent)]
 #[derive(Debug)]
 #[derive(Clone)]
@@ -47,26 +52,64 @@ pub struct Proc {
 
 impl Proc {
     /**
-     * Returns the main `Thread` of this process
+     * Returns the current workdir of the `Proc`
      */
-    pub fn main_thread(&self) -> Result<Thread> {
-        self.kern_call_0(KernFnPath::Proc(KernProcFnId::MainThread))
-            .map(|raw_thread_handle| {
-                Thread::from(TaskHandle::from_raw(raw_thread_handle))
+    pub fn work_dir(&self) -> Result<Dir> {
+        self.task_handle()
+            .kern_handle()
+            .inst_kern_call_0(KernFnPath::Proc(KernProcFnId::GetWorkDir))
+            .map(|raw_work_dir_handle| {
+                Dir::from(ObjHandle::from_raw(raw_work_dir_handle))
             })
     }
 
-    pub fn sub_threads(&self) -> Result<Vec<Thread>> {
-        let mut sub_threads_vec = Vec::with_capacity(self.threads_count()?);
+    /**
+     * Sets the current working `Dir` for this `Proc`.
+     *
+     * It is allowed for administrative processes to change working `Dir` to
+     * other processes
+     */
+    pub fn set_work_dir(&self, work_dir: &Dir) -> Result<()> {
+        self.task_handle()
+            .kern_handle()
+            .inst_kern_call_1(KernFnPath::Proc(KernProcFnId::SetWorkDir),
+                              work_dir.obj_handle().kern_handle().raw_handle() as usize)
+            .map(|_| ())
+    }
+
+    /**
+     * Returns the `TaskId` of the main `Thread` of this `Proc`
+     */
+    pub fn main_thread_id(&self) -> Result<TaskId> {
+        self.task_handle()
+            .kern_handle()
+            .inst_kern_call_0(KernFnPath::Proc(KernProcFnId::MainThread))
+            .map(|raw_task_id| raw_task_id as TaskId)
+    }
+
+    /**
+     * Returns the `Vec` with all the `TaskId`s of the sub-`Thread`s of this
+     * `Proc`
+     */
+    pub fn sub_threads_ids(&self) -> Result<Vec<TaskId>> {
+        let mut sub_threads_ids_vec = Vec::with_capacity(self.threads_count()?);
 
         self.task_handle()
             .kern_handle()
             .inst_kern_call_2(KernFnPath::Proc(KernProcFnId::SubThreads),
-                              sub_threads_vec.as_mut_ptr() as usize,
-                              sub_threads_vec.capacity())
-            .map(|_| sub_threads_vec)
+                              sub_threads_ids_vec.as_mut_ptr() as usize,
+                              sub_threads_ids_vec.capacity())
+            .map(|sub_threads_count| {
+                unsafe {
+                    sub_threads_ids_vec.set_len(sub_threads_count);
+                }
+                sub_threads_ids_vec
+            })
     }
 
+    /**
+     * Returns the total amount of `Thread`s owned by this `Proc`
+     */
     pub fn threads_count(&self) -> Result<usize> {
         self.task_handle()
             .kern_handle()

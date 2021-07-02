@@ -1,9 +1,12 @@
-/*! Group of `OSUser`s */
+/*! Group of `OsUser`s */
 
 use alloc::vec::Vec;
 
 use api_data::{
-    entity::types::OsEntityType,
+    entity::{
+        types::OsEntityType,
+        OsEntityId
+    },
     sys::{
         codes::KernOsGroupFnId,
         fn_path::KernFnPath
@@ -54,21 +57,22 @@ impl OsGroup {
     }
 
     /**
-     * Returns the `Vec` of `OsUsers` which joins this `OsGroup`
+     * Returns the `Vec` of `OsEntityId`s of the `OsUsers` which joins this
+     * `OsGroup`
      */
-    pub fn users(&self) -> Result<Vec<OsUser>> {
-        let mut users_vec = Vec::with_capacity(self.users_count()?);
+    pub fn users_ids(&self) -> Result<Vec<OsEntityId>> {
+        let mut users_ids_vec = Vec::with_capacity(self.users_count()?);
 
         self.os_entity_handle()
             .kern_handle()
-            .inst_kern_call_2(KernFnPath::OsGroup(KernOsGroupFnId::Users),
-                              users_vec.as_mut_ptr() as usize,
-                              users_vec.capacity())
+            .inst_kern_call_2(KernFnPath::OsGroup(KernOsGroupFnId::UsersIds),
+                              users_ids_vec.as_mut_ptr() as usize,
+                              users_ids_vec.capacity())
             .map(|users_count| {
                 unsafe {
-                    users_vec.set_len(users_count);
+                    users_ids_vec.set_len(users_count);
                 }
-                users_vec
+                users_ids_vec
             })
     }
 

@@ -1,6 +1,9 @@
 /*! `Task` exit value */
 
-use crate::error::OsError;
+use crate::{
+    error::OsError,
+    sys::AsSysCallPtr
+};
 
 /**
  * `Task` exist status
@@ -24,11 +27,12 @@ pub enum TaskExitStatus {
     WithError(OsError)
 }
 
-impl TaskExitStatus {
-    /**
-     * Returns `&self` as usize pointer value
-     */
-    pub fn as_syscall_ptr(&self) -> usize {
-        self as *const _ as usize
+impl AsSysCallPtr for TaskExitStatus {
+    /* No methods to implement */
+}
+
+impl Default for TaskExitStatus {
+    fn default() -> Self {
+        Self::Success
     }
 }
