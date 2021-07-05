@@ -12,7 +12,7 @@ Building:
 * Rust nightly
 
 Running:
-* xorriso
+* xorriso (Ubuntu) / libisoburn (Arch)
 * qemu-system-x86_64
 
 ## Contributors
