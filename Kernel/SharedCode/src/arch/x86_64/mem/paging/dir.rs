@@ -20,15 +20,15 @@ pub struct HwPageDirSupport;
 
 impl HwPageDirSupportBase for HwPageDirSupport {
     /* Page Table Entry flags */
-    const PTE_PRESENT: usize = 1 << 0;
-    const PTE_READABLE: usize = 0;
-    const PTE_WRITEABLE: usize = 1 << 1;
-    const PTE_GLOBAL: usize = 1 << 8;
-    const PTE_HUGE: usize = 1 << 7;
-    const PTE_ACCESSED: usize = 1 << 5;
-    const PTE_DIRTY: usize = 1 << 6;
-    const PTE_NO_EXECUTE: usize = 1 << 63;
-    const PTE_USER: usize = 1 << 2;
+    const PTE_PRESENT: usize = 0;
+    const PTE_READABLE: usize = 9;
+    const PTE_WRITEABLE: usize = 1;
+    const PTE_GLOBAL: usize = 8;
+    const PTE_HUGE: usize = 7;
+    const PTE_ACCESSED: usize = 5;
+    const PTE_DIRTY: usize = 6;
+    const PTE_NO_EXECUTE: usize = 63;
+    const PTE_USER: usize = 2;
 
     /* Page Table Entry mask */
     const PTE_ADDR_MASK: usize = 0x000F_FFFF_FFFF_F000;
@@ -43,24 +43,14 @@ impl HwPageDirSupportBase for HwPageDirSupport {
     const PT_LEVEL_4KB: PageTableLevel = PageTableLevel::Level1;
 
     unsafe fn active_page_dir_frame() -> PhysFrame<Page4KiB> {
-        use x86_64::registers::control::Cr3;
+        let cr3_value: usize;
+        asm!("mov {}, cr3", out(reg) cr3_value, options(nomem, nostack, preserves_flags));
 
-        PhysAddr::new(Cr3::read().0.start_address().as_u64() as usize).containing_frame()
+        PhysAddr::new(cr3_value & Self::PTE_ADDR_MASK).containing_frame()
     }
 
     unsafe fn activate_page_dir(phys_frame: PhysFrame<Page4KiB>) {
-        use x86_64::{
-            registers::control::Cr3,
-            structures::paging::PhysFrame as X64PhysFrame,
-            PhysAddr as X64PhysAddr
-        };
-
-        /* construct the x86_64 PhysAddr */
-        let x64_phys_addr =
-            X64PhysAddr::new_unsafe(phys_frame.start_addr().as_usize() as u64);
-
-        /* update the CR3 content */
-        Cr3::write(X64PhysFrame::from_start_address_unchecked(x64_phys_addr),
-                   Cr3::read().1);
+        let raw_addr = phys_frame.start_addr().as_usize();
+        asm!("mov cr3, {}", in(reg) raw_addr, options(nomem, preserves_flags));
     }
 }

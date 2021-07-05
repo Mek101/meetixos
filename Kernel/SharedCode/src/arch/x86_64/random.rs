@@ -1,46 +1,55 @@
 /*! x86_64 random implementation */
 
-use x86_64::instructions::random::RdRand;
+use core::arch::x86_64::{
+    _rdrand16_step,
+    _rdrand32_step,
+    _rdrand64_step
+};
 
 use crate::random::HwRandomGeneratorBase;
 
 /**
  * x86_64 `HwRandomGeneratorBase` implementation
  */
+#[derive(Debug, Copy, Clone)]
 pub struct HwRandomGenerator {
-    m_inner: RdRand
+    m_inner: ()
 }
 
 impl HwRandomGeneratorBase for HwRandomGenerator {
     fn new() -> Self {
-        if let Some(inner) = RdRand::new() {
-            Self { m_inner: inner }
+        let cpuid_res = unsafe { core::arch::x86_64::__cpuid(0x1) };
+        if cpuid_res.ecx & (1 << 30) != 0 {
+            Self { m_inner: () }
         } else {
-            panic!("CPU doesn't support RDRAND instruction")
+            panic!("CPU doesn't support RDRAND instruction");
         }
     }
 
     fn randomize_u64(&self) -> u64 {
-        loop {
-            if let Some(res) = self.m_inner.get_u64() {
-                return res;
-            }
+        let mut rdrand_res = 0;
+        while unsafe { _rdrand64_step(&mut rdrand_res) } != 1 {
+            core::hint::spin_loop();
         }
+
+        return rdrand_res;
     }
 
     fn randomize_u32(&self) -> u32 {
-        loop {
-            if let Some(res) = self.m_inner.get_u32() {
-                return res;
-            }
+        let mut rdrand_res = 0;
+        while unsafe { _rdrand32_step(&mut rdrand_res) } != 1 {
+            core::hint::spin_loop();
         }
+
+        return rdrand_res;
     }
 
     fn randomize_u16(&self) -> u16 {
-        loop {
-            if let Some(res) = self.m_inner.get_u16() {
-                return res;
-            }
+        let mut rdrand_res = 0;
+        while unsafe { _rdrand16_step(&mut rdrand_res) } != 1 {
+            core::hint::spin_loop();
         }
+
+        return rdrand_res;
     }
 }

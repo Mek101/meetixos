@@ -2,8 +2,7 @@
 
 use core::convert::TryFrom;
 
-use bit_field::BitField;
-use x86_64::VirtAddr as X64VirtAddr;
+use bits::fields::BitFields;
 
 use crate::{
     addr::{
@@ -22,16 +21,16 @@ use crate::{
 #[repr(transparent)]
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub struct HwVirtAddr {
-    m_addr: X64VirtAddr
+    m_raw_addr: usize
 }
 
 impl HwAddrBase for HwVirtAddr {
     fn new(raw_addr: usize) -> Self {
-        Self { m_addr: X64VirtAddr::new(raw_addr as u64) }
+        Self { m_raw_addr: ((raw_addr << 16) as isize >> 16) as usize }
     }
 
     fn as_usize(&self) -> usize {
-        self.m_addr.as_u64() as usize
+        self.m_raw_addr
     }
 }
 
@@ -41,57 +40,60 @@ impl HwVirtAddrBase for HwVirtAddr {
                          l2_index: PageTableIndex,
                          l1_index: PageTableIndex)
                          -> Self {
-        let mut addr = 0;
-        addr.set_bits(39..48, Into::<usize>::into(l4_index) as u64);
-        addr.set_bits(30..39, Into::<usize>::into(l3_index) as u64);
-        addr.set_bits(21..30, Into::<usize>::into(l2_index) as u64);
-        addr.set_bits(12..21, Into::<usize>::into(l1_index) as u64);
+        let mut raw_addr = 0;
+        raw_addr.set_bits(39..48, l4_index.into());
+        raw_addr.set_bits(30..39, l3_index.into());
+        raw_addr.set_bits(21..30, l2_index.into());
+        raw_addr.set_bits(12..21, l1_index.into());
 
-        Self { m_addr: X64VirtAddr::new(addr) }
+        Self { m_raw_addr: raw_addr }
     }
 
     fn from_2mib_indices(l4_index: PageTableIndex,
                          l3_index: PageTableIndex,
                          l2_index: PageTableIndex)
                          -> Self {
-        let mut addr = 0;
-        addr.set_bits(39..48, Into::<usize>::into(l4_index) as u64);
-        addr.set_bits(30..39, Into::<usize>::into(l3_index) as u64);
-        addr.set_bits(21..30, Into::<usize>::into(l2_index) as u64);
+        let mut raw_addr = 0;
+        raw_addr.set_bits(39..48, l4_index.into());
+        raw_addr.set_bits(30..39, l3_index.into());
+        raw_addr.set_bits(21..30, l2_index.into());
 
-        Self { m_addr: X64VirtAddr::new(addr) }
+        Self { m_raw_addr: raw_addr }
     }
 
     fn from_1gib_indices(l4_index: PageTableIndex, l3_index: PageTableIndex) -> Self {
-        let mut addr = 0;
-        addr.set_bits(39..48, Into::<usize>::into(l4_index) as u64);
-        addr.set_bits(30..39, Into::<usize>::into(l3_index) as u64);
+        let mut raw_addr = 0;
+        raw_addr.set_bits(39..48, l4_index.into());
+        raw_addr.set_bits(30..39, l3_index.into());
 
-        Self { m_addr: X64VirtAddr::new(addr) }
+        Self { m_raw_addr: raw_addr }
     }
 
     fn level_4_index(&self) -> u16 {
-        u16::from(self.m_addr.p4_index())
+        self.m_raw_addr.bits_at(39..48) as u16
     }
 
     fn level_3_index(&self) -> u16 {
-        u16::from(self.m_addr.p3_index())
+        self.m_raw_addr.bits_at(30..39) as u16
     }
 
     fn level_2_index(&self) -> u16 {
-        u16::from(self.m_addr.p2_index())
+        self.m_raw_addr.bits_at(21..30) as u16
     }
 
     fn level_1_index(&self) -> u16 {
-        u16::from(self.m_addr.p1_index())
+        self.m_raw_addr.bits_at(12..21) as u16
     }
 }
 
 impl TryFrom<usize> for HwVirtAddr {
     type Error = AddressErr;
 
-    fn try_from(value: usize) -> Result<Self, Self::Error> {
-        X64VirtAddr::try_new(value as u64).map(|addr| Self { m_addr: addr })
-                                          .map_err(|_| AddressErr(value))
+    fn try_from(raw_addr: usize) -> Result<Self, Self::Error> {
+        match raw_addr.bits_at(47..64) {
+            0 | 0x1ffff => Ok(Self { m_raw_addr: raw_addr }),
+            1 => Ok(Self::new(raw_addr)),
+            _ => Err(AddressErr(raw_addr))
+        }
     }
 }

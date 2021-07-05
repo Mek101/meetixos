@@ -19,7 +19,7 @@ pub mod spin;
 pub struct Mutex<R, T>
     where R: BackRawMutex,
           T: ?Sized {
-    m_back_mutex: R,
+    m_back_raw_mutex: R,
     m_held_data: UnsafeCell<T>
 }
 
@@ -29,18 +29,18 @@ impl<R, T> Mutex<R, T> where R: ConstCreatBackRawMutex {
      * `BackRawMutex`
      */
     pub const fn const_new(value: T) -> Self {
-        Self { m_back_mutex: R::CONST_CREAT,
+        Self { m_back_raw_mutex: R::CONST_CREAT,
                m_held_data: UnsafeCell::new(value) }
     }
 }
 
-impl<R, T> Mutex<R, T> where R: FallibleCreatBackRawMutex {
+impl<R, T> Mutex<R, T> where R: CreatMayFailBackRawMutex {
     /**
      * Constructs a `Mutex` wrapping the given `value` and a may-fail
      * `BackRawMutex`
      */
     pub fn new(value: T) -> Result<Self, R::CreatError> {
-        Ok(Self { m_back_mutex: R::creat_raw()?,
+        Ok(Self { m_back_raw_mutex: R::try_creat()?,
                   m_held_data: UnsafeCell::new(value) })
     }
 }
@@ -50,7 +50,7 @@ impl<R, T> Mutex<R, T> where R: BackRawMutex {
      * Constructs a `Mutex` from his fundamental components
      */
     pub const fn raw_new(back_mutex: R, value: T) -> Self {
-        Self { m_back_mutex: back_mutex,
+        Self { m_back_raw_mutex: back_mutex,
                m_held_data: UnsafeCell::new(value) }
     }
 
@@ -76,7 +76,7 @@ impl<R, T> Mutex<R, T>
      */
     #[inline]
     pub fn lock(&self) -> MutexDataGuard<'_, R, T> {
-        self.m_back_mutex.do_lock();
+        self.m_back_raw_mutex.do_lock();
 
         MutexDataGuard::new(self)
     }
@@ -87,7 +87,7 @@ impl<R, T> Mutex<R, T>
      */
     #[inline]
     pub fn try_lock(&self) -> Option<MutexDataGuard<'_, R, T>> {
-        if self.m_back_mutex.do_try_lock() {
+        if self.m_back_raw_mutex.do_try_lock() {
             Some(MutexDataGuard::new(self))
         } else {
             None
@@ -99,7 +99,7 @@ impl<R, T> Mutex<R, T>
      */
     #[inline]
     pub unsafe fn force_unlock(&self) {
-        self.m_back_mutex.do_unlock()
+        self.m_back_raw_mutex.do_unlock()
     }
 
     /**
@@ -107,7 +107,7 @@ impl<R, T> Mutex<R, T>
      */
     #[inline]
     pub fn is_locked(&self) -> bool {
-        self.m_back_mutex.do_is_locked()
+        self.m_back_raw_mutex.do_is_locked()
     }
 
     /**
@@ -115,7 +115,7 @@ impl<R, T> Mutex<R, T>
      */
     #[inline]
     pub unsafe fn raw_mutex(&self) -> &R {
-        &self.m_back_mutex
+        &self.m_back_raw_mutex
     }
 
     /**
@@ -132,7 +132,7 @@ impl<R, T> Mutex<R, T>
      * Returns the mutable pointer to the held data
      */
     #[inline]
-    pub fn data_ptr(&self) -> *mut T {
+    pub unsafe fn data_ptr(&self) -> *mut T {
         self.m_held_data.get()
     }
 }
@@ -211,7 +211,7 @@ pub trait ConstCreatBackRawMutex: BackRawMutex {
  * Interface on which the `Mutex` relies to create the `BackRawMutex` with
  * failure
  */
-pub trait FallibleCreatBackRawMutex: BackRawMutex {
+pub trait CreatMayFailBackRawMutex: BackRawMutex {
     /**
      * Customizable creation error type
      */
@@ -221,6 +221,6 @@ pub trait FallibleCreatBackRawMutex: BackRawMutex {
      * Creates a new `BackRawMutex` implementation which may fail if, for
      * example, relies on services of the operating system
      */
-    fn creat_raw() -> Result<Self, Self::CreatError>
+    fn try_creat() -> Result<Self, Self::CreatError>
         where Self: Sized;
 }

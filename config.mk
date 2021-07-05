@@ -32,7 +32,7 @@ CARGO := $(shell which cargo)
 # -- -- -- -- -- -- -- -- -- -- -- -- Rust Flags -- -- -- -- -- -- -- -- -- -- -- -- --
 #
 
-RUSTC_FLAGS ?= -Zmacro-backtrace
+RUSTC_FLAGS ?= -Zmacro-backtrace -Cforce-frame-pointers=y
 CARGO_FLAGS ?= --color=always
 
 ifeq ($(BUILD_MODE),release)
@@ -70,6 +70,7 @@ endif
 RSYNC ?= $(shell which rsync)
 RM    ?= $(shell which rm)
 CP    ?= $(shell which cp)
+MV    ?= $(shell which mv)
 MKDIR ?= $(shell which mkdir)
 
 ifeq ($(ARCH), x86_64)

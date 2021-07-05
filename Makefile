@@ -10,9 +10,9 @@ include config.mk
 # -- -- -- -- -- -- -- -- -- -- -- Project Variables -- -- -- -- -- -- -- -- -- -- --
 #
 
-SRC_DIRS ?= Kernel UKLibs Userland
-DOC_DIR  ?= $(BUILD_PREFIX)/Doc
-TARGET   ?= $(shell pwd)/Userland/$(TARGET_PREFIX)/userland.json
+SRC_DIRS   ?= Kernel UKLibs Userland
+DOC_DIR    ?= $(BUILD_PREFIX)/Doc
+DOC_TARGET ?= $(shell pwd)/Userland/$(TARGET_PREFIX)/userland.json
 
 #
 # -- -- -- -- -- -- -- -- -- -- -- -- -- Make Targets -- -- -- -- -- -- -- -- -- -- -- --
@@ -56,7 +56,7 @@ doc: format_build_src
 	$(V) cd $(DOC_DIR) &&                                 \
              RUSTFLAGS="$(RUSTC_FLAGS)"                   \
              CARGO_TARGET_DIR="$(DOC_DIR)/Target/$(ARCH)" \
-                 $(CARGO) doc --open --target $(TARGET) --all-features
+                 $(CARGO) doc --open --target $(DOC_TARGET) --all-features
 
 format_build_src: $(DOC_DIR)/rustfmt.toml
 	$(V) echo "- Formatting build-doc sources..."

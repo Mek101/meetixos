@@ -107,7 +107,8 @@ impl<W> Log for Logger<W> where W: LoggerWriter {
                    color_escape,
                    record.level(), /* human readable log-level */
                    Self::ESC_CYAN,
-                   record.target(), /* path to the rust module relative to the Kernel */
+                   record.target(), /* path to the rust module relative to the
+                                     * Kernel */
                    color_escape,
                    record.args()).unwrap();
         }

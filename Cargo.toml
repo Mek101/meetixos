@@ -1,18 +1,21 @@
 [workspace]
 members = [
-    # Kernel Crates
+    # NewKernel Crates
+    "NewKernel",
     "Kernel",
     "Kernel/HHLoader",
     "Kernel/SharedCode",
-    # User/Kernel Libraries
-    "UKLibs/LibApi",
+    # Userland/Kernel Libraries
+    "UKLibs/LibApiData",
     "UKLibs/LibBits",
     "UKLibs/LibHeap",
     "UKLibs/LibHelps",
-    "UKLibs/LibMacros",
-    "UKLibs/LibOS",
     "UKLibs/LibSymbols",
     "UKLibs/LibSync",
+    # Userland Libraries
+    "Userland/UsrLibs/LibApi",
+    "Userland/UsrLibs/LibRt",
+    "Userland/UsrLibs/LibMxStd",
     # App Crates
     "Userland/Apps/ExampleApp",
     # Binary Crates

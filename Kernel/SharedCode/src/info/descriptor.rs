@@ -8,8 +8,12 @@ use crate::{
     mem::paging::{
         frame::VirtFrameRangeIncl,
         Page2MiB
-    },
-    os::str_utils
+    }
+};
+use helps::str::{
+    copy_str_to_u8_buf,
+    u8_ptr_to_str_slice,
+    u8_slice_to_str_slice
 };
 
 /**
@@ -55,7 +59,7 @@ impl LoaderInfo {
                bootloader_name: &str)
                -> Self {
         let mut name_buffer = [0; BOOTLOADER_NAME_LEN_MAX];
-        str_utils::copy_str_to_u8_buf(&mut name_buffer, bootloader_name);
+        copy_str_to_u8_buf(&mut name_buffer, bootloader_name);
 
         Self { m_cmdline_args: cmdline_args,
                m_vm_layout: vm_layout,
@@ -113,7 +117,7 @@ impl LoaderInfo {
      * Returns the Kernel symbols as slice
      */
     pub fn kernel_symbols_slice(&self) -> &str {
-        str_utils::u8_ptr_to_str_slice(self.m_kern_symbols, self.m_kern_symbols_len)
+        u8_ptr_to_str_slice(self.m_kern_symbols, self.m_kern_symbols_len)
     }
 
     /**
@@ -121,6 +125,6 @@ impl LoaderInfo {
      */
     pub fn bootloader_name(&self) -> &str {
         let name_slice = &self.m_bootloader_name[..self.m_bootloader_name_len];
-        str_utils::u8_slice_to_str_slice(name_slice)
+        u8_slice_to_str_slice(name_slice)
     }
 }

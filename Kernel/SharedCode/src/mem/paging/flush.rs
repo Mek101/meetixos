@@ -189,7 +189,7 @@ pub trait MapFlusher {
  */
 pub(crate) trait HwMapFlusherBase {
     /**  
-     * Constructs a `HwMapFlusherBase` based object
+     * Constructs a `HwMapFlusherBase` based obj
      */
     fn new() -> Self;
 

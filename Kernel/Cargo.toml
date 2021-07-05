@@ -8,14 +8,10 @@ authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
 # -------------------------------- Kernel Private Crates ------------------------------- #
 shared = { path = "SharedCode" }
 
-[target.'cfg(target_arch = "x86_64")'.dependencies]
-# ------------------------ External x86_64 Thirdy Party Crates ------------------------- #
-x86_64 = "*"
-
 # ------------------------------ MeetiX Libraries Crates ------------------------------- #
-api     = { path = "../UKLibs/LibApi",  features = ["enable_kernel_methods"] }
-heap    = { path = "../UKLibs/LibHeap", features = ["disable_locked"] }
-sync    = { path = "../UKLibs/LibSync" }
-symbols = { path = "../UKLibs/LibSymbols" }
-bits    = { path = "../UKLibs/LibBits" }
-helps   = { path = "../UKLibs/LibHelps" }
+bits     = { path = "../UKLibs/LibBits" }
+heap     = { path = "../UKLibs/LibHeap" }
+sync     = { path = "../UKLibs/LibSync" }
+helps    = { path = "../UKLibs/LibHelps" }
+symbols  = { path = "../UKLibs/LibSymbols" }
+api_data = { path = "../UKLibs/LibApiData"}

@@ -1,27 +1,21 @@
 #![no_std]
-#![no_main]
 
-use core::panic::PanicInfo;
-
-use api::objs::{
-    impls::file::File,
-    object::UserCreatable
+use mx_std::{
+    convert::From,
+    handle::Result,
+    obj::{
+        impls::file::File,
+        UserCreatableObject
+    },
+    path::Path
 };
 
-#[no_mangle]
-pub unsafe extern "C" fn _start() {
-    let f = File::creat().for_read()
-                         .for_write()
-                         .apply_for("/Users/Marco/Docs/example.txt")
-                         .unwrap();
+fn main() -> Result<()> {
+    let file_path = Path::from("/Users/Marco/Docs/example.txt");
+    let f = File::creat().for_read().for_write().apply_for(&file_path)?;
 
     let mut _read_buf = [0u8; 512];
-    f.read(&mut _read_buf).unwrap();
+    f.read(&mut _read_buf)?;
 
-    /* cannot do anything for now :-( */
-}
-
-#[panic_handler]
-fn panic_handler(_info: &PanicInfo) -> ! {
-    loop { /* halt forever */ }
+    Ok(())
 }

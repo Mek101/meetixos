@@ -9,6 +9,11 @@ use core::{
     }
 };
 
+use num_enum::{
+    IntoPrimitive,
+    TryFromPrimitive
+};
+
 use crate::{
     addr::{
         phys::PhysAddr,
@@ -21,11 +26,15 @@ use crate::{
         PageSize
     }
 };
+use bits::flags::{
+    BitFlags,
+    BitFlagsValues
+};
 
 /**
  * Raw page table structure.
  *
- * It is ensured by the compiler that this object is always page aligned.
+ * It is ensured by the compiler that this obj is always page aligned.
  *
  * Internally contains `HwPageDirSupport::PT_ENTRIES_COUNT` entries of
  * `PageTableEntry` structures that they could point to the next page
@@ -121,7 +130,7 @@ impl PageTableEntry {
      */
     pub fn phys_frame<S>(&self) -> Result<PhysFrame<S>, PageTableEntryErr>
         where S: PageSize {
-        /* since this method is primarily called by the PageDir object to obtain
+        /* since this method is primarily called by the PageDir obj to obtain
          * physical frame to the next PageTable here is important the order on which
          * the controls are performed.
          * First of all must be checked whether the requested physical frame size is
@@ -131,9 +140,9 @@ impl PageTableEntry {
          * legal to be NOT present due to demand paging, then the PRESENT flag
          * presence is tested after because of this
          */
-        if !S::IS_BIG && self.flags().is_huge_page() {
+        if !S::IS_BIG && self.flags().is_enabled(PTFlagsBits::HugePage) {
             Err(PageTableEntryErr::InUseForBigFrame)
-        } else if !self.flags().is_present() {
+        } else if !self.flags().is_enabled(PTFlagsBits::Present) {
             Err(PageTableEntryErr::PhysFrameNotPresent)
         } else {
             Ok(self.address().containing_frame())
@@ -144,9 +153,11 @@ impl PageTableEntry {
      * Updates the `PageTableEntry` data with the given `PhysFrame` and
      * the given `PTFlags`
      */
-    pub fn set_mapping<S>(&mut self, phys_frame: PhysFrame<S>, pt_flags: PTFlags)
+    pub fn set_mapping<S>(&mut self,
+                          phys_frame: PhysFrame<S>,
+                          pt_flags: BitFlags<usize, PTFlagsBits>)
         where S: PageSize {
-        self.m_entry_data = phys_frame.start_addr().as_usize() | pt_flags.bits();
+        self.m_entry_data = phys_frame.start_addr().as_usize() | pt_flags.raw_bits();
     }
 
     /**
@@ -169,15 +180,15 @@ impl PageTableEntry {
     /**
      * Returns the `PTFlags` for this `PageTableEntry`
      */
-    pub fn flags(&self) -> PTFlags {
-        PTFlags::from_bits_truncate(self.m_entry_data)
+    pub fn flags(&self) -> BitFlags<usize, PTFlagsBits> {
+        BitFlags::from_raw_truncate(self.m_entry_data)
     }
 
     /**
      * Updates only the `PTFlags` of this `PageTableEntry`
      */
-    pub fn set_flags(&mut self, flags: PTFlags) {
-        self.m_entry_data = self.address().as_usize() | flags.bits();
+    pub fn set_flags(&mut self, flags: BitFlags<usize, PTFlagsBits>) {
+        self.m_entry_data = self.address().as_usize() | flags.raw_bits();
     }
 
     /**
@@ -233,74 +244,80 @@ impl Into<u16> for PageTableIndex {
     }
 }
 
-ext_bitflags! {
+/**
+ * Exposes an architecture independent set of `PageTable`'s flags
+ * primarily used by the `PageDir` obj.
+ *
+ * Not all the following flags have meaning in all the supported
+ * architectures, but are supported and used to have a common layer
+ */
+#[repr(usize)]
+#[derive(Debug)]
+#[derive(Copy, Clone)]
+#[derive(TryFromPrimitive, IntoPrimitive)]
+pub enum PTFlagsBits {
     /**
-     * Exposes an architecture independent set of `PageTable`'s flags
-     * primarily used by the `PageDir` object.
-     *
-     * Not all the following flags have meaning in all the supported
-     * architectures, but are supported and used to have a common layer
+     * Tells whether the `PageTableEntry` contains a valid `PhysFrame`
      */
-    pub struct PTFlags: usize {
-        /**
-         * Tells whether the `PageTableEntry` contains a valid `PhysFrame`
-         */
-        const PRESENT    = HwPageDirSupport::PTE_PRESENT;
+    Present   = HwPageDirSupport::PTE_PRESENT,
 
-        /**
-         * Tells whether the `PageTable` or the `PageTableEntry` is readable
-         */
-        const READABLE   = HwPageDirSupport::PTE_READABLE;
+    /**
+     * Tells whether the `PageTable` or the `PageTableEntry` is readable
+     */
+    Readable  = HwPageDirSupport::PTE_READABLE,
 
-        /**
-         * Tells whether the `PageTable` or the `PageTableEntry` is writeable
-         */
-        const WRITEABLE  = HwPageDirSupport::PTE_WRITEABLE;
+    /**
+     * Tells whether the `PageTable` or the `PageTableEntry` is writeable
+     */
+    Writeable = HwPageDirSupport::PTE_WRITEABLE,
 
-        /** Tells whether the `PageTableEntry` is a global page
-         */
-        const GLOBAL     = HwPageDirSupport::PTE_GLOBAL;
+    /**
+     * Tells whether the `PageTableEntry` is a global page
+     */
+    Global    = HwPageDirSupport::PTE_GLOBAL,
 
-        /**
-         * Tells whether the `PageTableEntry`'s references a big `PhysFrame`
-         */
-        const HUGE_PAGE  = HwPageDirSupport::PTE_HUGE;
+    /**
+     * Tells whether the `PageTableEntry`'s references a big `PhysFrame`
+     */
+    HugePage  = HwPageDirSupport::PTE_HUGE,
 
-        /**
-        * Tells whether the `PageTable` or the `PageTableEntry` was accessed
-         * (i.e read)
-         * Note that this flag is applied by the CPU
-         */
-        const ACCESSED   = HwPageDirSupport::PTE_ACCESSED;
+    /**
+     * Tells whether the `PageTable` or the `PageTableEntry` was accessed
+     * (i.e read)
+     * Note that this flag is applied by the CPU
+     */
+    Accessed  = HwPageDirSupport::PTE_ACCESSED,
 
-        /**
-         * Tells whether the `PageTable` or the `PageTableEntry` is dirty
-         * (i.e written)
-         * Note that this flag is applied by the CPU
-         */
-        const DIRTY      = HwPageDirSupport::PTE_DIRTY;
+    /**
+     * Tells whether the `PageTable` or the `PageTableEntry` is dirty
+     * (i.e written)
+     * Note that this flag is applied by the CPU
+     */
+    Dirty     = HwPageDirSupport::PTE_DIRTY,
 
-        /**
-         * Tells whether the `PageTableEntry` allows the execution of code
-         */
-        const NO_EXECUTE = HwPageDirSupport::PTE_NO_EXECUTE;
+    /**
+     * Tells whether the `PageTableEntry` allows the execution of code
+     */
+    NoExecute = HwPageDirSupport::PTE_NO_EXECUTE,
 
-        /**
-         * Tells whether the `PageTable` or the `PageTableEntry` is accessible
-         * by the userspace
-         */
-        const USER       = HwPageDirSupport::PTE_USER;
-    }
+    /**
+     * Tells whether the `PageTable` or the `PageTableEntry` is accessible
+     * by the userspace
+     */
+    User      = HwPageDirSupport::PTE_USER
+}
+
+impl BitFlagsValues for PTFlagsBits {
 }
 
 /**
  * Lists the errors that could occur when call
  * `PageTableEntry::phys_frame()`
  */
-#[repr(usize)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 pub enum PageTableEntryErr {
     /**
      * The `PhysFrame` is not present (i.e the entry haven't the
@@ -324,7 +341,8 @@ pub enum PageTableEntryErr {
  */
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq)]
+#[derive(PartialOrd, Ord)]
 pub enum PageTableLevel {
     Level4,
     Level3,

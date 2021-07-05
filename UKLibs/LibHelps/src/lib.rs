@@ -1,7 +1,6 @@
 /*! # Helpers & Conveniences Library
  *
- * Contains a little amount of helpers and conveniences to perform certain
- * common operations
+ * Contains helpers and conveniences to perform certain common operations
  */
 
 #![no_std]

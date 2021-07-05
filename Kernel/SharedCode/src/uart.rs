@@ -13,7 +13,7 @@ use crate::arch::uart::HwUart;
 /**
  * Simple arch independent interface for UART writing.
  *
- * The object implements `fmt::Write`, so it is possible to use all the
+ * The obj implements `fmt::Write`, so it is possible to use all the
  * formatting methods/macros
  */
 pub struct Uart {
@@ -50,7 +50,7 @@ impl fmt::Write for Uart {
  */
 pub(crate) trait HwUartBase: fmt::Write {
     /**
-     * Constructs an uninitialized `HwUartBase` based object
+     * Constructs an uninitialized `HwUartBase` based obj
      */
     fn new() -> Self;
 
@@ -58,14 +58,14 @@ pub(crate) trait HwUartBase: fmt::Write {
      * Initializes the underling hardware to make it active and ready to
      * receive bytes to write.
      *
-     * The method is ensured by the upper encapsulating object that is
+     * The method is ensured by the upper encapsulating obj that is
      * called only once per instance
      */
     fn init_hw(&mut self) -> bool;
 }
 
 /**
- * Encapsulates a possibly uninitialized `HwUartBase` based object and
+ * Encapsulates a possibly uninitialized `HwUartBase` based obj and
  * manages atomically his initialization
  */
 struct UartWriterInner<T>

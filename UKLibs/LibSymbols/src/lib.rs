@@ -1,4 +1,4 @@
-/*! # Symbols mangling and stack trace support
+/*! # Symbols Mangling & Stack Trace Support Library
  *
  * Provides primitives to demangle the rust compiled symbols and to show the
  * stack trace
