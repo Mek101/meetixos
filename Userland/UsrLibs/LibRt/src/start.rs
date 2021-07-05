@@ -13,9 +13,10 @@ use api_data::{
  * Entry point for userspace applications
  */
 #[lang = "start"]
-unsafe extern "C" fn lang_start<T>(rust_entry_point: fn() -> T,
-                                   _argc: isize,
-                                   _argv: *const *const u8)
+fn lang_start<T>(rust_entry_point: fn() -> T,
+                 _argc: isize,
+                 _argv: *const *const u8)
+                 -> isize
     where T: Termination + 'static {
     Proc::exit(rust_entry_point().report());
 }
@@ -34,6 +35,15 @@ pub trait Termination {
 impl Termination for () {
     fn report(self) -> TaskExitStatus {
         TaskExitStatus::Success
+    }
+}
+
+impl Termination for Result<(), OsError> {
+    fn report(self) -> TaskExitStatus {
+        match self {
+            Ok(_) => TaskExitStatus::Success,
+            Err(os_error) => TaskExitStatus::WithError(os_error)
+        }
     }
 }
 

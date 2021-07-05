@@ -30,7 +30,6 @@ use crate::{
         Object
     },
     task::{
-        impls::thread::Thread,
         Task,
         TaskHandle
     }

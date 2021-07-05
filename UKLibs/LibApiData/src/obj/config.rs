@@ -15,6 +15,7 @@ use crate::{
         grants::RawObjGrants,
         types::ObjType
     },
+    path::PathComponent,
     sys::AsSysCallPtr
 };
 
@@ -30,7 +31,7 @@ pub type ObjConfigFlags = BitFlags<usize, ObjConfigBits>;
 #[derive(Copy, Clone)]
 pub struct RawObjConfig<'a> {
     m_type: ObjType,
-    m_path: Option<&'a str>,
+    m_path: Option<&'a [PathComponent]>,
     m_flags: ObjConfigFlags,
     m_grants: RawObjGrants,
     m_data_size: Option<usize>
@@ -72,14 +73,14 @@ impl<'a> RawObjConfig<'a> {
     /**
      * Returns the optionally stored path
      */
-    pub fn path(&self) -> Option<&'a str> {
+    pub fn path(&self) -> Option<&'a [PathComponent]> {
         self.m_path
     }
 
     /**
      * Sets the path to the `Object` to open
      */
-    pub fn set_path(&mut self, path: &'a str) {
+    pub fn set_path(&mut self, path: &'a [PathComponent]) {
         self.m_path = Some(path);
     }
 

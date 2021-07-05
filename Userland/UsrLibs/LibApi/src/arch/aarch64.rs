@@ -1,6 +1,9 @@
 /*! aarch64 Kernel function call */
 
-use api_data::sys::SysCallPayload;
+use api_data::sys::{
+    AsSysCallPtr,
+    SysCallPayload
+};
 
 /**
  * Performs the `svc0` instruction to switch to the kernel with the given
@@ -8,5 +11,7 @@ use api_data::sys::SysCallPayload;
  */
 #[inline(always)]
 pub(crate) fn do_syscall(syscall_payload: &mut SysCallPayload) {
-    asm!("svc #0", in("x0") syscall_payload.as_syscall_ptr());
+    unsafe {
+        asm!("svc #0", in("x0") syscall_payload.as_syscall_ptr());
+    }
 }

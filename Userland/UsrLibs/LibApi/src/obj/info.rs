@@ -5,10 +5,7 @@ use core::ops::{
     DerefMut
 };
 
-use api_data::obj::{
-    info::RawObjInfo,
-    types::ObjType
-};
+use api_data::obj::info::RawObjInfo;
 
 use crate::{
     entity::{
@@ -23,8 +20,7 @@ use crate::{
         grants::ObjGrants,
         ObjHandle,
         Object
-    },
-    time::Instant
+    }
 };
 
 /**

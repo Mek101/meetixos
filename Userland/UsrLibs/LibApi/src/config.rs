@@ -1,7 +1,5 @@
 /*! Configuration Trait */
 
-use core::marker::PhantomData;
-
 use num_enum::{
     IntoPrimitive,
     TryFromPrimitive

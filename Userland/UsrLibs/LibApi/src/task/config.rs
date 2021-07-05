@@ -16,7 +16,6 @@ use api_data::{
         modes::TaskExecCpu,
         thread::{
             RUserThreadEntry,
-            ThreadEntryData,
             UserThreadArg
         },
         TaskId

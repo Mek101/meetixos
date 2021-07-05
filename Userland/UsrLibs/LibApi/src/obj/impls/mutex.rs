@@ -9,10 +9,7 @@ use api_data::{
     }
 };
 use sync::{
-    guards::{
-        LockGuardNonSendable,
-        LockGuardShareability
-    },
+    guards::LockGuardNonSendable,
     mutex::{
         BackRawMutex,
         CreatMayFailBackRawMutex

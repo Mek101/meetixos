@@ -10,7 +10,6 @@ use api_data::{
     },
     task::{
         exit::TaskExitStatus,
-        modes::WaitReason,
         thread::{
             RCleanerThreadEntry,
             ThreadEntryData
@@ -67,7 +66,7 @@ impl Thread {
     pub fn pause(&self) -> Result<()> {
         self.task_handle()
             .kern_handle()
-            .inst_kern_call_(KernFnPath::Thread(KernThreadFnId::Join))
+            .inst_kern_call_0(KernFnPath::Thread(KernThreadFnId::Join))
             .map(|_| ())
     }
 

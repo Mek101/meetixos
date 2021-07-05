@@ -5,7 +5,7 @@
  */
 
 #![no_std]
-#![feature(asm, in_band_lifetimes)]
+#![feature(asm, in_band_lifetimes, min_specialization)]
 
 extern crate alloc;
 

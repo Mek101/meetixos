@@ -5,6 +5,7 @@
  */
 
 #![no_std]
+#![feature(lang_items, alloc_error_handler)]
 
 extern crate alloc;
 

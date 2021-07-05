@@ -59,7 +59,7 @@ impl File {
             .inst_kern_call_2(KernFnPath::File(KernFileFnId::ReadData),
                               buf.as_mut_ptr() as usize,
                               buf.len())
-            .map(|read_bytes| &buf[..read_bytes])
+            .map(move |read_bytes| &buf[..read_bytes])
     }
 
     /**

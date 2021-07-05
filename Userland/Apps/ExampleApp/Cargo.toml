@@ -6,4 +6,4 @@ authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
 
 [dependencies]
 # ------------------------------ MeetiX Libraries Crates ------------------------------- #
-std = { path = "../../UsrLibs/LibStd" }
+mx_std = { path = "../../UsrLibs/LibMxStd" }

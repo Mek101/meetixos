@@ -48,7 +48,7 @@ impl Dir {
         self.obj_handle()
             .kern_handle()
             .inst_kern_call_1(KernFnPath::Dir(KernDirFnId::NextChild),
-                              dir_entry.as_syscall_ptr())
+                              dir_entry.as_syscall_ptr_mut())
             .map(|_| dir_entry)
     }
 

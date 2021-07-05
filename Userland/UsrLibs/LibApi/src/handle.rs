@@ -30,6 +30,7 @@ pub struct KernHandle {
     m_raw_handle: RawKernHandle
 }
 
+#[allow(dead_code)]
 impl KernHandle {
     /**
      * Constructs a `KernHandle` from the `raw_handle` value given

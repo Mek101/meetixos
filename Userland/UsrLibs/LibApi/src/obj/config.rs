@@ -32,7 +32,8 @@ use crate::{
         Object,
         SizeableDataObject,
         UserCreatableObject
-    }
+    },
+    path::Path
 };
 
 /**
@@ -85,7 +86,7 @@ impl<'a, T> ObjConfig<'a, T, CreatMode>
     }
 }
 
-impl<T> ObjConfig<T, OpenMode> where T: Object {
+impl<'a, T> ObjConfig<'a, T, OpenMode> where T: Object {
     /**
      * Constructs an empty `ObjConfig` for `Object` opening
      */
@@ -103,7 +104,7 @@ impl<T> ObjConfig<T, OpenMode> where T: Object {
     }
 }
 
-impl<T, M> ObjConfig<T, M>
+impl<'a, T, M> ObjConfig<'a, T, M>
     where T: Object + SizeableDataObject,
           M: ConfigMode
 {
@@ -116,7 +117,7 @@ impl<T, M> ObjConfig<T, M>
     }
 }
 
-impl<T, M> ObjConfig<T, M>
+impl<'a, T, M> ObjConfig<'a, T, M>
     where T: Object + ExecutableDataObject,
           M: ConfigMode
 {
@@ -130,7 +131,7 @@ impl<T, M> ObjConfig<T, M>
     }
 }
 
-impl<T, M> ObjConfig<T, M>
+impl<'a, T, M> ObjConfig<'a, T, M>
     where T: Object,
           M: ConfigMode
 {
@@ -172,8 +173,8 @@ impl<T, M> ObjConfig<T, M>
      * `Device`s are special cases, because they are volatile `Object`s, but
      * can be destroyed only by the kernel at system shutdown
      */
-    pub fn apply_for(&mut self, path: &'a str) -> Result<T> {
-        self.m_raw_config.set_path(path);
+    pub fn apply_for(&mut self, path: &'a Path) -> Result<T> {
+        self.m_raw_config.set_path(path.as_raw_components());
         self.apply_builder_config()
     }
 

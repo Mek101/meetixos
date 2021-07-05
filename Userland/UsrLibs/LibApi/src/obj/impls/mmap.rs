@@ -9,7 +9,6 @@ use core::{
         Deref,
         DerefMut
     },
-    ptr::slice_from_raw_parts_mut,
     slice
 };
 

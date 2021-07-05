@@ -12,7 +12,6 @@ use api_data::{
         fn_path::KernFnPath
     }
 };
-use helps::str::u8_slice_to_str_slice;
 
 use crate::{
     config::{
@@ -110,14 +109,14 @@ pub trait OsEntity: From<OsEntityHandle> + Default {
     /**
      * Returns an `OsEntityConfig` for `OsEntity` creation
      */
-    fn creat() -> OsEntityConfig<Self, CreatMode> {
+    fn creat<'a>() -> OsEntityConfig<'a, Self, CreatMode> {
         OsEntityConfig::<Self, CreatMode>::new()
     }
 
     /**
      * Returns an `OsEntityConfig` for `OsEntity` opening
      */
-    fn open() -> OsEntityConfig<Self, OpenMode> {
+    fn open<'a>() -> OsEntityConfig<'a, Self, OpenMode> {
         OsEntityConfig::<Self, OpenMode>::new()
     }
 

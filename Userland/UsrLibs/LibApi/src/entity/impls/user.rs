@@ -15,7 +15,6 @@ use api_data::{
 
 use crate::{
     entity::{
-        impls::group::OsGroup,
         OsEntity,
         OsEntityHandle
     },

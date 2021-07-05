@@ -6,6 +6,8 @@
 
 #![no_std]
 
+extern crate alloc;
+
 pub mod entity;
 pub mod error;
 pub mod limit;

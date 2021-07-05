@@ -4,8 +4,7 @@ use api_data::{
     sys::{
         codes::KernTaskFnId,
         fn_path::KernFnPath,
-        AsSysCallPtr,
-        RawKernHandle
+        AsSysCallPtr
     },
     task::{
         exit::TaskExitStatus,
@@ -143,14 +142,14 @@ pub trait Task: From<TaskHandle> {
     /**
      * Returns a `TaskConfig` for `Task` spawn
      */
-    fn spawn() -> TaskConfig<Self, CreatMode> {
+    fn spawn<'a>() -> TaskConfig<'a, Self, CreatMode> {
         TaskConfig::<Self, CreatMode>::new()
     }
 
     /**
      * Returns a `TaskConfig` for `Task` opening
      */
-    fn open() -> TaskConfig<Self, OpenMode> {
+    fn open<'a>() -> TaskConfig<'a, Self, OpenMode> {
         TaskConfig::<Self, OpenMode>::new()
     }
 
@@ -173,7 +172,7 @@ pub trait Task: From<TaskHandle> {
      * Returns the `TaskId` of this `Task`
      */
     fn os_id(&self) -> Result<TaskId> {
-        self.os_id()
+        self.task_handle().os_id()
     }
 
     /**

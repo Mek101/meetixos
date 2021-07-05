@@ -14,7 +14,7 @@ members = [
     # Userland Libraries
     "Userland/UsrLibs/LibApi",
     "Userland/UsrLibs/LibRt",
-    "Userland/UsrLibs/LibStd",
+    "Userland/UsrLibs/LibMxStd",
     # App Crates
     "Userland/Apps/ExampleApp",
     # Binary Crates

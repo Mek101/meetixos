@@ -56,7 +56,7 @@ impl Device {
             .inst_kern_call_2(KernFnPath::Device(KernDeviceFnId::Read),
                               buf.as_mut_ptr() as usize,
                               buf.len())
-            .map(|read_bytes| &buf[..read_bytes])
+            .map(move |read_bytes| &buf[..read_bytes])
     }
 
     /**
@@ -116,8 +116,10 @@ impl Device {
      * block unit is 1, for block devices use the `block_size`
      */
     pub fn set_pos(&self, mode: SeekMode) -> Result<usize> {
-        self.kern_call_1(KernFnPath::Device(KernDeviceFnId::SetPos),
-                         mode.as_syscall_ptr())
+        self.obj_handle()
+            .kern_handle()
+            .inst_kern_call_1(KernFnPath::Device(KernDeviceFnId::SetPos),
+                              mode.as_syscall_ptr())
     }
 
     /**

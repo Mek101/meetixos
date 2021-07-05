@@ -1,29 +1,32 @@
 /*! Objects management */
 
-use alloc::fmt::format;
-use core::{
-    any::type_name,
-    convert::TryInto,
-    result
-};
+/* TODO resolve Into<Object> and TryInto<Object> implementations
+ * use core::{
+ *     any::type_name,
+ *     convert::TryInto,
+ *     result
+ * };
+ * use api_data::error::{
+ *     class::OsErrorClass,
+ *     OsError
+ * };
+ * use crate::task::impls::{
+ *    Proc,
+ *    Thread
+ * };
+ */
 
 use api_data::{
-    error::{
-        class::OsErrorClass,
-        OsError
-    },
     obj::{
         info::RawObjInfo,
         modes::ObjRecvMode,
         types::ObjType,
-        uses::ObjUseBits,
-        RawObjHandle
+        uses::ObjUseBits
     },
     sys::{
         codes::KernObjectFnId,
         fn_path::KernFnPath,
-        AsSysCallPtr,
-        RawKernHandle
+        AsSysCallPtr
     },
     task::thread::RWatchThreadEntry
 };
@@ -43,13 +46,7 @@ use crate::{
         info::ObjInfo
     },
     task::{
-        impls::{
-            proc::Proc,
-            thread::{
-                c_thread_entry,
-                Thread
-            }
-        },
+        impls::thread::c_thread_entry,
         Task
     }
 };
@@ -93,7 +90,7 @@ impl ObjHandle {
         where T: Task {
         self.m_handle
             .inst_kern_call_1(KernFnPath::Object(KernObjectFnId::Send),
-                              recv_task.task_handle().kern_handle() as usize)
+                              recv_task.task_handle().kern_handle().raw_handle() as usize)
             .map(|_| ())
     }
 
@@ -144,7 +141,7 @@ impl ObjHandle {
         let mut raw_obj_info = RawObjInfo::default();
         self.m_handle
             .inst_kern_call_1(KernFnPath::Object(KernObjectFnId::Info),
-                              raw_obj_info.as_syscall_ptr())
+                              raw_obj_info.as_syscall_ptr_mut())
             .map(|_| raw_obj_info)
     }
 
@@ -167,40 +164,42 @@ impl ObjHandle {
     }
 }
 
-impl<T> Into<T> for ObjHandle where T: Object {
-    fn into(self) -> T {
-        let real_obj_type = self.info().unwrap_or_default().obj_type();
-
-        if real_obj_type == T::TYPE {
-            T::from(self)
-        } else {
-            panic!("ObjHandle({})::into::<{}>() - Failed, {} != {}",
-                   self.kern_handle().raw_handle(),
-                   type_name::<T>(),
-                   real_obj_type,
-                   T::TYPE);
-        }
-    }
-}
-
-impl<T> TryInto<T> for ObjHandle where T: Object {
-    type Error = OsError;
-
-    fn try_into(self) -> result::Result<T, Self::Error> {
-        let real_obj_type = self.info()?.obj_type();
-
-        if real_obj_type == T::TYPE {
-            Ok(T::from(self))
-        } else {
-            Err(OsError::new(OsErrorClass::TypesNotMatch,
-                             KernFnPath::Invalid,
-                             Some(self.kern_handle().raw_handle()),
-                             Proc::this().os_id()?,
-                             Thread::this().os_id()?,
-                             None))
-        }
-    }
-}
+/* TODO: the compiler reports: error: cannot specialize on trait
+ * `obj::Object` impl<T> Into<T> for ObjHandle where T: Object {
+ *     fn into(self) -> T {
+ *         let real_obj_type = self.info().unwrap_or_default().obj_type();
+ *
+ *         if real_obj_type == T::TYPE {
+ *             T::from(self)
+ *         } else {
+ *             panic!("ObjHandle({})::into::<{}>() - Failed, {} != {}",
+ *                    self.kern_handle().raw_handle(),
+ *                    type_name::<T>(),
+ *                    real_obj_type,
+ *                    T::TYPE);
+ *         }
+ *     }
+ * }
+ *
+ * impl<T> TryInto<T> for ObjHandle where T: Object {
+ *     type Error = OsError;
+ *
+ *     fn try_into(self) -> result::Result<T, Self::Error> {
+ *         let real_obj_type = self.info()?.obj_type();
+ *
+ *         if real_obj_type == T::TYPE {
+ *             Ok(T::from(self))
+ *         } else {
+ *             Err(OsError::new(OsErrorClass::TypesNotMatch,
+ *                              KernFnPath::Invalid,
+ *                              Some(self.kern_handle().raw_handle()),
+ *                              Proc::this().os_id()?,
+ *                              Thread::this().os_id()?,
+ *                              None))
+ *         }
+ *     }
+ * }
+ */
 
 /**
  * Common interface implemented by all the `ObjHandle` based objects.
@@ -228,14 +227,14 @@ pub trait Object: From<ObjHandle> + Default + Clone {
     /**
      * Returns an `ObjConfig` for `Object` opening
      */
-    fn open() -> ObjConfig<Self, OpenMode> {
+    fn open<'a>() -> ObjConfig<'a, Self, OpenMode> {
         ObjConfig::<Self, OpenMode>::new()
     }
 
     /**
      * Shares this `Object` instance with the given `Task`
      */
-    fn send(&self, recv_task: &T) -> Result<()>
+    fn send<T>(&self, recv_task: &T) -> Result<()>
         where T: Task {
         self.obj_handle().send(recv_task)
     }
@@ -304,7 +303,7 @@ pub trait UserCreatableObject: Object {
     /**
      * Returns an `ObjConfig` for `Object` creation
      */
-    fn creat() -> ObjConfig<Self, CreatMode> {
+    fn creat<'a>() -> ObjConfig<'a, Self, CreatMode> {
         ObjConfig::<Self, CreatMode>::new()
     }
 }
