@@ -1,6 +1,7 @@
 [workspace]
 members = [
-    # Kernel Crates
+    # NewKernel Crates
+    "NewKernel",
     "Kernel",
     "Kernel/HHLoader",
     "Kernel/SharedCode",

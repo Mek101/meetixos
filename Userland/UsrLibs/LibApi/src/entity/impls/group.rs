@@ -44,8 +44,8 @@ impl OsGroup {
      * The inserted user will have group permissions too for resources owned
      * by this `OsGroup`.
      *
-     * This call affects only the runtime tables of the Kernel, update the
-     * `/MeetiX/Configs/users_groups.xml` file to make it permanent
+     * This call affects only the runtime tables of the Kernel, update
+     * the `/MeetiX/Configs/users_groups.xml` file to make it permanent
      */
     pub fn add_user(&self, os_user: &OsUser) -> Result<()> {
         self.os_entity_handle()

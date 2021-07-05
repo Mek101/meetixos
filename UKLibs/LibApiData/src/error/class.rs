@@ -48,8 +48,8 @@ pub enum OsErrorClass {
     NotEnoughGrants,
 
     /**
-     * The previous system call was failed because the Kernel have exhausted
-     * the virtual/physical memory available
+     * The previous system call was failed because the Kernel have
+     * exhausted the virtual/physical memory available
      */
     NotEnoughMemory,
 

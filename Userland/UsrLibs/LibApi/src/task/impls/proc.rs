@@ -118,8 +118,9 @@ impl Proc {
     /**
      * Mount a new filesystem instance at `mnt_point`.
      *
-     * The Kernel loads a new filesystem instance which corresponds to the
-     * given `FSType` and connects it to the empty `mnt_point` given.
+     * The Kernel loads a new filesystem instance which corresponds to
+     * the given `FSType` and connects it to the empty `mnt_point`
+     * given.
      *
      * Depending on the `FSType` the `src_device` could be expected as valid
      * `Some` instance.

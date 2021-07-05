@@ -41,16 +41,16 @@ pub enum FsType {
     /**
      * Virtual Kernel Data information filesystem.
      *
-     * As virtual filesystem reads/writes the data using the Kernel internal
-     * APIs
+     * As virtual filesystem reads/writes the data using the Kernel
+     * internal APIs
      */
     KernData,
 
     /**
      * Virtual `Device` collection filesystem.
      *
-     * As virtual filesystem reads/writes the data using the Kernel internal
-     * APIs
+     * As virtual filesystem reads/writes the data using the Kernel
+     * internal APIs
      */
     Devices
 }

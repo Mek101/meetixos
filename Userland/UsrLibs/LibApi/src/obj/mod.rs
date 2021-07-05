@@ -271,9 +271,9 @@ pub trait Object: From<ObjHandle> + Default + Clone {
      * this method.
      *
      * The given `callback` must accept an `ObjUseInstant` as argument and
-     * must return a boolean that tells to the Kernel whether the callback
-     * must be re-called for the next event given via `filter` or must
-     * be unregistered.
+     * must return a boolean that tells to the Kernel whether the
+     * callback must be re-called for the next event given via `filter`
+     * or must be unregistered.
      *
      * Multiple `callback`s can be registered for different uses, but if the
      * given filters overlaps a previously registered callback an error will

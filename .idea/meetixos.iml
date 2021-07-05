@@ -25,6 +25,7 @@
       <sourceFolder url="file://$MODULE_DIR$/Userland/UsrLibs/LibApi/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Userland/UsrLibs/LibRt/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Userland/UsrLibs/LibMxStd/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/NewKernel/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/Userland/target" />
       <excludeFolder url="file://$MODULE_DIR$/Target" />

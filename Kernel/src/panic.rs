@@ -6,7 +6,8 @@ use crate::symbols::symbols_print_backtrace;
 use shared::logger::error;
 
 /**
- * Writes to the log output the Kernel panic message and halts the Kernel
+ * Writes to the log output the Kernel panic message and halts the
+ * Kernel
  */
 #[panic_handler]
 fn panic_handler(info: &PanicInfo) -> ! {

@@ -17,8 +17,8 @@ use num_enum::{
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum ObjRecvMode {
     /**
-     * Simply asks to the Kernel whether an `Object` of the requested type
-     * is already available into the `Task`'s receiving queue.
+     * Simply asks to the Kernel whether an `Object` of the requested
+     * type is already available into the `Task`'s receiving queue.
      *
      * If any `Object` is available the system call returns an error0
      */

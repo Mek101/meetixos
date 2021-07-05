@@ -1,7 +1,7 @@
 /*! # Higher Half Loader
  *
- * Implements the Kernel stage after the bootloader but before the Kernel
- * core.
+ * Implements the Kernel stage after the bootloader but before the
+ * Kernel core.
  *
  * This binary is responsible to initialize the architecture, randomize the
  * Kernel layout, initialize the physical memory bitmap, load and map the

@@ -49,7 +49,8 @@ use bits::flags::BitFlags;
  * addresses, remap stuffs with undefined consequences.
  *
  * So this is only an hardware abstraction layer to the paging manager, but
- * must be managed by an high level virtual memory manager into the Kernel
+ * must be managed by an high level virtual memory manager into the
+ * Kernel
  */
 pub struct PageDir {
     m_root_frame: PhysFrame<Page4KiB>,
@@ -363,8 +364,9 @@ impl PageDir {
              * 1) phys_frame is Some, explicit mapping is requested: we have to fill
              *    the entry with physical frame given and the flags
              * 2) phys_frame is None, demand paging mapping is requested: leave the
-             *    frame bits to 0 (the Kernel will receive a page fault when the page
-             *    will receive the first access) but fill up the flags bits
+             *    frame bits to 0 (the Kernel will receive a page fault when the
+             * page    will receive the first access) but fill up the flags
+             * bits
              *
              * Note that the if clause is
              * `if .. || !table_entry.flags().is_present()`

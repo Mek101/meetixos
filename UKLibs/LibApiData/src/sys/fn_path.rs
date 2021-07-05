@@ -28,10 +28,10 @@ use crate::sys::codes::{
 /**
  * Lists the callable Kernel function paths.
  *
- * Each variant represent a Kernel call class, which is the primary key of
- * the Kernel's routines table, and each class contains the specific codes
- * for the call class, which is the secondary key of the Kernel's routines
- * table
+ * Each variant represent a Kernel call class, which is the primary key
+ * of the Kernel's routines table, and each class contains the specific
+ * codes for the call class, which is the secondary key of the Kernel's
+ * routines table
  */
 #[derive(Debug)]
 #[derive(Copy, Clone)]

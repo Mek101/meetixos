@@ -11,7 +11,7 @@
     "linker": "rust-lld",
     "pre-link-args": {
         "ld.lld": [
-            "--script=Kernel/HHLoader/Targets/x86_64/linker.ld"
+            "--script=Kernel/Targets/x86_64/linker.ld"
         ]
     },
     "panic-strategy": "abort",

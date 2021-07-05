@@ -2,7 +2,7 @@
 
 use core::alloc::Layout;
 
-use heap::locked::raw::RawLazyLockedHeap;
+use heap::locked::RawLazyLockedHeap;
 use helps::align::align_up;
 use shared::{
     addr::Address,
@@ -30,6 +30,7 @@ use crate::mem::{
     },
     vm_layout::vml_layout
 };
+use core::ptr::NonNull;
 
 /* lazy allocator initialized by <init_heap()> */
 #[global_allocator]
@@ -62,7 +63,7 @@ fn heap_alloc_error_handler(layout: Layout) -> ! {
 /**
  * Supplies additional memory to the `HEAP_ALLOCATOR`
  */
-fn heap_mem_supplier(requested_size: usize) -> Option<(usize, usize)> {
+fn heap_mem_supplier(requested_size: usize) -> Option<(NonNull<u8>, usize)> {
     trace!("Called heap_mem_supplier({})", requested_size);
 
     /* align up the requested size to page boundary */
@@ -113,7 +114,12 @@ fn heap_mem_supplier(requested_size: usize) -> Option<(usize, usize)> {
 
             /* flush the TLB entries and return the address */
             map_flusher.flush();
-            Some((new_heap_to_map_range.start.start_addr().as_usize(), page_aligned_size))
+            Some((unsafe {
+                      NonNull::new_unchecked(new_heap_to_map_range.start
+                                                                  .start_addr()
+                                                                  .as_ptr_mut())
+                  },
+                  page_aligned_size))
         },
         Err(err) => {
             trace!("heap_mem_supplier: Failed to extend Kernel heap: cause: {}", err);
