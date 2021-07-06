@@ -6,6 +6,6 @@ mod arch;
 mod panic;
 
 #[no_mangle]
-pub unsafe extern "C" fn kernel_rust_start(_raw_info_ptr: usize) -> ! {
+pub extern "C" fn kernel_rust_start(_raw_info_ptr: usize) -> ! {
     loop {}
 }
