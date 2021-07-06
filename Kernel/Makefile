@@ -1,6 +1,6 @@
-#! Kernel Builder Script
+#! OldKernel Builder Script
 #!
-#! This Makefile is responsible to build/install/clean/doc the Kernel
+#! This Makefile is responsible to build/install/clean/doc the OldKernel
 
 include ../config.mk
 
@@ -8,81 +8,70 @@ include ../config.mk
 # -- -- -- -- -- -- -- -- -- -- -- Project Variables -- -- -- -- -- -- -- -- -- -- --
 #
 
-REPO_ROOT  ?= $(realpath ..)
-BUILD_DIR  ?= $(REPO_ROOT)/$(BUILD_PREFIX)
-KRN_TARGET ?= $(realpath $(TARGET_PREFIX)/kernel.json)
-HHL_TARGET ?= $(realpath HHLoader/$(TARGET_PREFIX)/hh_loader.json)
-DIST_DIR   ?= ../$(DIST_SYSROOT_PREFIX)/MeetiX
+REPO_ROOT     ?= $(realpath ..)
+BUILD_DIR     ?= $(REPO_ROOT)/$(BUILD_PREFIX)
+KERNEL_TARGET ?= $(realpath $(TARGET_PREFIX)/kernel.json)
+DIST_DIR      ?= $(realpath ../$(DIST_SYSROOT_PREFIX)/MeetiX)
 
 #
-# -- -- -- -- -- -- -- -- -- -- -- -- Kernel Paths -- -- -- -- -- -- -- -- -- -- -- --
+# -- -- -- -- -- -- -- -- -- -- -- -- OldKernel Paths -- -- -- -- -- -- -- -- -- -- -- --
 #
 
-KRN_BUILT_DIR ?= $(BUILD_DIR)/kernel/$(BUILD_MODE)
-HHL_BUILT_DIR ?= $(BUILD_DIR)/hh_loader/$(BUILD_MODE)
+KERNEL_BUILD_DIR ?= $(BUILD_DIR)/kernel/$(BUILD_MODE)
 
-BUILT_KRN    ?= $(KRN_BUILT_DIR)/kernel
-BUILT_HHL    ?= $(HHL_BUILT_DIR)/hh_loader
-KRN_CORE_MOD ?= $(KRN_BUILT_DIR)/kernel_bin.rs
-KRN_CORE_MAP ?= $(KRN_BUILT_DIR)/kernel_symbols.map
+BUILT_KERNEL       ?= $(KERNEL_BUILD_DIR)/kernel
+BUILT_PRE_KERNEL   ?= $(KERNEL_BUILD_DIR)/pre_kernel
+KERNEL_SYMBOLS     ?= $(KERNEL_BUILD_DIR)/kernel_symbols.rs
+PRE_KERNEL_SYMBOLS ?= $(KERNEL_BUILD_DIR)/empty_kernel_symbols.rs
 
-MX_KERNEL ?= $(HHL_BUILT_DIR)/mx_kernel
+FINAL_KERNEL ?= $(KERNEL_BUILD_DIR)/mx_kernel
 
 #
 # -- -- -- -- -- -- -- -- -- -- -- -- -- Sources -- -- -- ----  -- -- -- -- -- -- -- --
 #
 
-KRN_SOURCES ?= $(shell find src -name *.rs)
-HHL_SOURCES ?= $(shell find HHLoader/src -name *.rs -o -name *.S)
-SHF_SOURCES ?= $(shell find SharedCode/src -name *.rs)
-
-HHL_LINK_SRC ?= $(realpath HHLoader/$(TARGET_PREFIX)/linker.ld)
-KRN_LINK_SRC ?= $(realpath $(TARGET_PREFIX)/linker.ld)
-
-UK_LIBS_SRC ?= $(shell find ../UKLibs -name *.rs)
+KERNEL_SOURCES ?= $(shell find src -name *.rs -a -name *.S)
+UKLIBS_SOURCES ?= $(shell find $(realpath ../UKLibs) -name *.rs)
+SOURCES        ?= $(KERNEL_SOURCES) $(UKLIBS_SOURCES)
 
 #
 # -- -- -- -- -- -- -- -- -- -- -- -- -- Make Targets -- -- -- -- -- -- -- -- -- -- --
 #
 
 install: build
-	$(V) $(RSYNC) -a $(MX_KERNEL) $(DIST_DIR)
+	$(V) $(RSYNC) -a $(FINAL_KERNEL) $(DIST_DIR)
 
-build: $(MX_KERNEL)
-	$(V) echo "- Kernel Build completed..."
+build: $(FINAL_KERNEL)
+	$(V) echo "- Kernel Build Completed..."
 
-$(MX_KERNEL): $(BUILT_HHL)
-	$(V) echo "- Linking '$(basename $(MX_KERNEL))'"
-	$(V) $(CP) -f $(BUILT_HHL) $(MX_KERNEL)
+$(FINAL_KERNEL): $(BUILT_KERNEL)
+	$(V) echo "- Linking '$(basename $(FINAL_KERNEL))'"
+	$(V) $(MV) $(BUILT_KERNEL) $(FINAL_KERNEL)
 
-$(BUILT_HHL): $(KRN_CORE_MOD) $(KRN_CORE_MAP) $(HHL_SOURCES) $(HHL_LINK_SRC)
-	$(V) echo "- Building Kernel Loader..."
-	$(V) RUSTFLAGS="$(RUSTC_FLAGS)"                        \
-         KERNEL_BIN=$(KRN_CORE_MOD)                        \
-         KERNEL_SYM=$(KRN_CORE_MAP)                        \
-         CARGO_TARGET_DIR="$(BUILD_DIR)"                   \
-             $(CARGO) build $(CARGO_FLAGS)                 \
-                      --manifest-path HHLoader/Cargo.toml \
-                      --target $(HHL_TARGET)
+$(BUILT_KERNEL): $(KERNEL_SYMBOLS)
+	$(V) echo "- Updating Kernel Executable With Symbols..."
+	$(V) RUSTFLAGS="$(RUSTC_FLAGS)"       \
+         CARGO_TARGET_DIR=$(BUILD_DIR)    \
+         KERNEL_SYMBOLS=$(KERNEL_SYMBOLS) \
+         $(CARGO) build $(CARGO_FLAGS) --target $(KERNEL_TARGET)
 
-$(KRN_CORE_MOD): $(SHF_SOURCES) $(BUILT_KRN)
-	$(V) echo "- Writing Kernel Core Module..."
-	$(V) echo "const KERNEL_SIZE: usize = $$(stat --format %s $(BUILT_KRN));" >$(KRN_CORE_MOD)
-	$(V) echo >>$(KRN_CORE_MOD)
-	$(V) echo "#[link_section = \".kernel_core\"]" >>$(KRN_CORE_MOD)
-	$(V) echo "static KERNEL_BYTES: [u8; KERNEL_SIZE] = *include_bytes!(r\"$(BUILT_KRN)\");" >>$(KRN_CORE_MOD)
-	$(V) echo >>$(KRN_CORE_MOD)
+$(KERNEL_SYMBOLS): $(BUILT_PRE_KERNEL)
+	$(V) echo "- Writing Kernel Symbols..."
+	$(V) $(LLVM_NM) -n $(BUILT_PRE_KERNEL) | awk '{ if ($$2 == "T") printf("%s %s\n", $$1, $$3); }' | uniq >$(KERNEL_SYMBOLS)
 
-$(KRN_CORE_MAP): $(SHF_SOURCES) $(BUILT_KRN)
-	$(V) echo "- Writing Kernel Core Symbols Map..."
-	$(V) $(LLVM_NM) -n $(BUILT_KRN) | awk '{ if ($$2 != "a") printf("%s %s\n", $$1, $$3); }' | uniq >$(KRN_CORE_MAP)
+$(BUILT_PRE_KERNEL): $(SOURCES) $(PRE_KERNEL_SYMBOLS) $(KERNEL_TARGET)
+	$(V) echo "- Building Kernel Without Symbols..."
+	$(V) RUSTFLAGS="$(RUSTC_FLAGS)"           \
+         CARGO_TARGET_DIR=$(BUILD_DIR)        \
+         KERNEL_SYMBOLS=$(PRE_KERNEL_SYMBOLS) \
+         $(CARGO) build $(CARGO_FLAGS) --target $(KERNEL_TARGET)
+	$(V) $(MV) $(BUILT_KERNEL) $(BUILT_PRE_KERNEL)
 
-$(BUILT_KRN): $(SHF_SOURCES) $(KRN_SOURCES) $(KRN_LINK_SRC) $(UK_LIBS_SRC)
-	$(V) echo "- Building Kernel Core..."
-	$(V) RUSTFLAGS="$(RUSTC_FLAGS)"      \
-         CARGO_TARGET_DIR="$(BUILD_DIR)" \
-             $(CARGO) build $(CARGO_FLAGS) --target $(KRN_TARGET)
+$(PRE_KERNEL_SYMBOLS):
+	$(V) echo "- Writing Empty Kernel Symbols..."
+	$(V) $(MKDIR) -p $(dir $(PRE_KERNEL_SYMBOLS))
+	$(V) echo " " >$@
 
 clean:
 	$(V) echo "- Cleaning $(ARCH)/$(BUILD_MODE) Kernel..."
-	$(V) $(RM) -rf $(KRN_BUILT_DIR) $(HHL_BUILT_DIR)
+	$(V) $(RM) -rf $(KERNEL_BUILD_DIR)

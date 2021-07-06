@@ -7,11 +7,12 @@
     "target-c-int-width": "32",
     "os": "meetixos",
     "executables": true,
-    "linker-flavor": "ld.lld",
-    "linker": "rust-lld",
     "pre-link-args": {
-        "ld.lld": [
-            "--script=Kernel/Targets/x86_64/linker.ld"
+        "gcc": [
+            "-m64",
+            "-nodefaultlibs",
+            "-zmax-page-size=4096",
+            "-TKernel/Targets/x86_64/linker.ld"
         ]
     },
     "panic-strategy": "abort",

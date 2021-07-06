@@ -1,11 +1,11 @@
 [workspace]
 members = [
-    # NewKernel Crates
-    "NewKernel",
+    # Kernel Crates
     "Kernel",
-    "Kernel/HHLoader",
-    "Kernel/SharedCode",
-    # Userland/Kernel Libraries
+    "OldKernel",
+    "OldKernel/HHLoader",
+    "OldKernel/SharedCode",
+    # Userland/OldKernel Libraries
     "UKLibs/LibApiData",
     "UKLibs/LibBits",
     "UKLibs/LibHeap",

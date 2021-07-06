@@ -5,14 +5,16 @@
 .set MULTIBOOT_HEADER_MAGIC,    0xe85250d6
 .set MULTIBOOT_ARCH_X86,        0
 
+.set KERNEL_VIRT_ADDR,          0x0000fffffa100000
 
 /* ----------------------------------- .multiboot section ---------------------------------- */
 
 .code32
-.section .multiboot
+.section .multiboot, "a"
 
 /* multiboot 2 header instance to boot with a multiboot compliant bootloader */
-.align 8
+.align      8
+.type       kernel_multiboot_header_start, @object
 kernel_multiboot_header_start:
     /* .header_magic */
     .long       MULTIBOOT_HEADER_MAGIC
@@ -23,7 +25,8 @@ kernel_multiboot_header_start:
     /* .checksum */
     .long       -(MULTIBOOT_HEADER_MAGIC + MULTIBOOT_ARCH_X86 + (kernel_multiboot_header_end - kernel_multiboot_header_start))
 
-.align 8
+.align      8
+.type       kernel_multiboot_end_tag, @object
 kernel_multiboot_end_tag:
     .word       0
     .word       0
@@ -32,7 +35,7 @@ kernel_multiboot_header_end:
 
 /* ------------------------------------- .data section ------------------------------------- */
 
-.section .init_data
+.section .init_data, "a"
 
 /* reserve into the .data section an RW area to use as initial stack */
 .align      0x1000
@@ -133,9 +136,9 @@ kernel_long_mode_gdt:
     .byte       0xff, 0xff, 0, 0, 0, 0x92, 0xa0, 0x00
 kernel_long_mode_gdt_end:
 
-/* ------------------------------------- .text32 section ------------------------------------- */
+/* ------------------------------------- .init_text 32 section ------------------------------------- */
 
-.section .init_text
+.section .init_text, "ax"
 
 /**
  * Here is where the kernel starts his execution
@@ -158,7 +161,39 @@ kernel_start:
     mov         %ax,   %ss
 
 kernel_construct_page_table:
-    /* put into the first L4's slot the L3 page table with PTE_PRESENT, PTE_WRITEABLE and PTE_GLOBAL */
+    /* positionate the L4 page-table to the kernel-slot */
+    mov         $kernel_init_l4_page_table, %eax
+    add         $((KERNEL_VIRT_ADDR >> (12 + 9 + 9 + 9)) << 3), %eax
+
+    /* put L3 page-table into L4 selected slot with PTE_PRESENT, PTE_WRITEABLE and PTE_GLOBAL */
+    mov         $kernel_init_l3_page_table, %ecx
+    or          $(1 | 1 << 1 | 1 << 8), %ecx
+    mov         %ecx, (%eax)
+
+    /* positionate the L3 page-table to the kernel-slot */
+    mov         $kernel_init_l3_page_table, %eax
+    add         $(((KERNEL_VIRT_ADDR & 0x7fffffffff) >> (12 + 9 + 9)) << 3), %eax
+
+    /* put L2 page-table into L3 selected slot with PTE_PRESENT, PTE_WRITEABLE and PTE_GLOBAL */
+    mov         $kernel_init_l2_page_table, %ecx
+    or          $(1 | 1 << 1 | 1 << 8), %ecx
+    mov         %ecx, (%eax)
+
+    /* positionate the L2 page-table to the kernel-slot */
+    mov         $kernel_init_l2_page_table, %eax
+    add         $(((KERNEL_VIRT_ADDR & 0x3fffffff) >> (12 + 9)) << 3), %eax
+
+    /* now map the first 16MiB of memory to the kernel-slot with PTE_PRESENT, PTE_WRITEABLE, PTE_HUGE and PTE_GLOBAL */
+    movl        $(0x00000000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),    (%eax)
+    movl        $(0x00200000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),   8(%eax)
+    movl        $(0x00400000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  16(%eax)
+    movl        $(0x00600000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  24(%eax)
+    movl        $(0x00800000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  32(%eax)
+    movl        $(0x00A00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  40(%eax)
+    movl        $(0x00C00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  48(%eax)
+    movl        $(0x00E00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  56(%eax)
+
+    /* now map the page-tables at 0x00000000 too with the same protection */
     mov         $kernel_init_l3_page_table, %eax
     or          $(1 | 1 << 1 | 1 << 8), %eax
     mov         %eax, (kernel_init_l4_page_table)
@@ -168,20 +203,7 @@ kernel_construct_page_table:
     or          $(1 | 1 << 1 | 1 << 8), %eax
     mov         %eax, (kernel_init_l3_page_table)
 
-    /* since the kernel uses the memory mapped paging strategy, we need all the memory mapped to a
-     * particular offset of the virtual memory so that virtual_addr - PHYS_MEM_OFFSET = physical_addr
-     *
-     * Since the kernel dynamically chooses his virtual layout, and because we do not know how much
-     * physcial memory we have, here we map only a little portion of it (about 64MiB).
-     *
-     * The memory is identity mapped because the kernel is loaded to a specific physical address,
-     * and after the enable of the paging we must be able to continue to execute the kernel code
-     * in the early stage.
-     *
-     * We use 2MiB pages to avoid 3rd and 4th level page-tables
-     */
-
-    /* identity map the first 64MiB of memory using 2MiB pages PTE_PRESENT, PTE_WRITEABLE, PTE_HUGE and PTE_GLOBAL */
+    /* map the same physical pages in identity mapping */
     mov         $kernel_init_l2_page_table, %eax
     movl        $(0x00000000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),    (%eax)
     movl        $(0x00200000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),   8(%eax)
@@ -191,30 +213,6 @@ kernel_construct_page_table:
     movl        $(0x00A00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  40(%eax)
     movl        $(0x00C00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  48(%eax)
     movl        $(0x00E00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  56(%eax)
-    movl        $(0x01000000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  64(%eax)
-    movl        $(0x01200000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  72(%eax)
-    movl        $(0x01400000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  80(%eax)
-    movl        $(0x01600000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  88(%eax)
-    movl        $(0x01800000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  96(%eax)
-    movl        $(0x01A00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8), 104(%eax)
-    movl        $(0x01C00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8), 112(%eax)
-    movl        $(0x01E00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8), 120(%eax)
-    movl        $(0x02000000 | 1 | 1 << 1 | 1 << 7 | 1 << 8), 128(%eax)
-    movl        $(0x02200000 | 1 | 1 << 1 | 1 << 7 | 1 << 8), 136(%eax)
-    movl        $(0x02400000 | 1 | 1 << 1 | 1 << 7 | 1 << 8), 144(%eax)
-    movl        $(0x02600000 | 1 | 1 << 1 | 1 << 7 | 1 << 8), 152(%eax)
-    movl        $(0x02800000 | 1 | 1 << 1 | 1 << 7 | 1 << 8), 160(%eax)
-    movl        $(0x02A00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8), 168(%eax)
-    movl        $(0x02C00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8), 176(%eax)
-    movl        $(0x02E00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8), 184(%eax)
-    movl        $(0x03000000 | 1 | 1 << 1 | 1 << 7 | 1 << 8), 192(%eax)
-    movl        $(0x03200000 | 1 | 1 << 1 | 1 << 7 | 1 << 8), 200(%eax)
-    movl        $(0x03400000 | 1 | 1 << 1 | 1 << 7 | 1 << 8), 208(%eax)
-    movl        $(0x03600000 | 1 | 1 << 1 | 1 << 7 | 1 << 8), 216(%eax)
-    movl        $(0x03800000 | 1 | 1 << 1 | 1 << 7 | 1 << 8), 224(%eax)
-    movl        $(0x03A00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8), 232(%eax)
-    movl        $(0x03C00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8), 240(%eax)
-    movl        $(0x03E00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8), 248(%eax)
 
 kernel_enable_paging:
     /* setup the long mode GDT now */
@@ -240,14 +238,12 @@ kernel_enable_paging:
     or          $(1 << 16 | 1 << 31), %eax
     mov         %eax, %cr0
 
-    /* jump to the identity mapped text */
+    /* reload segment registers */
     ljmp        $0x08, $kernel_identity_mapped_text
 
-/* ------------------------------------- .text64 section ------------------------------------- */
+/* ------------------------------------- .init_text 64 section ------------------------------------- */
 
 .code64
-.section .text
-
 .type       kernel_identity_mapped_text, @function
 kernel_identity_mapped_text:
     /* setup the initial stack and the base pointer */

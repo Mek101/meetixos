@@ -1,6 +1,6 @@
 #! MeetiX OS Builder Script
 #!
-#! This Makefile is responsible to build all the source targets (Kernel and
+#! This Makefile is responsible to build all the source targets (OldKernel and
 #! applications), pack a bootable image then run the QEMU emulator for the selected
 #! architecture
 
