@@ -30,7 +30,7 @@ FINAL_KERNEL ?= $(KERNEL_BUILD_DIR)/mx_kernel
 # -- -- -- -- -- -- -- -- -- -- -- -- -- Sources -- -- -- ----  -- -- -- -- -- -- -- --
 #
 
-KERNEL_SOURCES ?= $(shell find src -name *.rs -a -name *.S)
+KERNEL_SOURCES ?= $(shell find src -name *.rs -o -name *.S)
 UKLIBS_SOURCES ?= $(shell find $(realpath ../UKLibs) -name *.rs)
 SOURCES        ?= $(KERNEL_SOURCES) $(UKLIBS_SOURCES)
 
@@ -46,9 +46,9 @@ build: $(FINAL_KERNEL)
 
 $(FINAL_KERNEL): $(BUILT_KERNEL)
 	$(V) echo "- Linking '$(basename $(FINAL_KERNEL))'"
-	$(V) $(MV) $(BUILT_KERNEL) $(FINAL_KERNEL)
+	$(V) $(MV) -f $(BUILT_KERNEL) $(FINAL_KERNEL)
 
-$(BUILT_KERNEL): $(KERNEL_SYMBOLS)
+$(BUILT_KERNEL): $(KERNEL_SYMBOLS) $(BUILT_PRE_KERNEL)
 	$(V) echo "- Updating Kernel Executable With Symbols..."
 	$(V) RUSTFLAGS="$(RUSTC_FLAGS)"       \
          CARGO_TARGET_DIR=$(BUILD_DIR)    \
@@ -57,20 +57,23 @@ $(BUILT_KERNEL): $(KERNEL_SYMBOLS)
 
 $(KERNEL_SYMBOLS): $(BUILT_PRE_KERNEL)
 	$(V) echo "- Writing Kernel Symbols..."
-	$(V) $(LLVM_NM) -n $(BUILT_PRE_KERNEL) | awk '{ if ($$2 == "T") printf("%s %s\n", $$1, $$3); }' | uniq >$(KERNEL_SYMBOLS)
+	$(V) $(LLVM_NM) -n $< | awk '{ if ($$2 == "T") printf("%s %s\n", $$1, $$3); }' | uniq >$@
 
-$(BUILT_PRE_KERNEL): $(SOURCES) $(PRE_KERNEL_SYMBOLS) $(KERNEL_TARGET)
+$(BUILT_PRE_KERNEL): $(PRE_KERNEL_SYMBOLS) $(KERNEL_TARGET) $(SOURCES)
 	$(V) echo "- Building Kernel Without Symbols..."
+	$(V) $(RM) -f $@
 	$(V) RUSTFLAGS="$(RUSTC_FLAGS)"           \
          CARGO_TARGET_DIR=$(BUILD_DIR)        \
          KERNEL_SYMBOLS=$(PRE_KERNEL_SYMBOLS) \
          $(CARGO) build $(CARGO_FLAGS) --target $(KERNEL_TARGET)
-	$(V) $(MV) $(BUILT_KERNEL) $(BUILT_PRE_KERNEL)
+	$(V) $(MV) -f $(BUILT_KERNEL) $@
 
-$(PRE_KERNEL_SYMBOLS):
+$(PRE_KERNEL_SYMBOLS): $(KERNEL_BUILD_DIR)
 	$(V) echo "- Writing Empty Kernel Symbols..."
-	$(V) $(MKDIR) -p $(dir $(PRE_KERNEL_SYMBOLS))
 	$(V) echo " " >$@
+
+$(KERNEL_BUILD_DIR):
+	$(V) $(MKDIR) -p $@
 
 clean:
 	$(V) echo "- Cleaning $(ARCH)/$(BUILD_MODE) Kernel..."

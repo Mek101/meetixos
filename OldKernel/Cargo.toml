@@ -1,0 +1,17 @@
+[package]
+name = "old_kernel"
+version = "0.1.0"
+edition = "2018"
+authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
+
+[dependencies]
+# -------------------------------- OldKernel Private Crates ------------------------------- #
+shared = { path = "SharedCode" }
+
+# ------------------------------ MeetiX Libraries Crates ------------------------------- #
+bits     = { path = "../UKLibs/LibBits" }
+heap     = { path = "../UKLibs/LibHeap" }
+sync     = { path = "../UKLibs/LibSync" }
+helps    = { path = "../UKLibs/LibHelps" }
+symbols  = { path = "../UKLibs/LibSymbols" }
+api_data = { path = "../UKLibs/LibApiData"}

@@ -1,0 +1,16 @@
+[package]
+name = "hh_loader"
+version = "0.1.0"
+edition = "2018"
+authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
+
+[dependencies]
+# -------------------------------- OldKernel Private Crates ------------------------------- #
+shared = { path = "../SharedCode" }
+
+[target.'cfg(target_arch = "x86_64")'.dependencies]
+# ------------------------ External x86_64 Thirdy Party Crates ------------------------- #
+multiboot2 = "*"
+
+# ------------------------------ MeetiX Libraries Crates ------------------------------- #
+helps = { path = "../../UKLibs/LibHelps" }
