@@ -13,6 +13,7 @@ use shared::{
     info::descriptor::LoaderInfo,
     logger::{
         info,
+        log,
         trace
     }
 };
@@ -95,7 +96,7 @@ pub unsafe extern "C" fn kern_start(loader_info: &LoaderInfo) {
  * Prints the header in the logging
  */
 fn print_header() {
-    info!("MeetiX OldKernel v{}", KERN_VERSION);
+    info!(target: "aa", "MeetiX OldKernel v{}", KERN_VERSION);
     info!("...Hoping you will use this OS as your primarily OS, maybe one day...");
 
     trace!("Booted By {}", cmdline_info().bootloader_name());

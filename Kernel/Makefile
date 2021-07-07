@@ -57,7 +57,7 @@ $(BUILT_KERNEL): $(KERNEL_SYMBOLS) $(BUILT_PRE_KERNEL)
 
 $(KERNEL_SYMBOLS): $(BUILT_PRE_KERNEL)
 	$(V) echo "- Writing Kernel Symbols..."
-	$(V) $(LLVM_NM) -n $< | awk '{ if ($$2 == "T") printf("%s %s\n", $$1, $$3); }' | uniq >$@
+	$(V) $(LLVM_NM) -n $< | awk '{ if ($$2 == "T") printf("%s %s\n", $$1, $$3); }' | uniq | $(RFILT) >$@
 
 $(BUILT_PRE_KERNEL): $(PRE_KERNEL_SYMBOLS) $(KERNEL_TARGET) $(SOURCES)
 	$(V) echo "- Building Kernel Without Symbols..."

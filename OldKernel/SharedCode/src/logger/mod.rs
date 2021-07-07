@@ -5,6 +5,7 @@ pub use log::{
     debug,
     error,
     info,
+    log,
     trace,
     warn,
     SetLoggerError

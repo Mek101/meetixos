@@ -1,22 +1,12 @@
 /*! Virtual & Physical address wrappers */
 
 use core::{
-    convert::TryFrom,
-    fmt,
     fmt::{
-        Binary,
         Debug,
-        LowerHex,
-        Octal,
-        UpperHex
+        Display
     },
     hash::Hash,
-    ops::{
-        Add,
-        AddAssign,
-        Sub,
-        SubAssign
-    }
+    ops::Deref
 };
 
 use helps::align::{
@@ -33,68 +23,52 @@ pub mod virt;
  */
 pub trait Address:
     Default
-    + TryFrom<usize, Error = AddressErr>
-    + Into<usize>
+    + From<usize>
+    + Deref<Target = usize>
     + Copy
     + Clone
     + Debug
-    + Binary
-    + Octal
-    + UpperHex
-    + LowerHex
-    + Add<usize, Output = Self>
-    + AddAssign<usize>
-    + Add<Self, Output = Self>
-    + AddAssign<Self>
-    + Sub<usize, Output = Self>
-    + SubAssign<usize>
-    + Sub<Self, Output = Self>
-    + SubAssign<Self>
+    + Display
     + Eq
     + PartialEq
     + Ord
     + PartialOrd
     + Hash {
     /**
-     * Constructs a validated `Address`
-     */
-    fn new(raw_addr: usize) -> Self;
-
-    /**
-     * Returns the inner contained address as `usize`
-     */
-    fn as_usize(&self) -> usize;
-
-    /**
      * Constructs a null `Address`
      */
-    fn new_zero() -> Self {
-        Self::new(0)
+    fn null() -> Self {
+        Self::from(0)
     }
 
     /**
-     * Returns the aligned up address using the given `align`
+     * Returns the aligned up `Address` using the given `align`
      */
     fn align_up<A>(&self, align: A) -> Self
         where A: Into<usize> {
-        Self::new(align_up(self.as_usize(), align.into()))
+        Self::from(align_up(**self, align.into()))
     }
 
     /**
-     * Returns the aligned down address using the given `align`
+     * Returns the aligned down `Address` using the given `align`
      */
     fn align_down<A>(&self, align: A) -> Self
         where A: Into<usize> {
-        Self::new(align_down(self.as_usize(), align.into()))
+        Self::from(align_down(**self, align.into()))
     }
 
     /**
-     * Returns the containing `Frame` for this `Address`
+     * Returns this `Address` + the given `offset`
      */
-    // fn containing_frame<S>(&self) -> Frame<Self, S>
-    //     where S: PageSize {
-    //     Frame::of_addr(self.clone())
-    // }
+    fn offset(&self, offset: isize) -> Self {
+        if offset > 0 {
+            Self::from(**self + offset as usize)
+        } else if offset < 0 {
+            Self::from(**self - offset as usize)
+        } else {
+            *self /* copy self */
+        }
+    }
 
     /**
      * Returns whether this `Address` is aligned with `align`
@@ -108,33 +82,17 @@ pub trait Address:
      * Returns whether this `Address` contains a zero value
      */
     fn is_null(&self) -> bool {
-        self.as_usize() == 0
+        **self == 0
     }
 }
 
 /**
- * `Address` creation error.
- *
- * Internally contains a raw address `usize` with the error value given
- */
-#[derive(Debug)]
-#[derive(Copy, Clone)]
-pub struct AddressErr {
-    pub m_raw_value: usize
-}
-
-impl fmt::Display for AddressErr {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "The given address was not properly aligned ({:#X})", self.m_raw_value)
-    }
-}
-
-/**
- * Interface on which the `Address` trait relies to use the hardware
- * implementation of the addresses
+ * Interface on which the `Address` trait implementors relies to use the
+ * hardware implementation of the addresses
  */
 pub trait HwAddrBase:
-    TryFrom<usize, Error = AddressErr>
+    From<usize>
+    + Deref<Target = usize>
     + Copy
     + Clone
     + Eq
@@ -142,16 +100,5 @@ pub trait HwAddrBase:
     + Ord
     + PartialOrd
     + Hash {
-    /**  
-     * Constructs a validated `HwAddrBase` based `Address`
-     *
-     * The returned instance can be a truncated/normalized version of the
-     * `raw_addr` for the underling architecture
-     */
-    fn new(raw_addr: usize) -> Self;
-
-    /**
-     * Returns this hardware address as `usize`
-     */
-    fn as_usize(&self) -> usize;
+    /* No additional methods are requested */
 }

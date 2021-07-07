@@ -6,19 +6,19 @@ pub mod print;
 /**
  * Kibibyte multiplier
  */
-pub const KIB: usize = 1024;
+pub const C_KIB: usize = 1024;
 
 /**
  * Mebibyte Byte multiplier
  */
-pub const MIB: usize = KIB * 1024;
+pub const C_MIB: usize = C_KIB * 1024;
 
 /**
  * Gibibyte Byte multiplier
  */
-pub const GIB: usize = MIB * 1024;
+pub const C_GIB: usize = C_MIB * 1024;
 
 /**
  * Tebibyte multiplier
  */
-pub const TIB: usize = GIB * 1024;
+pub const C_TIB: usize = C_GIB * 1024;

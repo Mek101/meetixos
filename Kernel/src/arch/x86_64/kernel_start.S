@@ -161,6 +161,9 @@ kernel_start:
     mov         %ax,   %ss
 
 kernel_construct_page_table:
+    /* setup the long mode GDT now */
+    lgdt        (kernel_long_mode_gdt_table)
+
     /* positionate the L4 page-table to the kernel-slot */
     mov         $kernel_init_l4_page_table, %eax
     add         $((KERNEL_VIRT_ADDR >> (12 + 9 + 9 + 9)) << 3), %eax
@@ -194,14 +197,16 @@ kernel_construct_page_table:
     movl        $(0x00E00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  56(%eax)
 
     /* now map the page-tables at 0x00000000 too with the same protection */
-    mov         $kernel_init_l3_page_table, %eax
-    or          $(1 | 1 << 1 | 1 << 8), %eax
-    mov         %eax, (kernel_init_l4_page_table)
+    mov         $kernel_init_l4_page_table, %eax
+    mov         $kernel_init_l3_page_table, %ecx
+    or          $(1 | 1 << 1 | 1 << 8), %ecx
+    mov         %ecx, (%eax)
 
     /* put into the first L3's slot the L2 page table with PTE_PRESENT, PTE_WRITEABLE and PTE_GLOBAL */
-    mov         $kernel_init_l2_page_table, %eax
-    or          $(1 | 1 << 1 | 1 << 8), %eax
-    mov         %eax, (kernel_init_l3_page_table)
+    mov         $kernel_init_l3_page_table, %eax
+    mov         $kernel_init_l2_page_table, %ecx
+    or          $(1 | 1 << 1 | 1 << 8), %ecx
+    mov         %ecx, (%eax)
 
     /* map the same physical pages in identity mapping */
     mov         $kernel_init_l2_page_table, %eax
@@ -215,9 +220,6 @@ kernel_construct_page_table:
     movl        $(0x00E00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  56(%eax)
 
 kernel_enable_paging:
-    /* setup the long mode GDT now */
-    lgdt        (kernel_long_mode_gdt_table)
-
     /* setup as current the static page directory */
     mov         $kernel_init_l4_page_table, %eax
     mov         %eax, %cr3

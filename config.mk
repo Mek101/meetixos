@@ -72,9 +72,10 @@ RM    ?= $(shell which rm)
 CP    ?= $(shell which cp)
 MV    ?= $(shell which mv)
 MKDIR ?= $(shell which mkdir)
+RFILT ?= $(shell which rustfilt)
 
 ifeq ($(ARCH), x86_64)
-    MAKE_RESQUE ?= $(shell which grub-mkrescue)
+    MAKE_RESCUE ?= $(shell which grub-mkrescue)
 endif
 
 #

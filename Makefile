@@ -29,7 +29,7 @@ run: image
 image: install
 ifeq ($(ARCH),x86_64)
 	$(V) echo "- Building GRUB bootable image... ($(BUILD_PREFIX)/$(BUILD_MODE)/meetixos.iso)"
-	$(V) $(MAKE_RESQUE) -d /usr/lib/grub/i386-pc/                     \
+	$(V) $(MAKE_RESCUE) -d /usr/lib/grub/i386-pc/                     \
 	                    -o $(BUILD_PREFIX)/$(BUILD_MODE)/meetixos.iso \
 	                    $(DIST_SYSROOT_PREFIX)
 endif
