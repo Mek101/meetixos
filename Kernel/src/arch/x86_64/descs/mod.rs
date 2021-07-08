@@ -3,10 +3,13 @@
 use crate::addr::virt::VirtAddr;
 
 pub mod gdt;
+pub mod idt;
 pub mod tss;
 
+/**
+ * x86_64 segmentation descriptor pointer
+ */
 #[repr(C, packed)]
-#[derive(Debug)]
 #[derive(Copy, Clone)]
 pub struct DescTablePtr {
     m_size_limit: u16,
@@ -14,24 +17,30 @@ pub struct DescTablePtr {
 }
 
 impl DescTablePtr {
+    /**
+     * Constructs a `DescTablePtr` from the given values
+     */
     pub fn new(limit: u16, base: VirtAddr) -> Self {
         Self { m_size_limit: limit,
                m_base_ptr: base }
     }
-
-    pub fn as_ptr(&self) -> usize {
-        self as *const Self as *const usize as usize
-    }
 }
 
+/**
+ * Lists the x86_64 CPU ring modes
+ */
 #[repr(u8)]
 #[derive(Debug)]
 #[derive(Copy, Clone)]
 #[derive(Eq, PartialEq)]
 pub enum CpuRingMode {
+    /* used for kernel mode */
     Ring0,
+    /* unused */
     Ring1,
+    /* unused */
     Ring2,
+    /* used for user mode */
     Ring3
 }
 
@@ -42,7 +51,7 @@ impl From<u16> for CpuRingMode {
             1 => Self::Ring1,
             2 => Self::Ring2,
             3 => Self::Ring3,
-            _ => panic!("CpuRingMode: Invalid ring")
+            _ => panic!("CpuRingMode::from(): Invalid ring value given")
         }
     }
 }

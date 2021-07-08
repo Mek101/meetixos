@@ -1,9 +1,6 @@
 /*! Kernel CPU management */
 
-use alloc::vec::Vec;
-
 use sync::mutex::{
-    guard::MutexDataGuard,
     spin::RawSpinMutex,
     Mutex
 };
@@ -37,7 +34,7 @@ impl Cpu {
     }
 
     pub fn id(&self) -> CpuId {
-        self.m_inner.lock().m_hw_cpu.smp_id()
+        self.m_inner.lock().m_hw_cpu.id()
     }
 
     pub fn current() -> &'static Self {

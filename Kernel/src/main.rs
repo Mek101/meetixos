@@ -4,7 +4,8 @@
 #![feature(array_methods)]
 #![allow(dead_code)]
 
-extern crate alloc;
+/* TODO heap allocation */
+//extern crate alloc;
 
 use crate::{
     dbg::{

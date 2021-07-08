@@ -4,7 +4,7 @@
 
 use core::alloc::Layout;
 
-#[global_allocator]
+//#[global_allocator]
 static S_HEAP_ALLOCATOR: FakeAllocator = FakeAllocator;
 
 struct FakeAllocator;

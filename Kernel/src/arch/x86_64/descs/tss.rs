@@ -9,7 +9,6 @@ use crate::addr::{
  * x86_64 stack state segment descriptor
  */
 #[repr(C, packed)]
-#[derive(Debug)]
 #[derive(Copy, Clone)]
 pub struct TaskStateSegment {
     _reserved_field_1: u32,
