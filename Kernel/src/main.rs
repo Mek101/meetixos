@@ -1,7 +1,10 @@
 #![no_std]
 #![no_main]
 #![feature(asm, global_asm, panic_info_message, const_fn_trait_bound)]
+#![feature(array_methods)]
 #![allow(dead_code)]
+
+extern crate alloc;
 
 use crate::{
     dbg::{
@@ -17,8 +20,10 @@ use crate::{
 
 mod addr;
 mod arch;
+mod cpu;
 mod dbg;
 mod dev;
+mod heap;
 mod info;
 mod mem;
 mod panic;
@@ -26,7 +31,7 @@ mod version;
 
 #[no_mangle]
 pub extern "C" fn kernel_rust_start(raw_boot_info_ptr: *const u8) -> ! {
-    /* initialize the global instance of the boot info structure */
+    /* initialize the global instance of the boot boot structure */
     BootInfo::init_instance(raw_boot_info_ptr);
 
     /* initialize debug printing and print the header */

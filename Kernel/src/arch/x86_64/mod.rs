@@ -1,6 +1,8 @@
 /*! x86_64 implementation code */
 
 pub mod addr;
+pub mod cpu;
+pub mod descs;
 pub mod dev;
 pub mod info;
 

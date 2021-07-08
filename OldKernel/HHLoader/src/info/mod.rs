@@ -57,7 +57,7 @@ pub fn info_prepare_loader_info() -> &'static LoaderInfo {
                                       kernel_symbols(),
                                       boot_info.bootloader_name());
 
-    /* store the loader info into the global value and return the reference */
+    /* store the loader boot into the global value and return the reference */
     unsafe {
         LOADER_INFO = Some(loader_info);
         LOADER_INFO.as_ref().unwrap()

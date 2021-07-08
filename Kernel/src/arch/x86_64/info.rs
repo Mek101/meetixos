@@ -1,4 +1,4 @@
-/*! x86_64 boot info implementation */
+/*! x86_64 boot boot implementation */
 
 use multiboot2::{
     load,

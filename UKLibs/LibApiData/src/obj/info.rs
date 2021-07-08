@@ -295,14 +295,14 @@ impl RawObjInfo {
     }
 
     /**
-     * Returns the `Object` last info access `RawInstant`
+     * Returns the `Object` last boot access `RawInstant`
      */
     pub fn last_data_modify_inst(&self) -> RawInstant {
         self.m_last_data_modify_inst
     }
 
     /**
-     * Sets the `Object` last info access `RawInstant`
+     * Sets the `Object` last boot access `RawInstant`
      */
     pub fn set_last_data_modify_inst(&mut self, new_inst: RawInstant) {
         self.m_last_data_modify_inst = new_inst;
@@ -323,14 +323,14 @@ impl RawObjInfo {
     }
 
     /**
-     * Returns the `Object` last info modification `RawInstant`
+     * Returns the `Object` last boot modification `RawInstant`
      */
     pub fn last_info_modify_inst(&self) -> RawInstant {
         self.m_last_info_modify_inst
     }
 
     /**
-     * Sets the `Object` last info modification `RawInstant`
+     * Sets the `Object` last boot modification `RawInstant`
      */
     pub fn set_last_info_modify_inst(&mut self, new_inst: RawInstant) {
         self.m_last_info_modify_inst = new_inst;

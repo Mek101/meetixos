@@ -167,7 +167,7 @@ impl ObjHandle {
 /* TODO: the compiler reports: error: cannot specialize on trait
  * `obj::Object` impl<T> Into<T> for ObjHandle where T: Object {
  *     fn into(self) -> T {
- *         let real_obj_type = self.info().unwrap_or_default().obj_type();
+ *         let real_obj_type = self.boot().unwrap_or_default().obj_type();
  *
  *         if real_obj_type == T::TYPE {
  *             T::from(self)
@@ -185,7 +185,7 @@ impl ObjHandle {
  *     type Error = OsError;
  *
  *     fn try_into(self) -> result::Result<T, Self::Error> {
- *         let real_obj_type = self.info()?.obj_type();
+ *         let real_obj_type = self.boot()?.obj_type();
  *
  *         if real_obj_type == T::TYPE {
  *             Ok(T::from(self))
@@ -267,7 +267,7 @@ pub trait Object: From<ObjHandle> + Default + Clone {
      * Registers the given `callback` to be executed whenever one of the
      * given `ObjUseBits` happen
      *
-     * The caller must have info-read grants to successfully call
+     * The caller must have boot-read grants to successfully call
      * this method.
      *
      * The given `callback` must accept an `ObjUseInstant` as argument and

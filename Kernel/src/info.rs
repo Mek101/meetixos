@@ -1,16 +1,16 @@
 /*! Kernel boot information */
 
+use helps::str::{
+    copy_str_to_u8_buf,
+    u8_slice_to_str_slice
+};
+
 use crate::{
     addr::{
         phys::PhysAddr,
         Address
     },
     arch::info::HwBootInfo
-};
-
-use helps::str::{
-    copy_str_to_u8_buf,
-    u8_slice_to_str_slice
 };
 
 static mut SM_BOOT_INFORMATION: Option<BootInfo> = None;

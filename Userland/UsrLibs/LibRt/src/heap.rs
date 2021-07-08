@@ -57,7 +57,7 @@ fn heap_mem_supplier(requested_size: usize) -> Option<(NonNull<u8>, usize)> {
                              panic!("Failed to obtain the NonNull_ptr for heap_allocator")
                          }
                      } else {
-                         panic!("Failed to obtain MMap info for heap_allocator")
+                         panic!("Failed to obtain MMap boot for heap_allocator")
                      }
                  })
 }

@@ -51,7 +51,7 @@ pub enum ObjUseBits {
     WritingData,
 
     /**
-     * Let the watcher `Task` notified about the successful `Object::info()`
+     * Let the watcher `Task` notified about the successful `Object::boot()`
      * (and related) calls of the watched `Object`
      */
     ReadingInfo,

@@ -52,7 +52,7 @@ mod version;
  */
 #[no_mangle]
 pub unsafe extern "C" fn kern_start(loader_info: &LoaderInfo) {
-    /* initialize the command line info from the loader info */
+    /* initialize the command line boot from the loader boot */
     cmdline_info_init(loader_info);
 
     /* initialize the logger, to be able to print in a formatted way */
