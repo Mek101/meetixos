@@ -22,8 +22,8 @@ use crate::{
     slab::Slab
 };
 
+pub mod lazy_locked_heap;
 pub mod linked_list;
-pub mod locked;
 pub mod slab;
 
 /**

@@ -1,6 +1,6 @@
 /*! Kernel debug utilities */
 
-pub mod display;
+pub mod display_pretty;
 pub mod print;
 
 /**

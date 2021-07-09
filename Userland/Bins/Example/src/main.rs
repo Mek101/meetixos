@@ -7,7 +7,7 @@ use mx_std::{
         error::OsError,
         path::PathExistsState
     },
-    obj::{
+    object::{
         impls::file::File,
         Object,
         UserCreatableObject

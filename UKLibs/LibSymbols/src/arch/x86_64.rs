@@ -1,6 +1,6 @@
 /*! x86_64 code implementation */
 
-use crate::trace::HwTracerHelperBase;
+use crate::stack_back_trace::HwTracerHelperBase;
 
 /**
  * x86_64 `HwTracerHelperBase` implementation

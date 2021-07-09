@@ -23,7 +23,7 @@ use api_data::{
 };
 
 use crate::{
-    config::{
+    config_mode::{
         ConfigMode,
         CreatMode,
         OpenMode
@@ -35,11 +35,11 @@ use crate::{
         },
         OsEntity
     },
-    handle::{
+    kern_handle::{
         KernHandle,
         Result
     },
-    obj::{
+    object::{
         impls::file::File,
         Object
     },

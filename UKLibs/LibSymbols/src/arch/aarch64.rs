@@ -1,6 +1,6 @@
 /*! aarch64 code implementation */
 
-use crate::trace::HwTracerHelperBase;
+use crate::stack_back_trace::HwTracerHelperBase;
 
 /**
  * aarch64 `HwTracerHelperBase` implementation

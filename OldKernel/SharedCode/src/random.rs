@@ -59,7 +59,7 @@ impl Random {
  */
 pub(crate) trait HwRandomGeneratorBase {
     /*
-     * Constructs a `HwRandomGeneratorBase` based obj
+     * Constructs a `HwRandomGeneratorBase` based object
      */
     fn new() -> Self;
 

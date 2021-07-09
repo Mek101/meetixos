@@ -1,7 +1,7 @@
 /*! `Task` related data */
 
 pub mod config;
-pub mod exit;
+pub mod exit_status;
 pub mod fs_types;
 pub mod modes;
 pub mod thread;

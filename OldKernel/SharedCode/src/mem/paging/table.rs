@@ -26,7 +26,7 @@ use crate::{
         PageSize
     }
 };
-use bits::flags::{
+use bits::bit_flags::{
     BitFlags,
     BitFlagsValues
 };
@@ -34,7 +34,7 @@ use bits::flags::{
 /**
  * Raw page table structure.
  *
- * It is ensured by the compiler that this obj is always page aligned.
+ * It is ensured by the compiler that this object is always page aligned.
  *
  * Internally contains `HwPageDirSupport::PT_ENTRIES_COUNT` entries of
  * `PageTableEntry` structures that they could point to the next page
@@ -130,7 +130,7 @@ impl PageTableEntry {
      */
     pub fn phys_frame<S>(&self) -> Result<PhysFrame<S>, PageTableEntryErr>
         where S: PageSize {
-        /* since this method is primarily called by the PageDir obj to obtain
+        /* since this method is primarily called by the PageDir object to obtain
          * physical frame to the next PageTable here is important the order on which
          * the controls are performed.
          * First of all must be checked whether the requested physical frame size is
@@ -246,7 +246,7 @@ impl Into<u16> for PageTableIndex {
 
 /**
  * Exposes an architecture independent set of `PageTable`'s flags
- * primarily used by the `PageDir` obj.
+ * primarily used by the `PageDir` object.
  *
  * Not all the following flags have meaning in all the supported
  * architectures, but are supported and used to have a common layer

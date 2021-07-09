@@ -2,8 +2,8 @@
 
 use mx_std::{
     convert::From,
-    handle::Result,
-    obj::{
+    kern_handle::Result,
+    object::{
         impls::file::File,
         UserCreatableObject
     },

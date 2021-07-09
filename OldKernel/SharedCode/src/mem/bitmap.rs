@@ -5,7 +5,7 @@ use core::{
     slice
 };
 
-use bits::fields::{
+use bits::bit_fields::{
     BitArray,
     BitFindMode
 };

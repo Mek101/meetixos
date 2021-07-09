@@ -12,7 +12,7 @@ extern crate alloc;
 pub use rustc_demangle::*;
 
 pub mod code_symbol;
-pub mod list;
-pub mod trace;
+pub mod code_symbols_list;
+pub mod stack_back_trace;
 
 mod arch;

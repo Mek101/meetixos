@@ -29,7 +29,7 @@ pub enum OsErrorClass {
     InvalidArgument,
 
     /**
-     * The last instance call was referencing an invalid obj
+     * The last instance call was referencing an invalid object
      */
     InvalidHandleReference,
 
@@ -55,7 +55,7 @@ pub enum OsErrorClass {
 
     /**
      * The previous system call was failed because the given `Path`
-     * references an unexisting obj name
+     * references an unexisting object name
      */
     ReferenceNotFound,
 
@@ -91,7 +91,7 @@ pub enum OsErrorClass {
     OperationNotEnabled,
 
     /**
-     * This is not properly an error, just indicates that the obj have no
+     * This is not properly an error, just indicates that the object have no
      * more data to read (i.e in `File` and `Dir`)
      */
     EndOfDataReached,

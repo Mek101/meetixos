@@ -2,7 +2,7 @@
 
 use core::alloc::Layout;
 
-use heap::locked::RawLazyLockedHeap;
+use heap::lazy_locked_heap::RawLazyLockedHeap;
 use helps::align::align_up;
 use shared::{
     addr::Address,
@@ -19,7 +19,7 @@ use shared::{
     }
 };
 use sync::mutex::{
-    spin::RawSpinMutex,
+    spin_mutex::RawSpinMutex,
     ConstCreatBackRawMutex
 };
 

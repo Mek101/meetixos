@@ -10,10 +10,10 @@
 extern crate alloc;
 
 pub mod arch;
-pub mod config;
+pub mod config_mode;
 pub mod entity;
-pub mod handle;
-pub mod obj;
+pub mod instant;
+pub mod kern_handle;
+pub mod object;
 pub mod path;
 pub mod task;
-pub mod time;

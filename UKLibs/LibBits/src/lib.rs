@@ -6,5 +6,5 @@
 #![no_std]
 #![feature(step_trait)]
 
-pub mod fields;
-pub mod flags;
+pub mod bit_fields;
+pub mod bit_flags;

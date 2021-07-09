@@ -4,11 +4,11 @@ use core::cell::UnsafeCell;
 
 use crate::{
     guards::LockGuardShareability,
-    mutex::guard::MutexDataGuard
+    mutex::data_guard::MutexDataGuard
 };
 
-pub mod guard;
-pub mod spin;
+pub mod data_guard;
+pub mod spin_mutex;
 
 /**
  * Mutual exclusive gate protector for a customizable data type.

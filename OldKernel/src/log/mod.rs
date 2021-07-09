@@ -4,7 +4,7 @@ use shared::logger::{
     logger::LevelFilter,
     writers::UartWriter
 };
-use sync::mutex::spin::RawSpinMutex;
+use sync::mutex::spin_mutex::RawSpinMutex;
 
 use crate::{
     cmdline::cmdline_info,

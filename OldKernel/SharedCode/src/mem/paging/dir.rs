@@ -38,7 +38,7 @@ use crate::{
         PageSize
     }
 };
-use bits::flags::BitFlags;
+use bits::bit_flags::BitFlags;
 
 /**
  * "Middle" level address space manager.
@@ -177,7 +177,7 @@ impl PageDir {
                                 /* when unmapping the frames that are part of a range
                                  * not completely mapped explicitly call
                                  * MapRangeFlush::flush() internally to avoid to return
-                                 * another MapRangeFlush obj as Err variant of the
+                                 * another MapRangeFlush object as Err variant of the
                                  * Result, which may be confusing
                                  */
                                 flusher.flush()

@@ -13,7 +13,7 @@ use shared::{
         PageSize
     }
 };
-use sync::mutex::spin::RawSpinMutex;
+use sync::mutex::spin_mutex::RawSpinMutex;
 
 use crate::mem::{
     phys::allocator::LockedBitMapAllocator,

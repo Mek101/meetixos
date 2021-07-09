@@ -9,7 +9,7 @@ use api_data::{
         AsSysCallPtr
     },
     task::{
-        exit::TaskExitStatus,
+        exit_status::TaskExitStatus,
         thread::{
             RCleanerThreadEntry,
             ThreadEntryData
@@ -19,7 +19,7 @@ use api_data::{
 };
 
 use crate::{
-    handle::{
+    kern_handle::{
         KernHandle,
         Result
     },

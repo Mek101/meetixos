@@ -1,11 +1,11 @@
 /*! Kernel CPU management */
 
 use sync::mutex::{
-    spin::RawSpinMutex,
+    spin_mutex::RawSpinMutex,
     Mutex
 };
 
-use crate::arch::cpu::HwCpu;
+use crate::arch::hw_cpu::HwCpu;
 
 const C_MAX_CPUS: usize = 8;
 

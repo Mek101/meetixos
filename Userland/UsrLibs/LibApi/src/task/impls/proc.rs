@@ -16,11 +16,11 @@ use api_data::{
 };
 
 use crate::{
-    handle::{
+    kern_handle::{
         KernHandle,
         Result
     },
-    obj::{
+    object::{
         grants::ObjGrants,
         impls::{
             device::Device,

@@ -1,9 +1,9 @@
 /*! `Thread` specific entry point data */
 
 use crate::{
-    obj::info::ObjUseInstant,
+    object::info::ObjUseInstant,
     task::{
-        exit::TaskExitStatus,
+        exit_status::TaskExitStatus,
         TaskId
     }
 };

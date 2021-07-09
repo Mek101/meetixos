@@ -10,9 +10,9 @@ extern crate alloc;
 
 pub mod entity;
 pub mod error;
+pub mod instant;
 pub mod limit;
-pub mod obj;
+pub mod object;
 pub mod path;
 pub mod sys;
 pub mod task;
-pub mod time;

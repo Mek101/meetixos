@@ -8,24 +8,24 @@
 //extern crate alloc;
 
 use crate::{
+    boot_info::BootInfo,
     dbg::{
-        display::DisplaySizePretty,
+        display_pretty::DisplaySizePretty,
         print::{
             dbg_print_init,
             DbgLevel
         }
     },
-    info::BootInfo,
     version::KERNEL_VERSION
 };
 
 mod addr;
 mod arch;
+mod boot_info;
 mod cpu;
 mod dbg;
 mod dev;
 mod heap;
-mod info;
 mod mem;
 mod panic;
 mod version;

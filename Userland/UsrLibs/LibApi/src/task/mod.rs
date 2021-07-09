@@ -7,18 +7,18 @@ use api_data::{
         AsSysCallPtr
     },
     task::{
-        exit::TaskExitStatus,
+        exit_status::TaskExitStatus,
         types::TaskType,
         TaskId
     }
 };
 
 use crate::{
-    config::{
+    config_mode::{
         CreatMode,
         OpenMode
     },
-    handle::{
+    kern_handle::{
         KernHandle,
         Result
     },

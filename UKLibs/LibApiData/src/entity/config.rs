@@ -5,7 +5,7 @@ use num_enum::{
     TryFromPrimitive
 };
 
-use bits::flags::{
+use bits::bit_flags::{
     BitFlags,
     BitFlagsValues
 };

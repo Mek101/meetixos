@@ -10,13 +10,13 @@ use core::{
 };
 
 use sync::mutex::{
-    spin::RawSpinMutex,
+    spin_mutex::RawSpinMutex,
     Mutex
 };
 
 use crate::{
-    dev::uart::Uart,
-    info::BootInfo
+    boot_info::BootInfo,
+    dev::uart::Uart
 };
 
 /* Vt100 color codes */

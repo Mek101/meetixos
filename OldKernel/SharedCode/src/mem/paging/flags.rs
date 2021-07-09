@@ -1,6 +1,6 @@
 /*! Page directory flags */
 
-use bits::flags::BitFlags;
+use bits::bit_flags::BitFlags;
 
 use crate::mem::paging::table::PTFlagsBits;
 

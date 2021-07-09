@@ -14,12 +14,12 @@ use api_data::{
 };
 
 use crate::{
-    config::{
+    config_mode::{
         CreatMode,
         OpenMode
     },
     entity::config::OsEntityConfig,
-    handle::{
+    kern_handle::{
         KernHandle,
         Result
     }

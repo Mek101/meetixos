@@ -14,8 +14,8 @@ use helps::align::{
     align_up
 };
 
-pub mod phys;
-pub mod virt;
+pub mod phys_addr;
+pub mod virt_addr;
 
 /**
  * Base interface of methods and dependencies common to all the addresses

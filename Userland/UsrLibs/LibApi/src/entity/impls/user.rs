@@ -18,7 +18,7 @@ use crate::{
         OsEntity,
         OsEntityHandle
     },
-    handle::Result
+    kern_handle::Result
 };
 
 /**

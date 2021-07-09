@@ -7,14 +7,14 @@ use num_enum::{
     TryFromPrimitive
 };
 
-use bits::flags::{
+use bits::bit_flags::{
     BitFlags,
     BitFlagsValues
 };
 
 use crate::{
     entity::RawOsEntityHandle,
-    obj::RawObjHandle,
+    object::RawObjHandle,
     sys::AsSysCallPtr,
     task::{
         modes::TaskExecCpu,

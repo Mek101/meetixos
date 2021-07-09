@@ -15,7 +15,7 @@ use shared::{
 /**
  * Collector of commonly requested information about the OldKernel core.
  *
- * So this obj pre-loads various redundant information to be able to
+ * So this object pre-loads various redundant information to be able to
  * serve them without recalculating each time
  */
 pub struct KernelPreLoadCache<'a> {

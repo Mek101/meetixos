@@ -11,7 +11,7 @@ use alloc::string::{
 };
 
 use crate::{
-    obj::types::ObjType,
+    object::types::ObjType,
     sys::AsSysCallPtr
 };
 

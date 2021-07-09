@@ -8,8 +8,8 @@ use shared::{
     }
 };
 use symbols::{
-    list::CodeSymbolsList,
-    trace::StackBackTrace
+    code_symbols_list::CodeSymbolsList,
+    stack_back_trace::StackBackTrace
 };
 
 /* parsed code symbols from the HHLoader */

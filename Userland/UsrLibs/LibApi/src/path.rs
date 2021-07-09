@@ -21,7 +21,7 @@ use api_data::{
     }
 };
 
-use crate::handle::{
+use crate::kern_handle::{
     KernHandle,
     Result
 };

@@ -2,7 +2,7 @@
 
 use core::fmt;
 
-use crate::arch::dev::uart::HwUart;
+use crate::arch::dev::hw_uart::HwUart;
 
 /**
  * Simple arch independent interface for UART writing
@@ -49,7 +49,7 @@ pub trait HwUartBase: fmt::Write {
      * Initializes the underling hardware to make it active and ready to
      * receive bytes to write.
      *
-     * The method is ensured by the upper encapsulating obj that is
+     * The method is ensured by the upper encapsulating object that is
      * called only once per instance
      */
     fn init_hw(&mut self) -> bool;

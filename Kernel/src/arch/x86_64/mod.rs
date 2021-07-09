@@ -1,9 +1,12 @@
 /*! x86_64 implementation code */
 
 pub mod addr;
-pub mod cpu;
-pub mod descs;
+pub mod desc_table;
 pub mod dev;
-pub mod info;
+pub mod gdt;
+pub mod hw_boot_info;
+pub mod hw_cpu;
+pub mod idt;
+pub mod tss;
 
 global_asm!(include_str!("kernel_start.S"), options(att_syntax));

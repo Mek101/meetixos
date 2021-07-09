@@ -5,7 +5,7 @@ use core::{
     ptr::NonNull
 };
 
-use api::obj::{
+use api::object::{
     impls::{
         mmap::MMap,
         mutex::OsRawMutex
@@ -13,7 +13,7 @@ use api::obj::{
     Object,
     UserCreatableObject
 };
-use heap::locked::RawLazyLockedHeap;
+use heap::lazy_locked_heap::RawLazyLockedHeap;
 use sync::mutex::CreatMayFailBackRawMutex;
 
 /**

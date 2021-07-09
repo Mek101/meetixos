@@ -1,6 +1,6 @@
 /*! riscv code implementation */
 
-use crate::trace::HwTracerHelperBase;
+use crate::stack_back_trace::HwTracerHelperBase;
 
 /**
  * riscv `HwTracerHelperBase` implementation

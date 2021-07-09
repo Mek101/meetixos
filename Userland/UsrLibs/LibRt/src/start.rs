@@ -6,7 +6,7 @@ use api::task::{
 };
 use api_data::{
     error::OsError,
-    task::exit::TaskExitStatus
+    task::exit_status::TaskExitStatus
 };
 
 /**

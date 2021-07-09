@@ -2,7 +2,7 @@
 
 use core::convert::TryFrom;
 
-use bits::fields::BitFields;
+use bits::bit_fields::BitFields;
 
 use crate::{
     addr::{
