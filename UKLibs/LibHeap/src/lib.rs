@@ -68,7 +68,7 @@ pub struct Heap {
     m_mem_from_supplier: usize
 }
 
-impl Heap {
+impl Heap /* Constants */ {
     /**
      * Initial amount of memory requested to the `HeapMemorySupplier` by the
      * `Heap::new()`
@@ -82,7 +82,9 @@ impl Heap {
                                                 + Slab::<4096>::PREFERRED_EXTEND_SIZE
                                                 + Slab::<8192>::PREFERRED_EXTEND_SIZE
                                                 + LinkedList::PREFERRED_EXTEND_SIZE;
+}
 
+impl Heap /* Constructors */ {
     /**
      * Constructs an `Heap` which relies on the given `HeapMemorySupplier`
      */
@@ -159,7 +161,9 @@ impl Heap {
                     m_in_use_mem: 0,
                     m_mem_from_supplier: up_aligned_area_size })
     }
+}
 
+impl Heap /* Methods */ {
     /**
      * Allocates new memory that fits the given `Layout` request.
      *
@@ -213,7 +217,9 @@ impl Heap {
         }
         self.m_in_use_mem -= layout.size();
     }
+}
 
+impl Heap /* Getters */ {
     /**
      * Returns the total amount of memory returned by the
      * `HeapMemorySupplier`
@@ -235,7 +241,9 @@ impl Heap {
     pub fn memory_available(&self) -> usize {
         self.m_mem_from_supplier - self.m_in_use_mem
     }
+}
 
+impl Heap /* Privates */ {
     /**
      * Refills the memory pool for the given `SubHeapAllocator`
      */
@@ -320,7 +328,10 @@ enum AllocSelector {
     LinkedList
 }
 
-impl AllocSelector {
+impl AllocSelector /* Static Functions */ {
+    /**
+     * Returns the variants which servers as best the given `Layout` request
+     */
     fn for_layout(layout: &Layout) -> Self {
         /* select the SubHeapAllocator from the given layout size */
         let mut allocator_selected = if layout.size() <= 64 && layout.align() <= 64 {
@@ -352,18 +363,23 @@ impl AllocSelector {
         }
         allocator_selected
     }
+}
 
+impl AllocSelector /* Getters */ {
+    /**
+     * Returns the Block size for the current variant
+     */
     fn block_size(&self) -> Option<usize> {
         match self {
-            AllocSelector::Slab64 => Some(64),
-            AllocSelector::Slab128 => Some(128),
-            AllocSelector::Slab256 => Some(256),
-            AllocSelector::Slab512 => Some(512),
-            AllocSelector::Slab1024 => Some(1024),
-            AllocSelector::Slab2048 => Some(2048),
-            AllocSelector::Slab4096 => Some(4096),
-            AllocSelector::Slab8192 => Some(8192),
-            AllocSelector::LinkedList => None
+            Self::Slab64 => Some(64),
+            Self::Slab128 => Some(128),
+            Self::Slab256 => Some(256),
+            Self::Slab512 => Some(512),
+            Self::Slab1024 => Some(1024),
+            Self::Slab2048 => Some(2048),
+            Self::Slab4096 => Some(4096),
+            Self::Slab8192 => Some(8192),
+            Self::LinkedList => None
         }
     }
 }

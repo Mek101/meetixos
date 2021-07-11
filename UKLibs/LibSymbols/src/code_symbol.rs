@@ -20,7 +20,7 @@ pub struct CodeSymbol {
     m_symbol_name: String
 }
 
-impl CodeSymbol {
+impl CodeSymbol /* Constructors */ {
     /**
      * Constructs a `CodeSymbol` from the given `raw_line` string.
      *
@@ -54,7 +54,9 @@ impl CodeSymbol {
         Some(Self { m_virt_addr: virt_addr,
                     m_symbol_name: symbol_name })
     }
+}
 
+impl CodeSymbol /* Getters */ {
     /**
      * Returns the virtual address on which this symbol starts
      */

@@ -37,6 +37,7 @@ pub trait Address:
     /**
      * Constructs a null `Address`
      */
+    #[inline]
     fn null() -> Self {
         Self::from(0)
     }
@@ -44,6 +45,7 @@ pub trait Address:
     /**
      * Returns the aligned up `Address` using the given `align`
      */
+    #[inline]
     fn align_up<A>(&self, align: A) -> Self
         where A: Into<usize> {
         Self::from(align_up(**self, align.into()))
@@ -52,6 +54,7 @@ pub trait Address:
     /**
      * Returns the aligned down `Address` using the given `align`
      */
+    #[inline]
     fn align_down<A>(&self, align: A) -> Self
         where A: Into<usize> {
         Self::from(align_down(**self, align.into()))
@@ -60,6 +63,7 @@ pub trait Address:
     /**
      * Returns this `Address` + the given `offset`
      */
+    #[inline]
     fn offset(&self, offset: isize) -> Self {
         if offset > 0 {
             Self::from(**self + offset as usize)
@@ -73,6 +77,7 @@ pub trait Address:
     /**
      * Returns whether this `Address` is aligned with `align`
      */
+    #[inline]
     fn is_aligned<A>(&self, align: A) -> bool
         where A: Into<usize> {
         self.align_down(align).eq(self)
@@ -81,6 +86,7 @@ pub trait Address:
     /**
      * Returns whether this `Address` contains a zero value
      */
+    #[inline]
     fn is_null(&self) -> bool {
         **self == 0
     }

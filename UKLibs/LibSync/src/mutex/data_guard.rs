@@ -31,7 +31,7 @@ pub struct MutexDataGuard<'a, R, T>
 
 impl<'a, R, T> MutexDataGuard<'a, R, T>
     where R: BackRawMutex + 'a,
-          T: ?Sized + 'a
+          T: ?Sized + 'a /* Constructors */
 {
     /**
      * Constructs a `MutexDataGuard` which wraps the given `Mutex`
@@ -40,7 +40,12 @@ impl<'a, R, T> MutexDataGuard<'a, R, T>
         Self { m_mutex: mutex,
                m_security: PhantomData }
     }
+}
 
+impl<'a, R, T> MutexDataGuard<'a, R, T>
+    where R: BackRawMutex + 'a,
+          T: ?Sized + 'a /* Getters */
+{
     /**
      * Returns the reference to the held `Mutex`
      */

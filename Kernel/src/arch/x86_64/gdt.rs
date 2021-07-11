@@ -31,7 +31,7 @@ pub struct GlobalDescTable {
     m_next_free_desc: usize
 }
 
-impl GlobalDescTable {
+impl GlobalDescTable /* Constructors */ {
     /**
      * Constructs a `GlobalDescTable` with already the null-segment
      */
@@ -39,7 +39,9 @@ impl GlobalDescTable {
         Self { m_desc_table: [0; 8],
                m_next_free_desc: 1 }
     }
+}
 
+impl GlobalDescTable /* Methods */ {
     /**
      * Appends a `Segment` descriptor
      */
@@ -62,10 +64,10 @@ impl GlobalDescTable {
         /* select the <CpuRingMode> */
         let cpu_ring_mode = match segment {
             Segment::Common(raw_value) => {
-                let descr_flags = SegmentFlags::from(raw_value);
+                let desc_flags = SegmentFlags::from(raw_value);
 
                 /* common segments could be for userland or only for kernel */
-                if descr_flags.is_enabled(SegmentFlagsBits::DplRing3) {
+                if desc_flags.is_enabled(SegmentFlagsBits::DplRing3) {
                     CpuRingMode::Ring3
                 } else {
                     CpuRingMode::Ring0
@@ -87,8 +89,8 @@ impl GlobalDescTable {
     pub fn load(&'static self) {
         unsafe {
             asm!("lgdt [{}]",
-                 in(reg) &self.table_ptr(),
-                 options(readonly, nostack, preserves_flags));
+            in(reg) &self.table_ptr(),
+            options(readonly, nostack, preserves_flags));
         }
     }
 
@@ -99,7 +101,9 @@ impl GlobalDescTable {
         DescTablePtr::new((self.m_next_free_desc * size_of::<usize>() - 1) as u16,
                           self.m_desc_table.as_ptr().into())
     }
+}
 
+impl GlobalDescTable /* Privates */ {
     /**
      * Pushes a new entry inside the table, panics if the limit is reached
      */
@@ -127,14 +131,16 @@ pub struct SegmentSelector {
     m_raw_value: u16
 }
 
-impl SegmentSelector {
+impl SegmentSelector /* Constructors */ {
     /**
      * Constructs a `SegmentSelector` from the given parameters
      */
     pub const fn new(array_index: u16, cpu_ring_mode: CpuRingMode) -> Self {
         Self { m_raw_value: array_index << 3 | cpu_ring_mode as u16 }
     }
+}
 
+impl SegmentSelector /* Getters */ {
     /**
      * Returns the index of the table where the CPU must load the `Segment`
      */
@@ -148,7 +154,9 @@ impl SegmentSelector {
     pub fn cpu_ring_mode(&self) -> CpuRingMode {
         CpuRingMode::from(self.m_raw_value & 0b11)
     }
+}
 
+impl SegmentSelector /* Setters */ {
     /**
      * Sets the `CpuRingMode` to load the segment
      */
@@ -167,7 +175,7 @@ pub enum Segment {
     System(usize, usize)
 }
 
-impl Segment {
+impl Segment /* Static Functions */ {
     /**
      * Returns a `Segment` configured for kernel-code
      */
@@ -284,7 +292,7 @@ pub enum SegmentFlagsBits {
     Granularity = 55
 }
 
-impl SegmentFlagsBits {
+impl SegmentFlagsBits /* Static Functions */ {
     /**
      * Returns the common `SegmentFlags`
      */

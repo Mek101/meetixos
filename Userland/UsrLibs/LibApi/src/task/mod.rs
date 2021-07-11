@@ -42,33 +42,16 @@ pub struct TaskHandle {
     m_handle: KernHandle
 }
 
-impl TaskHandle {
+impl TaskHandle /* Constructors */ {
     /**
      * Constructs an `TaskHandle` from the `raw_handle` value given
      */
     pub(crate) fn from_raw(raw_handle: usize) -> Self {
         Self { m_handle: KernHandle::from_raw(raw_handle) }
     }
+}
 
-    /**
-     * Obtains the current `TaskHandle` of the `TaskType` given
-     */
-    fn this(task_type: TaskType) -> Self {
-        KernHandle::kern_call_1(KernFnPath::Task(KernTaskFnId::This), task_type.into())
-                   .map(|raw_task_handle| Self { m_handle: KernHandle::from_raw(raw_task_handle) })
-                   .expect("Failed to obtain current Task handle")
-    }
-
-    /**
-     * Exists the current `TaskHandle` with the given `TaskExitStatus`
-     */
-    fn exit(task_type: TaskType, exit_status: TaskExitStatus) -> ! {
-        let _ = KernHandle::kern_call_2(KernFnPath::Task(KernTaskFnId::Exit),
-                                        task_type.into(),
-                                        exit_status.as_syscall_ptr());
-        unreachable!()
-    }
-
+impl TaskHandle /* Methods */ {
     /**
      * Returns the `TaskId` of this `TaskHandle`
      */
@@ -77,7 +60,18 @@ impl TaskHandle {
             .inst_kern_call_0(KernFnPath::Task(KernTaskFnId::OsId))
             .map(|task_id| task_id as TaskId)
     }
+}
 
+impl TaskHandle /* Getters */ {
+    /**
+     * Returns the reference to the `KernHandle`
+     */
+    pub fn kern_handle(&self) -> &KernHandle {
+        &self.m_handle
+    }
+}
+
+impl TaskHandle /* Privates */ {
     /**
      * Terminates this `TaskHandle`
      */
@@ -88,7 +82,7 @@ impl TaskHandle {
             .map(|_| ())
     }
 
-    /**  
+    /**
      * Yields the execution
      */
     fn yield_next(&self) {
@@ -108,10 +102,22 @@ impl TaskHandle {
     }
 
     /**
-     * Returns the reference to the `KernHandle`
+     * Obtains the current `TaskHandle` of the `TaskType` given
      */
-    pub fn kern_handle(&self) -> &KernHandle {
-        &self.m_handle
+    fn this(task_type: TaskType) -> Self {
+        KernHandle::kern_call_1(KernFnPath::Task(KernTaskFnId::This), task_type.into())
+                   .map(|raw_task_handle| Self { m_handle: KernHandle::from_raw(raw_task_handle) })
+                   .expect("Failed to obtain current Task handle")
+    }
+
+    /**
+     * Exists the current `TaskHandle` with the given `TaskExitStatus`
+     */
+    fn exit(task_type: TaskType, exit_status: TaskExitStatus) -> ! {
+        let _ = KernHandle::kern_call_2(KernFnPath::Task(KernTaskFnId::Exit),
+                                        task_type.into(),
+                                        exit_status.as_syscall_ptr());
+        unreachable!()
     }
 }
 

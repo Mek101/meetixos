@@ -34,7 +34,7 @@ pub struct BitFlags<B, T>
 
 impl<B, T> BitFlags<B, T>
     where B: BitFields + Default + Copy,
-          T: BitFlagsValues
+          T: BitFlagsValues /* Constructors */
 {
     /**
      * Constructs a zeroed `BitFlags`
@@ -73,35 +73,12 @@ impl<B, T> BitFlags<B, T>
         Self { m_raw_bits: raw_bits,
                _unused: PhantomData }
     }
+}
 
-    /**
-     * Enables the bit corresponding to the given `bit`
-     */
-    #[inline]
-    pub fn set_enabled(&mut self, bit: T) -> &mut Self {
-        self.set(bit, true)
-    }
-
-    /**
-     * Disables the bit corresponding to the given `bit`
-     */
-    #[inline]
-    pub fn set_disabled(&mut self, bit: T) -> &mut Self {
-        self.set(bit, false)
-    }
-
-    /**
-     * Sets for the bit corresponding to `bit` the `bit_value` value
-     */
-    #[inline]
-    pub fn set(&mut self, bit: T, bit_value: bool) -> &mut Self {
-        let bit_index = bit.into();
-        assert!(bit_index < B::BIT_LEN);
-
-        self.m_raw_bits.set_bit(bit_index, bit_value);
-        self
-    }
-
+impl<B, T> BitFlags<B, T>
+    where B: BitFields + Default + Copy,
+          T: BitFlagsValues /* Getters */
+{
     /**
      * Returns whether the bit corresponding to `bit` is enabled
      */
@@ -151,6 +128,39 @@ impl<B, T> BitFlags<B, T>
     #[inline]
     pub fn raw_bits(&self) -> B {
         self.m_raw_bits
+    }
+}
+
+impl<B, T> BitFlags<B, T>
+    where B: BitFields + Default + Copy,
+          T: BitFlagsValues /* Setters */
+{
+    /**
+     * Enables the bit corresponding to the given `bit`
+     */
+    #[inline]
+    pub fn set_enabled(&mut self, bit: T) -> &mut Self {
+        self.set(bit, true)
+    }
+
+    /**
+     * Disables the bit corresponding to the given `bit`
+     */
+    #[inline]
+    pub fn set_disabled(&mut self, bit: T) -> &mut Self {
+        self.set(bit, false)
+    }
+
+    /**
+     * Sets for the bit corresponding to `bit` the `bit_value` value
+     */
+    #[inline]
+    pub fn set(&mut self, bit: T, bit_value: bool) -> &mut Self {
+        let bit_index = bit.into();
+        assert!(bit_index < B::BIT_LEN);
+
+        self.m_raw_bits.set_bit(bit_index, bit_value);
+        self
     }
 }
 

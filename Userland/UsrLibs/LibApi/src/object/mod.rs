@@ -75,14 +75,26 @@ pub struct ObjHandle {
     m_handle: KernHandle
 }
 
-impl ObjHandle {
+impl ObjHandle /* Constructors */ {
     /**
      * Constructs an `ObjHandle` from the `raw_handle` value given
      */
     pub(crate) fn from_raw(raw_handle: usize) -> Self {
         Self { m_handle: KernHandle::from_raw(raw_handle) }
     }
+}
 
+impl ObjHandle /* Getters */ {
+    /**
+     * Returns the reference to the underling `KernHandle`
+     */
+    #[inline]
+    pub fn kern_handle(&self) -> &KernHandle {
+        &self.m_handle
+    }
+}
+
+impl ObjHandle /* Privates */ {
     /**
      * Shares this handle with the given `Task`
      */
@@ -153,14 +165,6 @@ impl ObjHandle {
             .inst_kern_call_1(KernFnPath::Object(KernObjectFnId::UpdateInfo),
                               raw_obj_info.as_syscall_ptr())
             .map(|_| ())
-    }
-
-    /**
-     * Returns the reference to the underling `KernHandle`
-     */
-    #[inline]
-    pub fn kern_handle(&self) -> &KernHandle {
-        &self.m_handle
     }
 }
 

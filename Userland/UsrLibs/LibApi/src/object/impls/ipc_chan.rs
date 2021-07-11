@@ -41,7 +41,7 @@ pub struct IpcChan {
     m_obj_handle: ObjHandle
 }
 
-impl IpcChan {
+impl IpcChan /* Methods */ {
     /**
      * Appends the given `payload` to the message-queue of this `IpcChan`.
      *

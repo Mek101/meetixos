@@ -39,7 +39,7 @@ pub struct Link {
     m_obj_handle: ObjHandle
 }
 
-impl Link {
+impl Link /* Methods */ {
     /**
      * Dereferences the link and returns the `ObjHandle` of the bind
      * `Object`.

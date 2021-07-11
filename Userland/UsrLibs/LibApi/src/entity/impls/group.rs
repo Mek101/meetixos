@@ -37,7 +37,7 @@ pub struct OsGroup {
     m_ent_handle: OsEntityHandle
 }
 
-impl OsGroup {
+impl OsGroup /* Methods */ {
     /**
      * Adds the given `OsUser` to this `OsGroup`
      *

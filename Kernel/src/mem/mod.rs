@@ -5,9 +5,6 @@ use core::{
     hash::Hash
 };
 
-pub mod phys;
-pub mod virt;
-
 /**
  * Default 4KiB page-frame size
  */

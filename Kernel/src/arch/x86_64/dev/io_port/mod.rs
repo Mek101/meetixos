@@ -28,6 +28,7 @@ impl<T> IOPort<T> where T: HwIOPort {
     /**
      * Reads a value from the selected I/O port
      */
+    #[inline]
     pub unsafe fn read(&self) -> T {
         T::io_port_read(self.m_port)
     }
@@ -35,6 +36,7 @@ impl<T> IOPort<T> where T: HwIOPort {
     /**
      * Writes the given value to the selected I/O port
      */
+    #[inline]
     pub unsafe fn write(&self, value: T) {
         T::io_port_write(self.m_port, value);
     }

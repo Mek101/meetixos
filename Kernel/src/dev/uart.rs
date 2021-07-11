@@ -11,7 +11,7 @@ pub struct Uart {
     m_hw_uart: HwUart
 }
 
-impl Uart {
+impl Uart /* Constructors */ {
     /**
      * Constructs an uninitialized `Uart` which must be initialized with
      * `Uart::init()`
@@ -19,7 +19,9 @@ impl Uart {
     pub const fn new() -> Self {
         Self { m_hw_uart: HwUart::CONST_NEW }
     }
+}
 
+impl Uart /* Methods */ {
     /**
      * Initializes the underling hardware to make it active and ready to
      * receive bytes to write

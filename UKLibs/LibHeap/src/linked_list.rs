@@ -26,7 +26,7 @@ pub struct LinkedList {
     m_first_hole: Hole
 }
 
-impl LinkedList {
+impl LinkedList /* Constructors */ {
     /**
      * Constructs a `LinkedList` from the given parameters
      */
@@ -44,7 +44,9 @@ impl LinkedList {
 
         LinkedList { m_first_hole: Hole::new(0, Some(&mut *first_real_hole_ptr)) }
     }
+}
 
+impl LinkedList /* Methods */ {
     /**
      * Finds and returns the first available Hole big-enough to satisfy the
      * given layout
@@ -75,14 +77,18 @@ impl LinkedList {
                    nn_ptr.as_ptr() as usize,
                    Self::align_layout(layout).size());
     }
+}
 
+impl LinkedList /* Static Functions */ {
     /**
      * Returns the minimal allocation size
      */
     pub const fn block_size() -> usize {
         size_of::<usize>() * 2
     }
+}
 
+impl LinkedList /* Privates */ {
     /**
      * Returns a layout with size increased to fit at least
      * `LinkedList::min_size` and proper alignment of a `Hole`
@@ -125,7 +131,7 @@ struct Hole {
     m_next_hole: Option<&'static mut Hole>
 }
 
-impl Hole {
+impl Hole /* Constructors */ {
     /**
      * Constructs a `Hole` with the given parameters
      */
@@ -133,7 +139,9 @@ impl Hole {
         Self { m_size: hole_size,
                m_next_hole: next_hole }
     }
+}
 
+impl Hole /* Getters */ {
     /**
      * Returns the information about this `Hole`
      */
@@ -151,7 +159,7 @@ struct HoleInfo {
     m_size: usize
 }
 
-impl HoleInfo {
+impl HoleInfo /* Constructors */ {
     /**
      * Constructs a `HoleInfo` from the given parameters
      */

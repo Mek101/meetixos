@@ -43,7 +43,7 @@ pub enum TaskExecCpu {
     Mask(u64)
 }
 
-impl TaskExecCpu {
+impl TaskExecCpu /* Methods */ {
     /**
      * Returns the variant cardinal value
      */

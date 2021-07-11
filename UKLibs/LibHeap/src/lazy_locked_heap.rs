@@ -40,7 +40,7 @@ pub struct RawLazyLockedHeap<M>
     m_lazy_locked_heap: Lazy<Mutex<M, Heap>, LazyHeapInitializer<M>>
 }
 
-impl<M> RawLazyLockedHeap<M> where M: BackRawMutex + 'static {
+impl<M> RawLazyLockedHeap<M> where M: BackRawMutex + 'static /* Constructors */ {
     /**
      * Constructs a `RawLazyLockedHeap` without initialize the internal
      * `sync::Mutex<Heap>`
@@ -51,14 +51,18 @@ impl<M> RawLazyLockedHeap<M> where M: BackRawMutex + 'static {
         Self { m_lazy_locked_heap:
                    Lazy::new(LazyHeapInitializer::new(raw_mutex_supplier, mem_supplier)) }
     }
+}
 
+impl<M> RawLazyLockedHeap<M> where M: BackRawMutex + 'static /* Methods */ {
     /**
      * Forces the initialization of this lazy `Heap`
      */
     pub fn force_init(&self) {
         self.m_lazy_locked_heap.lock().memory_in_use();
     }
+}
 
+impl<M> RawLazyLockedHeap<M> where M: BackRawMutex + 'static /* Getters */ {
     /**
      * Returns the total amount of memory returned by the
      * `HeapMemorySupplier`
@@ -108,7 +112,7 @@ struct LazyHeapInitializer<T>
     m_mem_supplier: HeapMemorySupplier
 }
 
-impl<T> LazyHeapInitializer<T> where T: BackRawMutex {
+impl<T> LazyHeapInitializer<T> where T: BackRawMutex /* Constructors */ {
     /**
      * Constructs a `LazyHeapInitializer`
      */

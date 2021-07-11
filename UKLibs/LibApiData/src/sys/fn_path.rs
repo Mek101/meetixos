@@ -59,7 +59,7 @@ pub enum KernFnPath {
     Invalid
 }
 
-impl KernFnPath {
+impl KernFnPath /* Methods */ {
     /**
      * Returns the current function class variant as `u16`
      */

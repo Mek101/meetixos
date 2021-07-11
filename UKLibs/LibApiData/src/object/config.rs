@@ -37,7 +37,7 @@ pub struct RawObjConfig<'a> {
     m_data_size: Option<usize>
 }
 
-impl<'a> RawObjConfig<'a> {
+impl<'a> RawObjConfig<'a> /* Constructors */ {
     /**
      * Constructs and empty `RawObjConfig`
      */
@@ -55,19 +55,14 @@ impl<'a> RawObjConfig<'a> {
                m_type: obj_type,
                m_path: None }
     }
+}
 
+impl<'a> RawObjConfig<'a> /* Getters */ {
     /**
      * Returns the `ObjType`
      */
     pub fn obj_type(&self) -> ObjType {
         self.m_type
-    }
-
-    /**
-     * Sets the `ObjType`    
-     */
-    pub fn set_obj_type(&mut self, obj_type: ObjType) {
-        self.m_type = obj_type;
     }
 
     /**
@@ -78,24 +73,10 @@ impl<'a> RawObjConfig<'a> {
     }
 
     /**
-     * Sets the path to the `Object` to open
-     */
-    pub fn set_path(&mut self, path: &'a [PathComponent]) {
-        self.m_path = Some(path);
-    }
-
-    /**
      * Returns the reference to te `ObjConfigFlags`
      */
     pub fn flags(&self) -> &ObjConfigFlags {
         &self.m_flags
-    }
-
-    /**
-     * Returns the mutable reference to te `ObjConfigFlags`
-     */
-    pub fn flags_mut(&mut self) -> &mut ObjConfigFlags {
-        &mut self.m_flags
     }
 
     /**
@@ -106,17 +87,40 @@ impl<'a> RawObjConfig<'a> {
     }
 
     /**
-     * Returns the mutable reference to te `RawObjGrants`
-     */
-    pub fn grants_mut(&mut self) -> &mut RawObjGrants {
-        &mut self.m_grants
-    }
-
-    /**
      * Returns the optional truncation size
      */
     pub fn data_size(&self) -> Option<usize> {
         self.m_data_size
+    }
+}
+
+impl<'a> RawObjConfig<'a> /* Setters */ {
+    /**
+     * Sets the `ObjType`    
+     */
+    pub fn set_obj_type(&mut self, obj_type: ObjType) {
+        self.m_type = obj_type;
+    }
+
+    /**
+     * Sets the path to the `Object` to open
+     */
+    pub fn set_path(&mut self, path: &'a [PathComponent]) {
+        self.m_path = Some(path);
+    }
+
+    /**
+     * Returns the mutable reference to te `ObjConfigFlags`
+     */
+    pub fn flags_mut(&mut self) -> &mut ObjConfigFlags {
+        &mut self.m_flags
+    }
+
+    /**
+     * Returns the mutable reference to te `RawObjGrants`
+     */
+    pub fn grants_mut(&mut self) -> &mut RawObjGrants {
+        &mut self.m_grants
     }
 
     /**

@@ -40,7 +40,7 @@ pub struct Device {
     m_obj_handle: ObjHandle
 }
 
-impl Device {
+impl Device /* Methods */ {
     /**
      * Requests to the underling driver to fill `buf` for at max
      * `buf.len()` bytes reading them from the source of the driver (like

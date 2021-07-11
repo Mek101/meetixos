@@ -35,7 +35,7 @@ pub struct RawOsEntityConfig<'a> {
     m_flags: OsEntityConfigFlags
 }
 
-impl<'a> RawOsEntityConfig<'a> {
+impl<'a> RawOsEntityConfig<'a> /* Constructors */ {
     /**
      * Constructs and empty `RawOsEntityConfig`
      */
@@ -51,19 +51,14 @@ impl<'a> RawOsEntityConfig<'a> {
                m_name: None,
                m_type: os_ent_type }
     }
+}
 
+impl<'a> RawOsEntityConfig<'a> /* Getters */ {
     /**
      * Returns the optionally stored `OsEntityId`
      */
     pub fn id(&self) -> Option<OsEntityId> {
         self.m_id
-    }
-
-    /**
-     * Sets an explicit `OsEntityId`
-     */
-    pub fn set_id(&mut self, raw_id: OsEntityId) {
-        self.m_id = Some(raw_id);
     }
 
     /**
@@ -74,13 +69,6 @@ impl<'a> RawOsEntityConfig<'a> {
     }
 
     /**
-     * Sets the `OsEntityType`    
-     */
-    pub fn set_entity_type(&mut self, ent_type: OsEntityType) {
-        self.m_type = ent_type;
-    }
-
-    /**
      * Returns the optionally stored `OsEntity` name
      */
     pub fn name(&self) -> Option<&'a str> {
@@ -88,17 +76,33 @@ impl<'a> RawOsEntityConfig<'a> {
     }
 
     /**
-     * Sets an explicit `OsEntity` name
-     */
-    pub fn set_name(&mut self, name: &'a str) {
-        self.m_name = Some(name);
-    }
-
-    /**
      * Returns the reference to te `OsEntityConfigFlags`
      */
     pub fn flags(&self) -> &OsEntityConfigFlags {
         &self.m_flags
+    }
+}
+
+impl<'a> RawOsEntityConfig<'a> /* Setters */ {
+    /**
+     * Sets an explicit `OsEntityId`
+     */
+    pub fn set_id(&mut self, raw_id: OsEntityId) {
+        self.m_id = Some(raw_id);
+    }
+
+    /**
+     * Sets the `OsEntityType`    
+     */
+    pub fn set_entity_type(&mut self, ent_type: OsEntityType) {
+        self.m_type = ent_type;
+    }
+
+    /**
+     * Sets an explicit `OsEntity` name
+     */
+    pub fn set_name(&mut self, name: &'a str) {
+        self.m_name = Some(name);
     }
 
     /**

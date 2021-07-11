@@ -63,6 +63,5 @@ pub extern "C" fn kernel_rust_start(raw_boot_info_ptr: *const u8) -> ! {
                                      .map(|mem_area| mem_area.size())
                                      .sum::<usize>()
                                      .display_pretty());
-
     panic!("TODO implement the remaining code");
 }

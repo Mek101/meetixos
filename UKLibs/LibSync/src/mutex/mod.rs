@@ -23,7 +23,7 @@ pub struct Mutex<R, T>
     m_held_data: UnsafeCell<T>
 }
 
-impl<R, T> Mutex<R, T> where R: ConstCreatBackRawMutex {
+impl<R, T> Mutex<R, T> where R: ConstCreatBackRawMutex /* Constructors */ {
     /**
      * Constructs a `Mutex` wrapping the given `value` and a const-creatable
      * `BackRawMutex`
@@ -34,7 +34,7 @@ impl<R, T> Mutex<R, T> where R: ConstCreatBackRawMutex {
     }
 }
 
-impl<R, T> Mutex<R, T> where R: CreatMayFailBackRawMutex {
+impl<R, T> Mutex<R, T> where R: CreatMayFailBackRawMutex /* Constructors */ {
     /**
      * Constructs a `Mutex` wrapping the given `value` and a may-fail
      * `BackRawMutex`
@@ -45,7 +45,7 @@ impl<R, T> Mutex<R, T> where R: CreatMayFailBackRawMutex {
     }
 }
 
-impl<R, T> Mutex<R, T> where R: BackRawMutex {
+impl<R, T> Mutex<R, T> where R: BackRawMutex /* Constructors */ {
     /**
      * Constructs a `Mutex` from his fundamental components
      */
@@ -53,7 +53,9 @@ impl<R, T> Mutex<R, T> where R: BackRawMutex {
         Self { m_back_raw_mutex: back_mutex,
                m_held_data: UnsafeCell::new(value) }
     }
+}
 
+impl<R, T> Mutex<R, T> where R: BackRawMutex /* Getter */ {
     /**
      * Returns the unwrapped inner data
      */
@@ -65,7 +67,7 @@ impl<R, T> Mutex<R, T> where R: BackRawMutex {
 
 impl<R, T> Mutex<R, T>
     where R: BackRawMutex,
-          T: ?Sized
+          T: ?Sized /* Methods */
 {
     /**
      * Acquires the `Mutex`, blocking the current thread until it is able to
@@ -101,7 +103,12 @@ impl<R, T> Mutex<R, T>
     pub unsafe fn force_unlock(&self) {
         self.m_back_raw_mutex.do_unlock()
     }
+}
 
+impl<R, T> Mutex<R, T>
+    where R: BackRawMutex,
+          T: ?Sized /* Getters */
+{
     /**
      * Returns whether this `Mutex` is already locked
      */

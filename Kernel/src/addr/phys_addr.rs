@@ -37,12 +37,14 @@ impl Address for PhysAddr {
 }
 
 impl Default for PhysAddr {
+    #[inline]
     fn default() -> Self {
         Self::null()
     }
 }
 
 impl From<usize> for PhysAddr {
+    #[inline]
     fn from(raw_phys_addr: usize) -> Self {
         Self { m_hw_phys_addr: HwPhysAddr::from(raw_phys_addr) }
     }
@@ -51,18 +53,21 @@ impl From<usize> for PhysAddr {
 impl Deref for PhysAddr {
     type Target = usize;
 
+    #[inline]
     fn deref(&self) -> &Self::Target {
         self.m_hw_phys_addr.deref()
     }
 }
 
 impl Debug for PhysAddr {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "PhysAddr({:#018x})", **self)
     }
 }
 
 impl Display for PhysAddr {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:#018x}", **self)
     }

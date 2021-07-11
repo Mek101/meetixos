@@ -48,7 +48,9 @@ pub struct ObjConfig<'a, T, M>
     _unused: PhantomData<(T, M)>
 }
 
-impl<'a, T> ObjConfig<'a, T, CreatMode> where T: Object + UserCreatableObject {
+impl<'a, T> ObjConfig<'a, T, CreatMode>
+    where T: Object + UserCreatableObject /* Constructors */
+{
     /**
      * Constructs a `ObjConfig` for `Object` creation
      */
@@ -56,37 +58,9 @@ impl<'a, T> ObjConfig<'a, T, CreatMode> where T: Object + UserCreatableObject {
         Self { m_raw_config: RawObjConfig::new(T::TYPE, true),
                _unused: PhantomData }
     }
-
-    /**
-     * Sets custom `ObjGrants` for the creation of the new `Object`
-     */
-    pub fn with_grants(&mut self, grants: ObjGrants<T>) -> &mut Self {
-        *self.m_raw_config.grants_mut() = *grants;
-        self
-    }
 }
 
-impl<'a, T> ObjConfig<'a, T, CreatMode>
-    where T: Object + UserCreatableObject + AnonymousObject
-{
-    /**
-     * Dispatches the configuration to the kernel which creates a new
-     * anonymous `Object`.
-     *
-     * An anonymous `Object` is an object that have no name, so it cannot be
-     * explicitly open by other `Task`s, but can be shared among other with
-     * `Object::send()`.
-     *
-     * The lifetime of the `Object`s created with this method is the scope
-     * which contains the handle, when the `Object` goes out of scope
-     * (from all the tasks that owns it) it is definitely destroyed
-     */
-    pub fn apply_for_anon(&self) -> Result<T> {
-        self.apply_builder_config()
-    }
-}
-
-impl<'a, T> ObjConfig<'a, T, OpenMode> where T: Object {
+impl<'a, T> ObjConfig<'a, T, OpenMode> where T: Object /* Constructors */ {
     /**
      * Constructs an empty `ObjConfig` for `Object` opening
      */
@@ -94,63 +68,12 @@ impl<'a, T> ObjConfig<'a, T, OpenMode> where T: Object {
         Self { m_raw_config: RawObjConfig::new(T::TYPE, false),
                _unused: PhantomData }
     }
-
-    /**
-     * Ensures that the `Object` can be opened only by one `Task` a time
-     */
-    pub fn exclusive(&mut self) -> &mut Self {
-        self.m_raw_config.flags_mut().set_enabled(ObjConfigBits::Exclusive);
-        self
-    }
-}
-
-impl<'a, T, M> ObjConfig<'a, T, M>
-    where T: Object + SizeableDataObject,
-          M: ConfigMode
-{
-    /**
-     * Truncates the data size to the specified amount
-     */
-    pub fn with_data_size(&mut self, data_size: usize) -> &mut Self {
-        self.m_raw_config.set_data_size(data_size);
-        self
-    }
-}
-
-impl<'a, T, M> ObjConfig<'a, T, M>
-    where T: Object + ExecutableDataObject,
-          M: ConfigMode
-{
-    /**
-    * Enables data executable operations
-
-    */
-    pub fn for_exec(&mut self) -> &mut Self {
-        self.m_raw_config.flags_mut().set_enabled(ObjConfigBits::Exec);
-        self
-    }
 }
 
 impl<'a, T, M> ObjConfig<'a, T, M>
     where T: Object,
-          M: ConfigMode
+          M: ConfigMode /* Methods */
 {
-    /**
-     * Enables data read operations
-     */
-    pub fn for_read(&mut self) -> &mut Self {
-        self.m_raw_config.flags_mut().set_enabled(ObjConfigBits::Read);
-        self
-    }
-
-    /**
-     * Enables data write operations
-     */
-    pub fn for_write(&mut self) -> &mut Self {
-        self.m_raw_config.flags_mut().set_enabled(ObjConfigBits::Write);
-        self
-    }
-
     /**
      * Dispatches the configuration to the kernel that opens (or creates if
      * `Object::creat()` was called) the `Object` referenced by `path`.
@@ -177,7 +100,102 @@ impl<'a, T, M> ObjConfig<'a, T, M>
         self.m_raw_config.set_path(path.as_raw_components());
         self.apply_builder_config()
     }
+}
 
+impl<'a, T> ObjConfig<'a, T, CreatMode>
+    where T: Object + UserCreatableObject + AnonymousObject /* Methods */
+{
+    /**
+     * Dispatches the configuration to the kernel which creates a new
+     * anonymous `Object`.
+     *
+     * An anonymous `Object` is an object that have no name, so it cannot be
+     * explicitly open by other `Task`s, but can be shared among other with
+     * `Object::send()`.
+     *
+     * The lifetime of the `Object`s created with this method is the scope
+     * which contains the handle, when the `Object` goes out of scope
+     * (from all the tasks that owns it) it is definitely destroyed
+     */
+    pub fn apply_for_anon(&self) -> Result<T> {
+        self.apply_builder_config()
+    }
+}
+
+impl<'a, T> ObjConfig<'a, T, CreatMode>
+    where T: Object + UserCreatableObject /* Setters */
+{
+    /**
+     * Sets custom `ObjGrants` for the creation of the new `Object`
+     */
+    pub fn with_grants(&mut self, grants: ObjGrants<T>) -> &mut Self {
+        *self.m_raw_config.grants_mut() = *grants;
+        self
+    }
+}
+
+impl<'a, T> ObjConfig<'a, T, OpenMode> where T: Object /* Setters */ {
+    /**
+     * Ensures that the `Object` can be opened only by one `Task` a time
+     */
+    pub fn exclusive(&mut self) -> &mut Self {
+        self.m_raw_config.flags_mut().set_enabled(ObjConfigBits::Exclusive);
+        self
+    }
+}
+
+impl<'a, T, M> ObjConfig<'a, T, M>
+    where T: Object + SizeableDataObject,
+          M: ConfigMode /* Setters */
+{
+    /**
+     * Truncates the data size to the specified amount
+     */
+    pub fn with_data_size(&mut self, data_size: usize) -> &mut Self {
+        self.m_raw_config.set_data_size(data_size);
+        self
+    }
+}
+
+impl<'a, T, M> ObjConfig<'a, T, M>
+    where T: Object + ExecutableDataObject,
+          M: ConfigMode /* Setters */
+{
+    /**
+    * Enables data executable operations
+
+    */
+    pub fn for_exec(&mut self) -> &mut Self {
+        self.m_raw_config.flags_mut().set_enabled(ObjConfigBits::Exec);
+        self
+    }
+}
+
+impl<'a, T, M> ObjConfig<'a, T, M>
+    where T: Object,
+          M: ConfigMode /* Setters */
+{
+    /**
+     * Enables data read operations
+     */
+    pub fn for_read(&mut self) -> &mut Self {
+        self.m_raw_config.flags_mut().set_enabled(ObjConfigBits::Read);
+        self
+    }
+
+    /**
+     * Enables data write operations
+     */
+    pub fn for_write(&mut self) -> &mut Self {
+        self.m_raw_config.flags_mut().set_enabled(ObjConfigBits::Write);
+        self
+    }
+}
+
+impl<'a, T, M> ObjConfig<'a, T, M>
+    where T: Object,
+          M: ConfigMode /* Privates */
+{
     /**
      * Requests to the kernel to apply the given configuration
      */

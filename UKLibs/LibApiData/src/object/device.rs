@@ -21,7 +21,7 @@ pub struct DeviceId {
     m_serial_value: u32
 }
 
-impl DeviceId {
+impl DeviceId /* Constructors */ {
     /**
      * Constructs a `DeviceId` from the given parameters
      */
@@ -33,7 +33,9 @@ impl DeviceId {
                m_device_class: device_class,
                m_serial_value: serial_value }
     }
+}
 
+impl DeviceId /* Getters */ {
     /**
      * Returns the `DeviceIdType`
      */
@@ -102,7 +104,7 @@ pub enum DeviceIdType {
     Character
 }
 
-impl DeviceIdType {
+impl DeviceIdType /* Getters */ {
     /**
      * Returns whether this is a `Block` device
      */
@@ -163,7 +165,7 @@ pub enum DeviceIdClass {
     Framebuffer
 }
 
-impl DeviceIdClass {
+impl DeviceIdClass /* Getters */ {
     /**
      * Returns whether this is a `Storage` device
      */

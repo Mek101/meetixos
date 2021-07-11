@@ -21,7 +21,7 @@ pub struct TaskStateSegment {
     pub m_io_map_base: u16
 }
 
-impl TaskStateSegment {
+impl TaskStateSegment /* Constructors */ {
     /**
      * Constructs an empty `TaskStateSegment`
      */

@@ -46,7 +46,7 @@ pub struct File {
     m_obj_handle: ObjHandle
 }
 
-impl File {
+impl File /* Methods */ {
     /**
      * Puts into `buf` at max `buf.len()` bytes reading from the current
      * cursor position.

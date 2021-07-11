@@ -21,6 +21,7 @@ impl HwAddrBase for HwPhysAddr {
 }
 
 impl From<usize> for HwPhysAddr {
+    #[inline]
     fn from(raw_phys_addr: usize) -> Self {
         Self { m_raw_phys_addr: raw_phys_addr % (1 << 52) }
     }
@@ -29,6 +30,7 @@ impl From<usize> for HwPhysAddr {
 impl Deref for HwPhysAddr {
     type Target = usize;
 
+    #[inline]
     fn deref(&self) -> &Self::Target {
         &self.m_raw_phys_addr
     }

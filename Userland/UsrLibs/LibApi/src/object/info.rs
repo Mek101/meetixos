@@ -36,7 +36,7 @@ pub struct ObjInfo<T>
     m_modified: bool
 }
 
-impl<T> ObjInfo<T> where T: Object {
+impl<T> ObjInfo<T> where T: Object /* Constructors */ {
     /**
      * Constructs a `ObjInfo` from the given arguments
      */
@@ -46,7 +46,9 @@ impl<T> ObjInfo<T> where T: Object {
                m_obj_prot_grants: ObjGrants::from(raw_obj_info.prot_grants().clone()),
                m_modified: false }
     }
+}
 
+impl<T> ObjInfo<T> where T: Object /* Methods */ {
     /**
      * Updates back the modified metadata for the `Object` which originates
      * this
@@ -59,7 +61,9 @@ impl<T> ObjInfo<T> where T: Object {
             Ok(())
         }
     }
+}
 
+impl<T> ObjInfo<T> where T: Object /* Setters */ {
     /**
      * Sets the `OsUser` which owns the `Object`
      */

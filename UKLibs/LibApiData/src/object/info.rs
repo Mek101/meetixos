@@ -61,12 +61,14 @@ pub struct RawObjInfo {
     m_last_info_modify_inst: RawInstant
 }
 
-impl RawObjInfo {
+impl RawObjInfo /* Constants */ {
     /**
      * Convenience constant to create zero-filled vfs name buffers
      */
     const EMPTY_VFS_NAME: [u8; VFS_NAME_LEN_MAX] = [0; VFS_NAME_LEN_MAX];
+}
 
+impl RawObjInfo /* Constructors */ {
     /**
      * Constructs a `RawObjInfo` filled with the given parameters
      */
@@ -115,7 +117,9 @@ impl RawObjInfo {
                m_last_info_access_inst: last_info_access_inst,
                m_last_info_modify_inst: last_info_modify_inst }
     }
+}
 
+impl RawObjInfo /* Getters */ {
     /**
      * Returns the `ObjType` of the `Object`
      */
@@ -178,17 +182,6 @@ impl RawObjInfo {
     }
 
     /**
-     * Sets a new name for the `Object`.
-     *
-     * Asserts on `self.has_name()`
-     */
-    pub fn set_name(&mut self, name: &str) {
-        assert!(self.has_name(), "Tried to set a name for an anonymous Object");
-
-        copy_str_to_u8_buf(&mut self.m_name_buffer, name);
-    }
-
-    /**
      * Returns the number of links to the name of the `Object` (i.e the
      * parent directory and the links which links this object)
      */
@@ -232,24 +225,10 @@ impl RawObjInfo {
     }
 
     /**
-     * Sets the `RawOsEntityHandle` of the `OsUser` which owns the `Object`
-     */
-    pub fn set_os_user(&mut self, os_user_handle: RawOsEntityHandle) {
-        self.m_update_os_user_handle = os_user_handle;
-    }
-
-    /**
      * Returns the `OsEntityId` of the `OsGroup` which owns the `Object`
      */
     pub fn os_group(&self) -> OsEntityId {
         self.m_os_group_id
-    }
-
-    /**
-     * Sets the `RawOsEntityHandle` of the `OsGroup` which owns the `Object`
-     */
-    pub fn set_os_group(&mut self, os_group_handle: RawOsEntityHandle) {
-        self.m_update_os_group_handle = os_group_handle;
     }
 
     /**
@@ -274,24 +253,10 @@ impl RawObjInfo {
     }
 
     /**
-     * Sets the `Object` creation `RawInstant`
-     */
-    pub fn set_creat_inst(&mut self, new_inst: RawInstant) {
-        self.m_creat_inst = new_inst;
-    }
-
-    /**
      * Returns the `Object` last data access `RawInstant`
      */
     pub fn last_data_access_inst(&self) -> RawInstant {
         self.m_last_data_access_inst
-    }
-
-    /**
-     * Sets the `Object` last data access `RawInstant`
-     */
-    pub fn set_last_data_access_inst(&mut self, new_inst: RawInstant) {
-        self.m_last_data_access_inst = new_inst;
     }
 
     /**
@@ -302,13 +267,6 @@ impl RawObjInfo {
     }
 
     /**
-     * Sets the `Object` last boot access `RawInstant`
-     */
-    pub fn set_last_data_modify_inst(&mut self, new_inst: RawInstant) {
-        self.m_last_data_modify_inst = new_inst;
-    }
-
-    /**
      * Returns the `Object` last data modification `RawInstant`
      */
     pub fn last_info_access_inst(&self) -> RawInstant {
@@ -316,17 +274,65 @@ impl RawObjInfo {
     }
 
     /**
-     * Sets the `Object` last data modification `RawInstant`
-     */
-    pub fn set_last_info_access_inst(&mut self, new_inst: RawInstant) {
-        self.m_last_info_access_inst = new_inst;
-    }
-
-    /**
      * Returns the `Object` last boot modification `RawInstant`
      */
     pub fn last_info_modify_inst(&self) -> RawInstant {
         self.m_last_info_modify_inst
+    }
+}
+
+impl RawObjInfo /* Setters */ {
+    /**
+     * Sets a new name for the `Object`.
+     *
+     * Asserts on `self.has_name()`
+     */
+    pub fn set_name(&mut self, name: &str) {
+        assert!(self.has_name(), "Tried to set a name for an anonymous Object");
+
+        copy_str_to_u8_buf(&mut self.m_name_buffer, name);
+    }
+
+    /**
+     * Sets the `RawOsEntityHandle` of the `OsUser` which owns the `Object`
+     */
+    pub fn set_os_user(&mut self, os_user_handle: RawOsEntityHandle) {
+        self.m_update_os_user_handle = os_user_handle;
+    }
+
+    /**
+     * Sets the `RawOsEntityHandle` of the `OsGroup` which owns the `Object`
+     */
+    pub fn set_os_group(&mut self, os_group_handle: RawOsEntityHandle) {
+        self.m_update_os_group_handle = os_group_handle;
+    }
+
+    /**
+     * Sets the `Object` creation `RawInstant`
+     */
+    pub fn set_creat_inst(&mut self, new_inst: RawInstant) {
+        self.m_creat_inst = new_inst;
+    }
+
+    /**
+     * Sets the `Object` last data access `RawInstant`
+     */
+    pub fn set_last_data_access_inst(&mut self, new_inst: RawInstant) {
+        self.m_last_data_access_inst = new_inst;
+    }
+
+    /**
+     * Sets the `Object` last boot access `RawInstant`
+     */
+    pub fn set_last_data_modify_inst(&mut self, new_inst: RawInstant) {
+        self.m_last_data_modify_inst = new_inst;
+    }
+
+    /**
+     * Sets the `Object` last data modification `RawInstant`
+     */
+    pub fn set_last_info_access_inst(&mut self, new_inst: RawInstant) {
+        self.m_last_info_access_inst = new_inst;
     }
 
     /**
@@ -379,7 +385,7 @@ pub struct ObjUseInstant {
     m_use_start: RawInstant
 }
 
-impl ObjUseInstant {
+impl ObjUseInstant /* Constructors */ {
     /**
      * Constructs an `ObjUseInstant` with the given parameters
      */
@@ -388,7 +394,9 @@ impl ObjUseInstant {
                m_thread_id: thread_id,
                m_use_start: use_start }
     }
+}
 
+impl ObjUseInstant /* Getters */ {
     /**
      * Returns the `ObjUseBits` performed by the referred user
      */

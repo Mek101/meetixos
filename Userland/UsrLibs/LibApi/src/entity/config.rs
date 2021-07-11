@@ -45,7 +45,7 @@ pub struct OsEntityConfig<'a, T, M>
     _unused: PhantomData<(T, M)>
 }
 
-impl<'a, T> OsEntityConfig<'a, T, CreatMode> where T: OsEntity {
+impl<'a, T> OsEntityConfig<'a, T, CreatMode> where T: OsEntity /* Constructors */ {
     /**
      * Constructs a `OsEntityConfig` for `OsEntity` creation
      */
@@ -53,7 +53,19 @@ impl<'a, T> OsEntityConfig<'a, T, CreatMode> where T: OsEntity {
         Self { m_raw_config: RawOsEntityConfig::new(T::TYPE, true),
                _unused: PhantomData }
     }
+}
 
+impl<'a, T> OsEntityConfig<'a, T, OpenMode> where T: OsEntity /* Constructors */ {
+    /**
+     * Constructs a `OsEntityConfig` for `OsEntity` opening
+     */
+    pub(super) fn new() -> Self {
+        Self { m_raw_config: RawOsEntityConfig::new(T::TYPE, false),
+               _unused: PhantomData }
+    }
+}
+
+impl<'a, T> OsEntityConfig<'a, T, CreatMode> where T: OsEntity /* Methods */ {
     /**
      * Dispatches the configuration to the kernel, which creates a new
      * `OsEntity`.
@@ -64,23 +76,7 @@ impl<'a, T> OsEntityConfig<'a, T, CreatMode> where T: OsEntity {
     }
 }
 
-impl<'a, T> OsEntityConfig<'a, T, OpenMode> where T: OsEntity {
-    /**
-     * Constructs a `OsEntityConfig` for `OsEntity` opening
-     */
-    pub(super) fn new() -> Self {
-        Self { m_raw_config: RawOsEntityConfig::new(T::TYPE, false),
-               _unused: PhantomData }
-    }
-
-    /**
-     * Specifies the `OsEntity`'s name
-     */
-    pub fn with_name(&mut self, ent_name: &'a str) -> &mut Self {
-        self.m_raw_config.set_name(ent_name);
-        self
-    }
-
+impl<'a, T> OsEntityConfig<'a, T, OpenMode> where T: OsEntity /* Methods */ {
     /**
      * Dispatches the configuration to the kernel, which tries to find the
      * requested `OsEntity`.
@@ -92,9 +88,19 @@ impl<'a, T> OsEntityConfig<'a, T, OpenMode> where T: OsEntity {
     }
 }
 
+impl<'a, T> OsEntityConfig<'a, T, OpenMode> where T: OsEntity /* Setters */ {
+    /**
+     * Specifies the `OsEntity`'s name
+     */
+    pub fn with_name(&mut self, ent_name: &'a str) -> &mut Self {
+        self.m_raw_config.set_name(ent_name);
+        self
+    }
+}
+
 impl<'a, T, M> OsEntityConfig<'a, T, M>
     where T: OsEntity,
-          M: ConfigMode
+          M: ConfigMode /* Setters */
 {
     /**
      * Tells to the Kernel which unique identifier the `OsEntity` must
@@ -115,7 +121,12 @@ impl<'a, T, M> OsEntityConfig<'a, T, M>
         self.m_raw_config.flags_mut().set_enabled(OsEntityConfigBits::Admin);
         self
     }
+}
 
+impl<'a, T, M> OsEntityConfig<'a, T, M>
+    where T: OsEntity,
+          M: ConfigMode /* Privates */
+{
     /**
      * Requests to the kernel to apply the given configuration
      */

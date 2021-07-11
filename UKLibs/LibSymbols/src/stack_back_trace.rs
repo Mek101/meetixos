@@ -21,7 +21,7 @@ pub struct StackBackTrace<'a> {
     m_text_end: usize
 }
 
-impl<'a> StackBackTrace<'a> {
+impl<'a> StackBackTrace<'a> /* Constructors */ {
     /**
      * Constructs a `StackBackTrace` reading the stack pointer
      */

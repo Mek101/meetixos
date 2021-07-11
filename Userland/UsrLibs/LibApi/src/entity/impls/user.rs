@@ -36,7 +36,7 @@ pub struct OsUser {
     m_ent_handle: OsEntityHandle
 }
 
-impl OsUser {
+impl OsUser /* Methods */ {
     /**
      * Returns a `Vec` with the `OsEntityId`s of the `OsGroups` joined by
      * this `OsUser`

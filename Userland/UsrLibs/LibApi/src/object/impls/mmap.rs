@@ -59,7 +59,7 @@ pub struct MMap {
     m_obj_handle: ObjHandle
 }
 
-impl MMap {
+impl MMap /* Methods */ {
     /**
      * Returns an immutable RAII `MMapBox` and gains read-control of the
      * `MMap`'s memory
@@ -121,7 +121,9 @@ impl MMap {
                                                  .is_storage_device()
                                 })
     }
+}
 
+impl MMap /* Privates */ {
     fn obtain_area(&self, ptr_mode: MMapPtrMode) -> Result<(usize, usize)> {
         let mut area_size = 0;
         self.obj_handle()
@@ -179,7 +181,7 @@ pub struct MMapBox<'a, T> {
     m_mem_ref: &'a [T]
 }
 
-impl<'a, T> MMapBox<'a, T> {
+impl<'a, T> MMapBox<'a, T> /* Constructors */ {
     /**
      * Constructs a new `MMapBox` with the given parameters
      */
@@ -211,7 +213,7 @@ pub struct MMapBoxMut<'a, T> {
     m_mem_ref: &'a mut [T]
 }
 
-impl<'a, T> MMapBoxMut<'a, T> {
+impl<'a, T> MMapBoxMut<'a, T> /* Constructors */ {
     /**
      * Constructs a new `MMapBoxMut` with the given parameters
      */

@@ -11,14 +11,16 @@ pub struct CodeSymbolsList {
     m_symbols: Vec<CodeSymbol>
 }
 
-impl CodeSymbolsList {
+impl CodeSymbolsList /* Constructors */ {
     /**
      * Constructs an uninitialized `CodeSymbolsList`
      */
     pub const fn new_uninitialized() -> Self {
         Self { m_symbols: Vec::new() }
     }
+}
 
+impl CodeSymbolsList /* Methods */ {
     /**
      * Constructs a `CodeSymbolsList` reading the newline-separated list of
      * raw symbols

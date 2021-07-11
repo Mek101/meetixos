@@ -65,7 +65,7 @@ pub enum PathComponent {
     ObjectName(String) /* it's used only for input to the kernel, so it's safe */
 }
 
-impl PathComponent {
+impl PathComponent /* Constants */ {
     /**
      * Lexical value to indicate the current directory
      */
@@ -80,7 +80,9 @@ impl PathComponent {
      * Lexical value to separate the path components
      */
     pub const SEPARATOR: &'static str = "/";
+}
 
+impl PathComponent /* Getters */ {
     /**
      * Returns whether `self` is `PathComponent::Root`
      */

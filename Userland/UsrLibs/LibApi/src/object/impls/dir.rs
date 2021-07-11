@@ -38,7 +38,7 @@ pub struct Dir {
     m_obj_handle: ObjHandle
 }
 
-impl Dir {
+impl Dir /* Methods */ {
     /**
      * Returns the next available `DirEntry` of this `Dir`
      */

@@ -43,7 +43,7 @@ pub struct Thread {
     m_task_handle: TaskHandle
 }
 
-impl Thread {
+impl Thread /* Methods */ {
     /**
      * Puts the caller `Thead` in wait-state until this `Thread` doesn't
      * terminate.
@@ -70,6 +70,21 @@ impl Thread {
             .map(|_| ())
     }
 
+    /**
+     * Resumes this `Thread` and returns the `Duration` of his pause
+     */
+    pub fn resume(&self) -> Result<Duration> {
+        let mut pause_duration = Duration::default();
+
+        self.task_handle()
+            .kern_handle()
+            .inst_kern_call_1(KernFnPath::Thread(KernThreadFnId::Resume),
+                              &mut pause_duration as *mut _ as usize)
+            .map(|_| pause_duration)
+    }
+}
+
+impl Thread /* Static Functions */ {
     /**
      * Puts the caller `Thread` in a sleep-state for the given `Duration` of
      * time.
@@ -102,20 +117,9 @@ impl Thread {
                                 cleanup_fn as usize,
                                 c_thread_entry as usize).map(|_| ())
     }
+}
 
-    /**
-     * Resumes this `Thread` and returns the `Duration` of his pause
-     */
-    pub fn resume(&self) -> Result<Duration> {
-        let mut pause_duration = Duration::default();
-
-        self.task_handle()
-            .kern_handle()
-            .inst_kern_call_1(KernFnPath::Thread(KernThreadFnId::Resume),
-                              &mut pause_duration as *mut _ as usize)
-            .map(|_| pause_duration)
-    }
-
+impl Thread /* Privates */ {
     /**
      * Returns the `ThreadEntryData`.
      *

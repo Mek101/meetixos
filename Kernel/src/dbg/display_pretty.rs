@@ -36,7 +36,7 @@ pub struct DbgDisplayFmtSize {
     m_multiplier: &'static str
 }
 
-impl DbgDisplayFmtSize {
+impl DbgDisplayFmtSize /* Constructors */ {
     /**
      * Constructs a `DbgDisplayFmtSize`
      */

@@ -24,7 +24,7 @@ pub struct RawSpinMutex {
     m_is_locked: AtomicBool
 }
 
-impl RawSpinMutex {
+impl RawSpinMutex /* Methods */ {
     /**
      * Tries to acquire the `RawSpinMutex` with possibility of failures,
      * even when the mutex is not locked.

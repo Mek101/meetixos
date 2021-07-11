@@ -32,7 +32,7 @@ pub struct SysCallPayload {
     m_result: usize
 }
 
-impl SysCallPayload {
+impl SysCallPayload /* Constructors */ {
     /**
      * Constructs a `SysCallArgs` with the given parameters
      */
@@ -53,7 +53,9 @@ impl SysCallPayload {
                m_error: OsError::default(),
                m_result: 0 }
     }
+}
 
+impl SysCallPayload /* Getters */ {
     /**
      * Returns the `KernFnPath` to the kernel function to call
      */

@@ -43,14 +43,26 @@ pub struct OsEntityHandle {
     m_handle: KernHandle
 }
 
-impl OsEntityHandle {
+impl OsEntityHandle /* Constructors */ {
     /**
      * Constructs an `OsEntityHandle` from the `raw_handle` value given
      */
     pub(crate) fn from_raw(raw_handle: usize) -> Self {
         Self { m_handle: KernHandle::from_raw(raw_handle) }
     }
+}
 
+impl OsEntityHandle /* Getters */ {
+    /**
+     * Returns the reference to the underling `KernHandle`
+     */
+    #[inline]
+    pub fn kern_handle(&self) -> &KernHandle {
+        &self.m_handle
+    }
+}
+
+impl OsEntityHandle /* Privates */ {
     /**
      * Returns the associated system wide unique `OsEntityId`
      */
@@ -77,14 +89,6 @@ impl OsEntityHandle {
                     String::from_utf8_unchecked(byte_vec)
                 }
             })
-    }
-
-    /**
-     * Returns the reference to the underling `KernHandle`
-     */
-    #[inline]
-    pub fn kern_handle(&self) -> &KernHandle {
-        &self.m_handle
     }
 }
 

@@ -38,7 +38,7 @@ pub struct HwUart {
     m_line_status: IOPort<u8>
 }
 
-impl HwUart {
+impl HwUart /* Privates */ {
     fn line_status(&self) -> BitFlags<u8, LineStatusBits> {
         let raw_line_status_value = unsafe { self.m_line_status.read() };
 

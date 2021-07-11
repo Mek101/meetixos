@@ -35,7 +35,7 @@ pub struct OsError {
     m_message: Option<[u8; OS_ERROR_MESSAGE_LEN_MAX]>
 }
 
-impl OsError {
+impl OsError /* Constructors */ {
     /**
      * Constructs an `OsError` filled with the given data
      */
@@ -57,7 +57,9 @@ impl OsError {
                                      buffer
                                  }) }
     }
+}
 
+impl OsError /* Getters */ {
     /**
      * Returns the `ErrorClass`
      */

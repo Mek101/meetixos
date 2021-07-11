@@ -31,14 +31,16 @@ pub struct KernHandle {
 }
 
 #[allow(dead_code)]
-impl KernHandle {
+impl KernHandle /* Constructors */ {
     /**
      * Constructs a `KernHandle` from the `raw_handle` value given
      */
     pub(crate) fn from_raw(raw_handle: usize) -> Self {
         Self { m_raw_handle: raw_handle as RawKernHandle }
     }
+}
 
+impl KernHandle /* Methods */ {
     /**
      * Returns whether this `KernHandle` references a valid kernel resource
      */
@@ -48,7 +50,9 @@ impl KernHandle {
                .map(|is_valid_handle| is_valid_handle != 0)
                .expect("Failed to check KernHandle validity")
     }
+}
 
+impl KernHandle /* Privates */ {
     /**
      * Returns the underling `RawKernHandle`
      */

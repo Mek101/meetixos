@@ -44,7 +44,7 @@ pub struct Instant {
     m_raw_instant: RawInstant
 }
 
-impl Instant {
+impl Instant /* Constructors */ {
     /**
      * Constructs an `Instant` from the given raw parts
      */
@@ -59,10 +59,12 @@ impl Instant {
         let mut raw_instant = RawInstant::default();
         KernHandle::kern_call_1(KernFnPath::Instant(KernInstantFnId::Now),
                                 &mut raw_instant as *mut _ as usize)
-                   .map(|_| Self { m_raw_instant: raw_instant })
-                   .expect("Failed to obtain updated Instant")
+            .map(|_| Self { m_raw_instant: raw_instant })
+            .expect("Failed to obtain updated Instant")
     }
+}
 
+impl Instant /* Getters */ {
     /**
      * Returns the reference to the underling `Duration` instance
      */

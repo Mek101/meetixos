@@ -81,7 +81,7 @@ pub enum SeekMode {
     End
 }
 
-impl SeekMode {
+impl SeekMode /* Methods */ {
     /**
      * Returns the integer which identifies the mode
      */

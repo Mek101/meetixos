@@ -49,7 +49,7 @@ pub struct Proc {
     m_task_handle: TaskHandle
 }
 
-impl Proc {
+impl Proc /* Methods */ {
     /**
      * Returns the current workdir of the `Proc`
      */
@@ -114,7 +114,9 @@ impl Proc {
             .kern_handle()
             .inst_kern_call_0(KernFnPath::Proc(KernProcFnId::ThreadsCount))
     }
+}
 
+impl Proc /* Static Functions */ {
     /**
      * Mount a new filesystem instance at `mnt_point`.
      *

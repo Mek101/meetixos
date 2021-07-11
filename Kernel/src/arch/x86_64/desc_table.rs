@@ -12,7 +12,7 @@ pub struct DescTablePtr {
     m_base_ptr: VirtAddr
 }
 
-impl DescTablePtr {
+impl DescTablePtr /* Constructors */ {
     /**
      * Constructs a `DescTablePtr` from the given values
      */

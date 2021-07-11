@@ -24,7 +24,7 @@ pub struct DirEntry {
     m_obj_type: ObjType
 }
 
-impl DirEntry {
+impl DirEntry /* Constructors */ {
     /**
      * Constructs a new `DirEntry` with the given values
      */
@@ -36,7 +36,9 @@ impl DirEntry {
                m_name_len: entry_name.len(),
                m_obj_type: obj_type }
     }
+}
 
+impl DirEntry /* Getters */ {
     /**
      * Returns the name of the child as string slice
      */

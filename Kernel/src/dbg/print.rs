@@ -47,7 +47,7 @@ pub enum DbgLevel {
     Trace
 }
 
-impl DbgLevel {
+impl DbgLevel /* Getters */ {
     /**
      * Returns the VT100 color code for the current variant
      */

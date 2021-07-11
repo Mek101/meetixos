@@ -23,6 +23,7 @@ impl HwAddrBase for HwVirtAddr {
 }
 
 impl From<usize> for HwVirtAddr {
+    #[inline]
     fn from(raw_virt_addr: usize) -> Self {
         Self { m_raw_virt_addr: ((raw_virt_addr << 16) as isize >> 16) as usize }
     }
@@ -31,6 +32,7 @@ impl From<usize> for HwVirtAddr {
 impl Deref for HwVirtAddr {
     type Target = usize;
 
+    #[inline]
     fn deref(&self) -> &Self::Target {
         &self.m_raw_virt_addr
     }

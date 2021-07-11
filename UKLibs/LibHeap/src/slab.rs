@@ -14,7 +14,7 @@ pub struct Slab<const BLOCK_SIZE: usize> {
     m_free_blocks: FreeBlockList
 }
 
-impl<const BLOCK_SIZE: usize> Slab<BLOCK_SIZE> {
+impl<const BLOCK_SIZE: usize> Slab<BLOCK_SIZE> /* Constructors */ {
     /**
      * Constructs a `Slab` from the given parameters
      */
@@ -30,7 +30,9 @@ impl<const BLOCK_SIZE: usize> Slab<BLOCK_SIZE> {
     pub unsafe fn with_preferred_size(start_area_addr: *mut u8) -> Self {
         Self::new(start_area_addr, Self::PREFERRED_EXTEND_SIZE)
     }
+}
 
+impl<const BLOCK_SIZE: usize> Slab<BLOCK_SIZE> /* Methods */ {
     /**
      * Allocates a new block of memory
      */
@@ -46,7 +48,9 @@ impl<const BLOCK_SIZE: usize> Slab<BLOCK_SIZE> {
     pub unsafe fn deallocate(&mut self, nn_ptr: NonNull<u8>) {
         self.m_free_blocks.push(&mut *(nn_ptr.as_ptr() as *mut SlabBlock));
     }
+}
 
+impl<const BLOCK_SIZE: usize> Slab<BLOCK_SIZE> /* Getters */ {
     /**
      * Returns the `BLOCK_SIZE` parameter
      */
@@ -112,7 +116,7 @@ struct FreeBlockList {
     m_count: usize
 }
 
-impl FreeBlockList {
+impl FreeBlockList /* Constructors */ {
     /**
      * Constructs a `FreeBlockList` from the given parameters
      */
@@ -121,7 +125,9 @@ impl FreeBlockList {
         free_list.extend(start_area_addr, area_size, block_size);
         free_list
     }
+}
 
+impl FreeBlockList /* Methods */ {
     /**
      * Adds the given region to this `FreeBlockList`
      */
@@ -155,7 +161,9 @@ impl FreeBlockList {
         self.m_first = Some(slab_block);
         self.m_count += 1;
     }
+}
 
+impl FreeBlockList /* Getters */ {
     /**
      * Returns the amount of remaining blocks
      */
@@ -184,7 +192,7 @@ struct SlabBlock {
     m_next: Option<&'static mut SlabBlock>
 }
 
-impl SlabBlock {
+impl SlabBlock /* Getters */ {
     /**
      * Converts `&self` to a `*mut u8`
      */

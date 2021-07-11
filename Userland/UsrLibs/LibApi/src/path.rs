@@ -36,7 +36,7 @@ pub struct Path {
     m_str_len: usize
 }
 
-impl Path {
+impl Path /* Methods */ {
     /**
      * Pushes `string_path` to this `Path`.
      *
@@ -155,7 +155,9 @@ impl Path {
         self.m_components.clear();
         self.m_str_len = 0;
     }
+}
 
+impl Path /* Getters */ {
     /**
      * Iterates the `PathComponent`s inside this `Path`
      */
@@ -199,7 +201,9 @@ impl Path {
     pub fn is_empty(&self) -> bool {
         self.m_components.is_empty()
     }
+}
 
+impl Path /* Privates */ {
     /**
      * Returns the raw `PathComponent` slice
      */

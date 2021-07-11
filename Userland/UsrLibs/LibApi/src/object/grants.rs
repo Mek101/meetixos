@@ -36,7 +36,7 @@ pub struct ObjGrants<T>
     _unused: PhantomData<T>
 }
 
-impl<T> ObjGrants<T> where T: Object {
+impl<T> ObjGrants<T> where T: Object /* Constructors */ {
     /**
      * Constructs a zeroed `ObjGrants`
      */

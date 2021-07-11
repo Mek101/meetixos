@@ -61,7 +61,7 @@ pub struct RawTaskConfig<'a> {
     m_thread_name: Option<&'a str>
 }
 
-impl<'a> RawTaskConfig<'a> {
+impl<'a> RawTaskConfig<'a> /* Constructors */ {
     /**
      * Constructs an empty `RawTaskConfig`
      */
@@ -85,7 +85,9 @@ impl<'a> RawTaskConfig<'a> {
                m_thread_arg: ptr::null(),
                m_thread_name: None }
     }
+}
 
+impl<'a> RawTaskConfig<'a> /* Getters */ {
     /**
      * Returns the preferred `RawTaskId`
      */
@@ -98,20 +100,6 @@ impl<'a> RawTaskConfig<'a> {
      */
     pub fn task_type(&self) -> TaskType {
         self.m_task_type
-    }
-
-    /**
-     * Sets the `TaskType`
-     */
-    pub fn set_task_type(&mut self, task_type: TaskType) {
-        self.m_task_type = task_type;
-    }
-
-    /**
-     * Sets the preferred `RawTaskId`
-     */
-    pub fn set_id(&mut self, id: TaskId) {
-        self.m_id = Some(id);
     }
 
     /**
@@ -136,24 +124,10 @@ impl<'a> RawTaskConfig<'a> {
     }
 
     /**
-     * Sets the `TaskExecCpu` filter
-     */
-    pub fn set_exec_cpu(&mut self, exec_cpu: TaskExecCpu) {
-        self.m_exec_cpu = exec_cpu;
-    }
-
-    /**
      * Returns the owner user's `RawOsEntityHandle`
      */
     pub fn os_user(&self) -> Option<RawOsEntityHandle> {
         self.m_os_user
-    }
-
-    /**
-     * Sets the owner user's `RawOsEntityHandle`
-     */
-    pub fn set_os_user(&mut self, os_user: RawOsEntityHandle) {
-        self.m_os_user = Some(os_user);
     }
 
     /**
@@ -164,24 +138,10 @@ impl<'a> RawTaskConfig<'a> {
     }
 
     /**
-     * Sets the owner group's `RawOsEntityHandle`
-     */
-    pub fn set_os_group(&mut self, os_group: RawOsEntityHandle) {
-        self.m_os_group = Some(os_group);
-    }
-
-    /**
      * Returns the `RawObjId` of the file to execute for the new process
      */
     pub fn file_to_exec(&self) -> RawObjHandle {
         self.m_file_to_exec
-    }
-
-    /**
-     * Sets the `RawObjId` of the file to execute for the new process
-     */
-    pub fn set_file_to_exec(&mut self, file_to_exec: RawObjHandle) {
-        self.m_file_to_exec = file_to_exec;
     }
 
     /**
@@ -193,24 +153,10 @@ impl<'a> RawTaskConfig<'a> {
     }
 
     /**
-     * Sets the reference to the command line arguments of the new process
-     */
-    pub fn set_cmdline_args(&mut self, cmdline_args: &'a [&'a str]) {
-        self.m_cmdline_args = Some(cmdline_args);
-    }
-
-    /**
      * Returns the `CRawThreadEntry` for the new thread
      */
     pub fn c_thread_entry(&self) -> Option<CThreadEntry> {
         self.m_c_thread_entry
-    }
-
-    /**
-     * Sets the `CRawThreadEntry` for the new thread
-     */
-    pub fn set_c_thread_entry(&mut self, c_thread_entry: CThreadEntry) {
-        self.m_c_thread_entry = Some(c_thread_entry);
     }
 
     /**
@@ -221,13 +167,6 @@ impl<'a> RawTaskConfig<'a> {
     }
 
     /**
-     * Sets the Rust `RawThreadEntry` for the new thread
-     */
-    pub fn set_thread_entry(&mut self, thread_entry: RUserThreadEntry) {
-        self.m_thread_entry = Some(thread_entry);
-    }
-
-    /**
      * Returns the `RawThreadArg` for the new thread
      */
     pub fn thread_arg(&self) -> UserThreadArg {
@@ -235,17 +174,82 @@ impl<'a> RawTaskConfig<'a> {
     }
 
     /**
-     * Sets the `RawThreadArg` for the new thread
-     */
-    pub fn set_thread_arg(&mut self, thread_arg: UserThreadArg) {
-        self.m_thread_arg = thread_arg;
-    }
-
-    /**
      * Returns the custom thread name
      */
     pub fn thread_name(&self) -> Option<&'a str> {
         self.m_thread_name
+    }
+}
+
+impl<'a> RawTaskConfig<'a> /* Setters */ {
+    /**
+     * Sets the preferred `RawTaskId`
+     */
+    pub fn set_id(&mut self, id: TaskId) {
+        self.m_id = Some(id);
+    }
+
+    /**
+     * Sets the `TaskType`
+     */
+    pub fn set_task_type(&mut self, task_type: TaskType) {
+        self.m_task_type = task_type;
+    }
+
+    /**
+     * Sets the `TaskExecCpu` filter
+     */
+    pub fn set_exec_cpu(&mut self, exec_cpu: TaskExecCpu) {
+        self.m_exec_cpu = exec_cpu;
+    }
+
+    /**
+     * Sets the owner user's `RawOsEntityHandle`
+     */
+    pub fn set_os_user(&mut self, os_user: RawOsEntityHandle) {
+        self.m_os_user = Some(os_user);
+    }
+
+    /**
+     * Sets the owner group's `RawOsEntityHandle`
+     */
+    pub fn set_os_group(&mut self, os_group: RawOsEntityHandle) {
+        self.m_os_group = Some(os_group);
+    }
+
+    /**
+     * Sets the `RawObjId` of the file to execute for the new process
+     */
+    pub fn set_file_to_exec(&mut self, file_to_exec: RawObjHandle) {
+        self.m_file_to_exec = file_to_exec;
+    }
+
+    /**
+     * Sets the reference to the command line arguments of the new process
+     */
+    pub fn set_cmdline_args(&mut self, cmdline_args: &'a [&'a str]) {
+        self.m_cmdline_args = Some(cmdline_args);
+    }
+
+    /**
+     * Sets the `CRawThreadEntry` for the new thread
+     */
+    pub fn set_c_thread_entry(&mut self, c_thread_entry: CThreadEntry) {
+        self.m_c_thread_entry = Some(c_thread_entry);
+    }
+
+    /**
+     * Sets the Rust `RawThreadEntry` for the new thread
+     */
+    pub fn set_thread_entry(&mut self, thread_entry: RUserThreadEntry) {
+        self.m_thread_entry = Some(thread_entry);
+    }
+
+    /**
+     * Sets the `RawThreadArg` for the new thread
+     */
+    pub fn set_thread_arg(&mut self, thread_arg: UserThreadArg) {
+        self.m_thread_arg = thread_arg;
     }
 
     /**
