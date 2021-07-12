@@ -42,6 +42,8 @@ mod heap;
 mod panic;
 mod version;
 mod vm;
+mod filesystem;
+
 
 /**
  * Rust entry-point.
