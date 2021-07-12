@@ -79,10 +79,6 @@ impl HwCpuBase for HwCpu {
                m_double_fault_stack: [0; C_DOUBLE_FAULT_STACK] }
     }
 
-    fn id(&self) -> CpuId {
-        self.m_id
-    }
-
     fn init(&'static mut self) {
         /* set the double fault stack pointer into the TSS */
         self.m_tss.m_full_intr_stack_table[C_DOUBLE_FAULT_STACK_INDEX]
@@ -105,5 +101,9 @@ impl HwCpuBase for HwCpu {
 
     fn current_id() -> CpuId {
         0 /* TODO APIC */
+    }
+
+    fn id(&self) -> CpuId {
+        self.m_id
     }
 }

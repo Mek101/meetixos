@@ -103,11 +103,6 @@ pub trait HwCpuBase {
     fn new_ap() -> Self;
 
     /**
-     * Returns the hardware `CpuId` of this `HwCpu`
-     */
-    fn id(&self) -> CpuId;
-
-    /**
      * Once the `HwCpu` is stored into the static `SM_ALL_CPUS` array this
      * method is called to initialize internal hardware stuffs which may
      * need `'static` lifetimes
@@ -118,4 +113,9 @@ pub trait HwCpuBase {
      * Returns the `CpuId` of the executing `Cpu`
      */
     fn current_id() -> CpuId;
+
+    /**
+     * Returns the hardware `CpuId` of this `HwCpu`
+     */
+    fn id(&self) -> CpuId;
 }

@@ -27,9 +27,9 @@ mod cpu;
 mod dbg;
 mod dev;
 mod heap;
-mod mem;
 mod panic;
 mod version;
+mod vm;
 
 #[no_mangle]
 pub extern "C" fn kernel_rust_start(raw_boot_info_ptr: *const u8) -> ! {
