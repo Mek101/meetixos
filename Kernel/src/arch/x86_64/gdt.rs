@@ -64,7 +64,7 @@ impl GlobalDescTable /* Methods */ {
         /* select the <CpuRingMode> */
         let cpu_ring_mode = match segment {
             Segment::Common(raw_value) => {
-                let desc_flags = SegmentFlags::from(raw_value);
+                let desc_flags = SegmentFlags::from_raw_truncate(raw_value);
 
                 /* common segments could be for userland or only for kernel */
                 if desc_flags.is_enabled(SegmentFlagsBits::DplRing3) {
@@ -153,6 +153,13 @@ impl SegmentSelector /* Getters */ {
      */
     pub fn cpu_ring_mode(&self) -> CpuRingMode {
         CpuRingMode::from(self.m_raw_value & 0b11)
+    }
+
+    /**
+     * Returns the `SegmentSelector` raw-value
+     */
+    pub fn as_raw(&self) -> usize {
+        self.m_raw_value as usize
     }
 }
 

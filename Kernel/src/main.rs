@@ -9,6 +9,7 @@
 
 use crate::{
     boot_info::BootInfo,
+    cpu::Cpu,
     dbg::{
         display_pretty::DisplaySizePretty,
         print::{
@@ -39,6 +40,10 @@ pub extern "C" fn kernel_rust_start(raw_boot_info_ptr: *const u8) -> ! {
     dbg_print_init();
     dbg_println!(DbgLevel::Info, "MeetiX Kernel v{} is Booting...", KERNEL_VERSION);
     dbg_println!(DbgLevel::Info, "An Open Source OS Project written in Rust");
+
+    /* early initialize the CPU management */
+    dbg_println!(DbgLevel::Trace, "Initializing CPU management...");
+    Cpu::early_init();
 
     dbg_println!(DbgLevel::Debug,
                  "raw_info_ptr: {:#018x}, kernel_rust_start: {:#018x}",

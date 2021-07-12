@@ -1,45 +1,57 @@
 /*! Kernel CPU management */
 
-use sync::mutex::{
-    spin_mutex::RawSpinMutex,
-    Mutex
-};
-
 use crate::arch::hw_cpu::HwCpu;
 
+/* Currently we support at max 8 CPUs */
 const C_MAX_CPUS: usize = 8;
 
+/* All the CPUs descriptors currently active */
 static mut SM_ALL_CPUS: [Option<Cpu>; C_MAX_CPUS] =
     [None, None, None, None, None, None, None, None];
 
+/**
+ * The index of the `Cpu` inside the global vector
+ */
 pub type CpuId = u16;
 
+/**
+ * High-level CPU management
+ */
 pub struct Cpu {
-    m_inner: Mutex<RawSpinMutex, CpuInner>
+    m_hw_cpu: HwCpu
 }
 
-impl Cpu {
+impl Cpu /* Constructors */ {
+    /**
+     * Initializes the primary CPU.
+     *
+     * Called once by `kernel_rust_start()`
+     */
     pub fn early_init() {
-        let bsp_cpu =
-            Self { m_inner: Mutex::const_new(CpuInner { m_hw_cpu: HwCpu::new_bsp() }) };
-
-        Self::register_cpu(bsp_cpu);
+        Self::add_cpu(Self { m_hw_cpu: HwCpu::new_bsp() }).m_hw_cpu.init();
     }
 
+    /**
+     * Initializes the current secondary CPU.
+     */
     pub fn init_ap() {
-        let ap_cpu =
-            Self { m_inner: Mutex::const_new(CpuInner { m_hw_cpu: HwCpu::new_ap() }) };
-
-        Self::register_cpu(ap_cpu);
+        Self::add_cpu(Self { m_hw_cpu: HwCpu::new_ap() }).m_hw_cpu.init();
     }
+}
 
-    pub fn id(&self) -> CpuId {
-        self.m_inner.lock().m_hw_cpu.id()
-    }
-
+impl Cpu /* Static Functions */ {
+    /**
+     * Returns the reference to the current `Cpu`
+     */
     pub fn current() -> &'static Self {
-        let cpu_id = HwCpu::current_id();
+        Self::by_id(HwCpu::current_id())
+    }
 
+    /**
+     * Returns the reference to the given `cpu_id` `Cpu`
+     */
+    pub fn by_id(cpu_id: CpuId) -> &'static Self {
+        assert!((cpu_id as usize) < C_MAX_CPUS);
         unsafe {
             SM_ALL_CPUS[cpu_id as usize].as_ref().unwrap_or_else(|| {
                                                      panic!("Requested an unregistered \
@@ -48,25 +60,62 @@ impl Cpu {
                                                  })
         }
     }
+}
 
-    fn register_cpu(cpu: Self) {
+impl Cpu /* Getters */ {
+    /**
+     * Returns the `CpuId` of this `Cpu`
+     */
+    pub fn id(&self) -> CpuId {
+        self.m_hw_cpu.id()
+    }
+}
+
+impl Cpu /* Privates */ {
+    /**
+     * Stores the given `Cpu` into the `SM_ALL_CPUS` array
+     */
+    fn add_cpu(cpu: Self) -> &'static mut Self {
+        let cpu_id = cpu.id();
+
         unsafe {
-            let cpu_id = cpu.id();
-
             assert!(SM_ALL_CPUS[cpu_id as usize].is_none());
 
             SM_ALL_CPUS[cpu_id as usize] = Some(cpu);
+            SM_ALL_CPUS[cpu_id as usize].as_mut().unwrap()
         }
     }
 }
 
-struct CpuInner {
-    m_hw_cpu: HwCpu
-}
-
+/**
+ * Interface on which the `Cpu` relies to obtain information or throw
+ * initialization for hardware CPU
+ */
 pub trait HwCpuBase {
+    /**
+     * Constructs an `HwCpu` which identifies the BSP CPU
+     */
     fn new_bsp() -> Self;
+
+    /**
+     * Constructs an `HwCpu` which identifies an AP CPU
+     */
     fn new_ap() -> Self;
+
+    /**
+     * Returns the hardware `CpuId` of this `HwCpu`
+     */
     fn id(&self) -> CpuId;
+
+    /**
+     * Once the `HwCpu` is stored into the static `SM_ALL_CPUS` array this
+     * method is called to initialize internal hardware stuffs which may
+     * need `'static` lifetimes
+     */
+    fn init(&'static mut self);
+
+    /**
+     * Returns the `CpuId` of the executing `Cpu`
+     */
     fn current_id() -> CpuId;
 }

@@ -30,7 +30,6 @@ pub struct KernHandle {
     m_raw_handle: RawKernHandle
 }
 
-#[allow(dead_code)]
 impl KernHandle /* Constructors */ {
     /**
      * Constructs a `KernHandle` from the `raw_handle` value given
@@ -52,6 +51,7 @@ impl KernHandle /* Methods */ {
     }
 }
 
+#[allow(dead_code)]
 impl KernHandle /* Privates */ {
     /**
      * Returns the underling `RawKernHandle`
