@@ -43,7 +43,8 @@ mod panic;
 mod version;
 mod vm;
 mod filesystem;
-
+mod info;
+mod mem;
 
 /**
  * Rust entry-point.

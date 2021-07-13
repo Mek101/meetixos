@@ -26,7 +26,7 @@ pub trait INode: Any + Send + Sync {
     fn is_writable(&self) -> bool;
 
     /**
-     * Syncs the INode changes on the underlaying device.
+     * Syncs the INode changes on the underlying device.
      */
     fn sync(&self) -> FsResult<()>;
 
@@ -50,7 +50,8 @@ impl dyn INode {
     /**
      * Try cast this INode to the `T` type.
      */
-    pub fn as_type<T>(&self) -> Option<&T> where T: INode {
+    pub fn as_type<T>(&self) -> Option<&T>
+        where T: INode {
         self.as_any().downcast_ref::<T>()
     }
 }
@@ -69,7 +70,8 @@ pub trait FileNode: INode {
     fn write_at(&self, offset: usize, buffer: &[u8]) -> FsResult<usize>;
 
     /**
-     * If the `length` is less than the current file's size, truncate it, otherwise extend it with 0s.
+     * If the `length` is less than the current file's size, truncate it,
+     * otherwise extend it with 0s.
      */
     fn resize(&self, length: usize) -> FsResult<()>;
 }
@@ -79,7 +81,7 @@ pub trait DirectoryNode: INode {
      * Get the INodes inside this directory.
      * This does NOT include the parent and self directories.
      */
-    fn get_nodes(&self) -> FsResult<&dyn Iterator<Item=&dyn INode>>;
+    fn get_nodes(&self) -> FsResult<&dyn Iterator<Item = &dyn INode>>;
 
     /**
      * Get the number of INodes in this directory.
