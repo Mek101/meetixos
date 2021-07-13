@@ -17,7 +17,8 @@ use crate::{
             DbgLevel
         }
     },
-    version::KERNEL_VERSION
+    version::KERNEL_VERSION,
+    vm::mem_manager::MemManager
 };
 
 mod addr;
@@ -41,32 +42,40 @@ pub extern "C" fn kernel_rust_start(raw_boot_info_ptr: *const u8) -> ! {
     dbg_println!(DbgLevel::Info, "MeetiX Kernel v{} is Booting...", KERNEL_VERSION);
     dbg_println!(DbgLevel::Info, "An Open Source OS Project written in Rust");
 
-    /* early initialize the CPU management */
-    dbg_println!(DbgLevel::Trace, "Initializing CPU management...");
+    /* initialize the CPU management for the bootstrap CPU */
+    dbg_println!(DbgLevel::Trace, "Initializing CPU Management...");
     Cpu::early_init();
 
-    dbg_println!(DbgLevel::Debug,
-                 "raw_info_ptr: {:#018x}, kernel_rust_start: {:#018x}",
-                 raw_boot_info_ptr as usize,
-                 kernel_rust_start as usize);
-    dbg_println!(DbgLevel::Debug,
-                 "boot_loader_name: '{}'",
-                 BootInfo::instance().boot_loader_name());
-    dbg_println!(DbgLevel::Debug,
-                 "cmd_line_args:    '{}'",
-                 BootInfo::instance().cmd_line_args());
-    for boot_mem_area in BootInfo::instance().boot_mem_areas().iter() {
+    /* initialize the memory manager */
+    dbg_println!(DbgLevel::Trace, "Initializing Memory Management...");
+    MemManager::init_instance();
+
+    /* FIXME debug printing to remove */
+    {
         dbg_println!(DbgLevel::Debug,
-                     "BootMemArea({}, {})",
-                     boot_mem_area.start_addr(),
-                     boot_mem_area.size().display_pretty());
+                     "raw_info_ptr: {:#018x}, kernel_rust_start: {:#018x}",
+                     raw_boot_info_ptr as usize,
+                     kernel_rust_start as usize);
+        dbg_println!(DbgLevel::Debug,
+                     "boot_loader_name: '{}'",
+                     BootInfo::instance().boot_loader_name());
+        dbg_println!(DbgLevel::Debug,
+                     "cmd_line_args:    '{}'",
+                     BootInfo::instance().cmd_line_args());
+        for boot_mem_area in BootInfo::instance().boot_mem_areas().iter() {
+            dbg_println!(DbgLevel::Debug,
+                         "BootMemArea({}..{})",
+                         boot_mem_area.start,
+                         boot_mem_area.end);
+        }
+        // dbg_println!(DbgLevel::Info,
+        //              "Available memory: {}",
+        //              
+        // BootInfo::instance().boot_mem_areas().iter().map(|phys_mem_range|)
+        //                                  .iter()
+        //                                  .map(|mem_area| mem_area.size())
+        //                                  .sum::<usize>()
+        //                                  .display_pretty());
     }
-    dbg_println!(DbgLevel::Info,
-                 "Available memory: {}",
-                 BootInfo::instance().boot_mem_areas()
-                                     .iter()
-                                     .map(|mem_area| mem_area.size())
-                                     .sum::<usize>()
-                                     .display_pretty());
     panic!("TODO implement the remaining code");
 }

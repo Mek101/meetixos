@@ -1,15 +1,14 @@
 /*! Kernel boot information */
 
+use core::ops::Range;
+
 use helps::str::{
     copy_str_to_u8_buf,
     u8_slice_to_str_slice
 };
 
 use crate::{
-    addr::{
-        phys_addr::PhysAddr,
-        Address
-    },
+    addr::phys_addr::PhysAddr,
     arch::hw_boot_info::HwBootInfo
 };
 
@@ -42,6 +41,7 @@ impl BootInfo /* Constructors */ {
                     "Called BootInfo::init_instance() more than one time");
         }
 
+        /* parse the bootloader information with the architecture implementation */
         let hw_boot_info = HwBootInfo::from(raw_boot_info_ptr);
 
         let mut boot_loader_name_buf = [0; 64];
@@ -143,21 +143,21 @@ pub trait HwBootInfoBase: From<*const u8> {
 }
 
 /**
- * Fixed collection of `BootMemArea`
+ * Fixed collection of `Range<PhysAddr>`
  */
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub struct BootMemAreas {
-    m_mem_areas: [BootMemArea; 64],
-    m_mem_areas_count: usize
+    m_phys_regions_ranges: [Range<PhysAddr>; 8],
+    m_phys_regions_ranges_count: usize
 }
 
 impl BootMemAreas /* Methods */ {
     /**
      * Inserts at the end a new `BootMemArea`
      */
-    pub fn push_area(&mut self, boot_mem_area: BootMemArea) {
-        self.m_mem_areas[self.m_mem_areas_count] = boot_mem_area;
-        self.m_mem_areas_count += 1;
+    pub fn push_area(&mut self, phys_region_range: Range<PhysAddr>) {
+        self.m_phys_regions_ranges[self.m_phys_regions_ranges_count] = phys_region_range;
+        self.m_phys_regions_ranges_count += 1;
     }
 }
 
@@ -165,57 +165,21 @@ impl BootMemAreas /* Getters */ {
     /**
      * Returns an `Iterator` to all the `BootMemArea`
      */
-    pub fn iter(&self) -> impl Iterator<Item = &BootMemArea> {
-        self.m_mem_areas[..self.m_mem_areas_count].iter()
+    pub fn iter(&self) -> impl Iterator<Item = &Range<PhysAddr>> {
+        self.m_phys_regions_ranges[..self.m_phys_regions_ranges_count].iter()
     }
 }
 
 impl Default for BootMemAreas {
     fn default() -> Self {
-        Self { m_mem_areas: [BootMemArea::default(); 64],
-               m_mem_areas_count: 0 }
-    }
-}
-
-/**
- * Region of physical memory given by the bootloader
- */
-#[derive(Default)]
-#[derive(Copy, Clone)]
-pub struct BootMemArea {
-    m_start_addr: PhysAddr,
-    m_size: usize
-}
-
-impl BootMemArea /* Constructors */ {
-    /**
-     * Constructs a `BootMemArea` from the given parameters
-     */
-    pub fn new(start_addr: PhysAddr, size: usize) -> Self {
-        Self { m_start_addr: start_addr,
-               m_size: size }
-    }
-}
-
-impl BootMemArea /* Getters */ {
-    /**
-     * Returns the `PhysAddr` where this `BootMemArea` starts
-     */
-    pub fn start_addr(&self) -> PhysAddr {
-        self.m_start_addr
-    }
-
-    /**
-     * Returns the size in bytes of this `BootMemArea`
-     */
-    pub fn size(&self) -> usize {
-        self.m_size
-    }
-
-    /**
-     * Returns the end `PhysAddr` of this `BootMemArea`
-     */
-    pub fn end_addr(&self) -> PhysAddr {
-        self.start_addr().offset(self.size() as isize)
+        Self { m_phys_regions_ranges: [Range::default(),
+                                       Range::default(),
+                                       Range::default(),
+                                       Range::default(),
+                                       Range::default(),
+                                       Range::default(),
+                                       Range::default(),
+                                       Range::default()], /* TODO range is not Copy */
+               m_phys_regions_ranges_count: 0 }
     }
 }

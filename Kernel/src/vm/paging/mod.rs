@@ -10,6 +10,7 @@ use crate::dbg::{
     C_MIB
 };
 
+pub mod page_table;
 pub mod page_table_entry;
 
 /**

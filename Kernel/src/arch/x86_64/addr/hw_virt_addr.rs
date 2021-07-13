@@ -19,7 +19,7 @@ pub struct HwVirtAddr {
 }
 
 impl HwAddrBase for HwVirtAddr {
-    /* No methods to implement */
+    const MAX: Self = Self { m_raw_virt_addr: 0x0000_ffff_ffff_ffff };
 }
 
 impl From<usize> for HwVirtAddr {

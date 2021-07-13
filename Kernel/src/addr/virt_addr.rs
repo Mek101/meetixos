@@ -10,7 +10,10 @@ use core::{
 };
 
 use crate::{
-    addr::Address,
+    addr::{
+        Address,
+        HwAddrBase
+    },
     arch::addr::hw_virt_addr::HwVirtAddr
 };
 
@@ -33,7 +36,7 @@ pub struct VirtAddr {
 }
 
 impl Address for VirtAddr {
-    /* No methods to implement */
+    const MAX: Self = Self { m_hw_virt_addr: HwVirtAddr::MAX };
 }
 
 impl Default for VirtAddr {

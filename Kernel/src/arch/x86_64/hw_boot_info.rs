@@ -9,12 +9,15 @@ use multiboot2::{
 };
 
 use crate::{
-    addr::phys_addr::PhysAddr,
+    addr::{
+        phys_addr::PhysAddr,
+        Address
+    },
     boot_info::{
-        BootMemArea,
         BootMemAreas,
         HwBootInfoBase
-    }
+    },
+    dbg::C_MIB
 };
 
 /**
@@ -42,22 +45,28 @@ impl HwBootInfoBase for HwBootInfo {
     fn mem_areas(&self) -> BootMemAreas {
         self.m_multiboot_ptr
             .memory_map_tag()
-            .map(MemoryMapTag::all_memory_areas)
+            .map(MemoryMapTag::memory_areas)
             .map(|mem_areas| {
                 let mut boot_mem_areas = BootMemAreas::default();
 
                 /* put all the multiboot areas into the collector */
                 for mem_area in mem_areas {
-                    let boot_mem_area = {
-                        let raw_phys_addr = mem_area.start_address() as usize;
-                        let area_size = mem_area.size() as usize;
+                    let start_phys_addr: PhysAddr =
+                        (mem_area.start_address() as usize).into();
+                    let phys_area_size = mem_area.size() as usize;
 
-                        /* construct the <BootMemArea> */
-                        BootMemArea::new(PhysAddr::from(raw_phys_addr), area_size)
-                    };
-
-                    /* unordered push, we rely on the right order by the bootloader */
-                    boot_mem_areas.push_area(boot_mem_area);
+                    /* don't map memory below one MiB.
+                     * Since it contains the BIOS and because it can be mapped by the
+                     * video-drivers
+                     */
+                    if start_phys_addr < C_MIB.into()
+                       && start_phys_addr.offset(phys_area_size) < C_MIB.into()
+                    {
+                        continue;
+                    } else {
+                        /* unordered push, we rely on the right order by the bootloader */
+                        boot_mem_areas.push_area(start_phys_addr.to_range(phys_area_size));
+                    }
                 }
                 boot_mem_areas
             })

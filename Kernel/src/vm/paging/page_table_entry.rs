@@ -7,7 +7,6 @@ use crate::{
     arch::vm::paging::hw_page_table_entry::HwPageTableEntry
 };
 
-#[repr(transparent)]
 #[derive(Debug)]
 pub struct PageTableEntry {
     m_hw_entry: HwPageTableEntry
@@ -48,6 +47,11 @@ impl PageTableEntry /* Getters */ {
     #[inline]
     fn is_writeable(&self) -> bool {
         self.m_hw_entry.is_writeable()
+    }
+
+    #[inline]
+    fn is_cacheable(&self) -> bool {
+        self.m_hw_entry.is_cacheable()
     }
 
     #[inline]
@@ -109,6 +113,11 @@ impl PageTableEntry /* Setters */ {
     }
 
     #[inline]
+    fn set_cacheable(&mut self, is_cacheable: bool) {
+        self.m_hw_entry.set_cacheable(is_cacheable);
+    }
+
+    #[inline]
     fn set_global(&mut self, is_global: bool) {
         self.m_hw_entry.set_global(is_global);
     }
@@ -153,6 +162,7 @@ pub trait HwPageTableEntryBase: Debug {
     fn is_present(&self) -> bool;
     fn is_readable(&self) -> bool;
     fn is_writeable(&self) -> bool;
+    fn is_cacheable(&self) -> bool;
     fn is_global(&self) -> bool;
     fn is_huge_page(&self) -> bool;
     fn is_accessed(&self) -> bool;
@@ -165,6 +175,7 @@ pub trait HwPageTableEntryBase: Debug {
     fn set_present(&mut self, is_present: bool);
     fn set_readable(&mut self, is_readable: bool);
     fn set_writeable(&mut self, is_writeable: bool);
+    fn set_cacheable(&mut self, is_cacheable: bool);
     fn set_global(&mut self, is_global: bool);
     fn set_huge_page(&mut self, is_huge_page: bool);
     fn set_accessed(&mut self, is_accessed: bool);

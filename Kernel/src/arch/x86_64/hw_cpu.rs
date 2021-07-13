@@ -82,7 +82,7 @@ impl HwCpuBase for HwCpu {
     fn init(&'static mut self) {
         /* set the double fault stack pointer into the TSS */
         self.m_tss.m_full_intr_stack_table[C_DOUBLE_FAULT_STACK_INDEX]
-            = VirtAddr::from(self.m_double_fault_stack.as_mut_ptr()).offset(C_DOUBLE_FAULT_STACK as isize);
+            = VirtAddr::from(self.m_double_fault_stack.as_mut_ptr()).offset(C_DOUBLE_FAULT_STACK);
 
         /* setup the GDT segments */
         let kern_code_segment_selector =

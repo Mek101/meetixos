@@ -10,7 +10,10 @@ use core::{
 };
 
 use crate::{
-    addr::Address,
+    addr::{
+        Address,
+        HwAddrBase
+    },
     arch::addr::hw_phys_addr::HwPhysAddr
 };
 
@@ -33,7 +36,7 @@ pub struct PhysAddr {
 }
 
 impl Address for PhysAddr {
-    /* No methods to implement */
+    const MAX: Self = Self { m_hw_phys_addr: HwPhysAddr::MAX };
 }
 
 impl Default for PhysAddr {

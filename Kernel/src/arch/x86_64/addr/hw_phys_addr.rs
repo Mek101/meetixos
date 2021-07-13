@@ -17,13 +17,13 @@ pub struct HwPhysAddr {
 }
 
 impl HwAddrBase for HwPhysAddr {
-    /* No methods to implement */
+    const MAX: Self = Self { m_raw_phys_addr: 0x000f_ffff_ffff_ffff };
 }
 
 impl From<usize> for HwPhysAddr {
     #[inline]
     fn from(raw_phys_addr: usize) -> Self {
-        Self { m_raw_phys_addr: raw_phys_addr % (1 << 52) }
+        Self { m_raw_phys_addr: raw_phys_addr & 0x000f_ffff_ffff_ffff }
     }
 }
 

@@ -6,7 +6,10 @@ use core::{
         Display
     },
     hash::Hash,
-    ops::Deref
+    ops::{
+        Deref,
+        Range
+    }
 };
 
 use helps::align::{
@@ -34,6 +37,11 @@ pub trait Address:
     + Ord
     + PartialOrd
     + Hash {
+    /**
+     * Maximum value reachable by this `Address` implementation
+     */
+    const MAX: Self;
+
     /**
      * Constructs a null `Address`
      */
@@ -64,14 +72,20 @@ pub trait Address:
      * Returns this `Address` + the given `offset`
      */
     #[inline]
-    fn offset(&self, offset: isize) -> Self {
+    fn offset(&self, offset: usize) -> Self {
         if offset > 0 {
-            Self::from(**self + offset as usize)
-        } else if offset < 0 {
-            Self::from(**self - offset as usize)
+            Self::from(**self + offset)
         } else {
             *self /* copy self */
         }
+    }
+
+    /**
+     * Constructs a `Range<Self>` which start from this for `range_size`
+     */
+    fn to_range(&self, range_size: usize) -> Range<Self> {
+        Range { start: self.clone(),
+                end: self.offset(range_size) }
     }
 
     /**
@@ -106,5 +120,8 @@ pub trait HwAddrBase:
     + Ord
     + PartialOrd
     + Hash {
-    /* No additional methods are requested */
+    /**
+     * Maximum value reachable by this `HwAddrBase` implementation
+     */
+    const MAX: Self;
 }
