@@ -12,6 +12,11 @@ use crate::{
         virt_addr::VirtAddr,
         Address
     },
+    dbg::{
+        display_pretty::DisplaySizePretty,
+        print::DbgLevel
+    },
+    dbg_println,
     vm::paging::{
         Page2MiB,
         Page4KiB,
@@ -36,7 +41,7 @@ impl LayoutManager /* Constants */ {
     /**
      * Kernel space begins at virtual offset of 192TiB
      */
-    const KERN_SPACE_BEGIN: usize = 0x0000_c000_0000_0000;
+    const KERN_SPACE_BEGIN: usize = 0xffff_c000_0000_0000;
 }
 
 impl LayoutManager /* Constructor */ {
@@ -100,19 +105,30 @@ impl LayoutManager /* Getters */ {
 impl LayoutManager /* Privates */ {
     fn prepare_components(phys_mem_size: usize)
                           -> [LayoutComponent; LayoutComponent::COUNT] {
-        /* calculate the static ranges sizes */
+        /* since the kernel uses a memory mapping paging strategy we need all the
+         * physical memory mapped somewhere. Doing so all the physical memory is
+         * accessible with <phys_addr_to_access + chosen_virt_addr>
+         */
         let phys_mem_mapping_size = align_up(phys_mem_size, Page2MiB::SIZE);
+
+        /* reserve 2 MiB to be able to map up to 512 4KiB pages or one huge 2MiB page */
         let tmp_mapping_size = Page2MiB::SIZE;
 
         /* obtain the remaining virtual space removing the kernel text */
         let remaining_kern_space_size = {
             let kern_text_begin_addr: VirtAddr =
                 unsafe { &__kernel_text_begin as *const _ as usize }.into();
+            dbg_println!(DbgLevel::Trace,
+                         "kern_text_begin_addr: {}",
+                         kern_text_begin_addr);
 
             *kern_text_begin_addr - Self::KERN_SPACE_BEGIN
         };
+        dbg_println!(DbgLevel::Trace,
+                     "remaining_kern_space_size: {}",
+                     remaining_kern_space_size.display_pretty());
 
-        /* the remaining components receives an equal portion of the layout */
+        /* remaining components receives an equal & shrinkable portion of the layout */
         let big_components_size = align_down((remaining_kern_space_size
                                               - phys_mem_mapping_size
                                               - tmp_mapping_size)
@@ -128,10 +144,13 @@ impl LayoutManager /* Privates */ {
 
     fn place_components(layout_components: &[LayoutComponent])
                         -> [Range<VirtAddr>; LayoutComponent::COUNT] {
+        /* alignment mismatching and reset when encountered shrinkable components */
         let mut total_alignment_diff = 0;
         let mut vm_range_addr: VirtAddr = Self::KERN_SPACE_BEGIN.into();
         let mut layout_ranges =
             [Range::default(), Range::default(), Range::default(), Range::default()]; /* TODO Range is not Copy */
+
+        /* place <LayoutComponent>s into virtual memory */
         for (i, &layout_component) in layout_components.iter().enumerate() {
             layout_ranges[i] = Self::place_component(layout_component,
                                                      &mut vm_range_addr,
@@ -158,7 +177,14 @@ impl LayoutManager /* Privates */ {
             } else {
                 layout_component.inner_size()
             };
+
         *vm_range_addr = aligned_up_addr.offset(layout_component.inner_size());
+
+        dbg_println!(DbgLevel::Trace,
+                     "layout_component: {:?}, aligned_up_addr: {}, component_size: {}",
+                     layout_component,
+                     aligned_up_addr,
+                     component_size.display_pretty());
 
         Range { start: aligned_up_addr,
                 end: aligned_up_addr.offset(component_size) }
