@@ -53,8 +53,15 @@ impl LayoutManager /* Constants */ {
 
 impl LayoutManager /* Constructor */ {
     pub fn new_randomized(phys_mem_size: usize) -> Self {
-        let _sized_layout_components = Self::size_components(phys_mem_size);
-        Self::new(&[])
+        let mut sized_layout_components = Self::size_components(phys_mem_size);
+        let randomized_layout_components =
+            Self::randomize_components(&mut sized_layout_components);
+        let unordered_vm_layout_ranges =
+            Self::place_components(randomized_layout_components);
+
+        /* TODO order for Self constructor */
+
+        Self::new(&unordered_vm_layout_ranges)
     }
 
     pub fn new_plain(phys_mem_size: usize) -> Self {
@@ -234,6 +241,11 @@ impl LayoutManager /* Privates */ {
 
         Range { start: aligned_up_addr,
                 end: *vm_range_addr }
+    }
+
+    fn randomize_components(sized_layout_components: &mut [LayoutComponent])
+                            -> &[LayoutComponent] {
+        sized_layout_components
     }
 }
 
