@@ -66,6 +66,6 @@ impl DbgDisplayFmtSize /* Constructors */ {
 
 impl fmt::Display for DbgDisplayFmtSize {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:.2}{}", self.m_raw_value, self.m_multiplier)
+        write!(f, "{}{}", self.m_raw_value, self.m_multiplier)
     }
 }

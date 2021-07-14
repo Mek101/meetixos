@@ -10,12 +10,9 @@
 use crate::{
     boot_info::BootInfo,
     cpu::Cpu,
-    dbg::{
-        display_pretty::DisplaySizePretty,
-        print::{
-            dbg_print_init,
-            DbgLevel
-        }
+    dbg::print::{
+        dbg_print_init,
+        DbgLevel
     },
     version::KERNEL_VERSION,
     vm::mem_manager::MemManager
@@ -70,7 +67,7 @@ pub extern "C" fn kernel_rust_start(raw_boot_info_ptr: *const u8) -> ! {
         }
         // dbg_println!(DbgLevel::Info,
         //              "Available memory: {}",
-        //              
+        //
         // BootInfo::instance().boot_mem_areas().iter().map(|phys_mem_range|)
         //                                  .iter()
         //                                  .map(|mem_area| mem_area.size())

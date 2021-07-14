@@ -30,7 +30,7 @@ const C_VT100_WHITE: usize = 37;
 static S_DBG_OUTPUT_UART: Mutex<RawSpinMutex, Uart> = Mutex::const_new(Uart::new());
 
 /* verbosity of the <dbg_println()> */
-static mut SM_DBG_LEVEL: DbgLevel = DbgLevel::Info;
+static mut SM_DBG_MAX_LEVEL: DbgLevel = DbgLevel::Info;
 
 /**
  * Enumerates the `dbg_println()` levels
@@ -100,7 +100,13 @@ impl Display for DbgLevel {
 #[macro_export]
 macro_rules! dbg_println {
     ($DbgLevel:expr, $($arg:tt)*) => (
-        $crate::dbg::print::dbg_do_print(format_args!($($arg)*), $DbgLevel, module_path!())
+        {
+            if $DbgLevel <=$crate::dbg::print::dbg_print_max_level() {
+                $crate::dbg::print::dbg_do_print(format_args!($($arg)*),
+                                                 $DbgLevel,
+                                                 module_path!())
+            }
+        }
     )
 }
 
@@ -118,10 +124,10 @@ pub fn dbg_print_init() {
      */
     if let Some((_, value)) = BootInfo::instance().cmd_line_find_arg("-log-level") {
         if let Some(str_dbg_level) = value {
-            if let Some(_) = dbg_print_set_level_from_str(str_dbg_level) {
+            if let Some(_) = dbg_print_set_max_level_from_str(str_dbg_level) {
                 dbg_println!(DbgLevel::Trace,
                              "Maximum allow debug printing level is DbgLevel::{}",
-                             unsafe { SM_DBG_LEVEL })
+                             unsafe { SM_DBG_MAX_LEVEL })
             } else {
                 dbg_println!(DbgLevel::Warn,
                              "Unsupported DbgLevel given: {}",
@@ -132,13 +138,20 @@ pub fn dbg_print_init() {
 }
 
 /**
+ * Returns the global `DbgLevel`
+ */
+pub fn dbg_print_max_level() -> DbgLevel {
+    unsafe { SM_DBG_MAX_LEVEL }
+}
+
+/**
  * Sets a new `DbgLevel` from the given string value and returns the old
  * value if the given string slice is reducible to a one of the supported
  * `DbgLevel`s
  */
-pub fn dbg_print_set_level_from_str(str_dbg_level: &str) -> Option<DbgLevel> {
+pub fn dbg_print_set_max_level_from_str(str_dbg_level: &str) -> Option<DbgLevel> {
     if let Ok(new_dbg_level) = DbgLevel::try_from(str_dbg_level) {
-        Some(dbg_print_set_level(new_dbg_level))
+        Some(dbg_print_set_max_level(new_dbg_level))
     } else {
         None
     }
@@ -147,10 +160,10 @@ pub fn dbg_print_set_level_from_str(str_dbg_level: &str) -> Option<DbgLevel> {
 /**
  * Sets a new `DbgLevel` and returns the previous one
  */
-pub fn dbg_print_set_level(dbg_level: DbgLevel) -> DbgLevel {
+pub fn dbg_print_set_max_level(dbg_level: DbgLevel) -> DbgLevel {
     unsafe {
-        let old_dbg_level = SM_DBG_LEVEL;
-        SM_DBG_LEVEL = dbg_level;
+        let old_dbg_level = SM_DBG_MAX_LEVEL;
+        SM_DBG_MAX_LEVEL = dbg_level;
         old_dbg_level
     }
 }
@@ -159,14 +172,12 @@ pub fn dbg_print_set_level(dbg_level: DbgLevel) -> DbgLevel {
  * Performs the output to the selected debug device
  */
 pub fn dbg_do_print(args: fmt::Arguments<'_>, dbg_level: DbgLevel, module_path: &str) {
-    if dbg_level <= unsafe { SM_DBG_LEVEL } {
-        write!(S_DBG_OUTPUT_UART.lock(),
-               "[\x1b[0;{}m{}\x1b[0m <> \x1b[0;{}m{: <25}\x1b[0m] \x1b[0;{}m{}\x1b[0m\n",
-               dbg_level.as_vt100_color(),
-               dbg_level,
-               C_VT100_MAGENTA,
-               module_path,
-               dbg_level.as_vt100_color(),
-               args).expect("Failed to print to serial debug output");
-    }
+    write!(S_DBG_OUTPUT_UART.lock(),
+           "[\x1b[0;{}m{}\x1b[0m <> \x1b[0;{}m{: <25}\x1b[0m] \x1b[0;{}m{}\x1b[0m\n",
+           dbg_level.as_vt100_color(),
+           dbg_level,
+           C_VT100_MAGENTA,
+           module_path,
+           dbg_level.as_vt100_color(),
+           args).expect("Failed to print to serial debug output");
 }

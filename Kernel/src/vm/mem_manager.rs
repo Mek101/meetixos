@@ -8,13 +8,7 @@ use crate::{
     boot_info::BootInfo,
     dbg::print::DbgLevel,
     dbg_println,
-    vm::{
-        layout_manager::LayoutManager,
-        paging::{
-            Page4KiB,
-            PageSize
-        }
-    }
+    vm::layout_manager::LayoutManager
 };
 
 static mut SM_MEM_MANAGER: Option<MemManager> = None;
@@ -36,7 +30,7 @@ impl MemManager /* Constructors */ {
         }
 
         /* construct the LayoutManager */
-        let layout_manager =
+        let _layout_manager =
             if let Some(_) = boot_info.cmd_line_find_arg("--unordered-vm-layout") {
                 LayoutManager::new_randomized(*last_phy_mem_addr)
             } else {

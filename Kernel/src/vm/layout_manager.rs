@@ -1,6 +1,10 @@
 /*! Kernel layout manager */
 
-use core::ops::Range;
+use core::{
+    fmt,
+    fmt::Display,
+    ops::Range
+};
 
 use helps::align::{
     align_down,
@@ -29,6 +33,9 @@ extern "C" {
     static __kernel_text_end: usize;
 }
 
+/* <false> until <MemManager::init_instance()> is called */
+static mut SM_INITIALIZED: bool = false;
+
 pub struct LayoutManager {
     m_phys_mem_mapping_range: Range<VirtAddr>,
     m_tmp_mem_mapping_range: Range<VirtAddr>,
@@ -45,19 +52,31 @@ impl LayoutManager /* Constants */ {
 }
 
 impl LayoutManager /* Constructor */ {
-    pub fn new_randomized(_phys_mem_size: usize) -> Self {
+    pub fn new_randomized(phys_mem_size: usize) -> Self {
+        let _sized_layout_components = Self::size_components(phys_mem_size);
         Self::new(&[])
     }
 
     pub fn new_plain(phys_mem_size: usize) -> Self {
-        /* obtain the ordered and sized <LayoutComponents> */
-        let layout_components = Self::prepare_components(phys_mem_size);
-        let vm_layout_ranges = Self::place_components(&layout_components);
+        /* obtain the ordered and sized <LayoutComponents>, then place them in VM */
+        let sized_layout_components = Self::size_components(phys_mem_size);
+        let vm_layout_ranges = Self::place_components(&sized_layout_components);
 
+        /* construct the LayoutManager */
         Self::new(&vm_layout_ranges)
     }
 
     fn new(vm_layout_ranges: &[Range<VirtAddr>]) -> Self {
+        /* the LayoutManager is a singleton stored into the <MemManager> */
+        unsafe {
+            if SM_INITIALIZED {
+                panic!("Tried to re-construct the LayoutManager. Use the MemManager!");
+            } else {
+                SM_INITIALIZED = true;
+            }
+        }
+
+        /* NOTE: here the ranges are expected in the same order of the fields */
         let mut vm_layout_ranges_it = vm_layout_ranges.iter();
 
         Self { m_phys_mem_mapping_range:
@@ -76,7 +95,16 @@ impl LayoutManager /* Constructor */ {
                    vm_layout_ranges_it.next()
                                       .expect("Missing filesystem page cache range")
                                       .clone(),
-               m_kern_text_range: Default::default() }
+               m_kern_text_range: {
+                   let start_virt_addr: VirtAddr =
+                       unsafe { &__kernel_text_begin as *const _ as usize }.into();
+                   let end_virt_addr: VirtAddr =
+                       unsafe { &__kernel_text_end as *const _ as usize }.into();
+
+                   /* return the Range<VirtAddr> of the kernel-text */
+                   Range { start: start_virt_addr,
+                           end: end_virt_addr }
+               } }
     }
 }
 
@@ -103,11 +131,13 @@ impl LayoutManager /* Getters */ {
 }
 
 impl LayoutManager /* Privates */ {
-    fn prepare_components(phys_mem_size: usize)
-                          -> [LayoutComponent; LayoutComponent::COUNT] {
+    fn size_components(phys_mem_size: usize)
+                       -> [LayoutComponent; LayoutComponent::COUNT] {
         /* since the kernel uses a memory mapping paging strategy we need all the
          * physical memory mapped somewhere. Doing so all the physical memory is
-         * accessible with <phys_addr_to_access + chosen_virt_addr>
+         * accessible with <phys_addr_to_access + chosen_virt_addr>.
+         * So reserve a virtual range where put the mapping.
+         * Use 2MiB alignment to use 2MiB pages for mapping
          */
         let phys_mem_mapping_size = align_up(phys_mem_size, Page2MiB::SIZE);
 
@@ -115,31 +145,36 @@ impl LayoutManager /* Privates */ {
         let tmp_mapping_size = Page2MiB::SIZE;
 
         /* obtain the remaining virtual space removing the kernel text */
-        let remaining_kern_space_size = {
-            let kern_text_begin_addr: VirtAddr =
-                unsafe { &__kernel_text_begin as *const _ as usize }.into();
-            dbg_println!(DbgLevel::Trace,
-                         "kern_text_begin_addr: {}",
-                         kern_text_begin_addr);
+        let rem_vm_kern_space_size = {
+            let kern_text_begin_addr =
+                unsafe { &__kernel_text_begin as *const _ as usize };
 
-            *kern_text_begin_addr - Self::KERN_SPACE_BEGIN
+            dbg_println!(DbgLevel::Trace,
+                         "KernelSpace: kernSpaceBegin..kernTextBegin ({}..{}) ",
+                         VirtAddr::from(Self::KERN_SPACE_BEGIN),
+                         VirtAddr::from(kern_text_begin_addr));
+
+            kern_text_begin_addr - Self::KERN_SPACE_BEGIN
         };
         dbg_println!(DbgLevel::Trace,
-                     "remaining_kern_space_size: {}",
-                     remaining_kern_space_size.display_pretty());
+                     "Available Kernel Space: {} ({:#018x})",
+                     rem_vm_kern_space_size.display_pretty(),
+                     rem_vm_kern_space_size);
+
+        /* remove from the remaining kernel space size the two components */
+        let rem_vm_kern_space_size =
+            rem_vm_kern_space_size - phys_mem_mapping_size - tmp_mapping_size;
 
         /* remaining components receives an equal & shrinkable portion of the layout */
-        let big_components_size = align_down((remaining_kern_space_size
-                                              - phys_mem_mapping_size
-                                              - tmp_mapping_size)
-                                             / 2,
-                                             Page4KiB::SIZE);
+        let shrinkable_components_size = align_down(rem_vm_kern_space_size
+                                                    / LayoutComponent::SHRINKABLES.len(),
+                                                    Page4KiB::SIZE);
 
         /* return the components with the size */
         [LayoutComponent::PhysMemMapping { m_size: phys_mem_mapping_size },
          LayoutComponent::TmpMapping { m_size: tmp_mapping_size },
-         LayoutComponent::KernRegions { m_size: big_components_size },
-         LayoutComponent::FsPageCache { m_size: big_components_size }]
+         LayoutComponent::KernRegions { m_size: shrinkable_components_size },
+         LayoutComponent::FsPageCache { m_size: shrinkable_components_size }]
     }
 
     fn place_components(layout_components: &[LayoutComponent])
@@ -147,11 +182,14 @@ impl LayoutManager /* Privates */ {
         /* alignment mismatching and reset when encountered shrinkable components */
         let mut total_alignment_diff = 0;
         let mut vm_range_addr: VirtAddr = Self::KERN_SPACE_BEGIN.into();
+
+        /* store the ranges in a fixed size array. TODO Range is not Copy */
         let mut layout_ranges =
-            [Range::default(), Range::default(), Range::default(), Range::default()]; /* TODO Range is not Copy */
+            [Range::default(), Range::default(), Range::default(), Range::default()];
 
         /* place <LayoutComponent>s into virtual memory */
         for (i, &layout_component) in layout_components.iter().enumerate() {
+            /* obtain the aligned Range<VirtAddr> for the current component */
             layout_ranges[i] = Self::place_component(layout_component,
                                                      &mut vm_range_addr,
                                                      &mut total_alignment_diff);
@@ -164,34 +202,41 @@ impl LayoutManager /* Privates */ {
                        vm_range_addr: &mut VirtAddr,
                        total_alignment_diff: &mut usize)
                        -> Range<VirtAddr> {
-        let aligned_up_addr = vm_range_addr.align_up(layout_component.inner_align());
+        /* obtain the aligned up VirtAddr for the current component */
+        let aligned_up_addr = vm_range_addr.align_up(layout_component.alignment());
 
+        /* the alignment could have produced a difference. So update the counter */
         *total_alignment_diff += *aligned_up_addr - **vm_range_addr;
+
+        /* here we obtain the LayoutComponent size, which could be down-aligned with
+         * the accumulated differences from the previous (and the current)
+         * up-alignment wastes */
         let component_size =
             if *total_alignment_diff > 0 && layout_component.is_shrinkable() {
+                /* copy the alignment diff and reset it */
                 let prev_alignment_diff = *total_alignment_diff;
                 *total_alignment_diff = 0;
 
-                align_down(layout_component.inner_size() - prev_alignment_diff,
-                           layout_component.inner_align())
+                align_down(layout_component.virt_size() - prev_alignment_diff,
+                           layout_component.alignment())
             } else {
-                layout_component.inner_size()
+                /* return the size as is */
+                layout_component.virt_size()
             };
 
-        *vm_range_addr = aligned_up_addr.offset(layout_component.inner_size());
-
+        /* update the VirtAddr for the next component if any */
+        *vm_range_addr = aligned_up_addr.offset(component_size);
         dbg_println!(DbgLevel::Trace,
-                     "layout_component: {:?}, aligned_up_addr: {}, component_size: {}",
+                     "{} ({}..{})",
                      layout_component,
                      aligned_up_addr,
-                     component_size.display_pretty());
+                     *vm_range_addr);
 
         Range { start: aligned_up_addr,
-                end: aligned_up_addr.offset(component_size) }
+                end: *vm_range_addr }
     }
 }
 
-#[derive(Debug)]
 #[derive(Copy, Clone)]
 enum LayoutComponent {
     PhysMemMapping {
@@ -217,6 +262,12 @@ impl LayoutComponent /* Constants */ {
                           Self::TmpMapping { m_size: 0 },
                           Self::KernRegions { m_size: 0 },
                           Self::FsPageCache { m_size: 0 }].len();
+
+    /**
+     * Shrinkable `LayoutComponent`s
+     */
+    const SHRINKABLES: &'static [Self] =
+        &[Self::KernRegions { m_size: 0 }, Self::FsPageCache { m_size: 0 }];
 }
 
 impl LayoutComponent /* Constructors */ {
@@ -232,7 +283,7 @@ impl LayoutComponent /* Constructors */ {
 }
 
 impl LayoutComponent /* Getters */ {
-    fn inner_size(&self) -> usize {
+    fn virt_size(&self) -> usize {
         match self {
             Self::PhysMemMapping { m_size }
             | Self::TmpMapping { m_size }
@@ -242,7 +293,7 @@ impl LayoutComponent /* Getters */ {
         }
     }
 
-    fn inner_align(&self) -> usize {
+    fn alignment(&self) -> usize {
         match self {
             Self::TmpMapping { .. }
             | Self::KernRegions { .. }
@@ -258,5 +309,19 @@ impl LayoutComponent /* Getters */ {
             Self::KernRegions { .. } | Self::FsPageCache { .. } => true,
             _ => panic!("Tried to obtain shrinkable from a None LayoutComponent")
         }
+    }
+}
+
+impl Display for LayoutComponent {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let (variant, size) = match *self {
+            Self::PhysMemMapping { m_size } => ("PhysMemMapping", m_size),
+            Self::TmpMapping { m_size } => ("TmpMapping", m_size),
+            Self::KernRegions { m_size } => ("KernRegions", m_size),
+            Self::FsPageCache { m_size } => ("FsPageCache", m_size),
+            Self::None => ("None", 0)
+        };
+
+        write!(f, "LayoutComponent::{} {{ m_size: {} }}", variant, size.display_pretty())
     }
 }
