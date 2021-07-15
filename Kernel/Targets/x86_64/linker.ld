@@ -45,7 +45,7 @@ SECTIONS {
     } : bss
 
     .symbols ALIGN(4K): AT(ADDR(.symbols) - KERNEL_VIRT_BASE) {
-        KEEP(*(.kernel_symbols*))
+        KEEP(*(.code_symbols*))
     } : symbols
 
     /DISCARD/ : {

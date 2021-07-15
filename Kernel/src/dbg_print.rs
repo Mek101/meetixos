@@ -101,10 +101,10 @@ impl Display for DbgLevel {
 macro_rules! dbg_println {
     ($DbgLevel:expr, $($arg:tt)*) => (
         {
-            if $DbgLevel <=$crate::dbg::print::dbg_print_max_level() {
-                $crate::dbg::print::dbg_do_print(format_args!($($arg)*),
-                                                 $DbgLevel,
-                                                 module_path!())
+            if $DbgLevel <=$crate::dbg_print::dbg_print_max_level() {
+                $crate::dbg_print::dbg_do_print(format_args!($($arg)*),
+                                                $DbgLevel,
+                                                module_path!())
             }
         }
     )

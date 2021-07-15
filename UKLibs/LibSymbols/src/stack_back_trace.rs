@@ -4,7 +4,7 @@ use core::fmt;
 
 use crate::{
     arch::HwTracerHelper,
-    code_symbols_list::CodeSymbolsList
+    code_symbols::CodeSymbols
 };
 
 /**
@@ -13,35 +13,31 @@ use crate::{
  * Executes the backtrace from the point where is constructed with
  * `StackBackTrace::new()`
  */
-pub struct StackBackTrace<'a> {
+pub(crate) struct StackBackTrace {
     m_return_ptr: usize,
     m_frame_ptr: usize,
-    m_symbols_list: &'a CodeSymbolsList<'a>,
     m_text_begin: usize,
     m_text_end: usize
 }
 
-impl<'a> StackBackTrace<'a> /* Constructors */ {
+impl StackBackTrace /* Constructors */ {
     /**
      * Constructs a `StackBackTrace` reading the stack pointer
      */
     #[inline(always)]
-    pub fn new(symbols_list: &'a CodeSymbolsList<'a>,
-               text_begin: usize,
-               text_end: usize)
-               -> Self {
+    pub(crate) fn new(text_begin: usize, text_end: usize) -> Self {
         Self { m_return_ptr: HwTracerHelper::read_return_ptr(),
                m_frame_ptr: HwTracerHelper::read_frame_ptr(),
-               m_symbols_list: symbols_list,
                m_text_begin: text_begin,
                m_text_end: text_end }
     }
 }
 
-impl<'a> fmt::Display for StackBackTrace<'a> {
+impl fmt::Display for StackBackTrace {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut current_return_ptr = self.m_return_ptr;
         let mut current_frame_ptr = self.m_frame_ptr;
+        let code_symbols = CodeSymbols::instance();
 
         /* be sure we are into the text */
         while current_return_ptr >= self.m_text_begin
@@ -49,7 +45,7 @@ impl<'a> fmt::Display for StackBackTrace<'a> {
               && current_frame_ptr != 0
         {
             /* obtain the symbol for the current pointer and display it */
-            if let Some(code_sym) = self.m_symbols_list.symbol_at(current_return_ptr) {
+            if let Some(code_sym) = code_symbols.symbol_at(current_return_ptr) {
                 writeln!(f, "{:#018x} - {}", current_return_ptr, code_sym)?;
             } else {
                 writeln!(f, "{:#018x} - (???)", current_return_ptr)?;

@@ -3,7 +3,7 @@
 use core::panic::PanicInfo;
 
 use crate::{
-    dbg::print::DbgLevel,
+    dbg_print::DbgLevel,
     dbg_println
 };
 

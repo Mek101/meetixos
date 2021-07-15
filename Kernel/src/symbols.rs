@@ -2,9 +2,10 @@
 
 use core::str;
 
-use helps::str::str_len;
-
-use crate::dbg::C_MIB;
+use helps::{
+    dbg::C_MIB,
+    str::str_len
+};
 
 const C_STORAGE_SIZE: usize = 1 * C_MIB;
 
@@ -27,7 +28,7 @@ pub fn kernel_symbols_early_init() {
         SM_KERNEL_SYMBOLS =
             str::from_utf8(symbols_slice).expect("Corrupted kernel symbols");
 
-        crate::dbg_println!(crate::dbg::print::DbgLevel::Trace,
+        crate::dbg_println!(crate::dbg_print::DbgLevel::Trace,
                             "\nSymbols:\n{}",
                             SM_KERNEL_SYMBOLS);
     }

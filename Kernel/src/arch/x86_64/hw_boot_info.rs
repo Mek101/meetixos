@@ -8,6 +8,8 @@ use multiboot2::{
     MemoryMapTag
 };
 
+use helps::dbg::C_MIB;
+
 use crate::{
     addr::{
         phys_addr::PhysAddr,
@@ -16,8 +18,7 @@ use crate::{
     boot_info::{
         BootMemAreas,
         HwBootInfoBase
-    },
-    dbg::C_MIB
+    }
 };
 
 /**

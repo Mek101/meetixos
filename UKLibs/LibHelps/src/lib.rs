@@ -6,5 +6,6 @@
 #![no_std]
 
 pub mod align;
+pub mod dbg;
 pub mod misc;
 pub mod str;

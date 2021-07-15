@@ -65,7 +65,7 @@ impl<'a> CodeSymbol<'a> /* Getters */ {
     /**
      * Returns the demangled symbol name `String`
      */
-    pub fn symbol_name(&self) -> &Demangle<'a> {
+    pub fn demangled_symbol(&self) -> &Demangle<'a> {
         &self.m_demangled
     }
 }

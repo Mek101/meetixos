@@ -6,14 +6,15 @@
 /* TODO heap allocation */
 //extern crate alloc;
 
+use symbols::code_symbols::CodeSymbols;
+
 use crate::{
     boot_info::BootInfo,
     cpu::Cpu,
-    dbg::print::{
+    dbg_print::{
         dbg_print_init,
         DbgLevel
     },
-    symbols::kernel_symbols_early_init,
     version::KERNEL_VERSION,
     vm::mem_manager::MemManager
 };
@@ -22,11 +23,10 @@ mod addr;
 mod arch;
 mod boot_info;
 mod cpu;
-mod dbg;
+mod dbg_print;
 mod dev;
 mod heap;
 mod panic;
-mod symbols;
 mod version;
 mod vm;
 
@@ -42,7 +42,7 @@ pub extern "C" fn kernel_rust_start(raw_boot_info_ptr: *const u8) -> ! {
 
     /* initialize the kernel symbols */
     dbg_println!(DbgLevel::Trace, "Initializing Kernel Symbols...");
-    kernel_symbols_early_init();
+    CodeSymbols::init_instance();
 
     /* initialize the CPU management for the bootstrap CPU */
     dbg_println!(DbgLevel::Trace, "Initializing CPU Management...");

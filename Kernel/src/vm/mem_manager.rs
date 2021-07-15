@@ -6,7 +6,7 @@ use crate::{
         Address
     },
     boot_info::BootInfo,
-    dbg::print::DbgLevel,
+    dbg_print::DbgLevel,
     dbg_println,
     vm::layout_manager::LayoutManager
 };

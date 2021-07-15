@@ -6,9 +6,12 @@ use core::{
     ops::Range
 };
 
-use helps::align::{
-    align_down,
-    align_up
+use helps::{
+    align::{
+        align_down,
+        align_up
+    },
+    dbg::DisplaySizePretty
 };
 
 use crate::{
@@ -16,10 +19,7 @@ use crate::{
         virt_addr::VirtAddr,
         Address
     },
-    dbg::{
-        display_pretty::DisplaySizePretty,
-        print::DbgLevel
-    },
+    dbg_print::DbgLevel,
     dbg_println,
     dev::random::Random,
     vm::paging::{

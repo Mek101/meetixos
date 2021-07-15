@@ -1,13 +1,26 @@
-/*! fmt::Display support */
+/*! Debugging utilities */
 
 use core::fmt;
 
-use crate::dbg::{
-    C_GIB,
-    C_KIB,
-    C_MIB,
-    C_TIB
-};
+/**
+ * Kibibyte multiplier
+ */
+pub const C_KIB: usize = 1024;
+
+/**
+ * Mebibyte Byte multiplier
+ */
+pub const C_MIB: usize = C_KIB * C_KIB;
+
+/**
+ * Gibibyte Byte multiplier
+ */
+pub const C_GIB: usize = C_MIB * C_KIB;
+
+/**
+ * Tebibyte multiplier
+ */
+pub const C_TIB: usize = C_GIB * C_KIB;
 
 impl DisplaySizePretty for usize {
     fn display_pretty(&self) -> DbgDisplayFmtSize {

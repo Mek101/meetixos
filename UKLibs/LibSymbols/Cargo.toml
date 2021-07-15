@@ -7,3 +7,6 @@ authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
 [dependencies]
 # ---------------------------- External Thirdy Party Crates ---------------------------- #
 rustc-demangle = "*"
+
+# ------------------------------ MeetiX Libraries Crates ------------------------------- #
+helps = { path = "../LibHelps" }
