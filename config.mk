@@ -43,36 +43,31 @@ ifeq ($(OFFLINE),true)
     CARGO_FLAGS += --offline
 endif
 
+ifeq ($(V),)
+    CARGO_FLAGS += --verbose
+endif
+
 #
 # -- -- -- -- -- -- -- -- -- -- -- -- LLVM Tools -- -- -- -- -- -- -- -- -- -- -- -- --
 #
 
-TOOLCHAIN_ROOT := $(shell $(RUSTC) --print sysroot)
-LLVM_OBJCOPY   := $(shell find $(TOOLCHAIN_ROOT) -name llvm-objcopy)
-LLVM_STRIP     := $(shell find $(TOOLCHAIN_ROOT) -name llvm-strip)
-LLVM_NM        := $(shell find $(TOOLCHAIN_ROOT) -name llvm-nm)
-LLVM_LD        := $(shell find $(TOOLCHAIN_ROOT) -name rust-lld)
+TOOLCHAIN_ROOT ?= $(shell $(RUSTC) --print sysroot)
+LLVM_STRIP     ?= $(shell find $(TOOLCHAIN_ROOT) -name llvm-strip)
+LLVM_NM        ?= $(shell find $(TOOLCHAIN_ROOT) -name llvm-nm)
+LLVM_LD        ?= $(shell find $(TOOLCHAIN_ROOT) -name rust-lld)
 
-#
-# -- -- -- -- -- -- -- -- -- -- -- LLVM Tools Flags -- -- -- -- -- -- -- -- -- -- -- --
-#
-
-OBJCOPY_FLAGS ?= -O elf32-i386
-
-ifeq ($(BUILD_MODE),release)
-    OBJCOPY_FLAGS += -S
-endif
 
 #
 # -- -- -- -- -- -- -- -- -- -- -- Command Line Tools -- -- -- -- -- -- -- -- -- -- -- --
 #
 
-RSYNC ?= $(shell which rsync)
-RM    ?= $(shell which rm)
-CP    ?= $(shell which cp)
-MV    ?= $(shell which mv)
-MKDIR ?= $(shell which mkdir)
-RFILT ?= $(shell which rustfilt)
+RSYNC   ?= $(shell which rsync)
+RM      ?= $(shell which rm)
+CP      ?= $(shell which cp)
+MV      ?= $(shell which mv)
+MKDIR   ?= $(shell which mkdir)
+RFILT   ?= $(shell which rustfilt)
+OBJCOPY ?= $(shell which objcopy)
 
 ifeq ($(ARCH), x86_64)
     MAKE_RESCUE ?= $(shell which grub-mkrescue)

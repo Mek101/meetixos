@@ -33,3 +33,16 @@ pub fn u8_ptr_to_str_slice<'a>(ptr: *const u8, len: usize) -> &'a str {
         str::from_utf8_unchecked(slice)
     }
 }
+
+/**
+ * Returns the length of the given slice interpreting it as ascii
+ * string-slice
+ */
+pub fn str_len(slice: &[u8]) -> usize {
+    for (i, c) in slice.iter().enumerate() {
+        if *c == b'\0' {
+            return i;
+        }
+    }
+    0
+}

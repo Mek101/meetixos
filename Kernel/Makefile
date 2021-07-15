@@ -1,6 +1,6 @@
 #! OldKernel Builder Script
 #!
-#! This Makefile is responsible to build/install/clean/doc the OldKernel
+#! This Makefile is responsible to build/install/clean/doc the Kernel
 
 include ../config.mk
 
@@ -20,9 +20,7 @@ DIST_DIR      ?= $(realpath ../$(DIST_SYSROOT_PREFIX)/MeetiX)
 KERNEL_BUILD_DIR ?= $(BUILD_DIR)/kernel/$(BUILD_MODE)
 
 BUILT_KERNEL       ?= $(KERNEL_BUILD_DIR)/kernel
-BUILT_PRE_KERNEL   ?= $(KERNEL_BUILD_DIR)/pre_kernel
-KERNEL_SYMBOLS     ?= $(KERNEL_BUILD_DIR)/kernel_symbols.rs
-PRE_KERNEL_SYMBOLS ?= $(KERNEL_BUILD_DIR)/empty_kernel_symbols.rs
+KERNEL_SYMBOLS     ?= $(KERNEL_BUILD_DIR)/kernel_symbols.syms
 
 FINAL_KERNEL ?= $(KERNEL_BUILD_DIR)/mx_kernel
 
@@ -44,36 +42,20 @@ install: build
 build: $(FINAL_KERNEL)
 	$(V) echo "- Kernel Build Completed..."
 
-$(FINAL_KERNEL): $(BUILT_KERNEL)
-	$(V) echo "- Linking '$(basename $(FINAL_KERNEL))'"
-	$(V) $(MV) -f $(BUILT_KERNEL) $(FINAL_KERNEL)
-
-$(BUILT_KERNEL): $(KERNEL_SYMBOLS) $(BUILT_PRE_KERNEL)
+$(FINAL_KERNEL): $(KERNEL_SYMBOLS) $(BUILT_KERNEL)
 	$(V) echo "- Updating Kernel Executable With Symbols..."
-	$(V) RUSTFLAGS="$(RUSTC_FLAGS)"       \
-         CARGO_TARGET_DIR=$(BUILD_DIR)    \
-         KERNEL_SYMBOLS=$(KERNEL_SYMBOLS) \
-         $(CARGO) build $(CARGO_FLAGS) --target $(KERNEL_TARGET)
+	$(V) $(OBJCOPY) --update-section .symbols="$(KERNEL_SYMBOLS)" $(BUILT_KERNEL)
+	$(V) $(RM) -f $@ && $(MV) -f $(BUILT_KERNEL) $@
 
-$(KERNEL_SYMBOLS): $(BUILT_PRE_KERNEL)
+$(KERNEL_SYMBOLS): $(BUILT_KERNEL)
 	$(V) echo "- Writing Kernel Symbols..."
 	$(V) $(LLVM_NM) -n $< | awk '{ if ($$2 == "T") printf("%s %s\n", $$1, $$3); }' | uniq | $(RFILT) >$@
 
-$(BUILT_PRE_KERNEL): $(PRE_KERNEL_SYMBOLS) $(KERNEL_TARGET) $(SOURCES)
+$(BUILT_KERNEL): $(KERNEL_TARGET) $(SOURCES)
 	$(V) echo "- Building Kernel Without Symbols..."
-	$(V) $(RM) -f $@
-	$(V) RUSTFLAGS="$(RUSTC_FLAGS)"           \
-         CARGO_TARGET_DIR=$(BUILD_DIR)        \
-         KERNEL_SYMBOLS=$(PRE_KERNEL_SYMBOLS) \
+	$(V) RUSTFLAGS="$(RUSTC_FLAGS)"    \
+         CARGO_TARGET_DIR=$(BUILD_DIR) \
          $(CARGO) build $(CARGO_FLAGS) --target $(KERNEL_TARGET)
-	$(V) $(MV) -f $(BUILT_KERNEL) $@
-
-$(PRE_KERNEL_SYMBOLS): $(KERNEL_BUILD_DIR)
-	$(V) echo "- Writing Empty Kernel Symbols..."
-	$(V) echo " " >$@
-
-$(KERNEL_BUILD_DIR):
-	$(V) $(MKDIR) -p $@
 
 clean:
 	$(V) echo "- Cleaning $(ARCH)/$(BUILD_MODE) Kernel..."

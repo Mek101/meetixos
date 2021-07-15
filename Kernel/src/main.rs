@@ -1,7 +1,6 @@
 #![no_std]
 #![no_main]
 #![feature(asm, global_asm, panic_info_message, const_fn_trait_bound)]
-#![feature(array_methods)]
 #![allow(dead_code)]
 
 /* TODO heap allocation */
@@ -14,6 +13,7 @@ use crate::{
         dbg_print_init,
         DbgLevel
     },
+    symbols::kernel_symbols_init,
     version::KERNEL_VERSION,
     vm::mem_manager::MemManager
 };
@@ -26,6 +26,7 @@ mod dbg;
 mod dev;
 mod heap;
 mod panic;
+mod symbols;
 mod version;
 mod vm;
 
@@ -38,6 +39,10 @@ pub extern "C" fn kernel_rust_start(raw_boot_info_ptr: *const u8) -> ! {
     dbg_print_init();
     dbg_println!(DbgLevel::Info, "MeetiX Kernel v{} is Booting...", KERNEL_VERSION);
     dbg_println!(DbgLevel::Info, "An Open Source OS Project written in Rust");
+
+    /* initialize the kernel symbols */
+    dbg_println!(DbgLevel::Trace, "Initializing Kernel Symbols...");
+    kernel_symbols_init();
 
     /* initialize the CPU management for the bootstrap CPU */
     dbg_println!(DbgLevel::Trace, "Initializing CPU Management...");
@@ -65,14 +70,6 @@ pub extern "C" fn kernel_rust_start(raw_boot_info_ptr: *const u8) -> ! {
                          boot_mem_area.start,
                          boot_mem_area.end);
         }
-        // dbg_println!(DbgLevel::Info,
-        //              "Available memory: {}",
-        //
-        // BootInfo::instance().boot_mem_areas().iter().map(|phys_mem_range|)
-        //                                  .iter()
-        //                                  .map(|mem_area| mem_area.size())
-        //                                  .sum::<usize>()
-        //                                  .display_pretty());
     }
     panic!("TODO implement the remaining code");
 }

@@ -7,6 +7,7 @@ PHDRS {
     text    PT_LOAD;
     data    PT_LOAD;
     bss     PT_LOAD;
+    symbols PT_LOAD;
 }
 
 SECTIONS {
@@ -37,15 +38,15 @@ SECTIONS {
         *(.sdata*)
     } : data
 
-    .got ALIGN(4K): AT(ADDR(.got) - KERNEL_VIRT_BASE) {
-        *(.got*)
-    } : data
-
     .bss ALIGN(4K) (NOLOAD): AT(ADDR(.bss) - KERNEL_VIRT_BASE) {
         *(.bss*)
         *(.sbss*)
         __kernel_text_end = .;
     } : bss
+
+    .symbols ALIGN(4K): AT(ADDR(.symbols) - KERNEL_VIRT_BASE) {
+        KEEP(*(.kernel_symbols*))
+    } : symbols
 
     /DISCARD/ : {
         *(.comment)

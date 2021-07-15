@@ -35,6 +35,24 @@ pub struct VirtAddr {
     m_hw_virt_addr: HwVirtAddr
 }
 
+impl VirtAddr {
+    pub fn as_ptr<T>(&self) -> *const T {
+        *self.m_hw_virt_addr as *const T
+    }
+
+    pub fn as_ptr_mut<T>(&self) -> *mut T {
+        *self.m_hw_virt_addr as *mut T
+    }
+
+    pub unsafe fn as_ref<T>(&self) -> &T {
+        &*self.as_ptr()
+    }
+
+    pub unsafe fn as_ref_mut<T>(&self) -> &mut T {
+        &mut *self.as_ptr_mut()
+    }
+}
+
 impl Address for VirtAddr {
     const MAX: Self = Self { m_hw_virt_addr: HwVirtAddr::MAX };
 }
