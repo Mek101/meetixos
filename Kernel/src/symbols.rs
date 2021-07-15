@@ -24,5 +24,9 @@ pub fn kernel_symbols_init() {
     unsafe {
         SM_KERNEL_SYMBOLS =
             str::from_utf8(symbols_slice).expect("Corrupted kernel symbols");
+
+        crate::dbg_println!(crate::dbg::print::DbgLevel::Trace,
+                            "\nSymbols:\n{}",
+                            SM_KERNEL_SYMBOLS);
     }
 }
