@@ -6,6 +6,7 @@ use core::{
         Display
     },
     hash::Hash,
+    iter::Step,
     ops::{
         Deref,
         Range
@@ -36,7 +37,8 @@ pub trait Address:
     + PartialEq
     + Ord
     + PartialOrd
-    + Hash {
+    + Hash
+    + Step {
     /**
      * Maximum value reachable by this `Address` implementation
      */
@@ -119,7 +121,8 @@ pub trait HwAddrBase:
     + PartialEq
     + Ord
     + PartialOrd
-    + Hash {
+    + Hash
+    + Step {
     /**
      * Maximum value reachable by this `HwAddrBase` implementation
      */

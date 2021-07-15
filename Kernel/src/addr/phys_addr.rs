@@ -6,6 +6,7 @@ use core::{
         Debug,
         Display
     },
+    iter::Step,
     ops::Deref
 };
 
@@ -73,5 +74,31 @@ impl Display for PhysAddr {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:#018x}", **self)
+    }
+}
+
+impl Step for PhysAddr {
+    fn steps_between(start: &Self, end: &Self) -> Option<usize> {
+        HwPhysAddr::steps_between(&start.m_hw_phys_addr, &end.m_hw_phys_addr)
+    }
+
+    fn forward_checked(start: Self, count: usize) -> Option<Self> {
+        if let Some(check_phys_addr) =
+            HwPhysAddr::forward_checked(start.m_hw_phys_addr, count)
+        {
+            Some(Self { m_hw_phys_addr: check_phys_addr })
+        } else {
+            None
+        }
+    }
+
+    fn backward_checked(start: Self, count: usize) -> Option<Self> {
+        if let Some(check_phys_addr) =
+            HwPhysAddr::backward_checked(start.m_hw_phys_addr, count)
+        {
+            Some(Self { m_hw_phys_addr: check_phys_addr })
+        } else {
+            None
+        }
     }
 }

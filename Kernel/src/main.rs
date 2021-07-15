@@ -1,6 +1,6 @@
 #![no_std]
 #![no_main]
-#![feature(asm, global_asm, panic_info_message, const_fn_trait_bound)]
+#![feature(asm, global_asm, panic_info_message, const_fn_trait_bound, step_trait)]
 #![allow(dead_code)]
 
 /* TODO heap allocation */

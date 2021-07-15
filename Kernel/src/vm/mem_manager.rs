@@ -31,10 +31,11 @@ impl MemManager /* Constructors */ {
 
         /* construct the LayoutManager */
         let _layout_manager =
-            if let Some(_) = boot_info.cmd_line_find_arg("--unordered-vm-layout") {
-                LayoutManager::new_randomized(*last_phy_mem_addr)
-            } else {
+            if let Some(_) = boot_info.cmd_line_find_arg("-plain-vm-layout") {
+                dbg_println!(DbgLevel::Warn, "Disabled kernel layout randomization");
                 LayoutManager::new_plain(*last_phy_mem_addr)
+            } else {
+                LayoutManager::new_randomized(*last_phy_mem_addr)
             };
     }
 }

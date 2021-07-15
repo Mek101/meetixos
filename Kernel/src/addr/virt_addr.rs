@@ -6,6 +6,7 @@ use core::{
         Debug,
         Display
     },
+    iter::Step,
     ops::Deref
 };
 
@@ -36,18 +37,30 @@ pub struct VirtAddr {
 }
 
 impl VirtAddr {
+    /**
+     * Returns this `VirtAddr` value as constant raw pointer
+     */
     pub fn as_ptr<T>(&self) -> *const T {
         *self.m_hw_virt_addr as *const T
     }
 
+    /**
+     * Returns this `VirtAddr` value as mutable raw pointer
+     */
     pub fn as_ptr_mut<T>(&self) -> *mut T {
         *self.m_hw_virt_addr as *mut T
     }
 
+    /**
+     * Returns this `VirtAddr` value as immutable reference
+     */
     pub unsafe fn as_ref<T>(&self) -> &T {
         &*self.as_ptr()
     }
 
+    /**
+     * Returns this `VirtAddr` value as mutable reference
+     */
     pub unsafe fn as_ref_mut<T>(&self) -> &mut T {
         &mut *self.as_ptr_mut()
     }
@@ -105,5 +118,31 @@ impl Display for VirtAddr {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:#018x}", **self)
+    }
+}
+
+impl Step for VirtAddr {
+    fn steps_between(start: &Self, end: &Self) -> Option<usize> {
+        HwVirtAddr::steps_between(&start.m_hw_virt_addr, &end.m_hw_virt_addr)
+    }
+
+    fn forward_checked(start: Self, count: usize) -> Option<Self> {
+        if let Some(check_phys_addr) =
+            HwVirtAddr::forward_checked(start.m_hw_virt_addr, count)
+        {
+            Some(Self { m_hw_virt_addr: check_phys_addr })
+        } else {
+            None
+        }
+    }
+
+    fn backward_checked(start: Self, count: usize) -> Option<Self> {
+        if let Some(check_phys_addr) =
+            HwVirtAddr::backward_checked(start.m_hw_virt_addr, count)
+        {
+            Some(Self { m_hw_virt_addr: check_phys_addr })
+        } else {
+            None
+        }
     }
 }
