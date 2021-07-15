@@ -13,7 +13,7 @@ use crate::{
         dbg_print_init,
         DbgLevel
     },
-    symbols::kernel_symbols_init,
+    symbols::kernel_symbols_early_init,
     version::KERNEL_VERSION,
     vm::mem_manager::MemManager
 };
@@ -42,7 +42,7 @@ pub extern "C" fn kernel_rust_start(raw_boot_info_ptr: *const u8) -> ! {
 
     /* initialize the kernel symbols */
     dbg_println!(DbgLevel::Trace, "Initializing Kernel Symbols...");
-    kernel_symbols_init();
+    kernel_symbols_early_init();
 
     /* initialize the CPU management for the bootstrap CPU */
     dbg_println!(DbgLevel::Trace, "Initializing CPU Management...");

@@ -16,7 +16,7 @@ use crate::{
 pub struct StackBackTrace<'a> {
     m_return_ptr: usize,
     m_frame_ptr: usize,
-    m_symbols_list: &'a CodeSymbolsList,
+    m_symbols_list: &'a CodeSymbolsList<'a>,
     m_text_begin: usize,
     m_text_end: usize
 }
@@ -26,7 +26,7 @@ impl<'a> StackBackTrace<'a> /* Constructors */ {
      * Constructs a `StackBackTrace` reading the stack pointer
      */
     #[inline(always)]
-    pub fn new(symbols_list: &'a CodeSymbolsList,
+    pub fn new(symbols_list: &'a CodeSymbolsList<'a>,
                text_begin: usize,
                text_end: usize)
                -> Self {

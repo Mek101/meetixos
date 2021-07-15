@@ -5,29 +5,27 @@ use core::{
     fmt
 };
 
-use alloc::{
-    format,
-    string::String
+use crate::{
+    demangle,
+    Demangle
 };
-
-use crate::demangle;
 
 /**
  * Callable code function symbol
  */
-pub struct CodeSymbol {
+pub struct CodeSymbol<'a> {
     m_virt_addr: usize,
-    m_symbol_name: String
+    m_demangled: Demangle<'a>
 }
 
-impl CodeSymbol /* Constructors */ {
+impl<'a> CodeSymbol<'a> /* Constructors */ {
     /**
      * Constructs a `CodeSymbol` from the given `raw_line` string.
      *
      * Expects the following format:
      * 0xxxxxxxxxxxx symbol_name
      */
-    pub fn from_raw_line(raw_line: &str) -> Option<Self> {
+    pub fn from_raw_line(raw_line: &'a str) -> Option<Self> {
         /* split the line using whitespaces */
         let mut line_parts = raw_line.split_ascii_whitespace();
 
@@ -48,15 +46,15 @@ impl CodeSymbol /* Constructors */ {
                 return None;
             }
 
-            format!("{:#}", demangle(str_symbol_name))
+            demangle(str_symbol_name)
         };
 
         Some(Self { m_virt_addr: virt_addr,
-                    m_symbol_name: symbol_name })
+                    m_demangled: symbol_name })
     }
 }
 
-impl CodeSymbol /* Getters */ {
+impl<'a> CodeSymbol<'a> /* Getters */ {
     /**
      * Returns the virtual address on which this symbol starts
      */
@@ -67,34 +65,34 @@ impl CodeSymbol /* Getters */ {
     /**
      * Returns the demangled symbol name `String`
      */
-    pub fn symbol_name(&self) -> &String {
-        &self.m_symbol_name
+    pub fn symbol_name(&self) -> &Demangle<'a> {
+        &self.m_demangled
     }
 }
 
-impl PartialEq for CodeSymbol {
+impl<'a> PartialEq for CodeSymbol<'a> {
     fn eq(&self, other: &Self) -> bool {
         self.m_virt_addr == other.m_virt_addr
     }
 }
 
-impl Eq for CodeSymbol {
+impl<'a> Eq for CodeSymbol<'a> {
 }
 
-impl PartialOrd for CodeSymbol {
+impl<'a> PartialOrd for CodeSymbol<'a> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.m_virt_addr.partial_cmp(&other.m_virt_addr)
     }
 }
 
-impl Ord for CodeSymbol {
+impl<'a> Ord for CodeSymbol<'a> {
     fn cmp(&self, other: &Self) -> Ordering {
         self.m_virt_addr.cmp(&other.m_virt_addr)
     }
 }
 
-impl fmt::Display for CodeSymbol {
+impl<'a> fmt::Display for CodeSymbol<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:#018x} - {:#}", self.m_virt_addr, self.m_symbol_name)
+        write!(f, "{:#018x} - {:#}", self.m_virt_addr, self.m_demangled)
     }
 }
