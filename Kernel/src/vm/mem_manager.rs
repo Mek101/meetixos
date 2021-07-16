@@ -30,12 +30,30 @@ impl MemManager /* Constructors */ {
         }
 
         /* construct the LayoutManager */
-        let _layout_manager =
+        let layout_manager =
             if let Some(_) = boot_info.cmd_line_find_arg("-plain-vm-layout") {
                 dbg_println!(DbgLevel::Warn, "Disabled kernel layout randomization");
                 LayoutManager::new_plain(*last_phy_mem_addr)
             } else {
                 LayoutManager::new_randomized(*last_phy_mem_addr)
             };
+
+        unsafe {
+            SM_MEM_MANAGER = Some(Self { m_layout_manager: layout_manager,
+                                         m_phys_frames_bitmap: &[] })
+        }
+    }
+}
+
+impl MemManager /* Getters */ {
+    pub fn instance() -> &'static MemManager {
+        unsafe {
+            SM_MEM_MANAGER.as_ref().expect("Tried to obtain MemManager instance before \
+                                            initialization")
+        }
+    }
+
+    pub fn layout_manager(&self) -> &LayoutManager {
+        &self.m_layout_manager
     }
 }

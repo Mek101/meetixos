@@ -5,17 +5,14 @@ use core::{
     fmt
 };
 
-use crate::{
-    demangle,
-    Demangle
-};
-
 /**
  * Callable code function symbol
  */
+#[derive(Debug)]
+#[derive(Copy, Clone)]
 pub struct CodeSymbol<'a> {
     m_virt_addr: usize,
-    m_demangled: Demangle<'a>
+    m_symbol_name: &'a str
 }
 
 impl<'a> CodeSymbol<'a> /* Constructors */ {
@@ -46,11 +43,11 @@ impl<'a> CodeSymbol<'a> /* Constructors */ {
                 return None;
             }
 
-            demangle(str_symbol_name)
+            str_symbol_name
         };
 
         Some(Self { m_virt_addr: virt_addr,
-                    m_demangled: symbol_name })
+                    m_symbol_name: symbol_name })
     }
 }
 
@@ -63,10 +60,17 @@ impl<'a> CodeSymbol<'a> /* Getters */ {
     }
 
     /**
-     * Returns the demangled symbol name `String`
+     * Returns the demangled symbol name
      */
-    pub fn demangled_symbol(&self) -> &Demangle<'a> {
-        &self.m_demangled
+    pub fn symbol_name(&self) -> &'a str {
+        &self.m_symbol_name
+    }
+}
+
+impl<'a> Default for CodeSymbol<'a> {
+    fn default() -> Self {
+        Self { m_virt_addr: 0,
+               m_symbol_name: "" }
     }
 }
 
@@ -93,6 +97,6 @@ impl<'a> Ord for CodeSymbol<'a> {
 
 impl<'a> fmt::Display for CodeSymbol<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:#018x} - {:#}", self.m_virt_addr, self.m_demangled)
+        write!(f, "{:#018x} - {}", self.m_virt_addr, self.m_symbol_name)
     }
 }

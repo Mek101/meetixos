@@ -1,16 +1,13 @@
 /*! Code symbols wrapper */
 
+use alloc::vec::Vec;
 use core::{
     fmt::Display,
-    mem::MaybeUninit,
     str
 };
 
 use helps::{
-    dbg::{
-        C_KIB,
-        C_MIB
-    },
+    dbg::C_MIB,
     str::str_len
 };
 
@@ -23,7 +20,6 @@ use crate::{
  * The initial reserved size for the `S_EXE_SYMBOLS_STORAGE`
  */
 const C_STORAGE_SIZE_MAX: usize = 1 * C_MIB;
-const C_CODE_SYMBOLS_MAX: usize = 2 * C_KIB; /* TODO remove when kernel implement Heap */
 
 /**
  * Dedicated section inside the ELF where the build-process stores the code
@@ -37,13 +33,17 @@ static S_EXE_SYMBOLS_STORAGE: [u8; C_STORAGE_SIZE_MAX] = [0; C_STORAGE_SIZE_MAX]
  */
 static mut SM_CODE_SYMBOLS: Option<CodeSymbols> = None;
 
+/**
+ * Singleton container for `CodeSymbol`s
+ */
 pub struct CodeSymbols {
-    /* TODO use a Vec when kernel implements Heap */
-    m_code_symbols: [CodeSymbol<'static>; C_CODE_SYMBOLS_MAX],
-    m_code_symbols_count: usize
+    m_code_symbols: Vec<CodeSymbol<'static>>
 }
 
 impl CodeSymbols /* Constructors */ {
+    /**
+     * Constructs the global `SM_CODE_SYMBOLS` instance
+     */
     pub fn init_instance() {
         unsafe {
             assert!(SM_CODE_SYMBOLS.is_none(),
@@ -53,6 +53,9 @@ impl CodeSymbols /* Constructors */ {
         }
     }
 
+    /**
+     * Constructs a filled `CodeSymbols`
+     */
     fn new() -> Self {
         /* calculate the length of the symbols */
         let symbols_len = str_len(&S_EXE_SYMBOLS_STORAGE);
@@ -67,36 +70,20 @@ impl CodeSymbols /* Constructors */ {
             str::from_utf8(storage_sub_slice).expect("Invalid symbols")
         };
 
-        /* TODO use a Vec when kernel implements Heap
-         *      symbols_str_slice.split("\n")
-         *                       .map(CodeSymbol::from_raw_line)
-         *                       .filter_map(|opt_code_symbol| opt_code_symbol)
-         *                       .collect::<Vec>()
-         */
-        let (code_symbols, symbols_count) = {
-            let mut code_symbols: [CodeSymbol<'static>; C_CODE_SYMBOLS_MAX] =
-                unsafe { MaybeUninit::uninit().assume_init() };
-            let mut symbols_count = 0;
-
-            for code_symbol in
-                symbols_str_slice.split("\n")
-                                 .map(CodeSymbol::from_raw_line)
-                                 .filter_map(|opt_code_symbol| opt_code_symbol)
-            {
-                code_symbols[symbols_count] = code_symbol;
-                symbols_count += 1;
-            }
-
-            (code_symbols, symbols_count)
-        };
-
         /* return the instance */
-        Self { m_code_symbols: code_symbols,
-               m_code_symbols_count: symbols_count }
+        Self { m_code_symbols:
+                   symbols_str_slice.split("\n")
+                                    .map(CodeSymbol::from_raw_line)
+                                    .filter_map(|opt_code_symbol| opt_code_symbol)
+                                    .collect() }
     }
 }
 
 impl CodeSymbols /* Methods */ {
+    /**
+     * Returns a `Display` implementation which shows the stack back-trace
+     */
+    #[inline(always)]
     pub fn back_tracer_from_here(&self,
                                  text_begin: usize,
                                  text_end: usize)
@@ -118,6 +105,9 @@ impl CodeSymbols /* Methods */ {
 }
 
 impl CodeSymbols /* Getters */ {
+    /**
+     * Returns the global `CodeSymbols` instance
+     */
     pub fn instance() -> &'static Self {
         unsafe {
             SM_CODE_SYMBOLS.as_ref().expect("Requested global CodeSymbols instance \
@@ -125,11 +115,17 @@ impl CodeSymbols /* Getters */ {
         }
     }
 
+    /**
+     * Returns whether the global `CodeSymbols` instance is initialized
+     */
     pub fn are_available() -> bool {
         unsafe { SM_CODE_SYMBOLS.is_some() }
     }
 
-    pub fn code_symbols(&self) -> &[CodeSymbol<'static>] {
-        &self.m_code_symbols[..self.m_code_symbols_count]
+    /**
+     * Returns the inner `Vec` with all the `CodeSymbol`s
+     */
+    pub fn code_symbols(&self) -> &Vec<CodeSymbol<'static>> {
+        &self.m_code_symbols
     }
 }

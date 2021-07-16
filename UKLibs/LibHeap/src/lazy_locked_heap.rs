@@ -23,7 +23,7 @@ use crate::{
 };
 
 /**
- * Callback used by the `RawLazyLockedHeap` to obtain the
+ * Callback used by the `LazyLockedHeap` to obtain the
  * `sync::BackRawMutex` implementation
  */
 pub type RawLazyMutexSupplier<M> = fn() -> Option<M>;
@@ -35,14 +35,14 @@ pub type RawLazyMutexSupplier<M> = fn() -> Option<M>;
  * This allow the use of the struct as `global_allocator` using constant
  * initialization
  */
-pub struct RawLazyLockedHeap<M>
+pub struct LazyLockedHeap<M>
     where M: BackRawMutex + 'static {
     m_lazy_locked_heap: Lazy<Mutex<M, Heap>, LazyHeapInitializer<M>>
 }
 
-impl<M> RawLazyLockedHeap<M> where M: BackRawMutex + 'static /* Constructors */ {
+impl<M> LazyLockedHeap<M> where M: BackRawMutex + 'static /* Constructors */ {
     /**
-     * Constructs a `RawLazyLockedHeap` without initialize the internal
+     * Constructs a `LazyLockedHeap` without initialize the internal
      * `sync::Mutex<Heap>`
      */
     pub const unsafe fn new(raw_mutex_supplier: RawLazyMutexSupplier<M>,
@@ -53,7 +53,7 @@ impl<M> RawLazyLockedHeap<M> where M: BackRawMutex + 'static /* Constructors */ 
     }
 }
 
-impl<M> RawLazyLockedHeap<M> where M: BackRawMutex + 'static /* Methods */ {
+impl<M> LazyLockedHeap<M> where M: BackRawMutex + 'static /* Methods */ {
     /**
      * Forces the initialization of this lazy `Heap`
      */
@@ -62,7 +62,7 @@ impl<M> RawLazyLockedHeap<M> where M: BackRawMutex + 'static /* Methods */ {
     }
 }
 
-impl<M> RawLazyLockedHeap<M> where M: BackRawMutex + 'static /* Getters */ {
+impl<M> LazyLockedHeap<M> where M: BackRawMutex + 'static /* Getters */ {
     /**
      * Returns the total amount of memory returned by the
      * `HeapMemorySupplier`
@@ -86,7 +86,7 @@ impl<M> RawLazyLockedHeap<M> where M: BackRawMutex + 'static /* Getters */ {
     }
 }
 
-unsafe impl<M> GlobalAlloc for RawLazyLockedHeap<M> where M: BackRawMutex {
+unsafe impl<M> GlobalAlloc for LazyLockedHeap<M> where M: BackRawMutex {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         self.m_lazy_locked_heap
             .lock()

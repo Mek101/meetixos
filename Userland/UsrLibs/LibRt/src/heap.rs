@@ -13,15 +13,15 @@ use api::object::{
     Object,
     UserCreatableObject
 };
-use heap::lazy_locked_heap::RawLazyLockedHeap;
+use heap::lazy_locked_heap::LazyLockedHeap;
 use sync::mutex::CreatMayFailBackRawMutex;
 
 /**
  * Global heap allocator
  */
 #[global_allocator]
-static mut S_HEAP_ALLOCATOR: RawLazyLockedHeap<OsRawMutex> =
-    unsafe { RawLazyLockedHeap::new(raw_mutex_supplier, heap_mem_supplier) };
+static mut S_HEAP_ALLOCATOR: LazyLockedHeap<OsRawMutex> =
+    unsafe { LazyLockedHeap::new(raw_mutex_supplier, heap_mem_supplier) };
 
 /**
  * Catches the allocation failures

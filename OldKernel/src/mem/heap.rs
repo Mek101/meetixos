@@ -2,7 +2,7 @@
 
 use core::alloc::Layout;
 
-use heap::lazy_locked_heap::RawLazyLockedHeap;
+use heap::lazy_locked_heap::LazyLockedHeap;
 use helps::align::align_up;
 use shared::{
     addr::Address,
@@ -34,9 +34,8 @@ use core::ptr::NonNull;
 
 /* lazy allocator initialized by <init_heap()> */
 #[global_allocator]
-static mut HEAP_ALLOCATOR: RawLazyLockedHeap<RawSpinMutex> = unsafe {
-    RawLazyLockedHeap::new(|| Some(RawSpinMutex::CONST_CREAT), heap_mem_supplier)
-};
+static mut HEAP_ALLOCATOR: LazyLockedHeap<RawSpinMutex> =
+    unsafe { LazyLockedHeap::new(|| Some(RawSpinMutex::CONST_CREAT), heap_mem_supplier) };
 
 /* keeps the count of physical frames requested */
 static mut HEAP_ALLOCATED_FRAMES: usize = 0;

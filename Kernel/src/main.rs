@@ -1,10 +1,14 @@
 #![no_std]
 #![no_main]
-#![feature(asm, global_asm, panic_info_message, const_fn_trait_bound, step_trait)]
+#![feature(asm,
+           global_asm,
+           panic_info_message,
+           const_fn_trait_bound,
+           step_trait,
+           alloc_error_handler)]
 #![allow(dead_code)]
 
-/* TODO heap allocation */
-//extern crate alloc;
+extern crate alloc;
 
 use symbols::code_symbols::CodeSymbols;
 

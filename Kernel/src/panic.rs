@@ -4,8 +4,10 @@ use core::panic::PanicInfo;
 
 use crate::{
     dbg_print::DbgLevel,
-    dbg_println
+    dbg_println,
+    vm::mem_manager::MemManager
 };
+use symbols::code_symbols::CodeSymbols;
 
 /**
  * Kernel panic catcher implementation
@@ -17,20 +19,27 @@ fn kernel_panic_handler(panic_info: &PanicInfo) -> ! {
     /* show the message if provided */
     if let Some(message) = panic_info.message() {
         dbg_println!(DbgLevel::Err, "An unrecoverable error has occurred:");
-        dbg_println!(DbgLevel::Err, "> {}", message);
+        dbg_println!(DbgLevel::Err, ">> {}", message);
     }
 
     /* show the file location when given */
     if let Some(location) = panic_info.location() {
         dbg_println!(DbgLevel::Err,
-                     "> {} at {}:{}",
+                     ">> File {} at {}:{}",
                      location.file(),
                      location.line(),
                      location.column());
     }
 
-    /* TODO print the backtrace */
-    // symbols_print_backtrace();
+    /* print the stack backtrace */
+    if CodeSymbols::are_available() {
+        let kern_text_range = MemManager::instance().layout_manager().kern_text_range();
+        let back_tracer_display =
+            CodeSymbols::instance().back_tracer_from_here(*kern_text_range.start,
+                                                          *kern_text_range.end);
+
+        dbg_println!(DbgLevel::Err, "Kernel stack Backtrace:\n{}", back_tracer_display);
+    }
 
     loop { /* halt forever TODO halt other CPUs */ }
 }

@@ -6,8 +6,9 @@
 
 #![no_std]
 #![feature(asm)]
+#![feature(once_cell)]
 
-pub use rustc_demangle::*;
+extern crate alloc;
 
 pub mod code_symbol;
 pub mod code_symbols;
