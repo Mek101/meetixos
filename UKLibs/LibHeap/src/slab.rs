@@ -3,8 +3,8 @@
 use core::ptr::NonNull;
 
 use crate::{
-    PreferredExtendSize,
-    SubHeapPool
+    HeapPool,
+    PreferredExtendSize
 };
 
 /**
@@ -73,7 +73,7 @@ impl<const BLOCK_SIZE: usize> Slab<BLOCK_SIZE> /* Getters */ {
     }
 }
 
-impl<const BLOCK_SIZE: usize> SubHeapPool for Slab<BLOCK_SIZE> {
+impl<const BLOCK_SIZE: usize> HeapPool for Slab<BLOCK_SIZE> {
     unsafe fn add_region(&mut self,
                          start_area_ptr: NonNull<u8>,
                          area_size: usize)

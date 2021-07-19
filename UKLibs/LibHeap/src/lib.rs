@@ -252,15 +252,15 @@ impl Heap /* Privates */ {
                        layout: &Layout)
                        -> bool {
         let sub_heap_allocator = match allocator_selector {
-            AllocSelector::Slab64 => &mut self.m_slab_64 as &mut dyn SubHeapPool,
-            AllocSelector::Slab128 => &mut self.m_slab_128 as &mut dyn SubHeapPool,
-            AllocSelector::Slab256 => &mut self.m_slab_256 as &mut dyn SubHeapPool,
-            AllocSelector::Slab512 => &mut self.m_slab_512 as &mut dyn SubHeapPool,
-            AllocSelector::Slab1024 => &mut self.m_slab_1024 as &mut dyn SubHeapPool,
-            AllocSelector::Slab2048 => &mut self.m_slab_2048 as &mut dyn SubHeapPool,
-            AllocSelector::Slab4096 => &mut self.m_slab_4096 as &mut dyn SubHeapPool,
-            AllocSelector::Slab8192 => &mut self.m_slab_8192 as &mut dyn SubHeapPool,
-            AllocSelector::LinkedList => &mut self.m_linked_list as &mut dyn SubHeapPool
+            AllocSelector::Slab64 => &mut self.m_slab_64 as &mut dyn HeapPool,
+            AllocSelector::Slab128 => &mut self.m_slab_128 as &mut dyn HeapPool,
+            AllocSelector::Slab256 => &mut self.m_slab_256 as &mut dyn HeapPool,
+            AllocSelector::Slab512 => &mut self.m_slab_512 as &mut dyn HeapPool,
+            AllocSelector::Slab1024 => &mut self.m_slab_1024 as &mut dyn HeapPool,
+            AllocSelector::Slab2048 => &mut self.m_slab_2048 as &mut dyn HeapPool,
+            AllocSelector::Slab4096 => &mut self.m_slab_4096 as &mut dyn HeapPool,
+            AllocSelector::Slab8192 => &mut self.m_slab_8192 as &mut dyn HeapPool,
+            AllocSelector::LinkedList => &mut self.m_linked_list as &mut dyn HeapPool
         };
 
         /* request to the supplier the maximum amount of memory */
@@ -294,7 +294,7 @@ impl Heap /* Privates */ {
 /**
  * `Heap` sub-allocator pool
  */
-pub trait SubHeapPool {
+pub trait HeapPool {
     /**
      * Puts the given region to the memory pool of the allocator
      */

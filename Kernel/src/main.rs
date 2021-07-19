@@ -8,6 +8,7 @@
            alloc_error_handler)]
 #![allow(dead_code)]
 
+#[macro_use]
 extern crate alloc;
 
 use symbols::code_symbols::CodeSymbols;
@@ -19,6 +20,7 @@ use crate::{
         dbg_print_init,
         DbgLevel
     },
+    heap::kernel_heap_init,
     version::KERNEL_VERSION,
     vm::mem_manager::MemManager
 };
@@ -43,6 +45,10 @@ pub extern "C" fn kernel_rust_start(raw_boot_info_ptr: *const u8) -> ! {
     dbg_print_init();
     dbg_println!(DbgLevel::Info, "MeetiX Kernel v{} is Booting...", KERNEL_VERSION);
     dbg_println!(DbgLevel::Info, "An Open Source OS Project written in Rust");
+
+    /* initialize the kernel heap */
+    dbg_println!(DbgLevel::Trace, "Initializing Kernel Heap...");
+    kernel_heap_init();
 
     /* initialize the kernel symbols */
     dbg_println!(DbgLevel::Trace, "Initializing Kernel Symbols...");

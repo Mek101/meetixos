@@ -15,8 +15,8 @@ use helps::{
 };
 
 use crate::{
-    PreferredExtendSize,
-    SubHeapPool
+    HeapPool,
+    PreferredExtendSize
 };
 
 /**
@@ -105,7 +105,7 @@ impl LinkedList /* Privates */ {
     }
 }
 
-impl SubHeapPool for LinkedList {
+impl HeapPool for LinkedList {
     unsafe fn add_region(&mut self,
                          start_area_ptr: NonNull<u8>,
                          area_size: usize)
