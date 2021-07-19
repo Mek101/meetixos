@@ -36,7 +36,28 @@ pub struct VirtAddr {
     m_hw_virt_addr: HwVirtAddr
 }
 
+impl VirtAddr /* Constants */ {
+    /**
+     * Bits each page table level occupies in a 64bit paginated system
+     */
+    const BITS_PER_TABLE_LEVEL: usize = HwVirtAddr::BITS_PER_TABLE_LEVEL;
+}
+
 impl VirtAddr /* Getters */ {
+    /**
+     * Returns the 4 9bit indexes for a 4KiB `VirtAddr`
+     */
+    pub fn as_4kib_page_table_indexes(&self) -> (usize, usize, usize, usize) {
+        todo!()
+    }
+
+    /**
+     * Returns the 3 9bit indexes for a 2MiB huge `VirtAddr`
+     */
+    pub fn as_2mib_page_table_indexes(&self) -> (usize, usize, usize) {
+        todo!()
+    }
+
     /**
      * Returns this `VirtAddr` value as constant raw pointer
      */
@@ -54,14 +75,14 @@ impl VirtAddr /* Getters */ {
     /**
      * Returns this `VirtAddr` value as immutable reference
      */
-    pub unsafe fn as_ref<T>(&self) -> &T {
+    pub unsafe fn as_ref<'a, T>(&self) -> &'a T {
         &*self.as_ptr()
     }
 
     /**
      * Returns this `VirtAddr` value as mutable reference
      */
-    pub unsafe fn as_ref_mut<T>(&self) -> &mut T {
+    pub unsafe fn as_ref_mut<'a, T>(&self) -> &'a mut T {
         &mut *self.as_ptr_mut()
     }
 }
@@ -145,4 +166,8 @@ impl Step for VirtAddr {
             None
         }
     }
+}
+
+pub trait HwVirtAddrBase: HwAddrBase {
+    const BITS_PER_TABLE_LEVEL: usize;
 }

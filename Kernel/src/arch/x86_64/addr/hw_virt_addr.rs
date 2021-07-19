@@ -5,7 +5,10 @@ use core::{
     ops::Deref
 };
 
-use crate::addr::HwAddrBase;
+use crate::addr::{
+    virt_addr::HwVirtAddrBase,
+    HwAddrBase
+};
 
 /**
  * x86_64 virtual address implementation.
@@ -19,6 +22,10 @@ use crate::addr::HwAddrBase;
 #[derive(Hash)]
 pub struct HwVirtAddr {
     m_raw_virt_addr: usize
+}
+
+impl HwVirtAddrBase for HwVirtAddr {
+    const BITS_PER_TABLE_LEVEL: usize = 9;
 }
 
 impl HwAddrBase for HwVirtAddr {

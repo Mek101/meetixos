@@ -27,7 +27,7 @@ impl PageTableEntry /* Methods */ {
 
 impl PageTableEntry /* Getters */ {
     #[inline]
-    fn phys_frame(&self) -> Option<PhysAddr> {
+    pub fn phys_frame(&self) -> Option<PhysAddr> {
         if self.is_present() {
             Some(self.m_hw_entry.raw_phys_frame().into())
         } else {
@@ -36,120 +36,120 @@ impl PageTableEntry /* Getters */ {
     }
 
     #[inline]
-    fn is_present(&self) -> bool {
+    pub fn is_present(&self) -> bool {
         self.m_hw_entry.is_present()
     }
 
     #[inline]
-    fn is_readable(&self) -> bool {
+    pub fn is_readable(&self) -> bool {
         self.m_hw_entry.is_readable()
     }
 
     #[inline]
-    fn is_writeable(&self) -> bool {
+    pub fn is_writeable(&self) -> bool {
         self.m_hw_entry.is_writeable()
     }
 
     #[inline]
-    fn is_cacheable(&self) -> bool {
+    pub fn is_cacheable(&self) -> bool {
         self.m_hw_entry.is_cacheable()
     }
 
     #[inline]
-    fn is_global(&self) -> bool {
+    pub fn is_global(&self) -> bool {
         self.m_hw_entry.is_global()
     }
 
     #[inline]
-    fn is_huge_page(&self) -> bool {
+    pub fn is_huge_page(&self) -> bool {
         self.m_hw_entry.is_huge_page()
     }
 
     #[inline]
-    fn is_accessed(&self) -> bool {
+    pub fn is_accessed(&self) -> bool {
         self.m_hw_entry.is_accessed()
     }
 
     #[inline]
-    fn is_dirty(&self) -> bool {
+    pub fn is_dirty(&self) -> bool {
         self.m_hw_entry.is_dirty()
     }
 
     #[inline]
-    fn is_no_execute(&self) -> bool {
+    pub fn is_no_execute(&self) -> bool {
         self.m_hw_entry.is_no_execute()
     }
 
     #[inline]
-    fn is_user(&self) -> bool {
+    pub fn is_user(&self) -> bool {
         self.m_hw_entry.is_user()
     }
 
     #[inline]
-    fn is_unused(&self) -> bool {
+    pub fn is_unused(&self) -> bool {
         self.m_hw_entry.is_unused()
     }
 }
 
 impl PageTableEntry /* Setters */ {
     #[inline]
-    fn set_phys_frame(&mut self, phys_frame: PhysAddr) {
+    pub fn set_phys_frame(&mut self, phys_frame: PhysAddr) {
         self.m_hw_entry.set_raw_phys_frame(*phys_frame);
         self.set_present(true);
     }
 
     #[inline]
-    fn set_present(&mut self, is_present: bool) {
+    pub fn set_present(&mut self, is_present: bool) {
         self.m_hw_entry.set_present(is_present);
     }
 
     #[inline]
-    fn set_readable(&mut self, is_readable: bool) {
+    pub fn set_readable(&mut self, is_readable: bool) {
         self.m_hw_entry.set_readable(is_readable);
     }
 
     #[inline]
-    fn set_writeable(&mut self, is_writeable: bool) {
+    pub fn set_writeable(&mut self, is_writeable: bool) {
         self.m_hw_entry.set_writeable(is_writeable);
     }
 
     #[inline]
-    fn set_cacheable(&mut self, is_cacheable: bool) {
+    pub fn set_cacheable(&mut self, is_cacheable: bool) {
         self.m_hw_entry.set_cacheable(is_cacheable);
     }
 
     #[inline]
-    fn set_global(&mut self, is_global: bool) {
+    pub fn set_global(&mut self, is_global: bool) {
         self.m_hw_entry.set_global(is_global);
     }
 
     #[inline]
-    fn set_huge_page(&mut self, is_huge_page: bool) {
+    pub fn set_huge_page(&mut self, is_huge_page: bool) {
         self.m_hw_entry.set_huge_page(is_huge_page);
     }
 
     #[inline]
-    fn set_accessed(&mut self, is_accessed: bool) {
+    pub fn set_accessed(&mut self, is_accessed: bool) {
         self.m_hw_entry.set_accessed(is_accessed);
     }
 
     #[inline]
-    fn set_dirty(&mut self, is_dirty: bool) {
+    pub fn set_dirty(&mut self, is_dirty: bool) {
         self.m_hw_entry.set_dirty(is_dirty);
     }
 
     #[inline]
-    fn set_no_execute(&mut self, is_no_execute: bool) {
+    pub fn set_no_execute(&mut self, is_no_execute: bool) {
         self.m_hw_entry.set_no_execute(is_no_execute);
     }
 
     #[inline]
-    fn set_user(&mut self, is_user: bool) {
+    pub fn set_user(&mut self, is_user: bool) {
         self.m_hw_entry.set_user(is_user);
     }
 
     #[inline]
-    fn set_unused(&mut self) {
+    pub fn set_unused(&mut self) {
         self.m_hw_entry.set_unused();
     }
 }
