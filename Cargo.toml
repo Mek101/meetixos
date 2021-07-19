@@ -2,6 +2,7 @@
 members = [
     # Kernel Crates
     "Kernel",
+    # TODO remove
     "OldKernel",
     "OldKernel/HHLoader",
     "OldKernel/SharedCode",

@@ -99,6 +99,12 @@ impl HwCpuBase for HwCpu {
         self.load_tss_segment(tss_segment_selector);
     }
 
+    fn do_halt(&self) {
+        unsafe {
+            asm!("cli; hlt");
+        }
+    }
+
     fn current_id() -> CpuId {
         0 /* TODO APIC */
     }

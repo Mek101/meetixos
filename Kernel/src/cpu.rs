@@ -39,6 +39,18 @@ impl Cpu /* Constructors */ {
     }
 }
 
+impl Cpu /* Methods */ {
+    /**
+     * Halts this CPU
+     */
+    pub fn halt(&self) -> ! {
+        /* TODO halt other CPUs */
+        loop {
+            self.m_hw_cpu.do_halt();
+        }
+    }
+}
+
 impl Cpu /* Static Functions */ {
     /**
      * Returns the reference to the current `Cpu`
@@ -55,7 +67,7 @@ impl Cpu /* Static Functions */ {
         unsafe {
             SM_ALL_CPUS[cpu_id as usize].as_ref().unwrap_or_else(|| {
                                                      panic!("Requested an unregistered \
-                                                             Cpu. cpu_id: {}",
+                                                             Cpu with id: {}",
                                                             cpu_id)
                                                  })
         }
@@ -108,6 +120,11 @@ pub trait HwCpuBase {
      * need `'static` lifetimes
      */
     fn init(&'static mut self);
+
+    /**
+     * Halts this `HwCpu`
+     */
+    fn do_halt(&self);
 
     /**
      * Returns the `CpuId` of the executing `Cpu`

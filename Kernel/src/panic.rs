@@ -3,6 +3,7 @@
 use core::panic::PanicInfo;
 
 use crate::{
+    cpu::Cpu,
     dbg_print::DbgLevel,
     dbg_println,
     vm::mem_manager::MemManager
@@ -41,5 +42,6 @@ fn kernel_panic_handler(panic_info: &PanicInfo) -> ! {
         dbg_println!(DbgLevel::Err, "Kernel stack Backtrace:\n{}", back_tracer_display);
     }
 
-    loop { /* halt forever TODO halt other CPUs */ }
+    /* halt this CPUs */
+    Cpu::current().halt();
 }
