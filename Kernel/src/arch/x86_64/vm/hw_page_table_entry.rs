@@ -9,12 +9,13 @@ use bits::bit_fields::BitFields;
 
 use crate::{
     addr::phys_addr::PhysAddr,
-    vm::paging::page_table_entry::HwPageTableEntryBase
+    vm::page_table_entry::HwPageTableEntryBase
 };
 
 /**
  * x86_64 `HwPageTableEntryBase` implementation
  */
+#[derive(Copy, Clone)]
 pub struct HwPageTableEntry {
     m_entry_value: usize
 }

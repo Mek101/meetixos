@@ -4,10 +4,11 @@ use core::fmt::Debug;
 
 use crate::{
     addr::phys_addr::PhysAddr,
-    arch::vm::paging::hw_page_table_entry::HwPageTableEntry
+    arch::vm::hw_page_table_entry::HwPageTableEntry
 };
 
 #[derive(Debug)]
+#[derive(Copy, Clone)]
 pub struct PageTableEntry {
     m_hw_entry: HwPageTableEntry
 }
@@ -153,7 +154,7 @@ impl PageTableEntry /* Setters */ {
     }
 }
 
-pub trait HwPageTableEntryBase: Debug {
+pub trait HwPageTableEntryBase: Debug + Copy + Clone {
     fn new() -> Self;
 
     unsafe fn invalidate_in_tlb(&self);

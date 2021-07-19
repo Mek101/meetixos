@@ -173,7 +173,7 @@ pub fn dbg_print_set_max_level(dbg_level: DbgLevel) -> DbgLevel {
  */
 pub fn dbg_do_print(args: fmt::Arguments<'_>, dbg_level: DbgLevel, module_path: &str) {
     write!(S_DBG_OUTPUT_UART.lock(),
-           "[\x1b[0;{}m{}\x1b[0m <> \x1b[0;{}m{: <25}\x1b[0m] \x1b[0;{}m{}\x1b[0m\n",
+           "[\x1b[0;{}m{}\x1b[0m <> \x1b[0;{}m{: <26}\x1b[0m] \x1b[0;{}m{}\x1b[0m\n",
            dbg_level.as_vt100_color(),
            dbg_level,
            C_VT100_MAGENTA,

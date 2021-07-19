@@ -36,7 +36,7 @@ pub struct VirtAddr {
     m_hw_virt_addr: HwVirtAddr
 }
 
-impl VirtAddr {
+impl VirtAddr /* Getters */ {
     /**
      * Returns this `VirtAddr` value as constant raw pointer
      */

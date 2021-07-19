@@ -1,5 +1,7 @@
 /*! Kernel layout manager */
 
+use alloc::vec::Vec;
+
 use core::{
     fmt,
     fmt::Display,
@@ -16,6 +18,7 @@ use helps::{
 
 use crate::{
     addr::{
+        phys_addr::PhysAddr,
         virt_addr::VirtAddr,
         Address
     },
@@ -28,7 +31,6 @@ use crate::{
         PageSize
     }
 };
-use alloc::vec::Vec;
 
 extern "C" {
     static __kernel_text_begin: usize;
@@ -36,7 +38,7 @@ extern "C" {
 }
 
 /* <false> until <MemManager::init_instance()> is called */
-static mut SM_INITIALIZED: bool = false;
+static mut SM_INSTANCE_INITIALIZED: bool = false;
 
 /**
  * Kernel VM ranges.
@@ -48,7 +50,8 @@ pub struct LayoutManager {
     m_tmp_mem_mapping_range: Range<VirtAddr>,
     m_kern_regions_range: Range<VirtAddr>,
     m_fs_page_cache_range: Range<VirtAddr>,
-    m_kern_text_range: Range<VirtAddr>
+    m_kern_text_range: Range<VirtAddr>,
+    m_kern_text_phys_range: Range<PhysAddr>
 }
 
 impl LayoutManager /* Constants */ {
@@ -56,6 +59,12 @@ impl LayoutManager /* Constants */ {
      * Kernel space begins at virtual offset of 192TiB
      */
     const KERN_SPACE_BEGIN: usize = 0xffff_c000_0000_0000;
+
+    /**
+     * Kernel base virtual address. Keep this in sync with various
+     * `Kernel/linker.ld/KERNEL_VIRT_BASE`
+     */
+    const KERN_VIRT_BASE: usize = 0xffff_ffff_fa00_0000;
 }
 
 impl LayoutManager /* Constructor */ {
@@ -105,10 +114,10 @@ impl LayoutManager /* Constructor */ {
     fn new(vm_layout_ranges: &Vec<Range<VirtAddr>>) -> Self {
         /* the LayoutManager is a singleton stored into the <MemManager> */
         unsafe {
-            if SM_INITIALIZED {
+            if SM_INSTANCE_INITIALIZED {
                 panic!("Tried to re-construct the LayoutManager. Use the MemManager!");
             } else {
-                SM_INITIALIZED = true;
+                SM_INSTANCE_INITIALIZED = true;
             }
         }
 
@@ -140,6 +149,20 @@ impl LayoutManager /* Constructor */ {
                                unsafe { &__kernel_text_begin as *const _ as usize }.into(),
                            end:
                                unsafe { &__kernel_text_end as *const _ as usize }.into() }
+               },
+               m_kern_text_phys_range: {
+                   /* many parts of the kernel code need the identity mapped pages of
+                    * the kernel text, so a convenient <PhysAddr> <Range> is stored
+                    * into the <LayoutManager>
+                    */
+                   Range { start: unsafe {
+                                      &__kernel_text_begin as *const _ as usize
+                                      - LayoutManager::KERN_VIRT_BASE
+                                  }.into(),
+                           end: unsafe {
+                                    &__kernel_text_end as *const _ as usize
+                                    - LayoutManager::KERN_VIRT_BASE
+                                }.into() }
                } }
     }
 }
@@ -179,6 +202,13 @@ impl LayoutManager /* Getters */ {
      */
     pub fn kern_text_range(&self) -> &Range<VirtAddr> {
         &self.m_kern_text_range
+    }
+
+    /**
+     * Returns the kernel-text physical `Range`
+     */
+    pub fn kern_text_phys_range(&self) -> &Range<PhysAddr> {
+        &self.m_kern_text_phys_range
     }
 }
 

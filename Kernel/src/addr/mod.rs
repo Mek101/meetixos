@@ -18,6 +18,8 @@ use helps::align::{
     align_up
 };
 
+use crate::vm::PageSize;
+
 pub mod phys_addr;
 pub mod virt_addr;
 
@@ -88,6 +90,14 @@ pub trait Address:
     fn to_range(&self, range_size: usize) -> Range<Self> {
         Range { start: self.clone(),
                 end: self.offset(range_size) }
+    }
+
+    /**
+     * Returns this `Address` as Page index
+     */
+    fn as_page_index<S>(&self) -> usize
+        where S: PageSize {
+        **self / S::SIZE
     }
 
     /**

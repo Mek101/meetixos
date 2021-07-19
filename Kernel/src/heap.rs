@@ -21,7 +21,7 @@ use sync::mutex::{
 use crate::{
     dbg_print::DbgLevel,
     dbg_println,
-    vm::paging::{
+    vm::{
         Page4KiB,
         PageSize
     }

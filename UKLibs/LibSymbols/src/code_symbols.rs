@@ -67,7 +67,7 @@ impl CodeSymbols /* Constructors */ {
         let symbols_str_slice = {
             let storage_sub_slice = &S_EXE_SYMBOLS_STORAGE[..symbols_len];
 
-            str::from_utf8(storage_sub_slice).expect("Invalid symbols")
+            unsafe { str::from_utf8_unchecked(storage_sub_slice) }
         };
 
         /* return the instance */

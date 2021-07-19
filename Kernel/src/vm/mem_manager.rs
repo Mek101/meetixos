@@ -1,5 +1,10 @@
 /*! Kernel memory manager */
 
+use core::{
+    fmt,
+    fmt::Debug
+};
+
 use bits::bit_fields::{
     BitArray,
     BitFields
@@ -15,18 +20,20 @@ use crate::{
     dbg_println,
     vm::{
         layout_manager::LayoutManager,
-        paging::{
-            Page4KiB,
-            PageSize
-        }
+        page_dir::PageDir,
+        Page4KiB,
+        PageSize
     }
 };
+use helps::dbg::DisplaySizePretty;
 
 static mut SM_MEM_MANAGER: Option<MemManager> = None;
 
 pub struct MemManager {
     m_layout_manager: LayoutManager,
-    m_phys_frames_bitmap: &'static mut [u8]
+    m_phys_frames_bitmap: &'static mut [u8],
+    m_mem_manager_stats: MemManagerStats,
+    m_kernel_page_dir: PageDir
 }
 
 impl MemManager /* Constructors */ {
@@ -56,6 +63,10 @@ impl MemManager /* Constructors */ {
             vec![0; phys_frames_bitmap_requested_pages * Page4KiB::SIZE];
 
         /* mark the available frames into the bitmap */
+        let kern_text_phys_range = layout_manager.kern_text_phys_range();
+        dbg_println!(DbgLevel::Trace, "kern_text_phys_range: {:?}", kern_text_phys_range);
+
+        let mut mem_manager_stats = MemManagerStats::new();
         for phys_addr in
             boot_info.boot_mem_areas()
                      .iter()
@@ -63,14 +74,23 @@ impl MemManager /* Constructors */ {
                          phys_mem_range.clone().step_by(Page4KiB::SIZE)
                      })
         {
-            phys_frames_bitmap.set_bit(*phys_addr / Page4KiB::SIZE, true);
+            /* mark as available only the frames which not store the kernel text */
+            if !kern_text_phys_range.contains(&phys_addr) {
+                phys_frames_bitmap.set_bit(phys_addr.as_page_index::<Page4KiB>(), true);
+                mem_manager_stats.m_free_phys_frames += 1;
+            } else {
+                mem_manager_stats.m_allocated_phys_frames += 1;
+            }
         }
+        dbg_println!(DbgLevel::Trace, "{:?}", mem_manager_stats);
 
         /* initialize the global instance */
         unsafe {
             SM_MEM_MANAGER = Some(Self { m_layout_manager: layout_manager,
                                          m_phys_frames_bitmap:
-                                             phys_frames_bitmap.leak() })
+                                             phys_frames_bitmap.leak(),
+                                         m_mem_manager_stats: mem_manager_stats,
+                                         m_kernel_page_dir: PageDir::active() })
         }
     }
 }
@@ -85,5 +105,39 @@ impl MemManager /* Getters */ {
 
     pub fn layout_manager(&self) -> &LayoutManager {
         &self.m_layout_manager
+    }
+}
+
+pub struct MemManagerStats {
+    m_allocated_phys_frames: usize,
+    m_free_phys_frames: usize
+}
+
+impl MemManagerStats /* Constructors */ {
+    fn new() -> Self {
+        Self { m_allocated_phys_frames: 0,
+               m_free_phys_frames: 0 }
+    }
+}
+
+impl MemManagerStats /* Getters */ {
+    pub fn allocated_phys_frames(&self) -> usize {
+        self.m_allocated_phys_frames
+    }
+
+    pub fn free_phys_frames(&self) -> usize {
+        self.m_free_phys_frames
+    }
+}
+
+impl Debug for MemManagerStats {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f,
+               "MemManagerStats {{ m_allocated_phys_frames: {} ({}), \
+                m_free_phys_frames: {} ({}) }}",
+               self.m_allocated_phys_frames,
+               (self.m_allocated_phys_frames * Page4KiB::SIZE).display_pretty(),
+               self.m_free_phys_frames,
+               (self.m_free_phys_frames * Page4KiB::SIZE).display_pretty())
     }
 }

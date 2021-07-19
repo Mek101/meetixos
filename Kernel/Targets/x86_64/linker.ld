@@ -41,11 +41,11 @@ SECTIONS {
     .bss ALIGN(4K) (NOLOAD): AT(ADDR(.bss) - KERNEL_VIRT_BASE) {
         *(.bss*)
         *(.sbss*)
-        __kernel_text_end = .;
     } : bss
 
     .symbols ALIGN(4K): AT(ADDR(.symbols) - KERNEL_VIRT_BASE) {
         KEEP(*(.code_symbols*))
+        __kernel_text_end = .;
     } : symbols
 
     /DISCARD/ : {
