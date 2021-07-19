@@ -22,12 +22,13 @@ use crate::{
     dbg_print::DbgLevel,
     dbg_println,
     dev::random::Random,
-    vm::paging::{
+    vm::{
         Page2MiB,
         Page4KiB,
         PageSize
     }
 };
+use alloc::vec::Vec;
 
 extern "C" {
     static __kernel_text_begin: usize;
@@ -101,7 +102,7 @@ impl LayoutManager /* Constructor */ {
     /**
      * Internal constructor called by the previous two functions
      */
-    fn new(vm_layout_ranges: &[Range<VirtAddr>]) -> Self {
+    fn new(vm_layout_ranges: &Vec<Range<VirtAddr>>) -> Self {
         /* the LayoutManager is a singleton stored into the <MemManager> */
         unsafe {
             if SM_INITIALIZED {
@@ -131,8 +132,8 @@ impl LayoutManager /* Constructor */ {
                                       .expect("Missing filesystem page cache range")
                                       .clone(),
                m_kern_text_range: {
-                   /* to avoid to use the special linker symbols every time are needed
-                    * the kernel-text ranges, they are stores as Range of VirtAddr into
+                   /* to avoid the use of the following special linker symbols every
+                    * time are needed, a convenient <VirtAddr> <Range> is stored into
                     * the <LayoutManager>
                     */
                    Range { start:
@@ -185,8 +186,7 @@ impl LayoutManager /* Privates */ {
     /**
      * Returns all the `LayoutComponent`s with a size
      */
-    fn size_components(phys_mem_size: usize)
-                       -> [LayoutComponent; LayoutComponent::COUNT] {
+    fn size_components(phys_mem_size: usize) -> Vec<LayoutComponent> {
         /* reserve 2 MiB to be able to map up to 512 4KiB pages or one huge 2MiB page */
         let tmp_mapping_size = Page2MiB::SIZE;
 
@@ -227,24 +227,23 @@ impl LayoutManager /* Privates */ {
                                                     Page4KiB::SIZE);
 
         /* return the components with the size */
-        [LayoutComponent::PhysMemMapping { m_size: phys_mem_mapping_size },
-         LayoutComponent::TmpMapping { m_size: tmp_mapping_size },
-         LayoutComponent::KernRegions { m_size: shrinkable_components_size },
-         LayoutComponent::FsPageCache { m_size: shrinkable_components_size }]
+        vec![LayoutComponent::PhysMemMapping { m_size: phys_mem_mapping_size },
+             LayoutComponent::TmpMapping { m_size: tmp_mapping_size },
+             LayoutComponent::KernRegions { m_size: shrinkable_components_size },
+             LayoutComponent::FsPageCache { m_size: shrinkable_components_size }]
     }
 
     /**
      * Places the given `LayoutComponent`s into VM
      */
-    fn place_components(layout_components: &[LayoutComponent])
-                        -> [Range<VirtAddr>; LayoutComponent::COUNT] {
+    fn place_components(layout_components: &Vec<LayoutComponent>)
+                        -> Vec<Range<VirtAddr>> {
         /* alignment mismatching and reset when encountered shrinkable components */
         let mut total_alignment_diff = 0;
         let mut vm_range_addr: VirtAddr = Self::KERN_SPACE_BEGIN.into();
 
         /* store the ranges in a fixed size array. TODO Range is not Copy */
-        let mut layout_ranges =
-            [Range::default(), Range::default(), Range::default(), Range::default()];
+        let mut layout_ranges = vec![Range::default(); layout_components.len()];
 
         /* place <LayoutComponent>s into virtual memory */
         for (i, &layout_component) in layout_components.iter().enumerate() {
@@ -303,8 +302,8 @@ impl LayoutManager /* Privates */ {
      * Randomizes the `LayoutComponent`s order, in order to place them into
      * VM in a pseudo random order
      */
-    fn randomize_components(sized_layout_components: &[LayoutComponent])
-                            -> [LayoutComponent; LayoutComponent::COUNT] {
+    fn randomize_components(sized_layout_components: &Vec<LayoutComponent>)
+                            -> Vec<LayoutComponent> {
         let random_gen = Random::new();
 
         /* keep a bitmap of the extracted components */
@@ -332,7 +331,7 @@ impl LayoutManager /* Privates */ {
         /* extract now the others randomly. NOTE the COUNT - 1! we want ot extract
          * all the component less the last, because we already have it
          */
-        let mut layout_components = [LayoutComponent::None; LayoutComponent::COUNT];
+        let mut layout_components = vec![LayoutComponent::None; LayoutComponent::COUNT];
         for index in 0..LayoutComponent::COUNT - 1 {
             loop {
                 /* generate the next random number */
@@ -349,7 +348,7 @@ impl LayoutManager /* Privates */ {
         }
 
         /* store the last layout-component */
-        layout_components[layout_components.len() - 1] = last_shrinkable_component;
+        layout_components[LayoutComponent::COUNT - 1] = last_shrinkable_component;
         layout_components
     }
 
@@ -357,16 +356,16 @@ impl LayoutManager /* Privates */ {
      * Restores the order of the `Range`s as expected by the `LayoutManager`
      * constructor but keeping the assigned address
      */
-    fn sort_for_constructor(layout_components: &[LayoutComponent],
-                            vm_layout_ranges: &[Range<VirtAddr>])
-                            -> [Range<VirtAddr>; LayoutComponent::COUNT] {
+    fn sort_for_constructor(layout_components: &Vec<LayoutComponent>,
+                            vm_layout_ranges: &Vec<Range<VirtAddr>>)
+                            -> Vec<Range<VirtAddr>> {
         assert_eq!(layout_components.len(), vm_layout_ranges.len());
 
         /* collect into an array of pairs the components associated with the range */
-        let mut components_ranges_pair = [(LayoutComponent::None, Range::default()),
-                                          (LayoutComponent::None, Range::default()),
-                                          (LayoutComponent::None, Range::default()),
-                                          (LayoutComponent::None, Range::default())];
+        let mut components_ranges_pair = vec![(LayoutComponent::None, Range::default()),
+                                              (LayoutComponent::None, Range::default()),
+                                              (LayoutComponent::None, Range::default()),
+                                              (LayoutComponent::None, Range::default())];
         for i in 0..LayoutComponent::COUNT {
             components_ranges_pair[i] =
                 (layout_components[i].clone(), vm_layout_ranges[i].clone());
@@ -378,8 +377,7 @@ impl LayoutManager /* Privates */ {
                               });
 
         /* fill the vm_ranges array with the ranges and return them */
-        let mut vm_ranges =
-            [Range::default(), Range::default(), Range::default(), Range::default()];
+        let mut vm_ranges = vec![Range::default(); LayoutComponent::COUNT];
         for i in 0..LayoutComponent::COUNT {
             vm_ranges[i] = components_ranges_pair[i].1.clone();
         }
