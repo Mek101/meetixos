@@ -15,7 +15,7 @@ impl HwPageDirBase for HwPageDir {
         Self { m_phys_frame: phys_frame }
     }
 
-    fn active() -> Self {
+    fn current() -> Self {
         let cr3_value: usize;
         unsafe {
             asm!("mov {}, cr3", out(reg) cr3_value, options(nomem, nostack, preserves_flags));
@@ -29,7 +29,7 @@ impl HwPageDirBase for HwPageDir {
     }
 
     #[inline]
-    fn phys_frame(&self) -> PhysAddr {
+    fn root_phys_frame(&self) -> PhysAddr {
         self.m_phys_frame
     }
 }

@@ -5,9 +5,14 @@ use core::{
     ops::Deref
 };
 
-use crate::addr::{
-    virt_addr::HwVirtAddrBase,
-    HwAddrBase
+use bits::bit_fields::BitFields;
+
+use crate::{
+    addr::{
+        virt_addr::HwVirtAddrBase,
+        HwAddrBase
+    },
+    vm::page_table::PageTableLevel
 };
 
 /**
@@ -26,6 +31,15 @@ pub struct HwVirtAddr {
 
 impl HwVirtAddrBase for HwVirtAddr {
     const BITS_PER_TABLE_LEVEL: usize = 9;
+
+    fn raw_table_index_for_level(&self, page_table_level: PageTableLevel) -> u16 {
+        match page_table_level {
+            PageTableLevel::Root => self.m_raw_virt_addr.bits_at(39..48) as u16,
+            PageTableLevel::OneGiB => self.m_raw_virt_addr.bits_at(30..39) as u16,
+            PageTableLevel::TwoMiB => self.m_raw_virt_addr.bits_at(21..30) as u16,
+            PageTableLevel::FourKiB => self.m_raw_virt_addr.bits_at(12..21) as u16
+        }
+    }
 }
 
 impl HwAddrBase for HwVirtAddr {

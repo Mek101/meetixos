@@ -5,7 +5,8 @@ use core::fmt::Debug;
 use crate::{
     addr::{
         phys_addr::PhysAddr,
-        virt_addr::VirtAddr
+        virt_addr::VirtAddr,
+        Address
     },
     arch::vm::hw_page_dir::HwPageDir,
     vm::{
@@ -16,16 +17,28 @@ use crate::{
 };
 
 pub struct PageDir {
-    m_hw_page_dir: HwPageDir
+    m_hw_page_dir: HwPageDir,
+    m_phys_mem_offset: VirtAddr
 }
 
 impl PageDir /* Constructors */ {
     pub fn from_phys_frame(phys_frame: PhysAddr) -> Self {
-        Self { m_hw_page_dir: HwPageDir::from_phys_frame(phys_frame) }
+        Self { m_hw_page_dir: HwPageDir::from_phys_frame(phys_frame),
+               m_phys_mem_offset: MemManager::instance().layout_manager()
+                                                        .phys_mem_mapping_range()
+                                                        .start }
     }
 
-    pub fn active() -> Self {
-        Self { m_hw_page_dir: HwPageDir::active() }
+    pub fn current() -> Self {
+        Self { m_hw_page_dir: HwPageDir::current(),
+               m_phys_mem_offset: MemManager::instance().layout_manager()
+                                                        .phys_mem_mapping_range()
+                                                        .start }
+    }
+
+    pub fn pre_phys_mapping() -> Self {
+        Self { m_hw_page_dir: HwPageDir::current(),
+               m_phys_mem_offset: VirtAddr::null() }
     }
 }
 
@@ -34,31 +47,30 @@ impl PageDir /* Methods */ {
         self.m_hw_page_dir.activate();
     }
 
-    pub unsafe fn next_page_table_from_entry(&self,
-                                             page_table_entry: &PageTableEntry)
-                                             -> &'static mut PageTable {
-        assert!(page_table_entry.is_present());
-        self.next_page_table(page_table_entry.phys_frame().unwrap())
+    pub unsafe fn next_page_table(&self,
+                                  page_table_entry: &PageTableEntry)
+                                  -> &mut PageTable {
+        assert!(page_table_entry.is_present(),
+                "Tried to obtain a non-present `&mut PageTable`");
+
+        self.frame_to_next_page_table(page_table_entry.phys_frame().unwrap())
     }
 }
 
 impl PageDir /* Getters */ {
-    pub fn phys_frame(&self) -> PhysAddr {
-        self.m_hw_page_dir.phys_frame()
+    pub fn root_phys_frame(&self) -> PhysAddr {
+        self.m_hw_page_dir.root_phys_frame()
     }
 
     pub fn root_page_table(&self) -> &mut PageTable {
-        unsafe { self.next_page_table(self.phys_frame()) }
+        unsafe { self.frame_to_next_page_table(self.root_phys_frame()) }
     }
 }
 
 impl PageDir /* Privates */ {
-    unsafe fn next_page_table(&self, phys_frame: PhysAddr) -> &'static mut PageTable {
-        let phys_mem_mapping_range_start =
-            MemManager::instance().layout_manager().phys_mem_mapping_range().start;
-
+    unsafe fn frame_to_next_page_table(&self, phys_frame: PhysAddr) -> &mut PageTable {
         let page_table_virt_addr: VirtAddr =
-            (*phys_frame + *phys_mem_mapping_range_start).into();
+            (*phys_frame + *self.m_phys_mem_offset).into();
 
         page_table_virt_addr.as_ref_mut()
     }
@@ -67,9 +79,9 @@ impl PageDir /* Privates */ {
 pub trait HwPageDirBase: Debug {
     fn from_phys_frame(phys_frame: PhysAddr) -> Self;
 
-    fn active() -> Self;
+    fn current() -> Self;
 
     unsafe fn activate(&self);
 
-    fn phys_frame(&self) -> PhysAddr;
+    fn root_phys_frame(&self) -> PhysAddr;
 }

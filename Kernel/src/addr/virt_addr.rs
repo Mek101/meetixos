@@ -15,7 +15,11 @@ use crate::{
         Address,
         HwAddrBase
     },
-    arch::addr::hw_virt_addr::HwVirtAddr
+    arch::addr::hw_virt_addr::HwVirtAddr,
+    vm::page_table::{
+        PageTableIndex,
+        PageTableLevel
+    }
 };
 
 /**
@@ -45,17 +49,10 @@ impl VirtAddr /* Constants */ {
 
 impl VirtAddr /* Getters */ {
     /**
-     * Returns the 4 9bit indexes for a 4KiB `VirtAddr`
+     * Returns the 9bit index at the desired index-level
      */
-    pub fn as_4kib_page_table_indexes(&self) -> (usize, usize, usize, usize) {
-        todo!()
-    }
-
-    /**
-     * Returns the 3 9bit indexes for a 2MiB huge `VirtAddr`
-     */
-    pub fn as_2mib_page_table_indexes(&self) -> (usize, usize, usize) {
-        todo!()
+    pub fn page_table_index(&self, page_table_level: PageTableLevel) -> PageTableIndex {
+        self.m_hw_virt_addr.raw_table_index_for_level(page_table_level).into()
     }
 
     /**
@@ -170,4 +167,6 @@ impl Step for VirtAddr {
 
 pub trait HwVirtAddrBase: HwAddrBase {
     const BITS_PER_TABLE_LEVEL: usize;
+
+    fn raw_table_index_for_level(&self, page_table_level: PageTableLevel) -> u16;
 }

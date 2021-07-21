@@ -15,6 +15,7 @@ use crate::{
 /**
  * x86_64 `HwPageTableEntryBase` implementation
  */
+#[repr(transparent)]
 #[derive(Copy, Clone)]
 pub struct HwPageTableEntry {
     m_entry_value: usize

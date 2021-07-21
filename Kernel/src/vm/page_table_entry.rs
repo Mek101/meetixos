@@ -7,6 +7,7 @@ use crate::{
     arch::vm::hw_page_table_entry::HwPageTableEntry
 };
 
+#[repr(transparent)]
 #[derive(Debug)]
 #[derive(Copy, Clone)]
 pub struct PageTableEntry {

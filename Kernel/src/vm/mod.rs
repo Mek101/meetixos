@@ -10,6 +10,8 @@ use helps::dbg::{
     C_MIB
 };
 
+use crate::vm::page_table::PageTableLevel;
+
 pub mod layout_manager;
 pub mod mem_manager;
 pub mod page_dir;
@@ -28,6 +30,7 @@ pub struct Page4KiB;
 
 impl PageSize for Page4KiB {
     const SIZE: usize = 4 * C_KIB;
+    const PAGE_TABLE_LEVEL: PageTableLevel = PageTableLevel::FourKiB;
     const IS_HUGE: bool = false;
 }
 
@@ -43,6 +46,7 @@ pub struct Page2MiB;
 
 impl PageSize for Page2MiB {
     const SIZE: usize = 2 * C_MIB;
+    const PAGE_TABLE_LEVEL: PageTableLevel = PageTableLevel::TwoMiB;
     const IS_HUGE: bool = false;
 }
 
@@ -52,6 +56,11 @@ pub trait PageSize:
      * The size in bytes for this kind of `PageSize`
      */
     const SIZE: usize;
+
+    /**
+     * How many page-table levels to reach the mapping for this page-size
+     */
+    const PAGE_TABLE_LEVEL: PageTableLevel;
 
     /**
      * Whether this `PageSize` needs huge-page flag
