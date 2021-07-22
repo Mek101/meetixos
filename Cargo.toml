@@ -2,10 +2,6 @@
 members = [
     # Kernel Crates
     "Kernel",
-    # TODO remove
-    "OldKernel",
-    "OldKernel/HHLoader",
-    "OldKernel/SharedCode",
     # Userland/OldKernel Libraries
     "UKLibs/LibApiData",
     "UKLibs/LibBits",
