@@ -111,20 +111,17 @@ impl MemManager /* Constructors */ {
 
         /* initialize the global instance */
         let mm_inst = unsafe {
-            let mm = Self { m_layout_manager: layout_manager,
-                            m_phys_frames_bitmap:
-                                Mutex::const_new(phys_frames_bitmap.leak()),
-                            m_mem_manager_stats: mem_manager_stats,
-                            m_kernel_page_dir: PageDir::pre_phys_mapping() };
-
-            SM_MEM_MANAGER = Some(mm);
+            SM_MEM_MANAGER = Some(Self { m_layout_manager: layout_manager,
+                                         m_phys_frames_bitmap:
+                                             Mutex::const_new(phys_frames_bitmap.leak()),
+                                         m_mem_manager_stats: mem_manager_stats,
+                                         m_kernel_page_dir: PageDir::pre_phys_mapping() });
             SM_MEM_MANAGER.as_mut().unwrap()
         };
 
-        /* unmap the lower-half kernel code, map the physical memory and properly
-         * protect the kernel image
-         */
+        /* unmap lower-half, map the physical memory and protect the kernel image */
         mm_inst.map_physical_memory(last_phys_mem_addr);
+        mm_inst.update_kernel_page_dir_after_phys_mapping();
         mm_inst.unmap_kernel_lower_half();
         mm_inst.protect_kernel_image();
     }
@@ -157,6 +154,9 @@ impl MemManager /* Getters */ {
         &self.m_layout_manager
     }
 
+    /**
+     * Returns the reference to the kernel `PageDir`
+     */
     pub fn kernel_page_dir(&self) -> &PageDir {
         &self.m_kernel_page_dir
     }
@@ -182,15 +182,20 @@ impl MemManager /* Privates */ {
         }
     }
 
+    /**
+     * Unmaps the kernel lower-half mapping
+     */
     fn unmap_kernel_lower_half(&self) {
+        /* the page-table index 0 is used to map the L4 & L3 page-table */
         let index_zero = PageTableIndex::from(0usize);
 
-        let l4_page_table = self.kernel_page_dir().root_page_table();
+        /* obtain the L4 & L3 page-table */
+        let kern_page_dir = self.kernel_page_dir();
+        let l4_page_table = kern_page_dir.root_page_table();
+        let l3_page_table =
+            unsafe { kern_page_dir.next_page_table(&mut l4_page_table[index_zero]) };
 
-        let l3_page_table = unsafe {
-            self.kernel_page_dir().next_page_table(&mut l4_page_table[index_zero])
-        };
-
+        /* unmap the first entry for each table */
         l3_page_table[index_zero].set_unused();
         l4_page_table[index_zero].set_unused();
     }
@@ -199,7 +204,7 @@ impl MemManager /* Privates */ {
      * Maps all the physical memory into the
      * `LayoutManager::phys_mem_mapping_range()`
      */
-    fn map_physical_memory(&mut self, last_phys_mem_addr: PhysAddr) {
+    fn map_physical_memory(&self, last_phys_mem_addr: PhysAddr) {
         /* obtain the virtual offset of the physical memory */
         let phys_mem_mapping_range_start =
             self.layout_manager().phys_mem_mapping_range().start;
@@ -219,17 +224,11 @@ impl MemManager /* Privates */ {
 
             /* set the flags of the entry */
             page_table_entry.set_phys_frame(phys_addr);
+            page_table_entry.set_huge_page(true);
             page_table_entry.set_present(true);
             page_table_entry.set_readable(true);
             page_table_entry.set_writeable(true);
-            page_table_entry.set_huge_page(true);
             page_table_entry.set_global(true);
-
-            dbg_println!(DbgLevel::Info,
-                         "{} {:?} {}",
-                         virt_addr,
-                         page_table_entry,
-                         VirtAddr::from(page_table_entry as *const _));
 
             /* invalidate the TLB */
             unsafe {
@@ -237,14 +236,19 @@ impl MemManager /* Privates */ {
                 /* TODO page_table_entry.invalidate_in_tlb(); */
             }
         }
+    }
 
-        /* overwrite the <m_kernel_page_dir> with the current one which uses
-         * the <phys_mem_mapping_range_start> for virtual address
-         * resolution
-         */
+    /**
+     * Updates the kernel `PageDir` with same instance which resolves the
+     * virtual -> physical addresses using the memory mapping
+     */
+    fn update_kernel_page_dir_after_phys_mapping(&mut self) {
         self.m_kernel_page_dir = PageDir::current();
     }
 
+    /**
+     * Protects the kernel image with proper protection
+     */
     fn protect_kernel_image(&self) {
         dbg_println!(DbgLevel::Debug, "PageDir:\n{:?}", self.kernel_page_dir());
     }

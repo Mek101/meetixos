@@ -12,8 +12,6 @@ use crate::{
         Address
     },
     arch::vm::hw_page_dir::HwPageDir,
-    dbg_print::DbgLevel,
-    dbg_println,
     vm::{
         mem_manager::MemManager,
         page_table::{
@@ -33,13 +31,6 @@ pub struct PageDir {
 }
 
 impl PageDir /* Constructors */ {
-    pub fn from_phys_frame(phys_frame: PhysAddr) -> Self {
-        Self { m_hw_page_dir: HwPageDir::from_phys_frame(phys_frame),
-               m_phys_mem_offset: MemManager::instance().layout_manager()
-                                                        .phys_mem_mapping_range()
-                                                        .start }
-    }
-
     pub fn current() -> Self {
         Self { m_hw_page_dir: HwPageDir::current(),
                m_phys_mem_offset: MemManager::instance().layout_manager()
@@ -141,12 +132,6 @@ impl PageDir /* Privates */ {
             page_table_entry.set_present(true);
             page_table_entry.set_readable(true);
             page_table_entry.set_writeable(true);
-
-            dbg_println!(DbgLevel::Info,
-                         "Allocated Level {:?} page_table: {} -> {:?}",
-                         page_table_level,
-                         phys_frame,
-                         page_table_entry);
 
             true
         } else {

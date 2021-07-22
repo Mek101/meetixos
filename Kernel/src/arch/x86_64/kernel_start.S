@@ -37,15 +37,6 @@ kernel_multiboot_header_end:
 
 .section .init_data, "a"
 
-/* reserve into the .data section an RW area to use as initial stack */
-.align      0x1000
-.type       kernel_init_stack_top, @object
-kernel_init_stack_top:
-.rept       64 * 1024 /* 64KiB of stack */
-    .byte   0
-.endr
-kernel_init_stack_bottom:
-
 /* reserve into the .data section an RW area to use as initial L4 page table */
 .align      0x1000
 .type       kernel_init_page_tables_begin, @object
@@ -243,3 +234,16 @@ kernel_identity_mapped_text:
 kernel_halt:
     /* we should never reach this point */
     jmp kernel_halt
+
+.code64
+.section .data
+/* the kernel stack is reserved into the higher-half .data section, since the lower half
+ * is unmapped by the <MemManager>
+ */
+.align      0x1000
+.type       kernel_init_stack_top, @object
+kernel_init_stack_top:
+.rept       64 * 1024 /* 64KiB of stack */
+    .byte   0
+.endr
+kernel_init_stack_bottom:
