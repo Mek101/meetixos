@@ -40,11 +40,29 @@ pub struct VirtAddr {
     m_hw_virt_addr: HwVirtAddr
 }
 
-impl VirtAddr /* Constants */ {
+impl VirtAddr /* Constructors */ {
     /**
-     * Bits each page table level occupies in a 64bit paginated system
+     * Constructs the `VirtAddr` from the given `PageTableIndex`
      */
-    const BITS_PER_TABLE_LEVEL: usize = HwVirtAddr::BITS_PER_TABLE_LEVEL;
+    pub fn from_4kib_indexes(l4_index: PageTableIndex,
+                             l3_index: PageTableIndex,
+                             l2_index: PageTableIndex,
+                             l1_index: PageTableIndex)
+                             -> Self {
+        Self { m_hw_virt_addr: HwVirtAddr::from_4kib_indexes(l4_index, l3_index,
+                                                             l2_index, l1_index) }
+    }
+
+    /**
+     * Constructs the `VirtAddr` from the given `PageTableIndex`
+     */
+    pub fn from_2mib_indexes(l4_index: PageTableIndex,
+                             l3_index: PageTableIndex,
+                             l2_index: PageTableIndex)
+                             -> Self {
+        Self { m_hw_virt_addr: HwVirtAddr::from_2mib_indexes(l4_index, l3_index,
+                                                             l2_index) }
+    }
 }
 
 impl VirtAddr /* Getters */ {
@@ -166,7 +184,16 @@ impl Step for VirtAddr {
 }
 
 pub trait HwVirtAddrBase: HwAddrBase {
-    const BITS_PER_TABLE_LEVEL: usize;
+    fn from_4kib_indexes(l4_index: PageTableIndex,
+                         l3_index: PageTableIndex,
+                         l2_index: PageTableIndex,
+                         l1_index: PageTableIndex)
+                         -> Self;
+
+    fn from_2mib_indexes(l4_index: PageTableIndex,
+                         l3_index: PageTableIndex,
+                         l2_index: PageTableIndex)
+                         -> Self;
 
     fn raw_table_index_for_level(&self, page_table_level: PageTableLevel) -> u16;
 }

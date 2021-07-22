@@ -21,9 +21,13 @@ impl PageTable /* Constructors */ {
 
 impl PageTable /* Methods */ {
     pub fn clear(&mut self) {
-        for entry in self.m_entries.iter_mut() {
-            entry.set_unused();
-        }
+        self.m_entries.fill(PageTableEntry::new());
+    }
+}
+
+impl PageTable /* Getters */ {
+    pub fn iter(&self) -> impl Iterator<Item = &PageTableEntry> {
+        self.m_entries.iter()
     }
 }
 
@@ -54,6 +58,12 @@ pub struct PageTableIndex {
 impl From<u16> for PageTableIndex {
     fn from(raw_index: u16) -> Self {
         Self { m_index: raw_index % 512 }
+    }
+}
+
+impl From<usize> for PageTableIndex {
+    fn from(raw_index: usize) -> Self {
+        Self::from(raw_index as u16)
     }
 }
 

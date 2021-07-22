@@ -12,7 +12,10 @@ use crate::{
         virt_addr::HwVirtAddrBase,
         HwAddrBase
     },
-    vm::page_table::PageTableLevel
+    vm::page_table::{
+        PageTableIndex,
+        PageTableLevel
+    }
 };
 
 /**
@@ -30,7 +33,31 @@ pub struct HwVirtAddr {
 }
 
 impl HwVirtAddrBase for HwVirtAddr {
-    const BITS_PER_TABLE_LEVEL: usize = 9;
+    fn from_4kib_indexes(l4_index: PageTableIndex,
+                         l3_index: PageTableIndex,
+                         l2_index: PageTableIndex,
+                         l1_index: PageTableIndex)
+                         -> Self {
+        let mut raw_virt_addr = 0;
+        raw_virt_addr.set_bits(39..48, l4_index.into());
+        raw_virt_addr.set_bits(30..39, l3_index.into());
+        raw_virt_addr.set_bits(21..30, l2_index.into());
+        raw_virt_addr.set_bits(12..21, l1_index.into());
+
+        Self::from(raw_virt_addr)
+    }
+
+    fn from_2mib_indexes(l4_index: PageTableIndex,
+                         l3_index: PageTableIndex,
+                         l2_index: PageTableIndex)
+                         -> Self {
+        let mut raw_virt_addr = 0;
+        raw_virt_addr.set_bits(39..48, l4_index.into());
+        raw_virt_addr.set_bits(30..39, l3_index.into());
+        raw_virt_addr.set_bits(21..30, l2_index.into());
+
+        Self::from(raw_virt_addr)
+    }
 
     fn raw_table_index_for_level(&self, page_table_level: PageTableLevel) -> u16 {
         match page_table_level {

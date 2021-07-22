@@ -64,7 +64,7 @@ impl LayoutManager /* Constants */ {
      * Kernel base virtual address. Keep this in sync with various
      * `Kernel/linker.ld/KERNEL_VIRT_BASE`
      */
-    const KERN_VIRT_BASE: usize = 0xffff_ffff_fa00_0000;
+    const KERN_VIRT_BASE: usize = 0xffff_ffff_c000_0000;
 }
 
 impl LayoutManager /* Constructor */ {

@@ -32,11 +32,7 @@ use crate::{
     vm::{
         layout_manager::LayoutManager,
         page_dir::PageDir,
-        page_table::{
-            PageTable,
-            PageTableLevel
-        },
-        page_table_entry::PageTableEntry,
+        page_table::PageTableIndex,
         Page2MiB,
         Page4KiB,
         PageSize
@@ -69,9 +65,9 @@ impl MemManager /* Constructors */ {
         let boot_info = BootInfo::instance();
 
         /* obtain the last PhysAddr to know the real size of the memory */
-        let last_phy_mem_addr =
+        let last_phys_mem_addr =
             boot_info.boot_mem_areas().iter().last().expect("Missing memory maps").end;
-        if last_phy_mem_addr > PhysAddr::MAX {
+        if last_phys_mem_addr > PhysAddr::MAX {
             dbg_println!(DbgLevel::Warn, "Exceeded physical memory limit")
         }
 
@@ -79,14 +75,14 @@ impl MemManager /* Constructors */ {
         let layout_manager =
             if let Some(_) = boot_info.cmd_line_find_arg("-plain-vm-layout") {
                 dbg_println!(DbgLevel::Warn, "Disabled kernel layout randomization");
-                LayoutManager::new_plain(*last_phy_mem_addr)
+                LayoutManager::new_plain(*last_phys_mem_addr)
             } else {
-                LayoutManager::new_randomized(*last_phy_mem_addr)
+                LayoutManager::new_randomized(*last_phys_mem_addr)
             };
 
         /* allocate the physical frames bitmap filled with zeroes */
         let phys_frames_bitmap_requested_pages =
-            ((*last_phy_mem_addr / Page4KiB::SIZE / u8::BIT_LEN) + Page4KiB::MASK) >> 12;
+            ((*last_phys_mem_addr / Page4KiB::SIZE / u8::BIT_LEN) + Page4KiB::MASK) >> 12;
         let mut phys_frames_bitmap =
             vec![0; phys_frames_bitmap_requested_pages * Page4KiB::SIZE];
 
@@ -114,20 +110,23 @@ impl MemManager /* Constructors */ {
         dbg_println!(DbgLevel::Trace, "{:?}", mem_manager_stats);
 
         /* initialize the global instance */
-        unsafe {
-            SM_MEM_MANAGER = Some(Self { m_layout_manager: layout_manager,
-                                         m_phys_frames_bitmap:
-                                             Mutex::const_new(phys_frames_bitmap.leak()),
-                                         m_mem_manager_stats: mem_manager_stats,
-                                         m_kernel_page_dir: PageDir::current() });
-        }
+        let mm_inst = unsafe {
+            let mm = Self { m_layout_manager: layout_manager,
+                            m_phys_frames_bitmap:
+                                Mutex::const_new(phys_frames_bitmap.leak()),
+                            m_mem_manager_stats: mem_manager_stats,
+                            m_kernel_page_dir: PageDir::pre_phys_mapping() };
 
-        /* map all the memory into the layout
-         * NOTE this operation is performed after the global instance initialization
-         * because many part of the virtual address calculation requires the global
-         * instance
+            SM_MEM_MANAGER = Some(mm);
+            SM_MEM_MANAGER.as_mut().unwrap()
+        };
+
+        /* unmap the lower-half kernel code, map the physical memory and properly
+         * protect the kernel image
          */
-        Self::instance().map_physical_memory(last_phy_mem_addr);
+        mm_inst.map_physical_memory(last_phys_mem_addr);
+        mm_inst.unmap_kernel_lower_half();
+        mm_inst.protect_kernel_image();
     }
 }
 
@@ -137,49 +136,6 @@ impl MemManager /* Methods */ {
      */
     pub fn allocate_kernel_phys_frame(&self) -> Option<PhysAddr> {
         self.allocate_phys_frame(BitFindMode::Regular)
-    }
-
-    /**
-     * Returns the mapping `PageTableEntry` for the given `VirtAddr`
-     */
-    pub fn ensure_page_table_entry<'a, S>(&self,
-                                          page_dir: &'a PageDir,
-                                          virt_addr: VirtAddr)
-                                          -> Option<&'a mut PageTableEntry>
-        where S: PageSize {
-        if virt_addr.is_aligned(S::SIZE) {
-            let l4_page_table = page_dir.root_page_table();
-
-            /* obtain the Level3 page-table */
-            let l3_page_table =
-                self.ensure_next_page_table_from_level(page_dir,
-                                                       virt_addr,
-                                                       l4_page_table,
-                                                       PageTableLevel::Root)?;
-
-            /* obtain the Level2 page-table */
-            let l2_page_table =
-                self.ensure_next_page_table_from_level(page_dir,
-                                                       virt_addr,
-                                                       l3_page_table,
-                                                       PageTableLevel::OneGiB)?;
-
-            /* obtain the last mapping page-table level */
-            let map_page_table = if S::SIZE == Page4KiB::SIZE {
-                /* if a <Page4KiB> mapping is requested go a level deeper */
-                self.ensure_next_page_table_from_level(page_dir,
-                                                       virt_addr,
-                                                       l2_page_table,
-                                                       PageTableLevel::TwoMiB)?
-            } else {
-                l2_page_table
-            };
-
-            /* extract the <PageTableEntry> from the mapping level */
-            Some(&mut map_page_table[virt_addr.page_table_index(S::PAGE_TABLE_LEVEL)])
-        } else {
-            None
-        }
     }
 }
 
@@ -199,6 +155,10 @@ impl MemManager /* Getters */ {
      */
     pub fn layout_manager(&self) -> &LayoutManager {
         &self.m_layout_manager
+    }
+
+    pub fn kernel_page_dir(&self) -> &PageDir {
+        &self.m_kernel_page_dir
     }
 }
 
@@ -222,77 +182,71 @@ impl MemManager /* Privates */ {
         }
     }
 
+    fn unmap_kernel_lower_half(&self) {
+        let index_zero = PageTableIndex::from(0usize);
+
+        let l4_page_table = self.kernel_page_dir().root_page_table();
+
+        let l3_page_table = unsafe {
+            self.kernel_page_dir().next_page_table(&mut l4_page_table[index_zero])
+        };
+
+        l3_page_table[index_zero].set_unused();
+        l4_page_table[index_zero].set_unused();
+    }
+
     /**
      * Maps all the physical memory into the
      * `LayoutManager::phys_mem_mapping_range()`
      */
-    fn map_physical_memory(&self, last_phys_mem_addr: PhysAddr) {
+    fn map_physical_memory(&mut self, last_phys_mem_addr: PhysAddr) {
         /* obtain the virtual offset of the physical memory */
         let phys_mem_mapping_range_start =
-            self.m_layout_manager.phys_mem_mapping_range().start;
-
-        let kernel_page_dir = PageDir::pre_phys_mapping();
+            self.layout_manager().phys_mem_mapping_range().start;
 
         /* iterate all the available frames as 2MiB frames to reduce intermediate
-         * page-tables granularity and physical memory allocations
+         * page-tables granularity and physical memory allocations.
+         * In this stage, when this method is called, the <m_kernel_page_dir> doesn't
+         * use the real mapped offset, because the memory is not mapped yet
          */
         for phys_addr in (PhysAddr::null()..last_phys_mem_addr).step_by(Page2MiB::SIZE) {
             let virt_addr: VirtAddr = (*phys_addr + *phys_mem_mapping_range_start).into();
 
             /* obtain the page-table-entry for the current virtual-address */
-            let page_table_entry =
-                self.ensure_page_table_entry::<Page2MiB>(&kernel_page_dir, virt_addr)
-                    .expect("Failed to map physical memory");
+            let page_table_entry = self.kernel_page_dir()
+                                       .ensure_page_table_entry::<Page2MiB>(virt_addr)
+                                       .expect("Failed to map physical memory");
 
             /* set the flags of the entry */
-            page_table_entry.set_phys_frame(phys_addr); /* sets <is_present()> too */
-            page_table_entry.set_writeable(true);
+            page_table_entry.set_phys_frame(phys_addr);
+            page_table_entry.set_present(true);
             page_table_entry.set_readable(true);
+            page_table_entry.set_writeable(true);
+            page_table_entry.set_huge_page(true);
             page_table_entry.set_global(true);
+
+            dbg_println!(DbgLevel::Info,
+                         "{} {:?} {}",
+                         virt_addr,
+                         page_table_entry,
+                         VirtAddr::from(page_table_entry as *const _));
 
             /* invalidate the TLB */
             unsafe {
                 asm!("invlpg [{}]", in(reg) *virt_addr, options(nostack, preserves_flags));
-                // page_table_entry.invalidate_in_tlb();
+                /* TODO page_table_entry.invalidate_in_tlb(); */
             }
         }
+
+        /* overwrite the <m_kernel_page_dir> with the current one which uses
+         * the <phys_mem_mapping_range_start> for virtual address
+         * resolution
+         */
+        self.m_kernel_page_dir = PageDir::current();
     }
 
-    /**
-     * Ensures the next level `PageTable` for the given `VirtAddr` into the
-     * given `PageDir`.
-     *
-     * Allocates the missing `PageTable` if necessary
-     */
-    fn ensure_next_page_table_from_level<'a>(&self,
-                                             page_dir: &'a PageDir,
-                                             virt_addr: VirtAddr,
-                                             prev_table: &'a mut PageTable,
-                                             page_table_level: PageTableLevel)
-                                             -> Option<&'a mut PageTable> {
-        /* obtain the <PageTableEntry> from the previous table */
-        let page_table_entry =
-            &mut prev_table[virt_addr.page_table_index(page_table_level)];
-
-        /* allocate the next page-table if missing */
-        let new_table_created = if page_table_entry.is_unused() {
-            page_table_entry.set_phys_frame(self.allocate_kernel_phys_frame()?);
-            page_table_entry.set_readable(true);
-            page_table_entry.set_writeable(true);
-
-            true
-        } else {
-            false
-        };
-
-        /* obtain the next page-table from the current entry */
-        let next_page_table = unsafe { &mut *page_dir.next_page_table(page_table_entry) };
-
-        /* clear it if it is new */
-        if new_table_created {
-            next_page_table.clear();
-        }
-        Some(next_page_table)
+    fn protect_kernel_image(&self) {
+        dbg_println!(DbgLevel::Debug, "PageDir:\n{:?}", self.kernel_page_dir());
     }
 }
 

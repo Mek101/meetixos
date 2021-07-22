@@ -1,6 +1,6 @@
 ENTRY(kernel_start)
 
-KERNEL_VIRT_BASE = 0xfffffffffa000000;
+KERNEL_VIRT_BASE = 0xffffffffc0000000;
 
 PHDRS {
     init    PT_LOAD;
@@ -11,8 +11,8 @@ PHDRS {
 }
 
 SECTIONS {
-    /* load at physical 1MiB, after BIOS */
-    . = 1M;
+    /* load at physical 2MiB, after BIOS */
+    . = 2M;
 
     .init ALIGN(4K): {
         __kernel_init_begin = .;

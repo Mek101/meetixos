@@ -5,7 +5,7 @@
 .set MULTIBOOT_HEADER_MAGIC,    0xe85250d6
 .set MULTIBOOT_ARCH_X86,        0
 
-.set KERNEL_VIRT_ADDR,          0x0000fffffa100000
+.set KERNEL_VIRT_ADDR,          0xffffffffc0000000
 
 /* ----------------------------------- .multiboot section ---------------------------------- */
 
@@ -166,7 +166,7 @@ kernel_construct_page_table:
 
     /* positionate the L4 page-table to the kernel-slot */
     mov         $kernel_init_l4_page_table, %eax
-    add         $((KERNEL_VIRT_ADDR >> (12 + 9 + 9 + 9)) << 3), %eax
+    add         $(((KERNEL_VIRT_ADDR >> 39) & 0x1ff) << 3), %eax
 
     /* put L3 page-table into L4 selected slot with PTE_PRESENT, PTE_WRITEABLE and PTE_GLOBAL */
     mov         $kernel_init_l3_page_table, %ecx
@@ -175,7 +175,7 @@ kernel_construct_page_table:
 
     /* positionate the L3 page-table to the kernel-slot */
     mov         $kernel_init_l3_page_table, %eax
-    add         $(((KERNEL_VIRT_ADDR & 0x7fffffffff) >> (12 + 9 + 9)) << 3), %eax
+    add         $(((KERNEL_VIRT_ADDR >> 30) & 0x1ff) << 3), %eax
 
     /* put L2 page-table into L3 selected slot with PTE_PRESENT, PTE_WRITEABLE and PTE_GLOBAL */
     mov         $kernel_init_l2_page_table, %ecx
@@ -184,17 +184,12 @@ kernel_construct_page_table:
 
     /* positionate the L2 page-table to the kernel-slot */
     mov         $kernel_init_l2_page_table, %eax
-    add         $(((KERNEL_VIRT_ADDR & 0x3fffffff) >> (12 + 9)) << 3), %eax
+    add         $(((KERNEL_VIRT_ADDR >> 21) & 0x1ff) << 3), %eax
 
-    /* now map the first 16MiB of memory to the kernel-slot with PTE_PRESENT, PTE_WRITEABLE, PTE_HUGE and PTE_GLOBAL */
+    /* now map the first 6MiB of memory to the kernel-slot with PTE_PRESENT, PTE_WRITEABLE, PTE_HUGE and PTE_GLOBAL */
     movl        $(0x00000000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),    (%eax)
     movl        $(0x00200000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),   8(%eax)
     movl        $(0x00400000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  16(%eax)
-    movl        $(0x00600000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  24(%eax)
-    movl        $(0x00800000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  32(%eax)
-    movl        $(0x00A00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  40(%eax)
-    movl        $(0x00C00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  48(%eax)
-    movl        $(0x00E00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  56(%eax)
 
     /* now map the page-tables at 0x00000000 too with the same protection */
     mov         $kernel_init_l4_page_table, %eax
@@ -207,17 +202,6 @@ kernel_construct_page_table:
     mov         $kernel_init_l2_page_table, %ecx
     or          $(1 | 1 << 1 | 1 << 8), %ecx
     mov         %ecx, (%eax)
-
-    /* map the same physical pages in identity mapping */
-    mov         $kernel_init_l2_page_table, %eax
-    movl        $(0x00000000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),    (%eax)
-    movl        $(0x00200000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),   8(%eax)
-    movl        $(0x00400000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  16(%eax)
-    movl        $(0x00600000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  24(%eax)
-    movl        $(0x00800000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  32(%eax)
-    movl        $(0x00A00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  40(%eax)
-    movl        $(0x00C00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  48(%eax)
-    movl        $(0x00E00000 | 1 | 1 << 1 | 1 << 7 | 1 << 8),  56(%eax)
 
 kernel_enable_paging:
     /* setup as current the static page directory */

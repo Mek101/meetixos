@@ -96,7 +96,6 @@ impl PageTableEntry /* Setters */ {
     #[inline]
     pub fn set_phys_frame(&mut self, phys_frame: PhysAddr) {
         self.m_hw_entry.set_raw_phys_frame(*phys_frame);
-        self.set_present(true);
     }
 
     #[inline]
