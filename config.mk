@@ -25,8 +25,9 @@ DIST_SYSROOT_PREFIX ?= $(BUILD_PREFIX)/Root/$(BUILD_MODE)
 # -- -- -- -- -- -- -- -- -- -- -- -- Rust Tools -- -- -- -- -- -- -- -- -- -- -- -- --
 #
 
-RUSTC := $(shell which rustc)
-CARGO := $(shell which cargo)
+RUSTC ?= $(shell which rustc)
+CARGO ?= $(shell which cargo)
+R_DBG ?= $(shell which rust-dbg)
 
 #
 # -- -- -- -- -- -- -- -- -- -- -- -- Rust Flags -- -- -- -- -- -- -- -- -- -- -- -- --
