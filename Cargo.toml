@@ -2,7 +2,7 @@
 members = [
     # Kernel Crates
     "Kernel",
-    # Userland/OldKernel Libraries
+    # Userland/Kernel Libraries
     "UKLibs/LibApiData",
     "UKLibs/LibBits",
     "UKLibs/LibHeap",

@@ -21,7 +21,7 @@ use crate::{
  * The x86_64 implementation of the UART module uses the COM1 for
  * communication.
  *
- * Change this value to the other COMx base to change the OldKernel's serial
+ * Change this value to the other COMx base to change the Kernel's serial
  * output port
  */
 const SERIAL_COM1_PORT_BASE: u16 = 0x3F8;

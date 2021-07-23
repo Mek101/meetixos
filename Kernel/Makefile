@@ -1,4 +1,4 @@
-#! OldKernel Builder Script
+#! Kernel Builder Script
 #!
 #! This Makefile is responsible to build/install/clean/doc the Kernel
 
@@ -14,7 +14,7 @@ KERNEL_TARGET ?= $(realpath $(TARGET_PREFIX)/kernel.json)
 DIST_DIR      ?= $(realpath ../$(DIST_SYSROOT_PREFIX)/MeetiX)
 
 #
-# -- -- -- -- -- -- -- -- -- -- -- -- OldKernel Paths -- -- -- -- -- -- -- -- -- -- -- --
+# -- -- -- -- -- -- -- -- -- -- -- -- Kernel Paths -- -- -- -- -- -- -- -- -- -- -- --
 #
 
 KERNEL_BUILD_DIR ?= $(BUILD_DIR)/kernel/$(BUILD_MODE)
