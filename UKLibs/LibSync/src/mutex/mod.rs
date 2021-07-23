@@ -55,16 +55,6 @@ impl<R, T> Mutex<R, T> where R: TBackRawMutex /* Constructors */ {
     }
 }
 
-impl<R, T> Mutex<R, T> where R: TBackRawMutex /* Getter */ {
-    /**
-     * Returns the unwrapped inner data
-     */
-    #[inline]
-    pub fn into_inner(self) -> T {
-        self.m_held_data.into_inner()
-    }
-}
-
 impl<R, T> Mutex<R, T>
     where R: TBackRawMutex,
           T: ?Sized /* Methods */
@@ -102,6 +92,16 @@ impl<R, T> Mutex<R, T>
     #[inline]
     pub unsafe fn force_unlock(&self) {
         self.m_back_raw_mutex.do_unlock()
+    }
+}
+
+impl<R, T> Mutex<R, T> where R: TBackRawMutex /* Getters */ {
+    /**
+     * Returns the unwrapped inner data
+     */
+    #[inline]
+    pub fn into_inner(self) -> T {
+        self.m_held_data.into_inner()
     }
 }
 
@@ -153,7 +153,7 @@ unsafe impl<R, T> Send for Mutex<R, T>
 
 unsafe impl<R, T> Sync for Mutex<R, T>
     where R: TBackRawMutex + Sync,
-          T: ?Sized + Send
+          T: ?Sized + Send + Sync
 {
     /* No methods, just a marker trait */
 }
@@ -164,7 +164,7 @@ unsafe impl<R, T> Sync for Mutex<R, T>
  */
 pub unsafe trait TBackRawMutex {
     /**
-     * Customizable creation error type
+     * Thread-safe shareability marker
      */
     type LockGuardShareabilityMark: MTLockGuardShareability;
 

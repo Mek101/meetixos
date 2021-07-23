@@ -47,7 +47,7 @@ impl<'a, R, T> MutexDataGuard<'a, R, T>
           T: ?Sized + 'a /* Getters */
 {
     /**
-     * Returns the reference to the held `Mutex`
+     * Returns the reference to the originating `Mutex`
      */
     pub fn mutex(&self) -> &'a Mutex<R, T> {
         self.m_mutex

@@ -17,8 +17,7 @@ use crate::{
 };
 
 /**
- * `BackRawMutex` implementation which relies on a `AtomicBool` to ensure
- * locking
+ * Spin-loop `BackRawMutex` implementation
  */
 pub struct RawSpinMutex {
     m_is_locked: AtomicBool
