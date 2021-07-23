@@ -89,6 +89,7 @@ impl Into<usize> for DeviceId {
 #[derive(Clone, Copy)]
 #[derive(PartialEq, Eq)]
 #[derive(PartialOrd, Ord)]
+#[derive(Hash)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum DeviceIdType {
     /**
@@ -134,6 +135,7 @@ impl Default for DeviceIdType {
 #[derive(Clone, Copy)]
 #[derive(PartialEq, Eq)]
 #[derive(PartialOrd, Ord)]
+#[derive(Hash)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum DeviceIdClass {
     /**
@@ -162,43 +164,79 @@ pub enum DeviceIdClass {
     /**
      * `Device` which manages a screen framebuffer
      */
-    Framebuffer
+    Framebuffer,
+
+    /**
+     * `Device` which produces random numbers
+     */
+    Random,
+
+    /**
+     * `Device` which manages I/O with serial port
+     */
+    Uart,
+
+    /**
+     * `Device` which manages terminal I/O    
+     */
+    Terminal
 }
 
 impl DeviceIdClass /* Getters */ {
     /**
      * Returns whether this is a `Storage` device
      */
-    pub fn is_storage_device(&self) -> bool {
+    pub fn is_storage(&self) -> bool {
         matches!(*self, Self::Storage)
     }
 
     /**
      * Returns whether this is a `Memory` device
      */
-    pub fn is_memory_device(&self) -> bool {
+    pub fn is_memory(&self) -> bool {
         matches!(*self, Self::Memory)
     }
 
     /**
      * Returns whether this is a `Network` device
      */
-    pub fn is_network_device(&self) -> bool {
+    pub fn is_network(&self) -> bool {
         matches!(*self, Self::Network)
     }
 
     /**
      * Returns whether this is a `Ipc` device
      */
-    pub fn is_ipc_device(&self) -> bool {
+    pub fn is_ipc(&self) -> bool {
         matches!(*self, Self::Ipc)
     }
 
     /**
      * Returns whether this is a `Framebuffer` device
      */
-    pub fn is_framebuffer_device(&self) -> bool {
+    pub fn is_framebuffer(&self) -> bool {
         matches!(*self, Self::Framebuffer)
+    }
+
+    /**
+     * Returns whether this is a `Random` device
+     */
+    pub fn is_random(&self) -> bool {
+        matches!(*self, Self::Random)
+    }
+
+    /**
+     * Returns whether this is a `Uart` device
+     */
+    pub fn is_uart(&self) -> bool {
+        matches!(*self, Self::Uart)
+    }
+
+    /**
+     * Returns whether this is a `Terminal` device
+     */
+    pub fn is_terminal(&self) -> bool {
+        matches!(*self, Self::Terminal)
     }
 }
 

@@ -113,7 +113,7 @@ impl MemManager /* Constructors */ {
         let mm_inst = unsafe {
             SM_MEM_MANAGER = Some(Self { m_layout_manager: layout_manager,
                                          m_phys_frames_bitmap:
-                                             Mutex::new(phys_frames_bitmap.leak()),
+                                             Mutex::const_new(phys_frames_bitmap.leak()),
                                          m_mem_manager_stats: mem_manager_stats,
                                          m_kernel_page_dir: PageDir::pre_phys_mapping() });
             SM_MEM_MANAGER.as_mut().unwrap()

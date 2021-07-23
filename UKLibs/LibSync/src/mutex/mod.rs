@@ -28,7 +28,7 @@ impl<R, T> Mutex<R, T> where R: TConstCreatBackRawMutex /* Constructors */ {
      * Constructs a `Mutex` wrapping the given `value` and a const-creatable
      * `BackRawMutex`
      */
-    pub const fn new(value: T) -> Self {
+    pub const fn const_new(value: T) -> Self {
         Self { m_back_raw_mutex: R::CONST_CREAT,
                m_held_data: UnsafeCell::new(value) }
     }

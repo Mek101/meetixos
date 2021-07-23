@@ -107,19 +107,15 @@ impl MMap /* Methods */ {
     }
 
     pub fn is_file_backed(&self) -> Result<bool> {
-        self.obj_handle().info().map(|raw_obj_info| {
-                                    raw_obj_info.device_id()
-                                                .device_class()
-                                                .is_storage_device()
-                                })
+        self.obj_handle()
+            .info()
+            .map(|raw_obj_info| raw_obj_info.device_id().device_class().is_storage())
     }
 
     pub fn is_device_backed(&self) -> Result<bool> {
-        self.obj_handle().info().map(|raw_obj_info| {
-                                    !raw_obj_info.device_id()
-                                                 .device_class()
-                                                 .is_storage_device()
-                                })
+        self.obj_handle()
+            .info()
+            .map(|raw_obj_info| !raw_obj_info.device_id().device_class().is_storage())
     }
 }
 

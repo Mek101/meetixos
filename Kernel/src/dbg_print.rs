@@ -27,7 +27,7 @@ const C_VT100_MAGENTA: usize = 35;
 const C_VT100_WHITE: usize = 37;
 
 /* output raw-device for <dbg_println()> */
-static S_DBG_OUTPUT_UART: Mutex<RawSpinMutex, Uart> = Mutex::new(Uart::new());
+static S_DBG_OUTPUT_UART: Mutex<RawSpinMutex, Uart> = Mutex::const_new(Uart::new());
 
 /* verbosity of the <dbg_println()> */
 static mut SM_DBG_MAX_LEVEL: DbgLevel = DbgLevel::Info;
