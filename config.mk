@@ -10,7 +10,7 @@ ARCH       ?= x86_64
 BUILD_MODE ?= debug
 VIRT_ACCEL ?= #-enable-kvm
 SMP_CORES  ?= 1 # TODO support SMP in the OldKernel
-V          ?= @ # disable print of executed command, remove to print commands
+V          ?= #@ # disable print of executed command, remove to print commands
 OFFLINE    ?= false
 
 #
@@ -27,7 +27,7 @@ DIST_SYSROOT_PREFIX ?= $(BUILD_PREFIX)/Root/$(BUILD_MODE)
 
 RUSTC ?= $(shell which rustc)
 CARGO ?= $(shell which cargo)
-R_DBG ?= $(shell which rust-dbg)
+R_GDB ?= $(shell which rust-gdb)
 
 #
 # -- -- -- -- -- -- -- -- -- -- -- -- Rust Flags -- -- -- -- -- -- -- -- -- -- -- -- --
