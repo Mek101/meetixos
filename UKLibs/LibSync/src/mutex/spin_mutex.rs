@@ -11,8 +11,8 @@ use core::{
 use crate::{
     guards::LockGuardSendable,
     mutex::{
-        BackRawMutex,
-        ConstCreatBackRawMutex
+        TBackRawMutex,
+        TConstCreatBackRawMutex
     }
 };
 
@@ -39,11 +39,11 @@ impl RawSpinMutex /* Methods */ {
     }
 }
 
-impl ConstCreatBackRawMutex for RawSpinMutex {
+impl TConstCreatBackRawMutex for RawSpinMutex {
     const CONST_CREAT: Self = Self { m_is_locked: AtomicBool::new(false) };
 }
 
-unsafe impl BackRawMutex for RawSpinMutex {
+unsafe impl TBackRawMutex for RawSpinMutex {
     type LockGuardShareabilityMark = LockGuardSendable;
 
     fn do_lock(&self) {

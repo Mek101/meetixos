@@ -28,7 +28,7 @@ pub mod page_table_entry;
 #[derive(Hash)]
 pub struct Page4KiB;
 
-impl PageSize for Page4KiB {
+impl TPageSize for Page4KiB {
     const SIZE: usize = 4 * C_KIB;
     const PAGE_TABLE_LEVEL: PageTableLevel = PageTableLevel::FourKiB;
     const IS_HUGE: bool = false;
@@ -44,13 +44,13 @@ impl PageSize for Page4KiB {
 #[derive(Hash)]
 pub struct Page2MiB;
 
-impl PageSize for Page2MiB {
+impl TPageSize for Page2MiB {
     const SIZE: usize = 2 * C_MIB;
     const PAGE_TABLE_LEVEL: PageTableLevel = PageTableLevel::TwoMiB;
     const IS_HUGE: bool = false;
 }
 
-pub trait PageSize:
+pub trait TPageSize:
     Debug + Copy + Clone + Eq + PartialEq + Ord + PartialOrd + Hash {
     /**
      * The size in bytes for this kind of `PageSize`

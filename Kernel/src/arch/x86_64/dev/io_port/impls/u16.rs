@@ -1,8 +1,8 @@
 /*! HwIOPortRead & HwIOPortWrite implementation for u16 */
 
-use crate::arch::x86_64::dev::io_port::impls::HwIOPort;
+use crate::arch::x86_64::dev::io_port::impls::THwIOPort;
 
-impl HwIOPort for u16 {
+impl THwIOPort for u16 {
     #[inline]
     unsafe fn io_port_read(port: u16) -> Self {
         let value: u16;

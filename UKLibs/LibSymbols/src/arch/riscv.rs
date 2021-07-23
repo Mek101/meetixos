@@ -1,13 +1,13 @@
 /*! riscv code implementation */
 
-use crate::stack_back_trace::HwTracerHelperBase;
+use crate::stack_back_trace::THwTracerHelper;
 
 /**
  * riscv `HwTracerHelperBase` implementation
  */
 pub struct HwTracerHelper;
 
-impl HwTracerHelperBase for HwTracerHelper {
+impl THwTracerHelper for HwTracerHelper {
     const PREV_FRAME_PTR_OFFSET: isize = -2;
     const PREV_RETURN_PTR_OFFSET: isize = -1;
 

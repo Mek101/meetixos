@@ -10,11 +10,11 @@ use core::{
 };
 
 use bits::bit_fields::{
-    BitArray,
-    BitFields,
-    BitFindMode
+    BitFindMode,
+    TBitArray,
+    TBitFields
 };
-use helps::dbg::DisplaySizePretty;
+use helps::dbg::TDisplaySizePretty;
 use sync::mutex::{
     spin_mutex::RawSpinMutex,
     Mutex
@@ -24,7 +24,7 @@ use crate::{
     addr::{
         phys_addr::PhysAddr,
         virt_addr::VirtAddr,
-        Address
+        TAddress
     },
     boot_info::BootInfo,
     dbg_print::DbgLevel,
@@ -35,7 +35,7 @@ use crate::{
         page_table::PageTableIndex,
         Page2MiB,
         Page4KiB,
-        PageSize
+        TPageSize
     }
 };
 
@@ -113,7 +113,7 @@ impl MemManager /* Constructors */ {
         let mm_inst = unsafe {
             SM_MEM_MANAGER = Some(Self { m_layout_manager: layout_manager,
                                          m_phys_frames_bitmap:
-                                             Mutex::const_new(phys_frames_bitmap.leak()),
+                                             Mutex::new(phys_frames_bitmap.leak()),
                                          m_mem_manager_stats: mem_manager_stats,
                                          m_kernel_page_dir: PageDir::pre_phys_mapping() });
             SM_MEM_MANAGER.as_mut().unwrap()

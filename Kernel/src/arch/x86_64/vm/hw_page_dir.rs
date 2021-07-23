@@ -2,7 +2,7 @@
 
 use crate::{
     addr::phys_addr::PhysAddr,
-    vm::page_dir::HwPageDirBase
+    vm::page_dir::THwPageDir
 };
 
 #[derive(Debug)]
@@ -10,7 +10,7 @@ pub struct HwPageDir {
     m_phys_frame: PhysAddr
 }
 
-impl HwPageDirBase for HwPageDir {
+impl THwPageDir for HwPageDir {
     fn from_phys_frame(phys_frame: PhysAddr) -> Self {
         Self { m_phys_frame: phys_frame }
     }

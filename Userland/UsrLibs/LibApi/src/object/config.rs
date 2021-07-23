@@ -10,15 +10,15 @@ use api_data::{
     sys::{
         codes::KernObjConfigFnId,
         fn_path::KernFnPath,
-        AsSysCallPtr
+        TAsSysCallPtr
     }
 };
 
 use crate::{
     config_mode::{
-        ConfigMode,
         CreatMode,
-        OpenMode
+        OpenMode,
+        TConfigMode
     },
     kern_handle::{
         KernHandle,
@@ -26,12 +26,12 @@ use crate::{
     },
     object::{
         grants::ObjGrants,
-        AnonymousObject,
-        ExecutableDataObject,
+        MTAnonymousObject,
+        MTExecutableDataObject,
+        MTSizeableDataObject,
         ObjHandle,
-        Object,
-        SizeableDataObject,
-        UserCreatableObject
+        TObject,
+        TUserCreatableObject
     },
     path::Path
 };
@@ -42,14 +42,14 @@ use crate::{
 #[derive(Debug)]
 #[derive(Copy, Clone)]
 pub struct ObjConfig<'a, T, M>
-    where T: Object,
-          M: ConfigMode {
+    where T: TObject,
+          M: TConfigMode {
     m_raw_config: RawObjConfig<'a>,
     _unused: PhantomData<(T, M)>
 }
 
 impl<'a, T> ObjConfig<'a, T, CreatMode>
-    where T: Object + UserCreatableObject /* Constructors */
+    where T: TObject + TUserCreatableObject /* Constructors */
 {
     /**
      * Constructs a `ObjConfig` for `Object` creation
@@ -60,7 +60,7 @@ impl<'a, T> ObjConfig<'a, T, CreatMode>
     }
 }
 
-impl<'a, T> ObjConfig<'a, T, OpenMode> where T: Object /* Constructors */ {
+impl<'a, T> ObjConfig<'a, T, OpenMode> where T: TObject /* Constructors */ {
     /**
      * Constructs an empty `ObjConfig` for `Object` opening
      */
@@ -71,8 +71,8 @@ impl<'a, T> ObjConfig<'a, T, OpenMode> where T: Object /* Constructors */ {
 }
 
 impl<'a, T, M> ObjConfig<'a, T, M>
-    where T: Object,
-          M: ConfigMode /* Methods */
+    where T: TObject,
+          M: TConfigMode /* Methods */
 {
     /**
      * Dispatches the configuration to the kernel that opens (or creates if
@@ -103,7 +103,7 @@ impl<'a, T, M> ObjConfig<'a, T, M>
 }
 
 impl<'a, T> ObjConfig<'a, T, CreatMode>
-    where T: Object + UserCreatableObject + AnonymousObject /* Methods */
+    where T: TObject + TUserCreatableObject + MTAnonymousObject /* Methods */
 {
     /**
      * Dispatches the configuration to the kernel which creates a new
@@ -123,7 +123,7 @@ impl<'a, T> ObjConfig<'a, T, CreatMode>
 }
 
 impl<'a, T> ObjConfig<'a, T, CreatMode>
-    where T: Object + UserCreatableObject /* Setters */
+    where T: TObject + TUserCreatableObject /* Setters */
 {
     /**
      * Sets custom `ObjGrants` for the creation of the new `Object`
@@ -134,7 +134,7 @@ impl<'a, T> ObjConfig<'a, T, CreatMode>
     }
 }
 
-impl<'a, T> ObjConfig<'a, T, OpenMode> where T: Object /* Setters */ {
+impl<'a, T> ObjConfig<'a, T, OpenMode> where T: TObject /* Setters */ {
     /**
      * Ensures that the `Object` can be opened only by one `Task` a time
      */
@@ -145,8 +145,8 @@ impl<'a, T> ObjConfig<'a, T, OpenMode> where T: Object /* Setters */ {
 }
 
 impl<'a, T, M> ObjConfig<'a, T, M>
-    where T: Object + SizeableDataObject,
-          M: ConfigMode /* Setters */
+    where T: TObject + MTSizeableDataObject,
+          M: TConfigMode /* Setters */
 {
     /**
      * Truncates the data size to the specified amount
@@ -158,8 +158,8 @@ impl<'a, T, M> ObjConfig<'a, T, M>
 }
 
 impl<'a, T, M> ObjConfig<'a, T, M>
-    where T: Object + ExecutableDataObject,
-          M: ConfigMode /* Setters */
+    where T: TObject + MTExecutableDataObject,
+          M: TConfigMode /* Setters */
 {
     /**
     * Enables data executable operations
@@ -172,8 +172,8 @@ impl<'a, T, M> ObjConfig<'a, T, M>
 }
 
 impl<'a, T, M> ObjConfig<'a, T, M>
-    where T: Object,
-          M: ConfigMode /* Setters */
+    where T: TObject,
+          M: TConfigMode /* Setters */
 {
     /**
      * Enables data read operations
@@ -193,8 +193,8 @@ impl<'a, T, M> ObjConfig<'a, T, M>
 }
 
 impl<'a, T, M> ObjConfig<'a, T, M>
-    where T: Object,
-          M: ConfigMode /* Privates */
+    where T: TObject,
+          M: TConfigMode /* Privates */
 {
     /**
      * Requests to the kernel to apply the given configuration

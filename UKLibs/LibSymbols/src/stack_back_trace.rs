@@ -68,7 +68,7 @@ impl fmt::Display for StackBackTrace {
  * Interface on which `StackBackTrace` relies to obtain hardware dependent
  * information
  */
-pub(crate) trait HwTracerHelperBase {
+pub(crate) trait THwTracerHelper {
     /**
      * Offset to obtain the previous frame pointer
      */

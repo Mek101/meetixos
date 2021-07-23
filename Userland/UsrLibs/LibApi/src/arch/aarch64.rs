@@ -1,7 +1,7 @@
 /*! aarch64 Kernel function call */
 
 use api_data::sys::{
-    AsSysCallPtr,
+    TAsSysCallPtr,
     SysCallPayload
 };
 

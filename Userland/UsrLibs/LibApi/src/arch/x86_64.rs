@@ -1,8 +1,8 @@
 /*! x86_64 Kernel function call */
 
 use api_data::sys::{
-    AsSysCallPtr,
-    SysCallPayload
+    SysCallPayload,
+    TAsSysCallPtr
 };
 
 /**

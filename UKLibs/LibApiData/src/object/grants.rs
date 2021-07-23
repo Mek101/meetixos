@@ -7,7 +7,7 @@ use num_enum::{
 
 use bits::bit_flags::{
     BitFlags,
-    BitFlagsValues
+    TBitFlagsValues
 };
 
 /**
@@ -78,5 +78,5 @@ pub enum ObjGrantsBits {
     OtherCanSeeIt
 }
 
-impl BitFlagsValues for ObjGrantsBits {
+impl TBitFlagsValues for ObjGrantsBits {
 }

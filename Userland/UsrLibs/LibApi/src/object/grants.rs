@@ -22,7 +22,7 @@ use crate::object::{
         mmap::MMap,
         mutex::OsRawMutex
     },
-    Object
+    TObject
 };
 
 /**
@@ -31,12 +31,12 @@ use crate::object::{
 #[derive(Debug)]
 #[derive(Copy, Clone)]
 pub struct ObjGrants<T>
-    where T: Object {
+    where T: TObject {
     m_raw_grants: RawObjGrants,
     _unused: PhantomData<T>
 }
 
-impl<T> ObjGrants<T> where T: Object /* Constructors */ {
+impl<T> ObjGrants<T> where T: TObject /* Constructors */ {
     /**
      * Constructs a zeroed `ObjGrants`
      */
@@ -46,14 +46,14 @@ impl<T> ObjGrants<T> where T: Object /* Constructors */ {
     }
 }
 
-impl<T> From<RawObjGrants> for ObjGrants<T> where T: Object {
+impl<T> From<RawObjGrants> for ObjGrants<T> where T: TObject {
     fn from(raw_grants: RawObjGrants) -> Self {
         Self { m_raw_grants: raw_grants,
                _unused: PhantomData }
     }
 }
 
-impl<T> Deref for ObjGrants<T> where T: Object {
+impl<T> Deref for ObjGrants<T> where T: TObject {
     type Target = RawObjGrants;
 
     fn deref(&self) -> &Self::Target {
@@ -61,7 +61,7 @@ impl<T> Deref for ObjGrants<T> where T: Object {
     }
 }
 
-impl<T> DerefMut for ObjGrants<T> where T: Object {
+impl<T> DerefMut for ObjGrants<T> where T: TObject {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.m_raw_grants
     }
@@ -261,7 +261,7 @@ impl Default for ObjGrants<OsRawMutex> {
     }
 }
 
-impl<T> Default for ObjGrants<T> where T: Object {
+impl<T> Default for ObjGrants<T> where T: TObject {
     /**
      * Implemented to shut the warning of the compiler about overlapping
      * implementations of the `Default` trait

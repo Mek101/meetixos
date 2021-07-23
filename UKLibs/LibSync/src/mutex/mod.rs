@@ -3,7 +3,7 @@
 use core::cell::UnsafeCell;
 
 use crate::{
-    guards::LockGuardShareability,
+    guards::MTLockGuardShareability,
     mutex::data_guard::MutexDataGuard
 };
 
@@ -17,24 +17,24 @@ pub mod spin_mutex;
  * data against concurrent access
  */
 pub struct Mutex<R, T>
-    where R: BackRawMutex,
+    where R: TBackRawMutex,
           T: ?Sized {
     m_back_raw_mutex: R,
     m_held_data: UnsafeCell<T>
 }
 
-impl<R, T> Mutex<R, T> where R: ConstCreatBackRawMutex /* Constructors */ {
+impl<R, T> Mutex<R, T> where R: TConstCreatBackRawMutex /* Constructors */ {
     /**
      * Constructs a `Mutex` wrapping the given `value` and a const-creatable
      * `BackRawMutex`
      */
-    pub const fn const_new(value: T) -> Self {
+    pub const fn new(value: T) -> Self {
         Self { m_back_raw_mutex: R::CONST_CREAT,
                m_held_data: UnsafeCell::new(value) }
     }
 }
 
-impl<R, T> Mutex<R, T> where R: CreatMayFailBackRawMutex /* Constructors */ {
+impl<R, T> Mutex<R, T> where R: TCreatMayFailBackRawMutex /* Constructors */ {
     /**
      * Constructs a `Mutex` wrapping the given `value` and a may-fail
      * `BackRawMutex`
@@ -45,7 +45,7 @@ impl<R, T> Mutex<R, T> where R: CreatMayFailBackRawMutex /* Constructors */ {
     }
 }
 
-impl<R, T> Mutex<R, T> where R: BackRawMutex /* Constructors */ {
+impl<R, T> Mutex<R, T> where R: TBackRawMutex /* Constructors */ {
     /**
      * Constructs a `Mutex` from his fundamental components
      */
@@ -55,7 +55,7 @@ impl<R, T> Mutex<R, T> where R: BackRawMutex /* Constructors */ {
     }
 }
 
-impl<R, T> Mutex<R, T> where R: BackRawMutex /* Getter */ {
+impl<R, T> Mutex<R, T> where R: TBackRawMutex /* Getter */ {
     /**
      * Returns the unwrapped inner data
      */
@@ -66,7 +66,7 @@ impl<R, T> Mutex<R, T> where R: BackRawMutex /* Getter */ {
 }
 
 impl<R, T> Mutex<R, T>
-    where R: BackRawMutex,
+    where R: TBackRawMutex,
           T: ?Sized /* Methods */
 {
     /**
@@ -106,7 +106,7 @@ impl<R, T> Mutex<R, T>
 }
 
 impl<R, T> Mutex<R, T>
-    where R: BackRawMutex,
+    where R: TBackRawMutex,
           T: ?Sized /* Getters */
 {
     /**
@@ -145,14 +145,14 @@ impl<R, T> Mutex<R, T>
 }
 
 unsafe impl<R, T> Send for Mutex<R, T>
-    where R: BackRawMutex + Send,
+    where R: TBackRawMutex + Send,
           T: ?Sized + Send
 {
     /* No methods, just a marker trait */
 }
 
 unsafe impl<R, T> Sync for Mutex<R, T>
-    where R: BackRawMutex + Sync,
+    where R: TBackRawMutex + Sync,
           T: ?Sized + Send
 {
     /* No methods, just a marker trait */
@@ -162,11 +162,11 @@ unsafe impl<R, T> Sync for Mutex<R, T>
  * Interface on which the `Mutex` relies to effectively perform
  * locking/unlocking operations over the held data
  */
-pub unsafe trait BackRawMutex {
+pub unsafe trait TBackRawMutex {
     /**
      * Customizable creation error type
      */
-    type LockGuardShareabilityMark: LockGuardShareability;
+    type LockGuardShareabilityMark: MTLockGuardShareability;
 
     /**
      * Acquires this `Mutex`, blocking the current thread until it is able
@@ -207,7 +207,7 @@ pub unsafe trait BackRawMutex {
 /**
  * Interface on which the `Mutex` relies to const-create the `BackRawMutex`
  */
-pub trait ConstCreatBackRawMutex: BackRawMutex {
+pub trait TConstCreatBackRawMutex: TBackRawMutex {
     /**
      * Creates a `BackRawMutex` using const pseudo-function
      */
@@ -218,7 +218,7 @@ pub trait ConstCreatBackRawMutex: BackRawMutex {
  * Interface on which the `Mutex` relies to create the `BackRawMutex` with
  * failure
  */
-pub trait CreatMayFailBackRawMutex: BackRawMutex {
+pub trait TCreatMayFailBackRawMutex: TBackRawMutex {
     /**
      * Customizable creation error type
      */

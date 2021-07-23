@@ -13,13 +13,13 @@ use crate::{
             group::OsGroup,
             user::OsUser
         },
-        OsEntity
+        TOsEntity
     },
     kern_handle::Result,
     object::{
         grants::ObjGrants,
         ObjHandle,
-        Object
+        TObject
     }
 };
 
@@ -29,14 +29,14 @@ use crate::{
 #[derive(Debug)]
 #[derive(Default)]
 pub struct ObjInfo<T>
-    where T: Object {
+    where T: TObject {
     m_raw_info: RawObjInfo,
     m_obj_handle: ObjHandle,
     m_obj_prot_grants: ObjGrants<T>,
     m_modified: bool
 }
 
-impl<T> ObjInfo<T> where T: Object /* Constructors */ {
+impl<T> ObjInfo<T> where T: TObject /* Constructors */ {
     /**
      * Constructs a `ObjInfo` from the given arguments
      */
@@ -48,7 +48,7 @@ impl<T> ObjInfo<T> where T: Object /* Constructors */ {
     }
 }
 
-impl<T> ObjInfo<T> where T: Object /* Methods */ {
+impl<T> ObjInfo<T> where T: TObject /* Methods */ {
     /**
      * Updates back the modified metadata for the `Object` which originates
      * this
@@ -63,7 +63,7 @@ impl<T> ObjInfo<T> where T: Object /* Methods */ {
     }
 }
 
-impl<T> ObjInfo<T> where T: Object /* Setters */ {
+impl<T> ObjInfo<T> where T: TObject /* Setters */ {
     /**
      * Sets the `OsUser` which owns the `Object`
      */
@@ -98,7 +98,7 @@ impl<T> ObjInfo<T> where T: Object /* Setters */ {
     }
 }
 
-impl<T> Deref for ObjInfo<T> where T: Object {
+impl<T> Deref for ObjInfo<T> where T: TObject {
     type Target = RawObjInfo;
 
     fn deref(&self) -> &Self::Target {
@@ -106,7 +106,7 @@ impl<T> Deref for ObjInfo<T> where T: Object {
     }
 }
 
-impl<T> DerefMut for ObjInfo<T> where T: Object {
+impl<T> DerefMut for ObjInfo<T> where T: TObject {
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.m_modified = true;
         &mut self.m_raw_info

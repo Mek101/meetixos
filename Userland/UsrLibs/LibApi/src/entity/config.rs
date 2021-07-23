@@ -13,19 +13,19 @@ use api_data::{
     sys::{
         codes::KernOsEntConfigFnId,
         fn_path::KernFnPath,
-        AsSysCallPtr
+        TAsSysCallPtr
     }
 };
 
 use crate::{
     config_mode::{
-        ConfigMode,
         CreatMode,
-        OpenMode
+        OpenMode,
+        TConfigMode
     },
     entity::{
-        OsEntity,
-        OsEntityHandle
+        OsEntityHandle,
+        TOsEntity
     },
     kern_handle::{
         KernHandle,
@@ -39,13 +39,13 @@ use crate::{
 #[derive(Debug)]
 #[derive(Copy, Clone)]
 pub struct OsEntityConfig<'a, T, M>
-    where T: OsEntity,
-          M: ConfigMode {
+    where T: TOsEntity,
+          M: TConfigMode {
     m_raw_config: RawOsEntityConfig<'a>,
     _unused: PhantomData<(T, M)>
 }
 
-impl<'a, T> OsEntityConfig<'a, T, CreatMode> where T: OsEntity /* Constructors */ {
+impl<'a, T> OsEntityConfig<'a, T, CreatMode> where T: TOsEntity /* Constructors */ {
     /**
      * Constructs a `OsEntityConfig` for `OsEntity` creation
      */
@@ -55,7 +55,7 @@ impl<'a, T> OsEntityConfig<'a, T, CreatMode> where T: OsEntity /* Constructors *
     }
 }
 
-impl<'a, T> OsEntityConfig<'a, T, OpenMode> where T: OsEntity /* Constructors */ {
+impl<'a, T> OsEntityConfig<'a, T, OpenMode> where T: TOsEntity /* Constructors */ {
     /**
      * Constructs a `OsEntityConfig` for `OsEntity` opening
      */
@@ -65,7 +65,7 @@ impl<'a, T> OsEntityConfig<'a, T, OpenMode> where T: OsEntity /* Constructors */
     }
 }
 
-impl<'a, T> OsEntityConfig<'a, T, CreatMode> where T: OsEntity /* Methods */ {
+impl<'a, T> OsEntityConfig<'a, T, CreatMode> where T: TOsEntity /* Methods */ {
     /**
      * Dispatches the configuration to the kernel, which creates a new
      * `OsEntity`.
@@ -76,7 +76,7 @@ impl<'a, T> OsEntityConfig<'a, T, CreatMode> where T: OsEntity /* Methods */ {
     }
 }
 
-impl<'a, T> OsEntityConfig<'a, T, OpenMode> where T: OsEntity /* Methods */ {
+impl<'a, T> OsEntityConfig<'a, T, OpenMode> where T: TOsEntity /* Methods */ {
     /**
      * Dispatches the configuration to the kernel, which tries to find the
      * requested `OsEntity`.
@@ -88,7 +88,7 @@ impl<'a, T> OsEntityConfig<'a, T, OpenMode> where T: OsEntity /* Methods */ {
     }
 }
 
-impl<'a, T> OsEntityConfig<'a, T, OpenMode> where T: OsEntity /* Setters */ {
+impl<'a, T> OsEntityConfig<'a, T, OpenMode> where T: TOsEntity /* Setters */ {
     /**
      * Specifies the `OsEntity`'s name
      */
@@ -99,8 +99,8 @@ impl<'a, T> OsEntityConfig<'a, T, OpenMode> where T: OsEntity /* Setters */ {
 }
 
 impl<'a, T, M> OsEntityConfig<'a, T, M>
-    where T: OsEntity,
-          M: ConfigMode /* Setters */
+    where T: TOsEntity,
+          M: TConfigMode /* Setters */
 {
     /**
      * Tells to the Kernel which unique identifier the `OsEntity` must
@@ -124,8 +124,8 @@ impl<'a, T, M> OsEntityConfig<'a, T, M>
 }
 
 impl<'a, T, M> OsEntityConfig<'a, T, M>
-    where T: OsEntity,
-          M: ConfigMode /* Privates */
+    where T: TOsEntity,
+          M: TConfigMode /* Privates */
 {
     /**
      * Requests to the kernel to apply the given configuration

@@ -10,11 +10,11 @@ use api::object::{
         mmap::MMap,
         mutex::OsRawMutex
     },
-    Object,
-    UserCreatableObject
+    TObject,
+    TUserCreatableObject
 };
 use heap::lazy_locked_heap::LazyLockedHeap;
-use sync::mutex::CreatMayFailBackRawMutex;
+use sync::mutex::TCreatMayFailBackRawMutex;
 
 /**
  * Global heap allocator

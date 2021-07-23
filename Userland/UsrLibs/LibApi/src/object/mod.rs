@@ -26,7 +26,7 @@ use api_data::{
     sys::{
         codes::KernObjectFnId,
         fn_path::KernFnPath,
-        AsSysCallPtr
+        TAsSysCallPtr
     },
     task::thread::RWatchThreadEntry
 };
@@ -47,7 +47,7 @@ use crate::{
     },
     task::{
         impls::thread::c_thread_entry,
-        Task
+        TTask
     }
 };
 
@@ -99,7 +99,7 @@ impl ObjHandle /* Privates */ {
      * Shares this handle with the given `Task`
      */
     fn send<T>(&self, recv_task: &T) -> Result<()>
-        where T: Task {
+        where T: TTask {
         self.m_handle
             .inst_kern_call_1(KernFnPath::Object(KernObjectFnId::Send),
                               recv_task.task_handle().kern_handle().raw_handle() as usize)
@@ -212,7 +212,7 @@ impl ObjHandle /* Privates */ {
  * and provides convenient methods to easily perform works that normally
  * implies more than one call
  */
-pub trait Object: From<ObjHandle> + Default + Clone {
+pub trait TObject: From<ObjHandle> + Default + Clone {
     /**
      * The value of the `ObjType` that matches the implementation
      */
@@ -239,7 +239,7 @@ pub trait Object: From<ObjHandle> + Default + Clone {
      * Shares this `Object` instance with the given `Task`
      */
     fn send<T>(&self, recv_task: &T) -> Result<()>
-        where T: Task {
+        where T: TTask {
         self.obj_handle().send(recv_task)
     }
 
@@ -303,7 +303,7 @@ pub trait Object: From<ObjHandle> + Default + Clone {
 /**
  * Marker interface for `Object`s which support `Object::creat()`
  */
-pub trait UserCreatableObject: Object {
+pub trait TUserCreatableObject: TObject {
     /**
      * Returns an `ObjConfig` for `Object` creation
      */
@@ -316,14 +316,14 @@ pub trait UserCreatableObject: Object {
  * Marker interface for `Object`s which support
  * `ObjConfig::with_data_size()`
  */
-pub trait SizeableDataObject {
+pub trait MTSizeableDataObject {
     /* No methods, just a marker trait */
 }
 
 /**
  * Marker interface for `Object`s which support `ObjConfig::for_exec()`
  */
-pub trait ExecutableDataObject {
+pub trait MTExecutableDataObject {
     /* No methods, just a marker trait */
 }
 
@@ -331,6 +331,6 @@ pub trait ExecutableDataObject {
  * Marker interface for `Object`s which support
  * `ObjConfig::apply_for_anon()`
  */
-pub trait AnonymousObject {
+pub trait MTAnonymousObject {
     /* No methods, just a marker trait */
 }

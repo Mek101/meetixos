@@ -13,11 +13,11 @@ use helps::dbg::C_MIB;
 use crate::{
     addr::{
         phys_addr::PhysAddr,
-        Address
+        TAddress
     },
     boot_info::{
         BootMemAreas,
-        HwBootInfoBase
+        THwBootInfo
     }
 };
 
@@ -28,7 +28,7 @@ pub struct HwBootInfo {
     m_multiboot_ptr: BootInformation
 }
 
-impl HwBootInfoBase for HwBootInfo {
+impl THwBootInfo for HwBootInfo {
     fn boot_loader_name(&self) -> &str {
         self.m_multiboot_ptr
             .boot_loader_name_tag()

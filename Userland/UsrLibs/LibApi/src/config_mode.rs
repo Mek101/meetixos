@@ -29,7 +29,7 @@ pub enum ConfigModeType {
 /**
  * Represents the base interface for the configuration modes
  */
-pub trait ConfigMode {
+pub trait TConfigMode {
     /**
      * The `ConfigModeType` which the concrete type represents
      */
@@ -43,7 +43,7 @@ pub trait ConfigMode {
 #[derive(Debug, Copy, Clone)]
 pub struct CreatMode;
 
-impl ConfigMode for CreatMode {
+impl TConfigMode for CreatMode {
     const TYPE: ConfigModeType = ConfigModeType::Create;
 }
 
@@ -54,6 +54,6 @@ impl ConfigMode for CreatMode {
 #[derive(Debug, Copy, Clone)]
 pub struct OpenMode;
 
-impl ConfigMode for OpenMode {
+impl TConfigMode for OpenMode {
     const TYPE: ConfigModeType = ConfigModeType::Open;
 }

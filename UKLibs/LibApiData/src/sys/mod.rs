@@ -127,7 +127,7 @@ impl SysCallPayload /* Getters */ {
     }
 }
 
-impl AsSysCallPtr for SysCallPayload {
+impl TAsSysCallPtr for SysCallPayload {
     /* No methods to implement */
 }
 
@@ -146,7 +146,7 @@ impl Into<Result<usize, OsError>> for SysCallPayload {
  * Interface which defines the method to cast `&self` and `&mut self` to a
  * `usize` value
  */
-pub trait AsSysCallPtr {
+pub trait TAsSysCallPtr {
     /**
      * Returns `&self` as `const usize` pointer
      */

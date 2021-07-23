@@ -12,8 +12,8 @@ use crate::{
     limit::OS_ERROR_MESSAGE_LEN_MAX,
     sys::{
         fn_path::KernFnPath,
-        AsSysCallPtr,
-        RawKernHandle
+        RawKernHandle,
+        TAsSysCallPtr
     },
     task::TaskId
 };
@@ -89,7 +89,7 @@ impl OsError /* Getters */ {
     }
 }
 
-impl AsSysCallPtr for OsError {
+impl TAsSysCallPtr for OsError {
     /* No methods to implement */
 }
 

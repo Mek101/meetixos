@@ -2,7 +2,7 @@
 
 use crate::addr::{
     virt_addr::VirtAddr,
-    Address
+    TAddress
 };
 
 /**

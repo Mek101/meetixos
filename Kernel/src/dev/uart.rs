@@ -41,7 +41,7 @@ impl fmt::Write for Uart {
  * Common interface used by the `UartWriterInner` to use the hardware
  * implementations
  */
-pub trait HwUartBase: fmt::Write {
+pub trait THwUart: fmt::Write {
     /**
      * Constructs an uninitialized `HwUartBase` based object
      */

@@ -15,8 +15,8 @@ use helps::{
 };
 
 use crate::{
-    HeapPool,
-    PreferredExtendSize
+    THeapPool,
+    TPreferredExtendSize
 };
 
 /**
@@ -105,7 +105,7 @@ impl LinkedList /* Privates */ {
     }
 }
 
-impl HeapPool for LinkedList {
+impl THeapPool for LinkedList {
     unsafe fn add_region(&mut self,
                          start_area_ptr: NonNull<u8>,
                          area_size: usize)
@@ -119,7 +119,7 @@ impl HeapPool for LinkedList {
     }
 }
 
-impl PreferredExtendSize for LinkedList {
+impl TPreferredExtendSize for LinkedList {
     const PREFERRED_EXTEND_SIZE: usize = 8192; /* 8KiB for each extension */
 }
 

@@ -16,11 +16,11 @@ use api_data::{
 use crate::{
     kern_handle::Result,
     object::{
-        AnonymousObject,
+        MTAnonymousObject,
+        MTSizeableDataObject,
         ObjHandle,
-        Object,
-        SizeableDataObject,
-        UserCreatableObject
+        TObject,
+        TUserCreatableObject
     }
 };
 
@@ -92,7 +92,7 @@ impl From<ObjHandle> for IpcChan {
     }
 }
 
-impl Object for IpcChan {
+impl TObject for IpcChan {
     const TYPE: ObjType = ObjType::IpcChan;
 
     fn obj_handle(&self) -> &ObjHandle {
@@ -104,14 +104,14 @@ impl Object for IpcChan {
     }
 }
 
-impl UserCreatableObject for IpcChan {
+impl TUserCreatableObject for IpcChan {
     /* No methods to implement */
 }
 
-impl SizeableDataObject for IpcChan {
+impl MTSizeableDataObject for IpcChan {
     /* No methods to implement */
 }
 
-impl AnonymousObject for IpcChan {
+impl MTAnonymousObject for IpcChan {
     /* No methods to implement */
 }

@@ -18,7 +18,7 @@ use helps::align::{
     align_up
 };
 
-use crate::vm::PageSize;
+use crate::vm::TPageSize;
 
 pub mod phys_addr;
 pub mod virt_addr;
@@ -27,7 +27,7 @@ pub mod virt_addr;
  * Base interface of methods and dependencies common to all the addresses
  * implementations (both virtual and physical)
  */
-pub trait Address:
+pub trait TAddress:
     Default
     + From<usize>
     + Deref<Target = usize>
@@ -42,12 +42,12 @@ pub trait Address:
     + Hash
     + Step {
     /**
-     * Maximum value reachable by this `Address` implementation
+     * Maximum value reachable by this `TAddress` implementation
      */
     const MAX: Self;
 
     /**
-     * Constructs a null `Address`
+     * Constructs a null `TAddress`
      */
     #[inline]
     fn null() -> Self {
@@ -55,7 +55,7 @@ pub trait Address:
     }
 
     /**
-     * Returns the aligned up `Address` using the given `align`
+     * Returns the aligned up `TAddress` using the given `align`
      */
     #[inline]
     fn align_up<A>(&self, align: A) -> Self
@@ -64,7 +64,7 @@ pub trait Address:
     }
 
     /**
-     * Returns the aligned down `Address` using the given `align`
+     * Returns the aligned down `TAddress` using the given `align`
      */
     #[inline]
     fn align_down<A>(&self, align: A) -> Self
@@ -73,7 +73,7 @@ pub trait Address:
     }
 
     /**
-     * Returns this `Address` + the given `offset`
+     * Returns this `TAddress` + the given `offset`
      */
     #[inline]
     fn offset(&self, offset: usize) -> Self {
@@ -93,15 +93,15 @@ pub trait Address:
     }
 
     /**
-     * Returns this `Address` as Page index
+     * Returns this `TAddress` as Page index
      */
     fn as_page_index<S>(&self) -> usize
-        where S: PageSize {
+        where S: TPageSize {
         **self / S::SIZE
     }
 
     /**
-     * Returns whether this `Address` is aligned with `align`
+     * Returns whether this `TAddress` is aligned with `align`
      */
     #[inline]
     fn is_aligned<A>(&self, align: A) -> bool
@@ -110,7 +110,7 @@ pub trait Address:
     }
 
     /**
-     * Returns whether this `Address` contains a zero value
+     * Returns whether this `TAddress` contains a zero value
      */
     #[inline]
     fn is_null(&self) -> bool {
@@ -119,10 +119,10 @@ pub trait Address:
 }
 
 /**
- * Interface on which the `Address` trait implementors relies to use the
+ * Interface on which the `TAddress` trait implementors relies to use the
  * hardware implementation of the addresses
  */
-pub trait HwAddrBase:
+pub trait THwAddr:
     From<usize>
     + Deref<Target = usize>
     + Copy

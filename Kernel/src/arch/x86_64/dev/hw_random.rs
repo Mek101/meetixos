@@ -10,14 +10,14 @@ use core::{
     hint::spin_loop
 };
 
-use crate::dev::random::HwRandomBase;
+use crate::dev::random::THwRandom;
 
 /**
  * x86_64 `HwRandomBase` implementation
  */
 pub struct HwRandom;
 
-impl HwRandomBase for HwRandom {
+impl THwRandom for HwRandom {
     fn new() -> Self {
         let cpuid_res = unsafe { __cpuid(0x1) };
         if cpuid_res.ecx & (1 << 30) != 0 {

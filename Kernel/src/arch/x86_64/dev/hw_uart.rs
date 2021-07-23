@@ -9,12 +9,12 @@ use num_enum::{
 
 use bits::bit_flags::{
     BitFlags,
-    BitFlagsValues
+    TBitFlagsValues
 };
 
 use crate::{
     arch::x86_64::dev::io_port::IOPort,
-    dev::uart::HwUartBase
+    dev::uart::THwUart
 };
 
 /**
@@ -71,7 +71,7 @@ impl HwUart /* Privates */ {
     }
 }
 
-impl HwUartBase for HwUart {
+impl THwUart for HwUart {
     const CONST_NEW: Self =
         Self { m_data: IOPort::new(SERIAL_COM1_PORT_BASE),
                m_intr_enabled: IOPort::new(SERIAL_COM1_PORT_BASE + 1),
@@ -129,7 +129,7 @@ enum IntrEnabledBits {
     StatusChange
 }
 
-impl BitFlagsValues for IntrEnabledBits {
+impl TBitFlagsValues for IntrEnabledBits {
 }
 
 #[repr(usize)]
@@ -140,5 +140,5 @@ enum LineStatusBits {
     OutputEmpty = 5
 }
 
-impl BitFlagsValues for LineStatusBits {
+impl TBitFlagsValues for LineStatusBits {
 }

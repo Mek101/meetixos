@@ -17,7 +17,7 @@ use api_data::{
     sys::{
         codes::KernPathFnId,
         fn_path::KernFnPath,
-        AsSysCallPtr
+        TAsSysCallPtr
     }
 };
 

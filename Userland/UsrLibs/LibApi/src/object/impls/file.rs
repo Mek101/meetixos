@@ -10,7 +10,7 @@ use api_data::{
     sys::{
         codes::KernFileFnId,
         fn_path::KernFnPath,
-        AsSysCallPtr
+        TAsSysCallPtr
     }
 };
 
@@ -21,12 +21,12 @@ use crate::{
             dir::Dir,
             mmap::MMap
         },
-        AnonymousObject,
-        ExecutableDataObject,
+        MTAnonymousObject,
+        MTExecutableDataObject,
+        MTSizeableDataObject,
         ObjHandle,
-        Object,
-        SizeableDataObject,
-        UserCreatableObject
+        TObject,
+        TUserCreatableObject
     }
 };
 
@@ -162,7 +162,7 @@ impl From<ObjHandle> for File {
     }
 }
 
-impl Object for File {
+impl TObject for File {
     const TYPE: ObjType = ObjType::File;
 
     fn obj_handle(&self) -> &ObjHandle {
@@ -174,18 +174,18 @@ impl Object for File {
     }
 }
 
-impl UserCreatableObject for File {
+impl TUserCreatableObject for File {
     /* No methods to implement */
 }
 
-impl SizeableDataObject for File {
+impl MTSizeableDataObject for File {
     /* No methods to implement */
 }
 
-impl ExecutableDataObject for File {
+impl MTExecutableDataObject for File {
     /* No methods to implement */
 }
 
-impl AnonymousObject for File {
+impl MTAnonymousObject for File {
     /* No methods to implement */
 }

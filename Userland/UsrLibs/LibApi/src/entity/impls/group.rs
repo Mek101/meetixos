@@ -16,8 +16,8 @@ use api_data::{
 use crate::{
     entity::{
         impls::user::OsUser,
-        OsEntity,
-        OsEntityHandle
+        OsEntityHandle,
+        TOsEntity
     },
     kern_handle::Result
 };
@@ -92,7 +92,7 @@ impl From<OsEntityHandle> for OsGroup {
     }
 }
 
-impl OsEntity for OsGroup {
+impl TOsEntity for OsGroup {
     const TYPE: OsEntityType = OsEntityType::Group;
 
     fn os_entity_handle(&self) -> &OsEntityHandle {

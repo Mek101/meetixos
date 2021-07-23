@@ -6,7 +6,7 @@ use api_data::{
     sys::{
         codes::KernThreadFnId,
         fn_path::KernFnPath,
-        AsSysCallPtr
+        TAsSysCallPtr
     },
     task::{
         exit_status::TaskExitStatus,
@@ -24,7 +24,7 @@ use crate::{
         Result
     },
     task::{
-        Task,
+        TTask,
         TaskHandle
     }
 };
@@ -151,7 +151,7 @@ impl From<TaskHandle> for Thread {
     }
 }
 
-impl Task for Thread {
+impl TTask for Thread {
     const TASK_TYPE: TaskType = TaskType::Thread;
 
     fn task_handle(&self) -> &TaskHandle {

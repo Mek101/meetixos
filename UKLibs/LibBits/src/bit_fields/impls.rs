@@ -7,14 +7,14 @@ use core::ops::{
 };
 
 use crate::bit_fields::{
-    BitArray,
-    BitFields,
-    BitFindMode
+    BitFindMode,
+    TBitArray,
+    TBitFields
 };
 
 macro_rules! impl_bit_fields_for_numeric {
     ($($Type:ty)*) => {$(
-        impl BitFields for $Type {
+        impl TBitFields for $Type {
             const BIT_LEN: usize = Self::BITS as usize;
 
             #[inline]
@@ -116,7 +116,7 @@ impl_bit_fields_for_numeric! {
     u8 u16 u32 u64 usize u128 i8 i16 i32 i64 isize i128
 }
 
-impl<T> BitArray<T> for [T] where T: BitFields {
+impl<T> TBitArray<T> for [T] where T: TBitFields {
     #[inline]
     fn bit_len(&self) -> usize {
         self.len() * T::BIT_LEN

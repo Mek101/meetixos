@@ -9,8 +9,8 @@ use mx_std::{
     },
     object::{
         impls::file::File,
-        Object,
-        UserCreatableObject
+        TObject,
+        TUserCreatableObject
     },
     option::Option::None,
     path::Path,

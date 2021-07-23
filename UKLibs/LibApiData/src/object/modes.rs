@@ -1,6 +1,6 @@
 /*! `Object` modes bits */
 
-use crate::sys::AsSysCallPtr;
+use crate::sys::TAsSysCallPtr;
 use num_enum::{
     IntoPrimitive,
     TryFromPrimitive
@@ -105,6 +105,6 @@ impl SeekMode /* Methods */ {
     }
 }
 
-impl AsSysCallPtr for SeekMode {
+impl TAsSysCallPtr for SeekMode {
     /* No methods to implement */
 }

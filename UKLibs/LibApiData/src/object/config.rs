@@ -7,7 +7,7 @@ use num_enum::{
 
 use bits::bit_flags::{
     BitFlags,
-    BitFlagsValues
+    TBitFlagsValues
 };
 
 use crate::{
@@ -16,7 +16,7 @@ use crate::{
         types::ObjType
     },
     path::PathComponent,
-    sys::AsSysCallPtr
+    sys::TAsSysCallPtr
 };
 
 /**
@@ -131,7 +131,7 @@ impl<'a> RawObjConfig<'a> /* Setters */ {
     }
 }
 
-impl<'a> AsSysCallPtr for RawObjConfig<'a> {
+impl<'a> TAsSysCallPtr for RawObjConfig<'a> {
     /* No methods to implement */
 }
 
@@ -169,5 +169,5 @@ pub enum ObjConfigBits {
     Exclusive
 }
 
-impl BitFlagsValues for ObjConfigBits {
+impl TBitFlagsValues for ObjConfigBits {
 }

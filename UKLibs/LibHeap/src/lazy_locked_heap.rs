@@ -11,8 +11,8 @@ use core::{
 
 use sync::{
     mutex::{
-        BackRawMutex,
-        Mutex
+        Mutex,
+        TBackRawMutex
     },
     Lazy
 };
@@ -36,11 +36,11 @@ pub type RawLazyMutexSupplier<M> = fn() -> Option<M>;
  * initialization
  */
 pub struct LazyLockedHeap<M>
-    where M: BackRawMutex + 'static {
+    where M: TBackRawMutex + 'static {
     m_lazy_locked_heap: Lazy<Mutex<M, Heap>, LazyHeapInitializer<M>>
 }
 
-impl<M> LazyLockedHeap<M> where M: BackRawMutex + 'static /* Constructors */ {
+impl<M> LazyLockedHeap<M> where M: TBackRawMutex + 'static /* Constructors */ {
     /**
      * Constructs a `LazyLockedHeap` without initialize the internal
      * `sync::Mutex<Heap>`
@@ -53,7 +53,7 @@ impl<M> LazyLockedHeap<M> where M: BackRawMutex + 'static /* Constructors */ {
     }
 }
 
-impl<M> LazyLockedHeap<M> where M: BackRawMutex + 'static /* Methods */ {
+impl<M> LazyLockedHeap<M> where M: TBackRawMutex + 'static /* Methods */ {
     /**
      * Forces the initialization of this lazy `Heap`
      */
@@ -62,7 +62,7 @@ impl<M> LazyLockedHeap<M> where M: BackRawMutex + 'static /* Methods */ {
     }
 }
 
-impl<M> LazyLockedHeap<M> where M: BackRawMutex + 'static /* Getters */ {
+impl<M> LazyLockedHeap<M> where M: TBackRawMutex + 'static /* Getters */ {
     /**
      * Returns the total amount of memory returned by the
      * `HeapMemorySupplier`
@@ -86,7 +86,7 @@ impl<M> LazyLockedHeap<M> where M: BackRawMutex + 'static /* Getters */ {
     }
 }
 
-unsafe impl<M> GlobalAlloc for LazyLockedHeap<M> where M: BackRawMutex {
+unsafe impl<M> GlobalAlloc for LazyLockedHeap<M> where M: TBackRawMutex {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         self.m_lazy_locked_heap
             .lock()
@@ -107,12 +107,12 @@ unsafe impl<M> GlobalAlloc for LazyLockedHeap<M> where M: BackRawMutex {
  * Concrete type for the `FnOnce` trait used by the `sync::Lazy`
  */
 struct LazyHeapInitializer<T>
-    where T: BackRawMutex {
+    where T: TBackRawMutex {
     m_raw_mutex_supplier: RawLazyMutexSupplier<T>,
     m_mem_supplier: HeapMemorySupplier
 }
 
-impl<T> LazyHeapInitializer<T> where T: BackRawMutex /* Constructors */ {
+impl<T> LazyHeapInitializer<T> where T: TBackRawMutex /* Constructors */ {
     /**
      * Constructs a `LazyHeapInitializer`
      */
@@ -124,7 +124,7 @@ impl<T> LazyHeapInitializer<T> where T: BackRawMutex /* Constructors */ {
     }
 }
 
-impl<T> FnOnce<()> for LazyHeapInitializer<T> where T: BackRawMutex {
+impl<T> FnOnce<()> for LazyHeapInitializer<T> where T: TBackRawMutex {
     type Output = Mutex<T, Heap>;
 
     extern "rust-call" fn call_once(self, _args: ()) -> Self::Output {

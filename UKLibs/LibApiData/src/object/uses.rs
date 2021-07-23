@@ -5,7 +5,7 @@ use num_enum::{
     TryFromPrimitive
 };
 
-use bits::bit_flags::BitFlagsValues;
+use bits::bit_flags::TBitFlagsValues;
 
 /**
  * Lists the available usages of an `Object` based struct.
@@ -102,5 +102,5 @@ impl Default for ObjUseBits {
     }
 }
 
-impl BitFlagsValues for ObjUseBits {
+impl TBitFlagsValues for ObjUseBits {
 }

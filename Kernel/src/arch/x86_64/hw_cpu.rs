@@ -3,7 +3,7 @@
 use crate::{
     addr::{
         virt_addr::VirtAddr,
-        Address
+        TAddress
     },
     arch::x86_64::{
         gdt::{

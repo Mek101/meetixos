@@ -154,7 +154,7 @@ impl PageTableEntry /* Setters */ {
     }
 }
 
-pub trait HwPageTableEntryBase: Debug + Copy + Clone {
+pub trait THwPageTableEntry: Debug + Copy + Clone {
     fn new() -> Self;
 
     unsafe fn invalidate_in_tlb(&self);

@@ -11,16 +11,16 @@ use api_data::{
 use sync::{
     guards::LockGuardNonSendable,
     mutex::{
-        BackRawMutex,
-        CreatMayFailBackRawMutex
+        TBackRawMutex,
+        TCreatMayFailBackRawMutex
     }
 };
 
 use crate::object::{
-    AnonymousObject,
+    MTAnonymousObject,
     ObjHandle,
-    Object,
-    UserCreatableObject
+    TObject,
+    TUserCreatableObject
 };
 
 /**
@@ -48,7 +48,7 @@ pub struct OsRawMutex {
     m_obj_handle: ObjHandle
 }
 
-impl CreatMayFailBackRawMutex for OsRawMutex {
+impl TCreatMayFailBackRawMutex for OsRawMutex {
     type CreatError = OsError;
 
     fn try_creat() -> Result<Self, Self::CreatError>
@@ -57,7 +57,7 @@ impl CreatMayFailBackRawMutex for OsRawMutex {
     }
 }
 
-unsafe impl BackRawMutex for OsRawMutex {
+unsafe impl TBackRawMutex for OsRawMutex {
     /**
      * The `Mutex` cannot be send across different threads using rust
      * primitives, because each thread have his own open object table, but
@@ -114,7 +114,7 @@ impl From<ObjHandle> for OsRawMutex {
     }
 }
 
-impl Object for OsRawMutex {
+impl TObject for OsRawMutex {
     const TYPE: ObjType = ObjType::OsRawMutex;
 
     #[inline]
@@ -128,10 +128,10 @@ impl Object for OsRawMutex {
     }
 }
 
-impl UserCreatableObject for OsRawMutex {
+impl TUserCreatableObject for OsRawMutex {
     /* No methods to implement */
 }
 
-impl AnonymousObject for OsRawMutex {
+impl MTAnonymousObject for OsRawMutex {
     /* No methods to implement */
 }

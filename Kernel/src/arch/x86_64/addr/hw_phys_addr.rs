@@ -5,7 +5,7 @@ use core::{
     ops::Deref
 };
 
-use crate::addr::HwAddrBase;
+use crate::addr::THwAddr;
 
 /**
  * x86_64 physical address implementation
@@ -19,7 +19,7 @@ pub struct HwPhysAddr {
     m_raw_phys_addr: usize
 }
 
-impl HwAddrBase for HwPhysAddr {
+impl THwAddr for HwPhysAddr {
     const MAX: Self = Self { m_raw_phys_addr: 0x000f_ffff_ffff_ffff };
 }
 

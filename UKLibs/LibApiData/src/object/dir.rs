@@ -10,7 +10,7 @@ use helps::str::{
 use crate::{
     limit::VFS_NAME_LEN_MAX,
     object::types::ObjType,
-    sys::AsSysCallPtr
+    sys::TAsSysCallPtr
 };
 
 /**
@@ -54,7 +54,7 @@ impl DirEntry /* Getters */ {
     }
 }
 
-impl AsSysCallPtr for DirEntry {
+impl TAsSysCallPtr for DirEntry {
     /* No methods to implement */
 }
 

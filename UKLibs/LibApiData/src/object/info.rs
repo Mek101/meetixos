@@ -18,7 +18,7 @@ use crate::{
         types::ObjType,
         uses::ObjUseBits
     },
-    sys::AsSysCallPtr,
+    sys::TAsSysCallPtr,
     task::TaskId
 };
 
@@ -343,7 +343,7 @@ impl RawObjInfo /* Setters */ {
     }
 }
 
-impl AsSysCallPtr for RawObjInfo {
+impl TAsSysCallPtr for RawObjInfo {
     /* No methods to implement */
 }
 

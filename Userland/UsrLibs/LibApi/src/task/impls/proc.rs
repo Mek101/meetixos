@@ -27,10 +27,10 @@ use crate::{
             dir::Dir
         },
         ObjHandle,
-        Object
+        TObject
     },
     task::{
-        Task,
+        TTask,
         TaskHandle
     }
 };
@@ -166,7 +166,7 @@ impl From<TaskHandle> for Proc {
     }
 }
 
-impl Task for Proc {
+impl TTask for Proc {
     const TASK_TYPE: TaskType = TaskType::Proc;
 
     fn task_handle(&self) -> &TaskHandle {

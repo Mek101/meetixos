@@ -252,15 +252,15 @@ impl Heap /* Privates */ {
                        layout: &Layout)
                        -> bool {
         let sub_heap_allocator = match allocator_selector {
-            AllocSelector::Slab64 => &mut self.m_slab_64 as &mut dyn HeapPool,
-            AllocSelector::Slab128 => &mut self.m_slab_128 as &mut dyn HeapPool,
-            AllocSelector::Slab256 => &mut self.m_slab_256 as &mut dyn HeapPool,
-            AllocSelector::Slab512 => &mut self.m_slab_512 as &mut dyn HeapPool,
-            AllocSelector::Slab1024 => &mut self.m_slab_1024 as &mut dyn HeapPool,
-            AllocSelector::Slab2048 => &mut self.m_slab_2048 as &mut dyn HeapPool,
-            AllocSelector::Slab4096 => &mut self.m_slab_4096 as &mut dyn HeapPool,
-            AllocSelector::Slab8192 => &mut self.m_slab_8192 as &mut dyn HeapPool,
-            AllocSelector::LinkedList => &mut self.m_linked_list as &mut dyn HeapPool
+            AllocSelector::Slab64 => &mut self.m_slab_64 as &mut dyn THeapPool,
+            AllocSelector::Slab128 => &mut self.m_slab_128 as &mut dyn THeapPool,
+            AllocSelector::Slab256 => &mut self.m_slab_256 as &mut dyn THeapPool,
+            AllocSelector::Slab512 => &mut self.m_slab_512 as &mut dyn THeapPool,
+            AllocSelector::Slab1024 => &mut self.m_slab_1024 as &mut dyn THeapPool,
+            AllocSelector::Slab2048 => &mut self.m_slab_2048 as &mut dyn THeapPool,
+            AllocSelector::Slab4096 => &mut self.m_slab_4096 as &mut dyn THeapPool,
+            AllocSelector::Slab8192 => &mut self.m_slab_8192 as &mut dyn THeapPool,
+            AllocSelector::LinkedList => &mut self.m_linked_list as &mut dyn THeapPool
         };
 
         /* request to the supplier the maximum amount of memory */
@@ -294,7 +294,7 @@ impl Heap /* Privates */ {
 /**
  * `Heap` sub-allocator pool
  */
-pub trait HeapPool {
+pub trait THeapPool {
     /**
      * Puts the given region to the memory pool of the allocator
      */
@@ -309,7 +309,7 @@ pub trait HeapPool {
     fn preferred_extend_size(&self) -> usize;
 }
 
-pub trait PreferredExtendSize {
+pub trait TPreferredExtendSize {
     /**
      * Preferred amount of memory for `add_region()`
      */

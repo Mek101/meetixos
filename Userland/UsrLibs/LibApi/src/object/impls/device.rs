@@ -10,7 +10,7 @@ use api_data::{
     sys::{
         codes::KernDeviceFnId,
         fn_path::KernFnPath,
-        AsSysCallPtr
+        TAsSysCallPtr
     }
 };
 
@@ -19,7 +19,7 @@ use crate::{
     object::{
         impls::mmap::MMap,
         ObjHandle,
-        Object
+        TObject
     }
 };
 
@@ -158,7 +158,7 @@ impl From<ObjHandle> for Device {
     }
 }
 
-impl Object for Device {
+impl TObject for Device {
     const TYPE: ObjType = ObjType::Device;
 
     fn obj_handle(&self) -> &ObjHandle {

@@ -29,7 +29,7 @@ pub enum BitFindMode {
  * Each method interprets index 0 as the least significant bit, while index
  * `.len() - 1` as the most significant bit
  */
-pub trait BitFields: Sized {
+pub trait TBitFields: Sized {
     /**
      * Number of bits which composes `Self`
      *
@@ -79,8 +79,8 @@ pub trait BitFields: Sized {
 /**
  * Extends the `BitField` trait to be used for array slices too
  */
-pub trait BitArray<T>
-    where T: BitFields {
+pub trait TBitArray<T>
+    where T: TBitFields {
     /**
      * Returns the bits in this bit array
      */
@@ -128,12 +128,12 @@ pub trait BitArray<T>
  * `BitFields` iterator
  */
 pub struct BitFieldsIterator<'a, T>
-    where T: BitFields {
+    where T: TBitFields {
     m_index: usize,
     m_bit_fields: &'a T
 }
 
-impl<'a, T> BitFieldsIterator<'a, T> where T: BitFields {
+impl<'a, T> BitFieldsIterator<'a, T> where T: TBitFields {
     /**
      * Constructs a `BitFieldsIterator` with the given `BitFields`
      */
@@ -143,7 +143,7 @@ impl<'a, T> BitFieldsIterator<'a, T> where T: BitFields {
     }
 }
 
-impl<'a, T> Iterator for BitFieldsIterator<'a, T> where T: BitFields {
+impl<'a, T> Iterator for BitFieldsIterator<'a, T> where T: TBitFields {
     type Item = bool;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -161,16 +161,16 @@ impl<'a, T> Iterator for BitFieldsIterator<'a, T> where T: BitFields {
  * `BitArray` iterator
  */
 pub struct BitArrayIterator<'a, B, T>
-    where B: BitFields,
-          T: BitArray<B> {
+    where B: TBitFields,
+          T: TBitArray<B> {
     m_index: usize,
     m_bit_array: &'a T,
     _unused: PhantomData<B>
 }
 
 impl<'a, B, T> BitArrayIterator<'a, B, T>
-    where B: BitFields,
-          T: BitArray<B>
+    where B: TBitFields,
+          T: TBitArray<B>
 {
     /**
      * Constructs a `BitArrayIterator` with the given `BitArray`
@@ -183,8 +183,8 @@ impl<'a, B, T> BitArrayIterator<'a, B, T>
 }
 
 impl<'a, B, T> Iterator for BitArrayIterator<'a, B, T>
-    where B: BitFields,
-          T: BitArray<B>
+    where B: TBitFields,
+          T: TBitArray<B>
 {
     type Item = bool;
 

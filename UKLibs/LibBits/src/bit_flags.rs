@@ -19,22 +19,22 @@ use core::{
     }
 };
 
-use crate::bit_fields::BitFields;
+use crate::bit_fields::TBitFields;
 
 /**
  * Safe wrapper for a bit flags
  */
 #[repr(transparent)]
 pub struct BitFlags<B, T>
-    where B: BitFields + Default + Copy,
-          T: BitFlagsValues {
+    where B: TBitFields + Default + Copy,
+          T: TBitFlagsValues {
     m_raw_bits: B,
     _unused: PhantomData<T>
 }
 
 impl<B, T> BitFlags<B, T>
-    where B: BitFields + Default + Copy,
-          T: BitFlagsValues /* Constructors */
+    where B: TBitFields + Default + Copy,
+          T: TBitFlagsValues /* Constructors */
 {
     /**
      * Constructs a zeroed `BitFlags`
@@ -76,8 +76,8 @@ impl<B, T> BitFlags<B, T>
 }
 
 impl<B, T> BitFlags<B, T>
-    where B: BitFields + Default + Copy,
-          T: BitFlagsValues /* Getters */
+    where B: TBitFields + Default + Copy,
+          T: TBitFlagsValues /* Getters */
 {
     /**
      * Returns whether the bit corresponding to `bit` is enabled
@@ -132,8 +132,8 @@ impl<B, T> BitFlags<B, T>
 }
 
 impl<B, T> BitFlags<B, T>
-    where B: BitFields + Default + Copy,
-          T: BitFlagsValues /* Setters */
+    where B: TBitFields + Default + Copy,
+          T: TBitFlagsValues /* Setters */
 {
     /**
      * Enables the bit corresponding to the given `bit`
@@ -165,8 +165,8 @@ impl<B, T> BitFlags<B, T>
 }
 
 impl<B, T> Clone for BitFlags<B, T>
-    where B: BitFields + Default + Copy,
-          T: BitFlagsValues
+    where B: TBitFields + Default + Copy,
+          T: TBitFlagsValues
 {
     #[inline]
     fn clone(&self) -> Self {
@@ -176,15 +176,15 @@ impl<B, T> Clone for BitFlags<B, T>
 }
 
 impl<B, T> Copy for BitFlags<B, T>
-    where B: BitFields + Default + Copy,
-          T: BitFlagsValues
+    where B: TBitFields + Default + Copy,
+          T: TBitFlagsValues
 {
     /* No methods to implement */
 }
 
 impl<B, T> Default for BitFlags<B, T>
-    where B: BitFields + Default + Copy,
-          T: BitFlagsValues
+    where B: TBitFields + Default + Copy,
+          T: TBitFlagsValues
 {
     fn default() -> Self {
         Self::new_zero()
@@ -192,8 +192,8 @@ impl<B, T> Default for BitFlags<B, T>
 }
 
 impl<B, T> From<B> for BitFlags<B, T>
-    where B: BitFields + Default + Copy,
-          T: BitFlagsValues
+    where B: TBitFields + Default + Copy,
+          T: TBitFlagsValues
 {
     fn from(raw_bits: B) -> Self {
         Self::from_raw_truncate(raw_bits)
@@ -201,8 +201,8 @@ impl<B, T> From<B> for BitFlags<B, T>
 }
 
 impl<B, T> BitOr for BitFlags<B, T>
-    where B: BitFields + Default + Copy + BitOr<Output = B>,
-          T: BitFlagsValues
+    where B: TBitFields + Default + Copy + BitOr<Output = B>,
+          T: TBitFlagsValues
 {
     type Output = Self;
 
@@ -214,8 +214,8 @@ impl<B, T> BitOr for BitFlags<B, T>
 }
 
 impl<B, T> BitOrAssign for BitFlags<B, T>
-    where B: BitFields + Default + Copy + BitOrAssign,
-          T: BitFlagsValues
+    where B: TBitFields + Default + Copy + BitOrAssign,
+          T: TBitFlagsValues
 {
     #[inline]
     fn bitor_assign(&mut self, rhs: Self) {
@@ -224,8 +224,8 @@ impl<B, T> BitOrAssign for BitFlags<B, T>
 }
 
 impl<B, T> BitOr<T> for BitFlags<B, T>
-    where B: BitFields + Default + Copy,
-          T: BitFlagsValues
+    where B: TBitFields + Default + Copy,
+          T: TBitFlagsValues
 {
     type Output = Self;
 
@@ -239,8 +239,8 @@ impl<B, T> BitOr<T> for BitFlags<B, T>
 }
 
 impl<B, T> BitOrAssign<T> for BitFlags<B, T>
-    where B: BitFields + Default + Copy,
-          T: BitFlagsValues
+    where B: TBitFields + Default + Copy,
+          T: TBitFlagsValues
 {
     #[inline]
     fn bitor_assign(&mut self, rhs: T) {
@@ -249,8 +249,8 @@ impl<B, T> BitOrAssign<T> for BitFlags<B, T>
 }
 
 impl<B, T> BitAnd for BitFlags<B, T>
-    where B: BitFields + Default + Copy + BitAnd<Output = B>,
-          T: BitFlagsValues
+    where B: TBitFields + Default + Copy + BitAnd<Output = B>,
+          T: TBitFlagsValues
 {
     type Output = Self;
 
@@ -262,8 +262,8 @@ impl<B, T> BitAnd for BitFlags<B, T>
 }
 
 impl<B, T> BitAndAssign for BitFlags<B, T>
-    where B: BitFields + Default + Copy + BitAndAssign,
-          T: BitFlagsValues
+    where B: TBitFields + Default + Copy + BitAndAssign,
+          T: TBitFlagsValues
 {
     #[inline]
     fn bitand_assign(&mut self, rhs: Self) {
@@ -272,8 +272,8 @@ impl<B, T> BitAndAssign for BitFlags<B, T>
 }
 
 impl<B, T> BitAnd<T> for BitFlags<B, T>
-    where B: BitFields + Default + Copy,
-          T: BitFlagsValues
+    where B: TBitFields + Default + Copy,
+          T: TBitFlagsValues
 {
     type Output = Self;
 
@@ -290,8 +290,8 @@ impl<B, T> BitAnd<T> for BitFlags<B, T>
 }
 
 impl<B, T> BitAndAssign<T> for BitFlags<B, T>
-    where B: BitFields + Default + Copy,
-          T: BitFlagsValues
+    where B: TBitFields + Default + Copy,
+          T: TBitFlagsValues
 {
     #[inline]
     fn bitand_assign(&mut self, rhs: T) {
@@ -300,8 +300,8 @@ impl<B, T> BitAndAssign<T> for BitFlags<B, T>
 }
 
 impl<B, T> BitXor for BitFlags<B, T>
-    where B: BitFields + Default + Copy + BitXor<Output = B>,
-          T: BitFlagsValues
+    where B: TBitFields + Default + Copy + BitXor<Output = B>,
+          T: TBitFlagsValues
 {
     type Output = Self;
 
@@ -313,8 +313,8 @@ impl<B, T> BitXor for BitFlags<B, T>
 }
 
 impl<B, T> BitXorAssign for BitFlags<B, T>
-    where B: BitFields + Default + Copy + BitXorAssign,
-          T: BitFlagsValues
+    where B: TBitFields + Default + Copy + BitXorAssign,
+          T: TBitFlagsValues
 {
     #[inline]
     fn bitxor_assign(&mut self, rhs: Self) {
@@ -323,8 +323,8 @@ impl<B, T> BitXorAssign for BitFlags<B, T>
 }
 
 impl<B, T> BitXor<T> for BitFlags<B, T>
-    where B: BitFields + Default + Copy + BitXor<Output = B>,
-          T: BitFlagsValues
+    where B: TBitFields + Default + Copy + BitXor<Output = B>,
+          T: TBitFlagsValues
 {
     type Output = Self;
 
@@ -339,8 +339,8 @@ impl<B, T> BitXor<T> for BitFlags<B, T>
 }
 
 impl<B, T> BitXorAssign<T> for BitFlags<B, T>
-    where B: BitFields + Default + Copy + BitXorAssign,
-          T: BitFlagsValues
+    where B: TBitFields + Default + Copy + BitXorAssign,
+          T: TBitFlagsValues
 {
     #[inline]
     fn bitxor_assign(&mut self, rhs: T) {
@@ -352,8 +352,8 @@ impl<B, T> BitXorAssign<T> for BitFlags<B, T>
 }
 
 impl<B, T> Not for BitFlags<B, T>
-    where B: BitFields + Default + Copy + Not<Output = B>,
-          T: BitFlagsValues
+    where B: TBitFields + Default + Copy + Not<Output = B>,
+          T: TBitFlagsValues
 {
     type Output = Self;
 
@@ -365,8 +365,8 @@ impl<B, T> Not for BitFlags<B, T>
 }
 
 impl<B, T> PartialEq for BitFlags<B, T>
-    where B: BitFields + Default + Copy + PartialEq,
-          T: BitFlagsValues
+    where B: TBitFields + Default + Copy + PartialEq,
+          T: TBitFlagsValues
 {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
@@ -375,15 +375,15 @@ impl<B, T> PartialEq for BitFlags<B, T>
 }
 
 impl<B, T> Eq for BitFlags<B, T>
-    where B: BitFields + Default + Copy + PartialEq,
-          T: BitFlagsValues
+    where B: TBitFields + Default + Copy + PartialEq,
+          T: TBitFlagsValues
 {
     /* No methods to implement */
 }
 
 impl<B, T> Debug for BitFlags<B, T>
-    where B: BitFields + Default + Copy + Binary,
-          T: BitFlagsValues + Debug
+    where B: TBitFields + Default + Copy + Binary,
+          T: TBitFlagsValues + Debug
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "BitFlags {{ m_bits: ")?;
@@ -420,6 +420,6 @@ impl<B, T> Debug for BitFlags<B, T>
 /**
  * Interface which must be implemented by the enumeration values
  */
-pub trait BitFlagsValues: Copy + Clone + Into<usize> + TryFrom<usize> {
+pub trait TBitFlagsValues: Copy + Clone + Into<usize> + TryFrom<usize> {
     /* No additional methods are requested */
 }

@@ -8,10 +8,10 @@ use num_enum::{
 };
 
 use bits::{
-    bit_fields::BitFields,
+    bit_fields::TBitFields,
     bit_flags::{
         BitFlags,
-        BitFlagsValues
+        TBitFlagsValues
     }
 };
 
@@ -333,6 +333,6 @@ impl SegmentFlagsBits /* Static Functions */ {
     }
 }
 
-impl BitFlagsValues for SegmentFlagsBits {
+impl TBitFlagsValues for SegmentFlagsBits {
     /* No methods to implement */
 }

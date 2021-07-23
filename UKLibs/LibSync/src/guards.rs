@@ -5,7 +5,7 @@
  */
 pub struct LockGuardSendable(());
 
-impl LockGuardShareability for LockGuardSendable {
+impl MTLockGuardShareability for LockGuardSendable {
     /* No methods, just a marker trait */
 }
 
@@ -14,7 +14,7 @@ impl LockGuardShareability for LockGuardSendable {
  */
 pub struct LockGuardNonSendable(*mut ());
 
-impl LockGuardShareability for LockGuardNonSendable {
+impl MTLockGuardShareability for LockGuardNonSendable {
     /* No methods, just a marker trait */
 }
 
@@ -22,6 +22,6 @@ unsafe impl Sync for LockGuardNonSendable {
     /* No methods, just a marker trait */
 }
 
-pub trait LockGuardShareability {
+pub trait MTLockGuardShareability {
     /* No methods, just a marker trait */
 }

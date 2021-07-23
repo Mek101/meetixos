@@ -5,11 +5,11 @@ use core::{
     fmt::Debug
 };
 
-use bits::bit_fields::BitFields;
+use bits::bit_fields::TBitFields;
 
 use crate::{
     addr::phys_addr::PhysAddr,
-    vm::page_table_entry::HwPageTableEntryBase
+    vm::page_table_entry::THwPageTableEntry
 };
 
 /**
@@ -21,7 +21,7 @@ pub struct HwPageTableEntry {
     m_entry_value: usize
 }
 
-impl HwPageTableEntryBase for HwPageTableEntry {
+impl THwPageTableEntry for HwPageTableEntry {
     #[inline]
     fn new() -> Self {
         Self { m_entry_value: 0 }

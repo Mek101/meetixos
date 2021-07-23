@@ -7,7 +7,7 @@ use num_enum::{
 
 use bits::bit_flags::{
     BitFlags,
-    BitFlagsValues
+    TBitFlagsValues
 };
 
 use crate::{
@@ -15,7 +15,7 @@ use crate::{
         types::OsEntityType,
         OsEntityId
     },
-    sys::AsSysCallPtr
+    sys::TAsSysCallPtr
 };
 
 /**
@@ -113,7 +113,7 @@ impl<'a> RawOsEntityConfig<'a> /* Setters */ {
     }
 }
 
-impl<'a> AsSysCallPtr for RawOsEntityConfig<'a> {
+impl<'a> TAsSysCallPtr for RawOsEntityConfig<'a> {
     /* No methods to implement */
 }
 
@@ -136,5 +136,5 @@ pub enum OsEntityConfigBits {
     Admin
 }
 
-impl BitFlagsValues for OsEntityConfigBits {
+impl TBitFlagsValues for OsEntityConfigBits {
 }

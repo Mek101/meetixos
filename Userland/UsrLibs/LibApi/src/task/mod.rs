@@ -4,7 +4,7 @@ use api_data::{
     sys::{
         codes::KernTaskFnId,
         fn_path::KernFnPath,
-        AsSysCallPtr
+        TAsSysCallPtr
     },
     task::{
         exit_status::TaskExitStatus,
@@ -128,7 +128,7 @@ impl TaskHandle /* Privates */ {
  * calling and provides convenient methods to easily perform works that
  * normally implies more than one call
  */
-pub trait Task: From<TaskHandle> {
+pub trait TTask: From<TaskHandle> {
     /**
      * The value of the `TaskType` that matches the implementation
      */

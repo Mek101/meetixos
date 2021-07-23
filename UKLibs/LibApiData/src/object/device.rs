@@ -7,7 +7,7 @@ use num_enum::{
     TryFromPrimitive
 };
 
-use bits::bit_fields::BitFields;
+use bits::bit_fields::TBitFields;
 
 /**
  * `Device` identifier

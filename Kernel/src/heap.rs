@@ -9,13 +9,13 @@ use heap::lazy_locked_heap::LazyLockedHeap;
 use helps::{
     align::align_up,
     dbg::{
-        DisplaySizePretty,
+        TDisplaySizePretty,
         C_MIB
     }
 };
 use sync::mutex::{
     spin_mutex::RawSpinMutex,
-    ConstCreatBackRawMutex
+    TConstCreatBackRawMutex
 };
 
 use crate::{
@@ -23,7 +23,7 @@ use crate::{
     dbg_println,
     vm::{
         Page4KiB,
-        PageSize
+        TPageSize
     }
 };
 

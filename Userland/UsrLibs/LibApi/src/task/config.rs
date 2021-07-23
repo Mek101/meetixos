@@ -6,7 +6,7 @@ use api_data::{
     sys::{
         codes::KernTaskConfigFnId,
         fn_path::KernFnPath,
-        AsSysCallPtr
+        TAsSysCallPtr
     },
     task::{
         config::{
@@ -24,16 +24,16 @@ use api_data::{
 
 use crate::{
     config_mode::{
-        ConfigMode,
         CreatMode,
-        OpenMode
+        OpenMode,
+        TConfigMode
     },
     entity::{
         impls::{
             group::OsGroup,
             user::OsUser
         },
-        OsEntity
+        TOsEntity
     },
     kern_handle::{
         KernHandle,
@@ -41,7 +41,7 @@ use crate::{
     },
     object::{
         impls::file::File,
-        Object
+        TObject
     },
     task::{
         impls::{
@@ -51,7 +51,7 @@ use crate::{
                 Thread
             }
         },
-        Task,
+        TTask,
         TaskHandle
     }
 };
@@ -62,13 +62,13 @@ use crate::{
 #[derive(Debug)]
 #[derive(Copy, Clone)]
 pub struct TaskConfig<'a, T, M>
-    where T: Task,
-          M: ConfigMode {
+    where T: TTask,
+          M: TConfigMode {
     m_raw_config: RawTaskConfig<'a>,
     _unused: PhantomData<(T, M)>
 }
 
-impl<'a, T> TaskConfig<'a, T, CreatMode> where T: Task /* Constructors */ {
+impl<'a, T> TaskConfig<'a, T, CreatMode> where T: TTask /* Constructors */ {
     /**
      * Constructs `TaskConfig` for `Task` spawning
      */
@@ -78,7 +78,7 @@ impl<'a, T> TaskConfig<'a, T, CreatMode> where T: Task /* Constructors */ {
     }
 }
 
-impl<'a, T> TaskConfig<'a, T, OpenMode> where T: Task /* Constructors */ {
+impl<'a, T> TaskConfig<'a, T, OpenMode> where T: TTask /* Constructors */ {
     /**
      * Constructs a `TaskConfig` for `Task` opening
      */
@@ -88,7 +88,7 @@ impl<'a, T> TaskConfig<'a, T, OpenMode> where T: Task /* Constructors */ {
     }
 }
 
-impl<'a, T> TaskConfig<'a, T, OpenMode> where T: Task /* Methods */ {
+impl<'a, T> TaskConfig<'a, T, OpenMode> where T: TTask /* Methods */ {
     /**
      * Dispatches the configuration to the kernel to find the desired `Task`
      */
@@ -130,8 +130,8 @@ impl<'a> TaskConfig<'a, Thread, CreatMode> /* Methods */ {
 }
 
 impl<'a, T, M> TaskConfig<'a, T, M>
-    where T: Task,
-          M: ConfigMode /* Setters */
+    where T: TTask,
+          M: TConfigMode /* Setters */
 {
     /**
      * Sets the explicit `TaskId` for creation or for opening
@@ -142,7 +142,7 @@ impl<'a, T, M> TaskConfig<'a, T, M>
     }
 }
 
-impl<'a, T> TaskConfig<'a, T, CreatMode> where T: Task /* Setters */ {
+impl<'a, T> TaskConfig<'a, T, CreatMode> where T: TTask /* Setters */ {
     /**
      * Enables cooperative scheduling for the new `Task`
      */
@@ -209,7 +209,7 @@ impl<'a> TaskConfig<'a, Proc, CreatMode> /* Setters */ {
     }
 }
 
-impl<'a, M> TaskConfig<'a, Thread, M> where M: ConfigMode /* Setters */ {
+impl<'a, M> TaskConfig<'a, Thread, M> where M: TConfigMode /* Setters */ {
     /**
      * Sets the name to the new thread or for searching
      */
@@ -220,8 +220,8 @@ impl<'a, M> TaskConfig<'a, Thread, M> where M: ConfigMode /* Setters */ {
 }
 
 impl<'a, T, M> TaskConfig<'a, T, M>
-    where T: Task,
-          M: ConfigMode /* Privates */
+    where T: TTask,
+          M: TConfigMode /* Privates */
 {
     /**
      * Dispatches the configuration to the kernel

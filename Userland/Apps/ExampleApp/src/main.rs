@@ -5,7 +5,7 @@ use mx_std::{
     kern_handle::Result,
     object::{
         impls::file::File,
-        UserCreatableObject
+        TUserCreatableObject
     },
     path::Path
 };

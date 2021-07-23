@@ -1,8 +1,8 @@
 /*! riscv Kernel function call */
 
 use api_data::sys::{
-    AsSysCallPtr,
-    SysCallPayload
+    SysCallPayload,
+    TAsSysCallPtr
 };
 
 /**

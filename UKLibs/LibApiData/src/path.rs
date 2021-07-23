@@ -12,7 +12,7 @@ use alloc::string::{
 
 use crate::{
     object::types::ObjType,
-    sys::AsSysCallPtr
+    sys::TAsSysCallPtr
 };
 
 /**
@@ -49,7 +49,7 @@ pub enum PathExistsState {
     EmptyPath
 }
 
-impl AsSysCallPtr for PathExistsState {
+impl TAsSysCallPtr for PathExistsState {
     /* No methods to implement */
 }
 

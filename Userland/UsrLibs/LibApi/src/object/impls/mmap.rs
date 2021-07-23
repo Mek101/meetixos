@@ -26,12 +26,12 @@ use api_data::{
 use crate::{
     kern_handle::Result,
     object::{
-        AnonymousObject,
-        ExecutableDataObject,
+        MTAnonymousObject,
+        MTExecutableDataObject,
+        MTSizeableDataObject,
         ObjHandle,
-        Object,
-        SizeableDataObject,
-        UserCreatableObject
+        TObject,
+        TUserCreatableObject
     }
 };
 
@@ -148,7 +148,7 @@ impl From<ObjHandle> for MMap {
     }
 }
 
-impl Object for MMap {
+impl TObject for MMap {
     const TYPE: ObjType = ObjType::MMap;
 
     fn obj_handle(&self) -> &ObjHandle {
@@ -160,19 +160,19 @@ impl Object for MMap {
     }
 }
 
-impl UserCreatableObject for MMap {
+impl TUserCreatableObject for MMap {
     /* No methods to implement */
 }
 
-impl ExecutableDataObject for MMap {
+impl MTExecutableDataObject for MMap {
     /* No methods to implement */
 }
 
-impl SizeableDataObject for MMap {
+impl MTSizeableDataObject for MMap {
     /* No methods to implement */
 }
 
-impl AnonymousObject for MMap {
+impl MTAnonymousObject for MMap {
     /* No methods to implement */
 }
 

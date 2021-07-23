@@ -5,12 +5,12 @@ use core::{
     ops::Deref
 };
 
-use bits::bit_fields::BitFields;
+use bits::bit_fields::TBitFields;
 
 use crate::{
     addr::{
-        virt_addr::HwVirtAddrBase,
-        HwAddrBase
+        virt_addr::THwVirtAddr,
+        THwAddr
     },
     vm::page_table::{
         PageTableIndex,
@@ -32,7 +32,7 @@ pub struct HwVirtAddr {
     m_raw_virt_addr: usize
 }
 
-impl HwVirtAddrBase for HwVirtAddr {
+impl THwVirtAddr for HwVirtAddr {
     fn from_4kib_indexes(l4_index: PageTableIndex,
                          l3_index: PageTableIndex,
                          l2_index: PageTableIndex,
@@ -69,7 +69,7 @@ impl HwVirtAddrBase for HwVirtAddr {
     }
 }
 
-impl HwAddrBase for HwVirtAddr {
+impl THwAddr for HwVirtAddr {
     const MAX: Self = Self { m_raw_virt_addr: 0x0000_ffff_ffff_ffff };
 }
 

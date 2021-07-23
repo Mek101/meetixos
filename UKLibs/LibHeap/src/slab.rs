@@ -3,8 +3,8 @@
 use core::ptr::NonNull;
 
 use crate::{
-    HeapPool,
-    PreferredExtendSize
+    THeapPool,
+    TPreferredExtendSize
 };
 
 /**
@@ -73,7 +73,7 @@ impl<const BLOCK_SIZE: usize> Slab<BLOCK_SIZE> /* Getters */ {
     }
 }
 
-impl<const BLOCK_SIZE: usize> HeapPool for Slab<BLOCK_SIZE> {
+impl<const BLOCK_SIZE: usize> THeapPool for Slab<BLOCK_SIZE> {
     unsafe fn add_region(&mut self,
                          start_area_ptr: NonNull<u8>,
                          area_size: usize)
@@ -103,7 +103,7 @@ impl<const BLOCK_SIZE: usize> HeapPool for Slab<BLOCK_SIZE> {
     }
 }
 
-impl<const BLOCK_SIZE: usize> PreferredExtendSize for Slab<BLOCK_SIZE> {
+impl<const BLOCK_SIZE: usize> TPreferredExtendSize for Slab<BLOCK_SIZE> {
     const PREFERRED_EXTEND_SIZE: usize = BLOCK_SIZE * 4; /* at least 4 block for each extension */
 }
 

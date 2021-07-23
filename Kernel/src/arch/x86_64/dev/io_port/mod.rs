@@ -2,7 +2,7 @@
 
 use core::marker::PhantomData;
 
-use crate::arch::x86_64::dev::io_port::impls::HwIOPort;
+use crate::arch::x86_64::dev::io_port::impls::THwIOPort;
 
 pub mod impls;
 
@@ -11,12 +11,12 @@ pub mod impls;
  */
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct IOPort<T>
-    where T: HwIOPort {
+    where T: THwIOPort {
     m_port: u16,
     _unused: PhantomData<T>
 }
 
-impl<T> IOPort<T> where T: HwIOPort {
+impl<T> IOPort<T> where T: THwIOPort {
     /**
      * Constructs an `IOPort` which read and writes on the given `port`
      */

@@ -9,8 +9,8 @@ use core::{
 };
 
 use crate::mutex::{
-    BackRawMutex,
-    Mutex
+    Mutex,
+    TBackRawMutex
 };
 
 /**
@@ -23,14 +23,14 @@ use crate::mutex::{
  */
 #[must_use = "if unused the Mutex will immediately unlock"]
 pub struct MutexDataGuard<'a, R, T>
-    where R: BackRawMutex,
+    where R: TBackRawMutex,
           T: ?Sized {
     m_mutex: &'a Mutex<R, T>,
     m_security: PhantomData<(&'a mut T, R::LockGuardShareabilityMark)>
 }
 
 impl<'a, R, T> MutexDataGuard<'a, R, T>
-    where R: BackRawMutex + 'a,
+    where R: TBackRawMutex + 'a,
           T: ?Sized + 'a /* Constructors */
 {
     /**
@@ -43,7 +43,7 @@ impl<'a, R, T> MutexDataGuard<'a, R, T>
 }
 
 impl<'a, R, T> MutexDataGuard<'a, R, T>
-    where R: BackRawMutex + 'a,
+    where R: TBackRawMutex + 'a,
           T: ?Sized + 'a /* Getters */
 {
     /**
@@ -55,7 +55,7 @@ impl<'a, R, T> MutexDataGuard<'a, R, T>
 }
 
 impl<'a, R, T> Deref for MutexDataGuard<'a, R, T>
-    where R: BackRawMutex + 'a,
+    where R: TBackRawMutex + 'a,
           T: ?Sized + 'a
 {
     type Target = T;
@@ -67,7 +67,7 @@ impl<'a, R, T> Deref for MutexDataGuard<'a, R, T>
 }
 
 impl<'a, R, T> DerefMut for MutexDataGuard<'a, R, T>
-    where R: BackRawMutex + 'a,
+    where R: TBackRawMutex + 'a,
           T: ?Sized + 'a
 {
     #[inline]
@@ -77,7 +77,7 @@ impl<'a, R, T> DerefMut for MutexDataGuard<'a, R, T>
 }
 
 impl<'a, R, T> Drop for MutexDataGuard<'a, R, T>
-    where R: BackRawMutex + 'a,
+    where R: TBackRawMutex + 'a,
           T: ?Sized + 'a
 {
     #[inline]
@@ -89,7 +89,7 @@ impl<'a, R, T> Drop for MutexDataGuard<'a, R, T>
 }
 
 unsafe impl<'a, R, T> Sync for MutexDataGuard<'a, R, T>
-    where R: BackRawMutex + Sync + 'a,
+    where R: TBackRawMutex + Sync + 'a,
           T: ?Sized + Sync + 'a
 {
     /* No methods, just a marker trait */

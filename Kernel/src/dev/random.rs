@@ -39,7 +39,7 @@ impl Random /* Methods */ {
  * Interface on which `Random` relies to perform random number generation
  * using hardware acceleration
  */
-pub trait HwRandomBase {
+pub trait THwRandom {
     /**
      * Constructs an `HwRandom`
      */

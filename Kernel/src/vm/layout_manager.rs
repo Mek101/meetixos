@@ -13,14 +13,14 @@ use helps::{
         align_down,
         align_up
     },
-    dbg::DisplaySizePretty
+    dbg::TDisplaySizePretty
 };
 
 use crate::{
     addr::{
         phys_addr::PhysAddr,
         virt_addr::VirtAddr,
-        Address
+        TAddress
     },
     dbg_print::DbgLevel,
     dbg_println,
@@ -28,7 +28,7 @@ use crate::{
     vm::{
         Page2MiB,
         Page4KiB,
-        PageSize
+        TPageSize
     }
 };
 

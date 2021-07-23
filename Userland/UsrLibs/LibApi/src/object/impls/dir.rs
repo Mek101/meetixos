@@ -9,7 +9,7 @@ use api_data::{
     sys::{
         codes::KernDirFnId,
         fn_path::KernFnPath,
-        AsSysCallPtr
+        TAsSysCallPtr
     }
 };
 
@@ -17,8 +17,8 @@ use crate::{
     kern_handle::Result,
     object::{
         ObjHandle,
-        Object,
-        UserCreatableObject
+        TObject,
+        TUserCreatableObject
     }
 };
 
@@ -84,7 +84,7 @@ impl From<ObjHandle> for Dir {
     }
 }
 
-impl Object for Dir {
+impl TObject for Dir {
     const TYPE: ObjType = ObjType::Dir;
 
     fn obj_handle(&self) -> &ObjHandle {
@@ -96,6 +96,6 @@ impl Object for Dir {
     }
 }
 
-impl UserCreatableObject for Dir {
+impl TUserCreatableObject for Dir {
     /* No methods to implement */
 }

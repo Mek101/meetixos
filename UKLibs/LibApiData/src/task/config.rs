@@ -9,13 +9,13 @@ use num_enum::{
 
 use bits::bit_flags::{
     BitFlags,
-    BitFlagsValues
+    TBitFlagsValues
 };
 
 use crate::{
     entity::RawOsEntityHandle,
     object::RawObjHandle,
-    sys::AsSysCallPtr,
+    sys::TAsSysCallPtr,
     task::{
         modes::TaskExecCpu,
         thread::{
@@ -260,7 +260,7 @@ impl<'a> RawTaskConfig<'a> /* Setters */ {
     }
 }
 
-impl<'a> AsSysCallPtr for RawTaskConfig<'a> {
+impl<'a> TAsSysCallPtr for RawTaskConfig<'a> {
     /* No methods to implement */
 }
 
@@ -306,5 +306,5 @@ pub enum TaskConfigBits {
     StartPaused
 }
 
-impl BitFlagsValues for TaskConfigBits {
+impl TBitFlagsValues for TaskConfigBits {
 }

@@ -8,7 +8,7 @@ pub mod u8;
  * Interface on which `IOPort` relies to read/write from the port of the
  * generic type selected
  */
-pub trait HwIOPort {
+pub trait THwIOPort {
     /**
      * Reads a `Self` value from the given port.
      */

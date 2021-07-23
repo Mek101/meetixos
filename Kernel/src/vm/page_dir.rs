@@ -9,7 +9,7 @@ use crate::{
     addr::{
         phys_addr::PhysAddr,
         virt_addr::VirtAddr,
-        Address
+        TAddress
     },
     arch::vm::hw_page_dir::HwPageDir,
     vm::{
@@ -21,7 +21,7 @@ use crate::{
         },
         page_table_entry::PageTableEntry,
         Page4KiB,
-        PageSize
+        TPageSize
     }
 };
 
@@ -55,7 +55,7 @@ impl PageDir /* Methods */ {
     pub fn ensure_page_table_entry<S>(&self,
                                       virt_addr: VirtAddr)
                                       -> Option<&mut PageTableEntry>
-        where S: PageSize {
+        where S: TPageSize {
         if virt_addr.is_aligned(S::SIZE) {
             let l4_page_table = self.root_page_table();
 
@@ -225,7 +225,7 @@ impl Debug for PageDir {
     }
 }
 
-pub trait HwPageDirBase: Debug {
+pub trait THwPageDir: Debug {
     fn from_phys_frame(phys_frame: PhysAddr) -> Self;
 
     fn current() -> Self;

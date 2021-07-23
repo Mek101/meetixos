@@ -12,8 +12,8 @@ use crate::{
     kern_handle::Result,
     object::{
         ObjHandle,
-        Object,
-        UserCreatableObject
+        TObject,
+        TUserCreatableObject
     }
 };
 
@@ -60,7 +60,7 @@ impl Link /* Methods */ {
      * Bind of anonymous `Object`s causes the return with an error
      */
     pub fn bind_to<T>(&self, obj_to_bind: &T) -> Result<()>
-        where T: Object {
+        where T: TObject {
         self.obj_handle()
             .kern_handle()
             .inst_kern_call_1(KernFnPath::Link(KernLinkFnId::BindTo),
@@ -76,7 +76,7 @@ impl From<ObjHandle> for Link {
     }
 }
 
-impl Object for Link {
+impl TObject for Link {
     const TYPE: ObjType = ObjType::Link;
 
     fn obj_handle(&self) -> &ObjHandle {
@@ -88,6 +88,6 @@ impl Object for Link {
     }
 }
 
-impl UserCreatableObject for Link {
+impl TUserCreatableObject for Link {
     /* No methods to implement */
 }

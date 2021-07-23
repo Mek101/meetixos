@@ -98,7 +98,7 @@ impl OsEntityHandle /* Privates */ {
  * It mainly exposes the private methods of the `OsEntityHandle` for safe
  * calling
  */
-pub trait OsEntity: From<OsEntityHandle> + Default {
+pub trait TOsEntity: From<OsEntityHandle> + Default {
     /**
      * Value of the `OsEntityType` that matches the implementation
      */

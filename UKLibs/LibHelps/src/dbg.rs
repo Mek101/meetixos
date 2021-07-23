@@ -22,7 +22,7 @@ pub const C_GIB: usize = C_MIB * C_KIB;
  */
 pub const C_TIB: usize = C_GIB * C_KIB;
 
-impl DisplaySizePretty for usize {
+impl TDisplaySizePretty for usize {
     fn display_pretty(&self) -> DbgDisplayFmtSize {
         DbgDisplayFmtSize::new(*self)
     }
@@ -32,7 +32,7 @@ impl DisplaySizePretty for usize {
  * Returns a `fmt::Display` implementation to print the value as size
  * multiplier
  */
-pub trait DisplaySizePretty {
+pub trait TDisplaySizePretty {
     /**
      * Returns a `fmt::Display` implementation to print the value as size
      * multiplier

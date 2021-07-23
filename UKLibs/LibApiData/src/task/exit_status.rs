@@ -2,7 +2,7 @@
 
 use crate::{
     error::OsError,
-    sys::AsSysCallPtr
+    sys::TAsSysCallPtr
 };
 
 /**
@@ -27,7 +27,7 @@ pub enum TaskExitStatus {
     WithError(OsError)
 }
 
-impl AsSysCallPtr for TaskExitStatus {
+impl TAsSysCallPtr for TaskExitStatus {
     /* No methods to implement */
 }
 

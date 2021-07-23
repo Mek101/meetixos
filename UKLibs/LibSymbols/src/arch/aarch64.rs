@@ -1,13 +1,13 @@
 /*! aarch64 code implementation */
 
-use crate::stack_back_trace::HwTracerHelperBase;
+use crate::stack_back_trace::THwTracerHelper;
 
 /**
  * aarch64 `HwTracerHelperBase` implementation
  */
 pub struct HwTracerHelper;
 
-impl HwTracerHelperBase for HwTracerHelper {
+impl THwTracerHelper for HwTracerHelper {
     const PREV_FRAME_PTR_OFFSET: isize = 0;
     const PREV_RETURN_PTR_OFFSET: isize = 1;
 

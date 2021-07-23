@@ -125,7 +125,7 @@ impl BootInfo /* Getters */ {
  * Base interface on which the `BootInfo` relies to obtain the necessary
  * information from the architecture dependent structure of boot-information
  */
-pub trait HwBootInfoBase: From<*const u8> {
+pub trait THwBootInfo: From<*const u8> {
     /**
      * Returns the bootloader-name string
      */

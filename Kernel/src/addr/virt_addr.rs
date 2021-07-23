@@ -12,8 +12,8 @@ use core::{
 
 use crate::{
     addr::{
-        Address,
-        HwAddrBase
+        TAddress,
+        THwAddr
     },
     arch::addr::hw_virt_addr::HwVirtAddr,
     vm::page_table::{
@@ -102,7 +102,7 @@ impl VirtAddr /* Getters */ {
     }
 }
 
-impl Address for VirtAddr {
+impl TAddress for VirtAddr {
     const MAX: Self = Self { m_hw_virt_addr: HwVirtAddr::MAX };
 }
 
@@ -183,7 +183,7 @@ impl Step for VirtAddr {
     }
 }
 
-pub trait HwVirtAddrBase: HwAddrBase {
+pub trait THwVirtAddr: THwAddr {
     fn from_4kib_indexes(l4_index: PageTableIndex,
                          l3_index: PageTableIndex,
                          l2_index: PageTableIndex,
