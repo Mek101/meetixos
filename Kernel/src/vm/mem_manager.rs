@@ -15,10 +15,7 @@ use bits::bit_fields::{
     TBitFields
 };
 use helps::dbg::TDisplaySizePretty;
-use sync::mutex::{
-    spin_mutex::RawSpinMutex,
-    Mutex
-};
+use sync::SpinMutex;
 
 use crate::{
     addr::{
@@ -51,7 +48,7 @@ static mut SM_MEM_MANAGER: Option<MemManager> = None;
  */
 pub struct MemManager {
     m_layout_manager: LayoutManager,
-    m_phys_frames_bitmap: Mutex<RawSpinMutex, &'static mut [u8]>,
+    m_phys_frames_bitmap: SpinMutex<&'static mut [u8]>,
     m_mem_manager_stats: MemManagerStats,
     m_kernel_page_dir: PageDir
 }
@@ -111,11 +108,12 @@ impl MemManager /* Constructors */ {
 
         /* initialize the global instance */
         let mm_inst = unsafe {
-            SM_MEM_MANAGER = Some(Self { m_layout_manager: layout_manager,
-                                         m_phys_frames_bitmap:
-                                             Mutex::const_new(phys_frames_bitmap.leak()),
-                                         m_mem_manager_stats: mem_manager_stats,
-                                         m_kernel_page_dir: PageDir::pre_phys_mapping() });
+            SM_MEM_MANAGER =
+                Some(Self { m_layout_manager: layout_manager,
+                            m_phys_frames_bitmap:
+                                SpinMutex::const_new(phys_frames_bitmap.leak()),
+                            m_mem_manager_stats: mem_manager_stats,
+                            m_kernel_page_dir: PageDir::pre_phys_mapping() });
             SM_MEM_MANAGER.as_mut().unwrap()
         };
 
