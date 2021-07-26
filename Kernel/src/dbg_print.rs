@@ -205,11 +205,17 @@ pub fn dbg_do_print(args: fmt::Arguments<'_>, dbg_level: DbgLevel, module_path: 
            args).expect("Failed to print to UART debug device");
 }
 
+/**
+ * Implements `fmt::Write` for `TUartDevice`
+ */
 pub struct DbgWriter {
     m_uart_device: &'static dyn TUartDevice
 }
 
 impl DbgWriter /* Constructors */ {
+    /**
+     * Constructs a `DbgWriter` which leaks a reference to the given device
+     */
     fn new(device_driver: Arc<dyn TDevice>) -> Self {
         let device_driver = Arc::clone(&device_driver);
         let leaked_device_driver_ptr = Arc::as_ptr(&device_driver);

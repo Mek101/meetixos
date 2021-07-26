@@ -10,9 +10,11 @@ use crate::{
 
 pub mod hw_random;
 pub mod hw_uart;
-pub mod io_port;
 
 impl DevManager /* Methods */ {
+    /**
+     * Registers the early and fundamental device drivers
+     */
     pub fn register_early_devices(&self) {
         /* register RDRAND device */
         assert!(self.register_device(X64RdRandRandom::new(0)),

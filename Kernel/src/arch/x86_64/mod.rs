@@ -9,5 +9,6 @@ pub mod hw_cpu;
 pub mod idt;
 pub mod tss;
 pub mod vm;
+pub mod x64_port;
 
 global_asm!(include_str!("kernel_start.S"), options(att_syntax));

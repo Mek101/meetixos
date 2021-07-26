@@ -23,7 +23,7 @@ use bits::bit_flags::{
 use sync::SpinMutex;
 
 use crate::{
-    arch::x86_64::dev::io_port::IOPort,
+    arch::x86_64::x64_port::X64Port,
     dev::{
         uart::TUartDevice,
         TDevice
@@ -35,12 +35,12 @@ use crate::{
  */
 pub struct X64Serial16550Uart {
     m_device_id: DeviceId,
-    m_data: IOPort<u8>,
-    m_intr_enabled: IOPort<u8>,
-    m_fifo_ctrl: IOPort<u8>,
-    m_line_ctrl: IOPort<u8>,
-    m_modem_ctrl: IOPort<u8>,
-    m_line_status: IOPort<u8>,
+    m_data: X64Port<u8>,
+    m_intr_enabled: X64Port<u8>,
+    m_fifo_ctrl: X64Port<u8>,
+    m_line_ctrl: X64Port<u8>,
+    m_modem_ctrl: X64Port<u8>,
+    m_line_status: X64Port<u8>,
     m_writer: SpinMutex<X64Serial16550UartWriter>
 }
 
@@ -85,12 +85,12 @@ impl X64Serial16550Uart /* Constructors */ {
         Self { m_device_id: DeviceId::new(DeviceIdType::Character,
                                           DeviceIdClass::Uart,
                                           com_port_number),
-               m_data: IOPort::new(serial_base),
-               m_intr_enabled: IOPort::new(serial_base + 1),
-               m_fifo_ctrl: IOPort::new(serial_base + 2),
-               m_line_ctrl: IOPort::new(serial_base + 3),
-               m_modem_ctrl: IOPort::new(serial_base + 4),
-               m_line_status: IOPort::new(serial_base + 5),
+               m_data: X64Port::new(serial_base),
+               m_intr_enabled: X64Port::new(serial_base + 1),
+               m_fifo_ctrl: X64Port::new(serial_base + 2),
+               m_line_ctrl: X64Port::new(serial_base + 3),
+               m_modem_ctrl: X64Port::new(serial_base + 4),
+               m_line_status: X64Port::new(serial_base + 5),
                m_writer: SpinMutex::const_new(X64Serial16550UartWriter) }
     }
 }
@@ -188,7 +188,7 @@ impl TUartDevice for X64Serial16550Uart {
 }
 
 /**
- * Writer proxy used to write thread-safe to the serial port
+ * Writer proxy used to write in a thread-safe manner to the serial port
  */
 struct X64Serial16550UartWriter;
 
