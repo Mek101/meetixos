@@ -3,6 +3,7 @@
 use alloc::vec::Vec;
 
 use api_data::{
+    entity::OsEntityId,
     sys::{
         codes::KernProcFnId,
         fn_path::KernFnPath
@@ -50,6 +51,26 @@ pub struct Proc {
 }
 
 impl Proc /* Methods */ {
+    /**
+     * Returns the `OsEntityId` of the `OsUser` which owns this `Proc`ess
+     */
+    pub fn os_user(&self) -> Result<OsEntityId> {
+        self.task_handle()
+            .kern_handle()
+            .inst_kern_call_0(KernFnPath::Proc(KernProcFnId::OsUser))
+            .map(|os_entity_id| os_entity_id as OsEntityId)
+    }
+
+    /**
+     * Returns the `OsEntityId` of the `OsGroup` which owns this `Proc`ess
+     */
+    pub fn os_group(&self) -> Result<OsEntityId> {
+        self.task_handle()
+            .kern_handle()
+            .inst_kern_call_0(KernFnPath::Proc(KernProcFnId::OsGroup))
+            .map(|os_entity_id| os_entity_id as OsEntityId)
+    }
+
     /**
      * Returns the current workdir of the `Proc`
      */

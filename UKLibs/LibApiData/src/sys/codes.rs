@@ -282,6 +282,8 @@ pub enum KernOsGroupFnId {
 #[derive(PartialOrd, Ord)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum KernProcFnId {
+    OsUser,
+    OsGroup,
     GetWorkDir,
     SetWorkDir,
     MainThread,
