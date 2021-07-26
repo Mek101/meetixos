@@ -5,7 +5,8 @@
            panic_info_message,
            const_fn_trait_bound,
            step_trait,
-           alloc_error_handler)]
+           alloc_error_handler,
+           const_btree_new)]
 #![allow(dead_code)]
 
 #[macro_use]
@@ -42,20 +43,16 @@ pub extern "C" fn kernel_rust_start(raw_boot_info_ptr: *const u8) -> ! {
     /* initialize the global instance of the boot boot structure */
     BootInfo::init_instance(raw_boot_info_ptr);
 
-    /* early initialize the device-manager, which initializes the fundamental
-     * drivers, like the serial for debug printing. This is because this step
-     * is done before <dbg_print_init()>
-     */
+    /* initialize the kernel heap since the DevManager could use it */
+    kernel_heap_init();
+
+    /* initializes the fundamental drivers, like the serial for debug printing */
     DevManager::early_init();
 
     /* initialize debug printing and print the header */
     dbg_print_init();
     dbg_println!(DbgLevel::Info, "MeetiX Kernel v{} is Booting...", KERNEL_VERSION);
     dbg_println!(DbgLevel::Info, "An Open Source OS Project written in Rust");
-
-    /* initialize the kernel heap */
-    dbg_println!(DbgLevel::Trace, "Initializing Kernel Heap...");
-    kernel_heap_init();
 
     /* initialize the kernel symbols */
     dbg_println!(DbgLevel::Trace, "Initializing Kernel Symbols...");

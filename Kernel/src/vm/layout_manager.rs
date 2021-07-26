@@ -24,13 +24,17 @@ use crate::{
     },
     dbg_print::DbgLevel,
     dbg_println,
-    dev::random::Random,
+    dev::{
+        DevManager,
+        TDevice
+    },
     vm::{
         Page2MiB,
         Page4KiB,
         TPageSize
     }
 };
+use api_data::object::device::DeviceIdClass;
 
 extern "C" {
     static __kernel_text_begin: usize;
@@ -334,7 +338,14 @@ impl LayoutManager /* Privates */ {
      */
     fn randomize_components(sized_layout_components: &Vec<LayoutComponent>)
                             -> Vec<LayoutComponent> {
-        let random_gen = Random::new();
+        /* obtain the random device */
+        let random_generic_device =
+            DevManager::instance().device_by_class(DeviceIdClass::Random)
+                                  .expect("No random driver registered");
+        let random_device =
+            random_generic_device.as_random()
+                                 .expect("DevManager returned a NON-random device for \
+                                          DeviceIdClass::Random device");
 
         /* keep a bitmap of the extracted components */
         let mut extracted_components = [false; LayoutComponent::COUNT];
@@ -346,7 +357,7 @@ impl LayoutManager /* Privates */ {
         let last_shrinkable_component = {
             /* extract the first available shrinkable component */
             let component_index =
-                random_gen.generate_u64() as usize % LayoutComponent::SHRINKABLES.len();
+                random_device.random_u64() as usize % LayoutComponent::SHRINKABLES.len();
 
             /* extract the LayoutComponent from the SHRINKABLES, then return the same
              * LayoutComponent but with the valid size
@@ -366,7 +377,7 @@ impl LayoutManager /* Privates */ {
             loop {
                 /* generate the next random number */
                 let next_index =
-                    random_gen.generate_u64() as usize % sized_layout_components.len();
+                    random_device.random_u64() as usize % sized_layout_components.len();
 
                 /* mark as extracted */
                 if !extracted_components[next_index] {

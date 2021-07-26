@@ -83,7 +83,8 @@ QEMU_ARGS     ?= -m 64M -serial stdio
 QEMU_GDB_ARGS ?= -m 64M
 
 ifeq ($(ARCH), x86_64)
-    QEMU_ARGS += -cpu IvyBridge
+    QEMU_ARGS     += -cpu IvyBridge
+    QEMU_GDB_ARGS += -cpu IvyBridge
 endif
 
 #

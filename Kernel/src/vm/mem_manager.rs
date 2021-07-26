@@ -69,13 +69,12 @@ impl MemManager /* Constructors */ {
         }
 
         /* construct the LayoutManager */
-        let layout_manager =
-            if let Some(_) = boot_info.cmd_line_find_arg("-plain-vm-layout") {
-                dbg_println!(DbgLevel::Warn, "Disabled kernel layout randomization");
-                LayoutManager::new_plain(*last_phys_mem_addr)
-            } else {
-                LayoutManager::new_randomized(*last_phys_mem_addr)
-            };
+        let layout_manager = if boot_info.cmd_line_arg_exists("-plain-vm-layout") {
+            dbg_println!(DbgLevel::Warn, "Disabled kernel layout randomization");
+            LayoutManager::new_plain(*last_phys_mem_addr)
+        } else {
+            LayoutManager::new_randomized(*last_phys_mem_addr)
+        };
 
         /* allocate the physical frames bitmap filled with zeroes */
         let phys_frames_bitmap_requested_pages =

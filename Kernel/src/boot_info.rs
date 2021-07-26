@@ -11,6 +11,7 @@ use crate::{
     addr::phys_addr::PhysAddr,
     arch::hw_boot_info::HwBootInfo
 };
+use core::str::FromStr;
 
 /* Global BootInfo instance which will live for all the kernel's life */
 static mut SM_BOOT_INFORMATION: Option<BootInfo> = None;
@@ -66,6 +67,16 @@ impl BootInfo /* Constructors */ {
 
 impl BootInfo /* Methods */ {
     /**
+     * Returns whether the given key exists into the command line
+     */
+    pub fn cmd_line_arg_exists(&self, key_to_search: &str) -> bool {
+        self.cmd_line_args()
+            .split_whitespace()
+            .find(|arg_str| arg_str.contains(key_to_search))
+            .is_some()
+    }
+
+    /**
      * Searches for a command line option with the given `key_to_search`.
      *
      * If it founds the key returns the key and, if any, the option after
@@ -82,6 +93,34 @@ impl BootInfo /* Methods */ {
                     (arg_str, None)
                 }
             })
+    }
+
+    /**
+     * Searches for a command line option with the given `key_to_search`.
+     *
+     * If it founds the key returns the key and, if any, the option after
+     * the `=` as `usize` value
+     */
+    pub fn cmd_line_find_arg_int(&self,
+                                 key_to_search: &str)
+                                 -> Option<(&str, Option<usize>)> {
+        self.cmd_line_find_arg(key_to_search).map(|(key, value_opt)| {
+                                                 let int_value =
+                                                     value_opt.map(|str_value| {
+                                                                  if let Ok(int_value) =
+                                                             usize::from_str(str_value)
+                                                         {
+                                                             int_value
+                                                         } else {
+                                                             panic!("invalid integer \
+                                                                     for `{}`: {}",
+                                                                    key_to_search,
+                                                                    str_value)
+                                                         }
+                                                              });
+
+                                                 (key, int_value)
+                                             })
     }
 }
 

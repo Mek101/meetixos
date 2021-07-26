@@ -14,22 +14,24 @@ pub mod io_port;
 
 impl DevManager /* Methods */ {
     pub fn register_early_devices(&self) {
-        let rdrand_device_driver =
-            X64RdRandRandom::try_new(0).expect("Unsupported RDRAND instruction");
-        let serial_com1_device_driver = X64Serial16550Uart::new(0x3f8);
-        let serial_com2_device_driver = X64Serial16550Uart::new(0x2e8);
-        let serial_com3_device_driver = X64Serial16550Uart::new(0x2f8);
-        let serial_com4_device_driver = X64Serial16550Uart::new(0x3e8);
-
-        assert!(self.register_device(rdrand_device_driver),
+        /* register RDRAND device */
+        assert!(self.register_device(X64RdRandRandom::new(0)),
                 "Failed to register RDRAND driver");
-        assert!(self.register_device(serial_com1_device_driver),
+
+        /* register COM1 serial device */
+        assert!(self.register_device(X64Serial16550Uart::new_com1()),
                 "Failed to register Serial COM1 driver");
-        assert!(self.register_device(serial_com2_device_driver),
+
+        /* register COM2 serial device */
+        assert!(self.register_device(X64Serial16550Uart::new_com2()),
                 "Failed to register Serial COM2 driver");
-        assert!(self.register_device(serial_com3_device_driver),
+
+        /* register COM3 serial device */
+        assert!(self.register_device(X64Serial16550Uart::new_com3()),
                 "Failed to register Serial COM3 driver");
-        assert!(self.register_device(serial_com4_device_driver),
+
+        /* register COM4 serial device */
+        assert!(self.register_device(X64Serial16550Uart::new_com4()),
                 "Failed to register Serial COM4 driver");
     }
 }

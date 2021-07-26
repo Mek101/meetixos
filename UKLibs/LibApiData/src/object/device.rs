@@ -28,10 +28,10 @@ impl DeviceId /* Constructors */ {
     /**
      * Constructs a `DeviceId` from the given parameters
      */
-    pub fn new(device_type: DeviceIdType,
-               device_class: DeviceIdClass,
-               serial_value: u32)
-               -> Self {
+    pub const fn new(device_type: DeviceIdType,
+                     device_class: DeviceIdClass,
+                     serial_value: u32)
+                     -> Self {
         Self { m_device_type: device_type,
                m_device_class: device_class,
                m_serial_value: serial_value }

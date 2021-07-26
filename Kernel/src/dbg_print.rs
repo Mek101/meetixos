@@ -1,19 +1,25 @@
 /*! debug printing support */
 
+use alloc::sync::Arc;
 use core::{
     convert::TryFrom,
     fmt,
     fmt::{
         Display,
         Write
-    }
+    },
+    mem
 };
 
-use sync::SpinMutex;
+use api_data::object::device::DeviceIdClass;
 
 use crate::{
     boot_info::BootInfo,
-    dev::uart::Uart
+    dev::{
+        uart::TUartDevice,
+        DevManager,
+        TDevice
+    }
 };
 
 /* Vt100 color codes */
@@ -23,8 +29,8 @@ const C_VT100_YELLOW: usize = 33;
 const C_VT100_MAGENTA: usize = 35;
 const C_VT100_WHITE: usize = 37;
 
-/* output raw-device for <dbg_println()> */
-static S_DBG_OUTPUT_UART: SpinMutex<Uart> = SpinMutex::const_new(Uart::new());
+/* output device for <dbg_println()> */
+static mut SM_DBG_WRITER: Option<DbgWriter> = None;
 
 /* verbosity of the <dbg_println()> */
 static mut SM_DBG_MAX_LEVEL: DbgLevel = DbgLevel::Info;
@@ -96,24 +102,44 @@ impl Display for DbgLevel {
  */
 #[macro_export]
 macro_rules! dbg_println {
-    ($DbgLevel:expr, $($arg:tt)*) => (
-        {
-            if $DbgLevel <=$crate::dbg_print::dbg_print_max_level() {
-                $crate::dbg_print::dbg_do_print(format_args!($($arg)*),
-                                                $DbgLevel,
-                                                module_path!())
-            }
+    ($DbgLevel:expr, $($arg:tt)*) => ({
+        if $DbgLevel <=$crate::dbg_print::dbg_print_max_level() {
+            $crate::dbg_print::dbg_do_print(format_args!($($arg)*),
+                                            $DbgLevel,
+                                            module_path!())
         }
-    )
+    })
 }
 
 /**
  * Initializes the debug printing
  */
 pub fn dbg_print_init() {
-    /* initialize the hardware output */
-    if !S_DBG_OUTPUT_UART.lock().init() {
-        panic!("Failed to initialize serial debug output");
+    /* obtain the first available UART device */
+    if let Some(uart_device_drivers) =
+        DevManager::instance().enumerate_by_class(DeviceIdClass::Uart)
+    {
+        let uart_device_driver = if uart_device_drivers.len() > 1 {
+            if let Some((_, value)) =
+                BootInfo::instance().cmd_line_find_arg_int("-log-serial-output")
+            {
+                if let Some(value) = value {
+                    uart_device_drivers[value].clone()
+                } else {
+                    uart_device_drivers[0].clone()
+                }
+            } else {
+                uart_device_drivers[0].clone()
+            }
+        } else {
+            uart_device_drivers[0].clone()
+        };
+
+        unsafe {
+            SM_DBG_WRITER = Some(DbgWriter::new(uart_device_driver));
+        }
+    } else {
+        panic!("Missing UART device driver")
     }
 
     /* search into the cmdline whether the -log-level option is given, in that
@@ -169,12 +195,35 @@ pub fn dbg_print_set_max_level(dbg_level: DbgLevel) -> DbgLevel {
  * Performs the output to the selected debug device
  */
 pub fn dbg_do_print(args: fmt::Arguments<'_>, dbg_level: DbgLevel, module_path: &str) {
-    write!(S_DBG_OUTPUT_UART.lock(),
+    write!(unsafe { SM_DBG_WRITER.as_mut().expect("Missing UART device") },
            "[\x1b[0;{}m{}\x1b[0m <> \x1b[0;{}m{: <26}\x1b[0m] \x1b[0;{}m{}\x1b[0m\n",
            dbg_level.as_vt100_color(),
            dbg_level,
            C_VT100_MAGENTA,
            module_path,
            dbg_level.as_vt100_color(),
-           args).expect("Failed to print to serial debug output");
+           args).expect("Failed to print to UART debug device");
+}
+
+pub struct DbgWriter {
+    m_uart_device: &'static dyn TUartDevice
+}
+
+impl DbgWriter /* Constructors */ {
+    fn new(device_driver: Arc<dyn TDevice>) -> Self {
+        let device_driver = Arc::clone(&device_driver);
+        let leaked_device_driver_ptr = Arc::as_ptr(&device_driver);
+        mem::forget(device_driver);
+
+        Self { m_uart_device:
+                   unsafe { &*leaked_device_driver_ptr }.as_uart()
+                                                        .expect("Wrong UART device \
+                                                                 selected") }
+    }
+}
+
+impl fmt::Write for DbgWriter {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        self.m_uart_device.write_str(s)
+    }
 }
