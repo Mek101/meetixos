@@ -73,26 +73,30 @@ fn kernel_heap_mem_supplier(requested_size: usize) -> Option<(NonNull<u8>, usize
             None /* TODO allocate a new kernel region
                   *      MemManager::instance().allocate_kernel_region(...) */
         } else {
-            let init_pool_used_size = SM_ETERNAL_POOL_USED_PAGES * Page4KiB::SIZE;
+            let eternal_pool_used_size = SM_ETERNAL_POOL_USED_PAGES * Page4KiB::SIZE;
 
             /* allocate a new sub-slice of the <SM_INIT_HEAP_POOL> */
-            let allocated_pool_slice = {
-                let new_pool_range =
-                    init_pool_used_size..init_pool_used_size + requested_size;
-                let new_pool_slice = &mut SM_ETERNAL_POOL[new_pool_range];
-                SM_ETERNAL_POOL_USED_PAGES += requested_pages;
+            let allocated_eternal_pool_slice = {
+                /* select the next available range */
+                let new_eternal_pool_range =
+                    eternal_pool_used_size..eternal_pool_used_size + requested_size;
 
-                new_pool_slice
+                /* obtain the reference to the sub-slice */
+                let new_eternal_pool_slice = &mut SM_ETERNAL_POOL[new_eternal_pool_range];
+
+                /* update the used pages counter, then return the reference */
+                SM_ETERNAL_POOL_USED_PAGES += requested_pages;
+                new_eternal_pool_slice
             };
 
-            let init_pool_rem_space =
+            let eternal_pool_rem_space =
                 C_ETERNAL_POOL_SIZE - SM_ETERNAL_POOL_USED_PAGES * Page4KiB::SIZE;
             dbg_println!(DbgLevel::Trace,
                          "SM_INIT_HEAP_POOL remaining space: {}",
-                         init_pool_rem_space.display_pretty());
+                         eternal_pool_rem_space.display_pretty());
 
             /* return the new memory for the Heap */
-            Some((NonNull::new_unchecked(allocated_pool_slice.as_mut_ptr()),
+            Some((NonNull::new_unchecked(allocated_eternal_pool_slice.as_mut_ptr()),
                   requested_size))
         }
     }
