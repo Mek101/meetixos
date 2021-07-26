@@ -11,6 +11,7 @@ use crate::{
             Segment,
             SegmentSelector
         },
+        idt::IntrDescTable,
         tss::TaskStateSegment
     },
     cpu::{
@@ -30,6 +31,7 @@ pub struct HwCpu {
     m_is_ap: bool,
     m_gdt: GlobalDescTable,
     m_tss: TaskStateSegment,
+    m_idt: IntrDescTable,
     m_double_fault_stack: [u8; C_DOUBLE_FAULT_STACK]
 }
 
@@ -68,6 +70,7 @@ impl HwCpuBase for HwCpu {
                m_is_ap: false,
                m_gdt: GlobalDescTable::new(),
                m_tss: TaskStateSegment::new(),
+               m_idt: IntrDescTable {},
                m_double_fault_stack: [0; C_DOUBLE_FAULT_STACK] }
     }
 
@@ -76,6 +79,7 @@ impl HwCpuBase for HwCpu {
                m_is_ap: true,
                m_gdt: GlobalDescTable::new(),
                m_tss: TaskStateSegment::new(),
+               m_idt: IntrDescTable {},
                m_double_fault_stack: [0; C_DOUBLE_FAULT_STACK] }
     }
 

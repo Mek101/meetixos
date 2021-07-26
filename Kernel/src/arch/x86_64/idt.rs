@@ -1,3 +1,7 @@
 /*! x86_64 Interrupt descriptor table */
 
-pub struct IntrDescTable {}
+#[repr(C)]
+#[repr(align(16))]
+#[derive(Debug)]
+#[derive(Clone)]
+pub struct IntrDescTable {/* TODO fields */}
