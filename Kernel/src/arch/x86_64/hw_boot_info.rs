@@ -1,5 +1,8 @@
 /*! x86_64 boot boot implementation */
 
+use alloc::vec::Vec;
+use core::ops::Range;
+
 use multiboot2::{
     load,
     BootInformation,
@@ -15,14 +18,11 @@ use crate::{
         phys_addr::PhysAddr,
         TAddress
     },
-    boot_info::{
-        BootMemAreas,
-        THwBootInfo
-    }
+    boot_info::THwBootInfo
 };
 
 /**
- * `HwBootInfoBase` for x86_64 `Multiboot_2` standard
+ * `HwBootInfoBase` for x86_64 `Multiboot2` standard
  */
 pub struct HwBootInfo {
     m_multiboot_ptr: BootInformation
@@ -43,12 +43,12 @@ impl THwBootInfo for HwBootInfo {
             .unwrap_or_default()
     }
 
-    fn mem_areas(&self) -> BootMemAreas {
+    fn phys_mem_ranges(&self) -> Vec<Range<PhysAddr>> {
         self.m_multiboot_ptr
             .memory_map_tag()
             .map(MemoryMapTag::memory_areas)
             .map(|mem_areas| {
-                let mut boot_mem_areas = BootMemAreas::default();
+                let mut boot_mem_areas = Vec::with_capacity(8);
 
                 /* put all the multiboot areas into the collector */
                 for mem_area in mem_areas {
@@ -66,7 +66,7 @@ impl THwBootInfo for HwBootInfo {
                         continue;
                     } else {
                         /* unordered push, we rely on the right order by the bootloader */
-                        boot_mem_areas.push_area(start_phys_addr.to_range(phys_area_size));
+                        boot_mem_areas.push(start_phys_addr.to_range(phys_area_size));
                     }
                 }
                 boot_mem_areas

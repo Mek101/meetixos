@@ -36,7 +36,7 @@ static mut SM_HEAP_ALLOCATOR: LazyLockedHeap<RawSpinMutex> = unsafe {
 /**
  * Forces the kernel heap initialization
  */
-pub fn kernel_heap_init() {
+pub fn kernel_heap_early_init() {
     unsafe {
         SM_HEAP_ALLOCATOR.force_init();
     }

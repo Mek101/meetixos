@@ -1,17 +1,18 @@
 /*! Kernel boot information */
 
-use core::ops::Range;
-
-use helps::str::{
-    copy_str_to_u8_buf,
-    u8_slice_to_str_slice
+use alloc::{
+    string::String,
+    vec::Vec
+};
+use core::{
+    ops::Range,
+    str::FromStr
 };
 
 use crate::{
     addr::phys_addr::PhysAddr,
     arch::hw_boot_info::HwBootInfo
 };
-use core::str::FromStr;
 
 /* Global BootInfo instance which will live for all the kernel's life */
 static mut SM_BOOT_INFORMATION: Option<BootInfo> = None;
@@ -21,13 +22,9 @@ static mut SM_BOOT_INFORMATION: Option<BootInfo> = None;
  * booting
  */
 pub struct BootInfo {
-    m_boot_loader_name_buf: [u8; 64],
-    m_boot_loader_name_buf_len: usize,
-
-    m_cmd_line_args_buf: [u8; 1024],
-    m_cmd_line_args_buf_len: usize,
-
-    m_boot_mem_areas: BootMemAreas
+    m_boot_loader_name: String,
+    m_cmd_line_args_buf: String,
+    m_boot_mem_areas: Vec<Range<PhysAddr>>
 }
 
 impl BootInfo /* Constructors */ {
@@ -45,22 +42,14 @@ impl BootInfo /* Constructors */ {
         /* parse the bootloader information with the architecture implementation */
         let hw_boot_info = HwBootInfo::from(raw_boot_info_ptr);
 
-        let mut boot_loader_name_buf = [0; 64];
-        copy_str_to_u8_buf(&mut boot_loader_name_buf, hw_boot_info.boot_loader_name());
-
-        let mut cmd_line_buf = [0; 1024];
-        copy_str_to_u8_buf(&mut cmd_line_buf, hw_boot_info.cmd_line_args());
-
-        let boot_info =
-            Self { m_boot_loader_name_buf: boot_loader_name_buf,
-                   m_boot_loader_name_buf_len: hw_boot_info.boot_loader_name().len(),
-                   m_cmd_line_args_buf: cmd_line_buf,
-                   m_cmd_line_args_buf_len: hw_boot_info.cmd_line_args().len(),
-                   m_boot_mem_areas: hw_boot_info.mem_areas() };
-
+        /* store the global instance of the BootInfo */
         unsafe {
-            /* store the global instance of the BootInfo */
-            SM_BOOT_INFORMATION = Some(boot_info);
+            SM_BOOT_INFORMATION =
+                Some(Self { m_boot_loader_name:
+                                String::from(hw_boot_info.boot_loader_name()),
+                            m_cmd_line_args_buf:
+                                String::from(hw_boot_info.cmd_line_args()),
+                            m_boot_mem_areas: hw_boot_info.phys_mem_ranges() });
         }
     }
 }
@@ -140,22 +129,21 @@ impl BootInfo /* Getters */ {
     /**
      * Returns the name of the bootloader which have started the kernel
      */
-    pub fn boot_loader_name(&self) -> &str {
-        u8_slice_to_str_slice(&self.m_boot_loader_name_buf
-                                  [..self.m_boot_loader_name_buf_len])
+    pub fn boot_loader_name(&self) -> &String {
+        &self.m_boot_loader_name
     }
 
     /**
      * Returns the command-line arguments given by the bootloader
      */
-    pub fn cmd_line_args(&self) -> &str {
-        u8_slice_to_str_slice(&self.m_cmd_line_args_buf[..self.m_cmd_line_args_buf_len])
+    pub fn cmd_line_args(&self) -> &String {
+        &self.m_cmd_line_args_buf
     }
 
     /**
-     * Returns the `BootMemAreas`
+     * Returns the `Vec` of physical memory regions
      */
-    pub fn boot_mem_areas(&self) -> &BootMemAreas {
+    pub fn boot_mem_areas(&self) -> &Vec<Range<PhysAddr>> {
         &self.m_boot_mem_areas
     }
 }
@@ -178,47 +166,5 @@ pub trait THwBootInfo: From<*const u8> {
     /**
      * Returns a filled `BootMemAreas`
      */
-    fn mem_areas(&self) -> BootMemAreas;
-}
-
-/**
- * Fixed collection of `Range<PhysAddr>`
- */
-#[derive(Clone)]
-pub struct BootMemAreas {
-    m_phys_regions_ranges: [Range<PhysAddr>; 8],
-    m_phys_regions_ranges_count: usize
-}
-
-impl BootMemAreas /* Methods */ {
-    /**
-     * Inserts at the end a new `BootMemArea`
-     */
-    pub fn push_area(&mut self, phys_region_range: Range<PhysAddr>) {
-        self.m_phys_regions_ranges[self.m_phys_regions_ranges_count] = phys_region_range;
-        self.m_phys_regions_ranges_count += 1;
-    }
-}
-
-impl BootMemAreas /* Getters */ {
-    /**
-     * Returns an `Iterator` to all the `BootMemArea`
-     */
-    pub fn iter(&self) -> impl Iterator<Item = &Range<PhysAddr>> {
-        self.m_phys_regions_ranges[..self.m_phys_regions_ranges_count].iter()
-    }
-}
-
-impl Default for BootMemAreas {
-    fn default() -> Self {
-        Self { m_phys_regions_ranges: [Range::default(),
-                                       Range::default(),
-                                       Range::default(),
-                                       Range::default(),
-                                       Range::default(),
-                                       Range::default(),
-                                       Range::default(),
-                                       Range::default()], /* TODO range is not Copy */
-               m_phys_regions_ranges_count: 0 }
-    }
+    fn phys_mem_ranges(&self) -> Vec<Range<PhysAddr>>;
 }

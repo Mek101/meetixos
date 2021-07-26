@@ -22,7 +22,7 @@ use crate::{
         DbgLevel
     },
     dev::DevManager,
-    heap::kernel_heap_init,
+    heap::kernel_heap_early_init,
     version::KERNEL_VERSION,
     vm::mem_manager::MemManager
 };
@@ -40,11 +40,11 @@ mod vm;
 
 #[no_mangle]
 pub extern "C" fn kernel_rust_start(raw_boot_info_ptr: *const u8) -> ! {
+    /* initialize the kernel heap since the BootInfo & DevManager could use it */
+    kernel_heap_early_init();
+
     /* initialize the global instance of the boot boot structure */
     BootInfo::init_instance(raw_boot_info_ptr);
-
-    /* initialize the kernel heap since the DevManager could use it */
-    kernel_heap_init();
 
     /* initializes the fundamental drivers, like the serial for debug printing */
     DevManager::early_init();
