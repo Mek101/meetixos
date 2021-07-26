@@ -2,7 +2,15 @@
 
 use core::fmt;
 
-use crate::arch::dev::hw_uart::HwUart;
+use crate::{
+    arch::dev::hw_uart::HwUart,
+    dev::TDevice
+};
+
+pub trait TUartDevice: TDevice {
+    fn init_hw(&self) -> bool;
+    fn write_str(&self, str: &str) -> fmt::Result;
+}
 
 /**
  * Simple arch independent interface for UART writing

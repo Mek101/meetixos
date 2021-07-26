@@ -20,6 +20,7 @@ use crate::{
         dbg_print_init,
         DbgLevel
     },
+    dev::DevManager,
     heap::kernel_heap_init,
     version::KERNEL_VERSION,
     vm::mem_manager::MemManager
@@ -40,6 +41,12 @@ mod vm;
 pub extern "C" fn kernel_rust_start(raw_boot_info_ptr: *const u8) -> ! {
     /* initialize the global instance of the boot boot structure */
     BootInfo::init_instance(raw_boot_info_ptr);
+
+    /* early initialize the device-manager, which initializes the fundamental
+     * drivers, like the serial for debug printing. This is because this step
+     * is done before <dbg_print_init()>
+     */
+    DevManager::early_init();
 
     /* initialize debug printing and print the header */
     dbg_print_init();

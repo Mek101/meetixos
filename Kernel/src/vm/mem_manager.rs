@@ -138,7 +138,7 @@ impl MemManager /* Getters */ {
     /**
      * Returns the global `MemManager` instance
      */
-    pub fn instance() -> &'static MemManager {
+    pub fn instance() -> &'static Self {
         unsafe {
             SM_MEM_MANAGER.as_ref().expect("Tried to obtain MemManager instance before \
                                             initialization")

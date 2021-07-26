@@ -15,6 +15,9 @@ use bits::bit_fields::TBitFields;
 #[derive(Debug)]
 #[derive(Default)]
 #[derive(Copy, Clone)]
+#[derive(Eq, PartialEq)]
+#[derive(Ord, PartialOrd)]
+#[derive(Hash)]
 pub struct DeviceId {
     m_device_type: DeviceIdType,
     m_device_class: DeviceIdClass,
