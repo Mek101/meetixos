@@ -36,7 +36,7 @@ static mut SM_HEAP_ALLOCATOR: LazyLockedHeap<RawSpinMutex> = unsafe {
 /**
  * Forces the kernel heap initialization
  */
-pub fn kernel_heap_early_init() {
+pub fn kernel_heap_init_eternal_pool() {
     unsafe {
         SM_HEAP_ALLOCATOR.force_init();
     }
@@ -53,10 +53,10 @@ fn kernel_heap_raw_mutex_supplier() -> Option<RawSpinMutex> {
  * Supplies additional memory regions to the `Heap` allocator
  */
 fn kernel_heap_mem_supplier(requested_size: usize) -> Option<(NonNull<u8>, usize)> {
-    const C_INIT_POOL_SIZE: usize = 1 * C_MIB;
+    const C_ETERNAL_POOL_SIZE: usize = 1 * C_MIB;
 
-    static mut SM_INIT_POOL_USED_PAGES: usize = 0;
-    static mut SM_INIT_POOL: [u8; C_INIT_POOL_SIZE] = [0; C_INIT_POOL_SIZE];
+    static mut SM_ETERNAL_POOL_USED_PAGES: usize = 0;
+    static mut SM_ETERNAL_POOL: [u8; C_ETERNAL_POOL_SIZE] = [0; C_ETERNAL_POOL_SIZE];
 
     unsafe {
         let requested_pages = align_up(requested_size, Page4KiB::SIZE) / Page4KiB::SIZE;
@@ -66,25 +66,27 @@ fn kernel_heap_mem_supplier(requested_size: usize) -> Option<(NonNull<u8>, usize
                      requested_pages,
                      requested_size.display_pretty());
 
-        /* return a sub-split of the <SM_INIT_HEAP_POOL> if still available */
-        if C_INIT_POOL_SIZE / Page4KiB::SIZE < SM_INIT_POOL_USED_PAGES + requested_pages {
+        /* return a sub-split of the <SM_ETERNAL_POOL> if still available */
+        if C_ETERNAL_POOL_SIZE / Page4KiB::SIZE
+           < SM_ETERNAL_POOL_USED_PAGES + requested_pages
+        {
             None /* TODO allocate a new kernel region
                   *      MemManager::instance().allocate_kernel_region(...) */
         } else {
-            let init_pool_used_size = SM_INIT_POOL_USED_PAGES * Page4KiB::SIZE;
+            let init_pool_used_size = SM_ETERNAL_POOL_USED_PAGES * Page4KiB::SIZE;
 
             /* allocate a new sub-slice of the <SM_INIT_HEAP_POOL> */
             let allocated_pool_slice = {
                 let new_pool_range =
                     init_pool_used_size..init_pool_used_size + requested_size;
-                let new_pool_slice = &mut SM_INIT_POOL[new_pool_range];
-                SM_INIT_POOL_USED_PAGES += requested_pages;
+                let new_pool_slice = &mut SM_ETERNAL_POOL[new_pool_range];
+                SM_ETERNAL_POOL_USED_PAGES += requested_pages;
 
                 new_pool_slice
             };
 
             let init_pool_rem_space =
-                C_INIT_POOL_SIZE - SM_INIT_POOL_USED_PAGES * Page4KiB::SIZE;
+                C_ETERNAL_POOL_SIZE - SM_ETERNAL_POOL_USED_PAGES * Page4KiB::SIZE;
             dbg_println!(DbgLevel::Trace,
                          "SM_INIT_HEAP_POOL remaining space: {}",
                          init_pool_rem_space.display_pretty());
