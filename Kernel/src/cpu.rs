@@ -1,13 +1,11 @@
 /*! Kernel CPU management */
 
+use alloc::vec::Vec;
+
 use crate::arch::hw_cpu::HwCpu;
 
-/* Currently we support at max 8 CPUs */
-const C_MAX_CPUS: usize = 8;
-
 /* All the CPUs descriptors currently active */
-static mut SM_ALL_CPUS: [Option<Cpu>; C_MAX_CPUS] =
-    [None, None, None, None, None, None, None, None];
+static mut SM_ALL_CPUS: Vec<Cpu> = Vec::new();
 
 /**
  * The index of the `Cpu` inside the global vector
@@ -63,13 +61,10 @@ impl Cpu /* Static Functions */ {
      * Returns the reference to the given `cpu_id` `Cpu`
      */
     pub fn by_id(cpu_id: CpuId) -> &'static Self {
-        assert!((cpu_id as usize) < C_MAX_CPUS);
         unsafe {
-            SM_ALL_CPUS[cpu_id as usize].as_ref().unwrap_or_else(|| {
-                                                     panic!("Requested an unregistered \
-                                                             Cpu with id: {}",
-                                                            cpu_id)
-                                                 })
+            SM_ALL_CPUS.get(cpu_id as usize)
+                       .expect(format!("Requested an unregistered Cpu with id: {}",
+                                       cpu_id).as_str())
         }
     }
 }
@@ -91,10 +86,10 @@ impl Cpu /* Privates */ {
         let cpu_id = cpu.id();
 
         unsafe {
-            assert!(SM_ALL_CPUS[cpu_id as usize].is_none());
+            assert!(SM_ALL_CPUS.get(cpu_id as usize).is_none());
 
-            SM_ALL_CPUS[cpu_id as usize] = Some(cpu);
-            SM_ALL_CPUS[cpu_id as usize].as_mut().unwrap()
+            SM_ALL_CPUS.push(cpu);
+            &mut SM_ALL_CPUS[cpu_id as usize]
         }
     }
 }
