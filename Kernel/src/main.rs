@@ -1,3 +1,8 @@
+/*! # MeetiX Kernel
+ *
+ * Monolithic kernel implementation for MeetiX OS
+ */
+
 #![no_std]
 #![no_main]
 #![feature(asm,
@@ -38,6 +43,13 @@ mod panic;
 mod version;
 mod vm;
 
+/**
+ * Rust entry-point.
+ *
+ * Here is where the kernel starts his execution when
+ * `Kernel/arch/<arch_name>/kernel_start.S` transfers the control to the
+ * Rust code
+ */
 #[no_mangle]
 pub extern "C" fn kernel_rust_start(raw_boot_info_ptr: *const u8) -> ! {
     /* initialize the kernel heap since the BootInfo & DevManager could use it */
