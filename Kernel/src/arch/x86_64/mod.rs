@@ -7,6 +7,8 @@ pub mod gdt;
 pub mod hw_boot_info;
 pub mod hw_cpu;
 pub mod idt;
+pub mod local_apic;
+pub mod ms_register;
 pub mod pic;
 pub mod tss;
 pub mod vm;

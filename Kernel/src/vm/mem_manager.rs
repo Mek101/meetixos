@@ -20,7 +20,6 @@ use sync::SpinMutex;
 use crate::{
     addr::{
         phys_addr::PhysAddr,
-        virt_addr::VirtAddr,
         TAddress
     },
     boot_info::BootInfo,
@@ -202,17 +201,13 @@ impl MemManager /* Privates */ {
      * `LayoutManager::phys_mem_mapping_range()`
      */
     fn map_physical_memory(&self, last_phys_mem_addr: PhysAddr) {
-        /* obtain the virtual offset of the physical memory */
-        let phys_mem_mapping_range_start =
-            self.layout_manager().phys_mem_mapping_range().start;
-
         /* iterate all the available frames as 2MiB frames to reduce intermediate
          * page-tables granularity and physical memory allocations.
          * In this stage, when this method is called, the <m_kernel_page_dir> doesn't
          * use the real mapped offset, because the memory is not mapped yet
          */
         for phys_addr in (PhysAddr::null()..last_phys_mem_addr).step_by(Page2MiB::SIZE) {
-            let virt_addr: VirtAddr = (*phys_addr + *phys_mem_mapping_range_start).into();
+            let virt_addr = self.layout_manager().phys_addr_to_virt_addr(phys_addr);
 
             /* obtain the page-table-entry for the current virtual-address */
             let page_table_entry = self.kernel_page_dir()

@@ -1,7 +1,15 @@
 /*! x86_64 CPU management implementation */
 
+use core::arch::x86_64::{
+    CpuidResult,
+    __cpuid
+};
+
+use bits::bit_fields::TBitFields;
+
 use crate::{
     addr::{
+        phys_addr::PhysAddr,
         virt_addr::VirtAddr,
         TAddress
     },
@@ -12,17 +20,22 @@ use crate::{
             SegmentSelector
         },
         idt::IntrDescTable,
+        local_apic::LocalApic,
+        ms_register::MsRegister,
         pic::PicManager,
         tss::TaskStateSegment
     },
     cpu::{
         CpuId,
         THwCpu
-    }
+    },
+    vm::mem_manager::MemManager
 };
 
 const C_DOUBLE_FAULT_STACK: usize = 4096;
 const C_DOUBLE_FAULT_STACK_INDEX: usize = 0;
+
+static mut SM_APIC_BASE_VIRT_ADDR: Option<VirtAddr> = None;
 
 /**
  * x86_64 `HwCpuBase` implementation
@@ -33,6 +46,7 @@ pub struct HwCpu {
     m_gdt: GlobalDescTable,
     m_tss: TaskStateSegment,
     m_idt: IntrDescTable,
+    m_local_apic: LocalApic,
     m_double_fault_stack: [u8; C_DOUBLE_FAULT_STACK]
 }
 
@@ -42,12 +56,12 @@ impl HwCpu /* Privates */ {
      */
     fn reload_code_segment_register(&self, kern_code_segment_selector: SegmentSelector) {
         unsafe {
-            asm!("push      {seg_selector}",
+            asm!("push      {ssl}",
                  "lea       {tmp}, [1f + rip]",
                  "push      {tmp}",
                  "retfq",
                  "1:",
-                 seg_selector = in(reg) kern_code_segment_selector.as_raw(),
+                 ssl = in(reg) kern_code_segment_selector.as_raw(),
                  tmp = lateout(reg) _,
                  options(preserves_flags));
         }
@@ -63,6 +77,49 @@ impl HwCpu /* Privates */ {
                  options(nomem, nostack, preserves_flags));
         }
     }
+
+    fn init_apic(&self) -> bool {
+        /* fail if the APIC is not supported by the CPU */
+        if !LocalApic::is_supported() {
+            return false;
+        }
+
+        /* obtain from the APIC-MSR the APIC base value */
+        let apic_msr = MsRegister::new(0x1b);
+        let apic_base = unsafe { apic_msr.read() as usize };
+
+        /* check for disabled APIC (bit 11 stores enable-bit) */
+        if !apic_base.bit_at(11) {
+            return false;
+        }
+
+        /* obtain the APIC physical address and convert it to virtual */
+        let apic_base_phys_addr: PhysAddr = (apic_base & 0xffff_f000).into();
+        let apic_base_virt_addr =
+            MemManager::instance().layout_manager()
+                                  .phys_addr_to_virt_addr(apic_base_phys_addr);
+        crate::dbg_println!(crate::dbg_print::DbgLevel::Trace,
+                            "apic_base: {}, apic_base_phys_addr: {}, \
+                             apic_base_virt_addr: {}",
+                            apic_base,
+                            apic_base_phys_addr,
+                            apic_base_virt_addr);
+        unsafe {
+            /* store the APIC base VirtAddr for use of the other cores */
+            SM_APIC_BASE_VIRT_ADDR = Some(apic_base_virt_addr);
+
+            /* store into the APIC-MSR the enable flag */
+            apic_msr.write(apic_base as u64 | 0x800);
+        }
+        true
+    }
+
+    fn enable_local_apic(&mut self) {
+    }
+
+    fn cpu_frequency_info(&self) -> CpuidResult {
+        unsafe { __cpuid(0x16) }
+    }
 }
 
 impl THwCpu for HwCpu {
@@ -72,6 +129,7 @@ impl THwCpu for HwCpu {
                m_gdt: GlobalDescTable::new(),
                m_tss: TaskStateSegment::new(),
                m_idt: IntrDescTable {},
+               m_local_apic: LocalApic::new(),
                m_double_fault_stack: [0; C_DOUBLE_FAULT_STACK] }
     }
 
@@ -81,6 +139,7 @@ impl THwCpu for HwCpu {
                m_gdt: GlobalDescTable::new(),
                m_tss: TaskStateSegment::new(),
                m_idt: IntrDescTable {},
+               m_local_apic: LocalApic::new(),
                m_double_fault_stack: [0; C_DOUBLE_FAULT_STACK] }
     }
 
@@ -105,7 +164,13 @@ impl THwCpu for HwCpu {
     }
 
     fn init_interrupts(&'static mut self) {
-        PicManager::init_instance();
+        if !self.m_is_ap {
+            PicManager::init_instance();
+
+            /* initialize the APIC */
+            self.init_apic();
+        }
+        self.enable_local_apic();
     }
 
     fn do_halt(&self) {
@@ -134,7 +199,23 @@ impl THwCpu for HwCpu {
         self.m_id
     }
 
+    fn base_frequency(&self) -> u64 {
+        self.cpu_frequency_info().eax.bits_at(0..15) as u64
+    }
+
+    fn max_frequency(&self) -> u64 {
+        self.cpu_frequency_info().ebx.bits_at(0..15) as u64
+    }
+
+    fn bus_frequency(&self) -> u64 {
+        self.cpu_frequency_info().ecx.bits_at(0..15) as u64
+    }
+
     fn are_interrupts_enabled(&self) -> bool {
-        todo!()
+        let rflags: u64;
+        unsafe {
+            asm!("pushfq; pop {}", out(reg) rflags, options(nomem, preserves_flags));
+        }
+        rflags.bit_at(9)
     }
 }
