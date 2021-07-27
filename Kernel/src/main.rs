@@ -11,7 +11,8 @@
            const_fn_trait_bound,
            step_trait,
            alloc_error_handler,
-           const_btree_new)]
+           const_btree_new,
+           once_cell)]
 #![allow(dead_code)]
 
 #[macro_use]

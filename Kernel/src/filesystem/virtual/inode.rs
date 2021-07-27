@@ -3,6 +3,7 @@ use core::any::Any;
 use api_data::path::PathComponent;
 
 use crate::filesystem::FsResult;
+use alloc::sync::Arc;
 
 pub enum NodeType {
     File,
@@ -81,7 +82,7 @@ pub trait DirectoryNode: INode {
      * Get the INodes inside this directory.
      * This does NOT include the parent and self directories.
      */
-    fn get_nodes(&self) -> FsResult<&dyn Iterator<Item = &dyn INode>>;
+    fn get_nodes(&self) -> FsResult<&dyn Iterator<Item = Arc<&dyn INode>>>;
 
     /**
      * Get the number of INodes in this directory.

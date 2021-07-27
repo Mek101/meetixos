@@ -1,5 +1,6 @@
 pub mod implementation;
 pub mod r#virtual;
+mod loaded_nodes;
 
 use alloc::rc::Rc;
 
