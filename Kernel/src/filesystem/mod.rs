@@ -3,6 +3,9 @@ pub mod r#virtual;
 mod loaded_nodes;
 
 use alloc::rc::Rc;
+use alloc::sync::Arc;
+
+use sync::SpinRwLock;
 
 pub type FsResult<T> = Result<T, FsError>;
 
@@ -36,5 +39,7 @@ trait FilesystemProvider {
 trait Filesystem {
     fn validate_path_in_namespace(&self, path: Rc<&str>) -> Result<&str, &str>;
 
-    fn get_root_inode(&self) -> INode;
+    fn get_root_node(&self) -> Arc<&dyn INode>;
+
+    fn get_filesystem_state(&self) -> SpinRwLock<()>;
 }
