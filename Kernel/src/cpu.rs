@@ -39,6 +39,37 @@ impl Cpu /* Constructors */ {
 
 impl Cpu /* Methods */ {
     /**
+     * Enable hardware interrupts for this `Cpu`
+     */
+    pub fn enable_interrupts(&self) {
+        self.m_hw_cpu.do_enable_interrupts();
+    }
+
+    /**
+     * Disables hardware interrupts for this `Cpu`
+     */
+    pub fn disable_interrupts(&self) {
+        self.m_hw_cpu.do_disable_interrupts();
+    }
+
+    /**
+     * Executes `f` without interrupts for this `Cpu`
+     */
+    pub fn without_interrupts<F>(&self, f: F)
+        where F: FnOnce() {
+        let was_enabled = self.are_interrupts_enabled();
+        if was_enabled {
+            self.disable_interrupts();
+        }
+
+        f();
+
+        if was_enabled {
+            self.enable_interrupts()
+        }
+    }
+
+    /**
      * Halts this CPU
      */
     pub fn halt(&self) -> ! {
@@ -50,6 +81,24 @@ impl Cpu /* Methods */ {
 }
 
 impl Cpu /* Static Functions */ {
+    /**
+     * Initializes the interrupt management for this `Cpu`
+     */
+    pub fn init_interrupts_for_this() {
+        /* obtain the current <Cpu> descriptor */
+        let this_cpu_id = HwCpu::current_id();
+        let this_cpu = unsafe {
+            SM_ALL_CPUS.get_mut(this_cpu_id as usize)
+                       .expect(format!("Requested an unregistered Cpu with id: {}",
+                                       this_cpu_id).as_str())
+        };
+
+        /* initialize the interrupts management */
+        this_cpu.m_hw_cpu.init_interrupts();
+    }
+}
+
+impl Cpu /* Getters */ {
     /**
      * Returns the reference to the current `Cpu`
      */
@@ -67,14 +116,19 @@ impl Cpu /* Static Functions */ {
                                        cpu_id).as_str())
         }
     }
-}
 
-impl Cpu /* Getters */ {
     /**
      * Returns the `CpuId` of this `Cpu`
      */
     pub fn id(&self) -> CpuId {
         self.m_hw_cpu.id()
+    }
+
+    /**
+     * Returns whether this `Cpu` have hardware interrupts enabled
+     */
+    pub fn are_interrupts_enabled(&self) -> bool {
+        self.m_hw_cpu.are_interrupts_enabled()
     }
 }
 
@@ -98,7 +152,7 @@ impl Cpu /* Privates */ {
  * Interface on which the `Cpu` relies to obtain information or throw
  * initialization for hardware CPU
  */
-pub trait HwCpuBase {
+pub trait THwCpu {
     /**
      * Constructs an `HwCpu` which identifies the BSP CPU
      */
@@ -117,9 +171,26 @@ pub trait HwCpuBase {
     fn init(&'static mut self);
 
     /**
+     * Here must be initialized hardware interrupts controller and any stuff
+     * which is needed by the architecture to manage software and hardware
+     * interruptions
+     */
+    fn init_interrupts(&'static mut self);
+
+    /**
      * Halts this `HwCpu`
      */
     fn do_halt(&self);
+
+    /**
+     * Enable hardware interrupts for this `Cpu`
+     */
+    fn do_enable_interrupts(&self);
+
+    /**
+     * Disables hardware interrupts for this `Cpu`
+     */
+    fn do_disable_interrupts(&self);
 
     /**
      * Returns the `CpuId` of the executing `Cpu`
@@ -130,4 +201,9 @@ pub trait HwCpuBase {
      * Returns the hardware `CpuId` of this `HwCpu`
      */
     fn id(&self) -> CpuId;
+
+    /**
+     * Returns whether this `Cpu` have hardware interrupts enabled
+     */
+    fn are_interrupts_enabled(&self) -> bool;
 }

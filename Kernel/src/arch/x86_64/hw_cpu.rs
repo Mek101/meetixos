@@ -12,11 +12,12 @@ use crate::{
             SegmentSelector
         },
         idt::IntrDescTable,
+        pic::PicManager,
         tss::TaskStateSegment
     },
     cpu::{
         CpuId,
-        HwCpuBase
+        THwCpu
     }
 };
 
@@ -64,7 +65,7 @@ impl HwCpu /* Privates */ {
     }
 }
 
-impl HwCpuBase for HwCpu {
+impl THwCpu for HwCpu {
     fn new_bsp() -> Self {
         Self { m_id: 0,
                m_is_ap: false,
@@ -103,9 +104,25 @@ impl HwCpuBase for HwCpu {
         self.load_tss_segment(tss_segment_selector);
     }
 
+    fn init_interrupts(&'static mut self) {
+        PicManager::init_instance();
+    }
+
     fn do_halt(&self) {
         unsafe {
             asm!("cli; hlt");
+        }
+    }
+
+    fn do_enable_interrupts(&self) {
+        unsafe {
+            asm!("sti", options(nostack));
+        }
+    }
+
+    fn do_disable_interrupts(&self) {
+        unsafe {
+            asm!("cli", options(nostack));
         }
     }
 
@@ -115,5 +132,9 @@ impl HwCpuBase for HwCpu {
 
     fn id(&self) -> CpuId {
         self.m_id
+    }
+
+    fn are_interrupts_enabled(&self) -> bool {
+        todo!()
     }
 }

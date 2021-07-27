@@ -78,6 +78,10 @@ pub extern "C" fn kernel_rust_start(raw_boot_info_ptr: *const u8) -> ! {
     dbg_println!(DbgLevel::Trace, "Initializing Memory Management...");
     MemManager::init_instance();
 
+    /* initialize the interrupts for this CPU */
+    dbg_println!(DbgLevel::Trace, "Initializing Interrupts Management...");
+    Cpu::init_interrupts_for_this();
+
     /* FIXME debug printing to remove */
     {
         dbg_println!(DbgLevel::Debug,

@@ -7,6 +7,7 @@ pub mod gdt;
 pub mod hw_boot_info;
 pub mod hw_cpu;
 pub mod idt;
+pub mod pic;
 pub mod tss;
 pub mod vm;
 pub mod x64_port;
