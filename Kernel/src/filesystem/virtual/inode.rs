@@ -37,6 +37,11 @@ pub trait INode: Any + Send + Sync {
     fn get_name(&self) -> &PathComponent;
 
     /**
+     * Get the parent INode of this INode. Only the system root may return None
+     */
+    fn get_parent(&self) -> Optional<Arc<&dyn INode>>;
+
+    /**
      * Get type of this INode
      */
     fn get_type(&self) -> NodeType;
