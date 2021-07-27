@@ -109,7 +109,7 @@ fn find_child_from_ancestor(mut ancestor: &Arc<&dyn INode>, path_to_child: &[Pat
     // Walk to the node iteratively, to prevent stack overflows.
     for depth_index in 0..path_to_child.len() - 1 {
         match ancestor.get_type() {
-            NodeType::File => return Err(()),
+            NodeType::File => Err(()),
             NodeType::Directory => {
                 // Search for the next node
                 let as_directory: &dyn DirectoryNode = ancestor.as_type().unwrap();
@@ -117,10 +117,10 @@ fn find_child_from_ancestor(mut ancestor: &Arc<&dyn INode>, path_to_child: &[Pat
                     Ok(nodes) => {
                         match nodes.iter().find(|n| *n.get_name() == ancestor[depth_index]) {
                             Some(n) => ancestor = n, // Our new ancestor.
-                            None => return Err(())
+                            None => Err(())
                         }
                     }
-                    Err(_) => return Err(())
+                    Err(_) => Err(())
                 }
             }
         }
@@ -153,7 +153,7 @@ fn search_ancestor_node(nodes: &impl Iterator<Item=Arc<&dyn INode>>, path: &[Pat
         }
     }
 
-    return match nearest_node {
+    match nearest_node {
         Some(n) => PartialINodeSearchResult::NewBestScore(best_score, n),
         None => PartialINodeSearchResult::None
     }
@@ -161,7 +161,7 @@ fn search_ancestor_node(nodes: &impl Iterator<Item=Arc<&dyn INode>>, path: &[Pat
 
 impl LoadedNodes {
     fn search_node_in_map(map: &HashMap<&[PathComponent], Arc<&dyn INode>>, path: &[PathComponent], best_score: usize) -> PartialINodeSearchResult {
-        return match map.get(path) {
+        match map.get(path) {
             Some(node) => PartialINodeSearchResult::Found(node),
             None => search_ancestor_node(map.values(), path, best_score)
         }
@@ -207,7 +207,7 @@ impl LoadedNodes {
             let opened_nodes = self._opened_nodes.read();
             match self::search_node_in_map(opened_nodes, path, best_score) {
                 PartialINodeSearchResult::None => {}
-                PartialINodeSearchResult::Found(node) => return Ok(node.clone()),
+                PartialINodeSearchResult::Found(node) => Ok(node.clone()),
                 PartialINodeSearchResult::NewBestScore(new_best, new_nearest) => {
                     best_score = new_best;
                     nearest_node = new_nearest.clone();
@@ -220,7 +220,7 @@ impl LoadedNodes {
             let cached_nodes = self._cached_nodes.read();
             match self::search_inode_map(cached_nodes, path, best_score) {
                 PartialINodeSearchResult::None => {}
-                PartialINodeSearchResult::Found(node) => return Ok(node.clone()),
+                PartialINodeSearchResult::Found(node) => Ok(node.clone()),
                 PartialINodeSearchResult::NewBestScore(new_best, new_nearest) => {
                     best_score = new_best;
                     nearest_node = new_nearest.clone();
@@ -254,12 +254,12 @@ impl FsRoots {
     }
 
     pub fn get_filesystem_of(self, path: &[PathComponent]) -> Result<Arc<&dyn Filesystem>, ()> {
-        return match self._filesystem_mountpoints.get(path) {
-            Some(fs) => return Ok(fs),
+        match self._filesystem_mountpoints.get(path) {
+            Some(fs) => Ok(fs),
             None => {
                 let nodes = self._filesystem_mountpoints.iter().values().map(|fs| fs.get_root_node());
                 match search_ancestor_node(nodes, path, usize::MAX) {
-                    PartialSearchResult::Found(n) => return Ok(n.get_filesystem()),
+                    PartialSearchResult::Found(n) => Ok(n.get_filesystem()),
                     _ => Err(())
                 }
             }
