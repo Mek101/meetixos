@@ -1,5 +1,6 @@
 /*! x86_64 implementation code */
 
+pub mod acpi;
 pub mod addr;
 pub mod desc_table;
 pub mod dev;

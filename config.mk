@@ -78,9 +78,10 @@ endif
 # -- -- -- -- -- -- -- -- -- -- -- -- QEMU Tools -- -- -- -- -- -- -- -- -- -- -- -- -- --
 #
 
-QEMU          ?= qemu-system-$(ARCH)
-QEMU_ARGS     ?= -m 64M -serial stdio
-QEMU_GDB_ARGS ?= -m 64M
+QEMU             ?= qemu-system-$(ARCH)
+QEMU_SHARED_ARGS ?= -m 64M -cpu host
+QEMU_ARGS        ?= $(QEMU_SHARED_ARGS) -serial stdio
+QEMU_GDB_ARGS    ?= $(QEMU_SHARED_ARGS)
 
 ifeq ($(ARCH), x86_64)
     QEMU_ARGS     += -cpu IvyBridge
