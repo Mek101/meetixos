@@ -2,7 +2,10 @@
 
 use crate::{
     arch::x86_64::dev::{
-        hw_random::X64RdRandRandom,
+        hw_random::{
+            rdrand::X64RdRandRandom,
+            rdtsc::X64RdTscRandom
+        },
         hw_uart::X64Serial16550Uart
     },
     dev::DevManager
@@ -16,9 +19,14 @@ impl DevManager /* Methods */ {
      * Registers the early and fundamental device drivers
      */
     pub fn register_early_devices(&self) {
-        /* register RDRAND device */
-        assert!(self.register_device(X64RdRandRandom::new(0)),
-                "Failed to register RDRAND driver");
+        /* register a random device, if <X64RdRandRandom>'s registration fails
+         * probably means that the architecture doesn't supports RDRAND
+         * instruction, so fallback to the RDTSC support
+         */
+        if !self.register_device(X64RdRandRandom::new(0)) {
+            assert!(self.register_device(X64RdTscRandom::new(0)),
+                    "Failed to register random driver");
+        }
 
         /* register COM1 serial device */
         assert!(self.register_device(X64Serial16550Uart::new_com1()),
