@@ -9,14 +9,14 @@ use core::ops::Range;
 use api_data::path::{PathComponent, PathExistsState};
 use sync::SpinRwLock;
 
-use crate::filesystem::{Filesystem, FsError};
-use crate::filesystem::r#virtual::{INode, DirectoryNode};
 use sync::rw_lock::data_guard::RwLockDataReadGuard;
 use sync::rw_lock::spin_rw_lock::RawSpinRwLock;
 
-type INodeLockMap<'a> = SpinRwLock<HashMap<&'a [PathComponent], &'a dyn INode>>;
+use crate::filesystem::{Filesystem, FsError};
+use crate::filesystem::r#virtual::{INode, DirectoryNode};
+use crate::filesystem::node_structs::{NodeTable, NodeTreeMap, PartialNodeResult};
 
-pub type PartialINodeSearchResult<'a> = PartialSearchResult<&'a Arc<&'a dyn INode>>;
+type INodeLockMap<'a> = SpinRwLock<HashMap<&'a [PathComponent], &'a dyn INode>>;
 
 pub type INodeResult<'a> = Result<Arc<&'a dyn INode>, ()>;
 
@@ -28,14 +28,14 @@ enum PartialSearchResult<T> {
 
 pub static LOADED_NODES: Lazy<LoadedNodes> = Lazy::new(|| {
     LoadedNodes {
-        _opened_nodes: INodeLockMap::new(HashMap::new()).unwrap(),
+        _opened_nodes: SpinRwLock::new(NodeTable::new()).unwrap(),
         _cached_nodes: INodeLockMap::new(HashMap::new()).unwrap(),
         _filesystem_roots: SpinRwLock::new(FsRoots::new()).unwrap(),
     }
 });
 
 pub struct LoadedNodes<'a> {
-    _opened_nodes: INodeLockMap<'a>,
+    _opened_nodes: SpinRwLock<NodeTable<'a>>,
     _cached_nodes: INodeLockMap<'a>,
     _filesystem_roots: SpinRwLock<FsRoots<'a>>,
 }
@@ -163,11 +163,8 @@ fn search_ancestor_node(nodes: &impl Iterator<Item=Arc<&dyn INode>>, path: &[Pat
 }
 
 impl LoadedNodes {
-    fn search_node_in_map(map: &HashMap<&[PathComponent], Arc<&dyn INode>>, path: &[PathComponent], best_score: usize) -> PartialINodeSearchResult {
-        match map.get(path) {
-            Some(node) => PartialINodeSearchResult::Found(node),
-            None => search_ancestor_node(map.values(), path, best_score)
-        }
+    fn search_node_in_map(map: &impl NodeTreeMap, path: &[PathComponent], best_score: usize) -> PartialNodeResult {
+        map.get_best_match(path, best_score)
     }
 
     /**
