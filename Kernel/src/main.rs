@@ -12,7 +12,8 @@
            step_trait,
            alloc_error_handler,
            const_btree_new,
-           array_methods)]
+           array_methods,
+           once_cell)]
 #![allow(dead_code)]
 
 #[macro_use]
@@ -43,6 +44,9 @@ mod heap;
 mod panic;
 mod version;
 mod vm;
+mod filesystem;
+mod info;
+mod mem;
 
 /**
  * Rust entry-point.

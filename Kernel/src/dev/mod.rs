@@ -19,6 +19,7 @@ use crate::dev::{
 };
 
 pub mod random;
+pub mod adapters;
 pub mod uart;
 
 /* <None> until <DevManager::early_init()> is called */
