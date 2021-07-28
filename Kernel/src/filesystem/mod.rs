@@ -1,11 +1,14 @@
 pub mod implementation;
 pub mod r#virtual;
 mod loaded_nodes;
+mod node_structs;
 
 use alloc::rc::Rc;
 use alloc::sync::Arc;
 
 use sync::SpinRwLock;
+
+pub use crate::filesystem::r#virtual::INode;
 
 pub type FsResult<T> = Result<T, FsError>;
 

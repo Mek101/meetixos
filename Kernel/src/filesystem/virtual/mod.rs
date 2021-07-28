@@ -1,3 +1,4 @@
+pub use inode::*;
+
 mod inode;
 
-pub use inode::*;
