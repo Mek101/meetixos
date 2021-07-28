@@ -1,7 +1,8 @@
 use alloc::collections::HashMap;
 use alloc::sync::Arc;
 use alloc::vec::Vec;
-use core::cmp::min;
+use core::cmp;
+use core::mem;
 use core::lazy::Lazy;
 use core::ops::Range;
 
@@ -10,10 +11,12 @@ use sync::SpinRwLock;
 
 use crate::filesystem::{Filesystem, FsError};
 use crate::filesystem::r#virtual::{INode, DirectoryNode};
+use sync::rw_lock::data_guard::RwLockDataReadGuard;
+use sync::rw_lock::spin_rw_lock::RawSpinRwLock;
 
 type INodeLockMap<'a> = SpinRwLock<HashMap<&'a [PathComponent], &'a dyn INode>>;
 
-pub type PartialINodeSearchResult<'a> = PartialSearchResult<&'a dyn INode>;
+pub type PartialINodeSearchResult<'a> = PartialSearchResult<&'a Arc<&'a dyn INode>>;
 
 pub type INodeResult<'a> = Result<Arc<&'a dyn INode>, ()>;
 
@@ -49,9 +52,9 @@ struct FsRoots<'a> {
  *                               and pass to the next. If more than the path length, defaults to
  *                               it.
  */
-fn get_minimum_common_ancestor(path: &[PathComponent], mut node: Arc<&dyn INode>, max_inverse_depth: usize) -> Result<(&Arc<&dyn Inode>, usize), ()> {
+fn get_minimum_common_ancestor(path: &[PathComponent], mut node: Arc<&dyn INode>, max_inverse_depth: usize) -> Result<(&Arc<&dyn INode>, usize), ()> {
     let mut minimum_ancestor = None;
-    let mut minimum_inverse_depth = min(max_inverse_depth, path.len()); // Start from the max
+    let mut minimum_inverse_depth = cmp::min(max_inverse_depth, path.len()); // Start from the max
 
     /*
      * Iterate the nodes backwards to the system root.
@@ -80,10 +83,10 @@ fn get_minimum_common_ancestor(path: &[PathComponent], mut node: Arc<&dyn INode>
                 /*
                  * This will remove:
                  * - If our path is a super-path that includes the node, the path components
-                 *   after the node
+                 *   after the node.
                  * - If the path and the node have nothing in common but a few middle path
                  *   components, (eg /bar/FOO/file and /faz/fuz/FOO/something), this removes the
-                 *   false matches
+                 *   false matches.
                  */
                 minimum_ancestor = None;
             }
@@ -179,15 +182,15 @@ impl LoadedNodes {
             Err(())
         }
 
-        // Lock the filesystem roots table and then the inode's filesystem root since it must not
+        // Lock the filesystem roots table and then get the filesystem root inode since it must not
         // change or be unmounted while we're searching.
-        let (node_filesystem, filesystem_state_guard): (Arc<&dyn INode>, RwLockDataReadGuard<()>) = {
+        let node_filesystem: Arc<&dyn INode> = {
             let roots = self._filesystem_roots.read();
-            let filesystem: &dyn Filesystem = roots.get_filesystem_of(path)?;
-            let filesystem_state = roots.get_filesystem_state();
+            let filesystem = roots.get_filesystem_of(path)?;
             // Ensure the node's filesystem is locked before dropping the Filesystem table guard.
-            let guard = filesystem_state.read();
-            (filesystem.get_root_node(), guard)
+            let node = filesystem.get_root_node();
+            mem::drop(roots);
+            node
         };
 
 
@@ -204,8 +207,8 @@ impl LoadedNodes {
 
         // Second, search the opened nodes
         {
-            let opened_nodes = self._opened_nodes.read();
-            match self::search_node_in_map(opened_nodes, path, best_score) {
+            let opened_nodes  = self._opened_nodes.read();
+            match Self::search_node_in_map(&opened_nodes, path, best_score) {
                 PartialINodeSearchResult::None => {}
                 PartialINodeSearchResult::Found(node) => Ok(node.clone()),
                 PartialINodeSearchResult::NewBestScore(new_best, new_nearest) => {
@@ -218,7 +221,7 @@ impl LoadedNodes {
         // Third, search the cache
         {
             let cached_nodes = self._cached_nodes.read();
-            match self::search_inode_map(cached_nodes, path, best_score) {
+            match Self::search_node_in_map(&cached_nodes, path, best_score) {
                 PartialINodeSearchResult::None => {}
                 PartialINodeSearchResult::Found(node) => Ok(node.clone()),
                 PartialINodeSearchResult::NewBestScore(new_best, new_nearest) => {
@@ -229,10 +232,15 @@ impl LoadedNodes {
         }
 
         // Fourth, walk from the node's filesystem root.
-        let result = find_child_from_ancestor(&nearest_node, path);
+        let result = find_child_from_ancestor(&nearest_node, path)?;
 
-        filesystem_state_guard.drop();
-        result
+        // Add the parent of the inode to the cache.
+        // TODO: when supported, set a maximum timer to keep things speedy
+        {
+            let cached_nodes = self._cached_nodes.write();
+            cached_nodes.insert(path, result.get_parent()?);
+        }
+        INodeResult::Ok(result)
     }
 }
 
