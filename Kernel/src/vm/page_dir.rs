@@ -19,7 +19,10 @@ use crate::{
             PageTableIndex,
             PageTableLevel
         },
-        page_table_entry::PageTableEntry,
+        page_table_entry::{
+            PageTableEntry,
+            PageTableMapping
+        },
         Page4KiB,
         TPageSize
     }
@@ -54,7 +57,7 @@ impl PageDir /* Methods */ {
      */
     pub fn ensure_page_table_entry<S>(&self,
                                       virt_addr: VirtAddr)
-                                      -> Option<&mut PageTableEntry>
+                                      -> Option<PageTableMapping<'_>>
         where S: TPageSize {
         if virt_addr.is_aligned(S::SIZE) {
             let l4_page_table = self.root_page_table();
@@ -81,8 +84,15 @@ impl PageDir /* Methods */ {
                 l2_page_table
             };
 
+            let page_table_mapping = {
+                let page_table_entry =
+                    &mut map_page_table[virt_addr.page_table_index(S::PAGE_TABLE_LEVEL)];
+
+                PageTableMapping::new(virt_addr, page_table_entry)
+            };
+
             /* extract the <PageTableEntry> from the mapping level */
-            Some(&mut map_page_table[virt_addr.page_table_index(S::PAGE_TABLE_LEVEL)])
+            Some(page_table_mapping)
         } else {
             None
         }
@@ -128,10 +138,12 @@ impl PageDir /* Privates */ {
         let new_table_created = if page_table_entry.is_unused() {
             let phys_frame = MemManager::instance().allocate_kernel_phys_frame()?;
 
-            page_table_entry.set_phys_frame(phys_frame);
-            page_table_entry.set_present(true);
-            page_table_entry.set_readable(true);
-            page_table_entry.set_writeable(true);
+            /* fill the flags */
+            page_table_entry.set_phys_frame(phys_frame)
+                            .set_present(true)
+                            .set_readable(true)
+                            .set_writeable(true)
+                            .set_global(true);
 
             true
         } else {

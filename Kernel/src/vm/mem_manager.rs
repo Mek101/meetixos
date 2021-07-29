@@ -210,23 +210,19 @@ impl MemManager /* Privates */ {
             let virt_addr = self.layout_manager().phys_addr_to_virt_addr(phys_addr);
 
             /* obtain the page-table-entry for the current virtual-address */
-            let page_table_entry = self.kernel_page_dir()
-                                       .ensure_page_table_entry::<Page2MiB>(virt_addr)
-                                       .expect("Failed to map physical memory");
+            let mut page_table_mapping =
+                self.kernel_page_dir()
+                    .ensure_page_table_entry::<Page2MiB>(virt_addr)
+                    .expect("Failed to map physical memory");
 
-            /* set the flags of the entry */
-            page_table_entry.set_phys_frame(phys_addr);
-            page_table_entry.set_huge_page(true);
-            page_table_entry.set_present(true);
-            page_table_entry.set_readable(true);
-            page_table_entry.set_writeable(true);
-            page_table_entry.set_global(true);
-
-            /* invalidate the TLB */
-            unsafe {
-                asm!("invlpg [{}]", in(reg) *virt_addr, options(nostack, preserves_flags));
-                /* TODO page_table_entry.invalidate_in_tlb(); */
-            }
+            /* fill the bitflags */
+            page_table_mapping.set_phys_frame(phys_addr)
+                              .set_huge_page(true)
+                              .set_present(true)
+                              .set_readable(true)
+                              .set_writeable(true)
+                              .set_global(true)
+                              .set_user(false);
         }
     }
 

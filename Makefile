@@ -26,6 +26,7 @@ run_dbg: image
 	$(V) echo "- Debugging"
 	$(V) echo "target remote localhost:1234" >$(BUILD_PREFIX)/$(BUILD_MODE)/gdb_commands.txt
 	$(V) echo "layout src" >>$(BUILD_PREFIX)/$(BUILD_MODE)/gdb_commands.txt
+	$(V) echo "set print pretty on" >>$(BUILD_PREFIX)/$(BUILD_MODE)/gdb_commands.txt
 	$(V) $(QEMU) $(VIRT_ACCEL) $(QEMU_GDB_ARGS) -S -s -cdrom $(BUILD_PREFIX)/$(BUILD_MODE)/meetixos.iso &
 	$(V) $(R_GDB) $(BUILD_PREFIX)/kernel/$(BUILD_MODE)/mx_kernel --command=$(BUILD_PREFIX)/$(BUILD_MODE)/gdb_commands.txt
 

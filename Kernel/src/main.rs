@@ -9,6 +9,7 @@
            global_asm,
            panic_info_message,
            const_fn_trait_bound,
+           const_mut_refs,
            step_trait,
            alloc_error_handler,
            const_btree_new,

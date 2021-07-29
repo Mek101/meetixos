@@ -13,7 +13,7 @@ use crate::{
         TAddress
     },
     arch::x86_64::{
-        acpi::AcpiManager,
+        acpi_manager::AcpiManager,
         gdt::{
             GlobalDescTable,
             Segment
@@ -55,7 +55,7 @@ impl THwCpu for HwCpu {
                m_gdt: GlobalDescTable::new(),
                m_tss: TaskStateSegment::new(),
                m_idt: IntrDescTable {},
-               m_local_apic: LocalApic::new(),
+               m_local_apic: LocalApic::new_uninitialized(),
                m_double_fault_stack: [0; C_DOUBLE_FAULT_STACK] }
     }
 
@@ -64,7 +64,7 @@ impl THwCpu for HwCpu {
                m_gdt: GlobalDescTable::new(),
                m_tss: TaskStateSegment::new(),
                m_idt: IntrDescTable {},
-               m_local_apic: LocalApic::new(),
+               m_local_apic: LocalApic::new_uninitialized(),
                m_double_fault_stack: [0; C_DOUBLE_FAULT_STACK] }
     }
 
@@ -72,8 +72,8 @@ impl THwCpu for HwCpu {
         /* set the double fault stack pointer into the TSS */
         self.m_tss.m_full_intr_stack_table[C_DOUBLE_FAULT_STACK_INDEX] = {
             /* obtain the <VirtAddr> of the static buffer */
-            let double_fault_stack_virt_addr =
-                VirtAddr::from(self.m_double_fault_stack.as_mut_ptr());
+            let double_fault_stack_virt_addr: VirtAddr =
+                self.m_double_fault_stack.as_mut_ptr().into();
 
             /* return the bottom of the area */
             double_fault_stack_virt_addr.offset(C_DOUBLE_FAULT_STACK)
@@ -112,16 +112,14 @@ impl THwCpu for HwCpu {
     }
 
     fn init_interrupts(&'static mut self) {
-        LocalApic::init_apic();
-        AcpiManager::init_instance();
-
-        // if !self.m_is_ap {
-        //     PicManager::init_instance();
-        //
-        //     /* initialize the APIC */
-        //     LocalApic::init_apic();
-        // }
-        // self.m_local_apic.enable();
+        if !self.m_is_ap {
+            /* initialize APIC and collect ACPI tables on BSP */
+            if !LocalApic::init_apic() {
+                panic!("This CPU doesn't support APIC");
+            }
+            AcpiManager::init_instance();
+        }
+        self.m_local_apic.init_and_enable();
     }
 
     fn do_halt(&self) {
@@ -143,7 +141,7 @@ impl THwCpu for HwCpu {
     }
 
     fn current_id() -> CpuId {
-        0 /* TODO APIC */
+        LocalApic::this_core_id()
     }
 
     fn id(&self) -> CpuId {

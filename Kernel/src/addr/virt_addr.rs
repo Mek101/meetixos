@@ -153,7 +153,10 @@ impl Debug for VirtAddr {
 impl Display for VirtAddr {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:#018x}", **self)
+        write!(f, "0x{:04x}", (**self & 0xffff_0000_0000_0000) >> 48)?;
+        write!(f, "_{:04x}", (**self & 0x0000_ffff_0000_0000) >> 32)?;
+        write!(f, "_{:04x}", (**self & 0x0000_0000_ffff_0000) >> 16)?;
+        write!(f, "_{:04x}", **self & 0x0000_0000_0000_ffff)
     }
 }
 

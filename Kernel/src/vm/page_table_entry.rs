@@ -1,11 +1,61 @@
 /*! Page table entry */
 
-use core::fmt::Debug;
+use core::{
+    fmt::Debug,
+    mem,
+    ops::{
+        Deref,
+        DerefMut
+    }
+};
 
 use crate::{
-    addr::phys_addr::PhysAddr,
+    addr::{
+        phys_addr::PhysAddr,
+        virt_addr::VirtAddr
+    },
     arch::vm::hw_page_table_entry::HwPageTableEntry
 };
+
+pub struct PageTableMapping<'a> {
+    m_virt_addr: VirtAddr,
+    m_page_table_entry: &'a mut PageTableEntry
+}
+
+impl<'a> PageTableMapping<'a> /* Constructors */ {
+    pub const fn new(virt_addr: VirtAddr,
+                     page_table_entry: &'a mut PageTableEntry)
+                     -> Self {
+        Self { m_virt_addr: virt_addr,
+               m_page_table_entry: page_table_entry }
+    }
+}
+
+impl<'a> PageTableMapping<'a> /* Methods */ {
+    pub fn forget(self) {
+        mem::forget(self);
+    }
+}
+
+impl<'a> Deref for PageTableMapping<'a> {
+    type Target = PageTableEntry;
+
+    fn deref(&self) -> &Self::Target {
+        self.m_page_table_entry
+    }
+}
+
+impl<'a> DerefMut for PageTableMapping<'a> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.m_page_table_entry
+    }
+}
+
+impl<'a> Drop for PageTableMapping<'a> {
+    fn drop(&mut self) {
+        unsafe { self.m_page_table_entry.invalidate_in_tlb(self.m_virt_addr) }
+    }
+}
 
 #[repr(transparent)]
 #[derive(Debug)]
@@ -17,12 +67,6 @@ pub struct PageTableEntry {
 impl PageTableEntry /* Constructors */ {
     pub fn new() -> Self {
         Self { m_hw_entry: HwPageTableEntry::new() }
-    }
-}
-
-impl PageTableEntry /* Methods */ {
-    pub unsafe fn invalidate_in_tlb(&self) {
-        self.m_hw_entry.invalidate_in_tlb();
     }
 }
 
@@ -94,70 +138,88 @@ impl PageTableEntry /* Getters */ {
 
 impl PageTableEntry /* Setters */ {
     #[inline]
-    pub fn set_phys_frame(&mut self, phys_frame: PhysAddr) {
+    pub fn set_phys_frame(&mut self, phys_frame: PhysAddr) -> &mut Self {
         self.m_hw_entry.set_raw_phys_frame(*phys_frame);
+        self
     }
 
     #[inline]
-    pub fn set_present(&mut self, is_present: bool) {
+    pub fn set_present(&mut self, is_present: bool) -> &mut Self {
         self.m_hw_entry.set_present(is_present);
+        self
     }
 
     #[inline]
-    pub fn set_readable(&mut self, is_readable: bool) {
+    pub fn set_readable(&mut self, is_readable: bool) -> &mut Self {
         self.m_hw_entry.set_readable(is_readable);
+        self
     }
 
     #[inline]
-    pub fn set_writeable(&mut self, is_writeable: bool) {
+    pub fn set_writeable(&mut self, is_writeable: bool) -> &mut Self {
         self.m_hw_entry.set_writeable(is_writeable);
+        self
     }
 
     #[inline]
-    pub fn set_cacheable(&mut self, is_cacheable: bool) {
+    pub fn set_cacheable(&mut self, is_cacheable: bool) -> &mut Self {
         self.m_hw_entry.set_cacheable(is_cacheable);
+        self
     }
 
     #[inline]
-    pub fn set_global(&mut self, is_global: bool) {
+    pub fn set_global(&mut self, is_global: bool) -> &mut Self {
         self.m_hw_entry.set_global(is_global);
+        self
     }
 
     #[inline]
-    pub fn set_huge_page(&mut self, is_huge_page: bool) {
+    pub fn set_huge_page(&mut self, is_huge_page: bool) -> &mut Self {
         self.m_hw_entry.set_huge_page(is_huge_page);
+        self
     }
 
     #[inline]
-    pub fn set_accessed(&mut self, is_accessed: bool) {
+    pub fn set_accessed(&mut self, is_accessed: bool) -> &mut Self {
         self.m_hw_entry.set_accessed(is_accessed);
+        self
     }
 
     #[inline]
-    pub fn set_dirty(&mut self, is_dirty: bool) {
+    pub fn set_dirty(&mut self, is_dirty: bool) -> &mut Self {
         self.m_hw_entry.set_dirty(is_dirty);
+        self
     }
 
     #[inline]
-    pub fn set_no_execute(&mut self, is_no_execute: bool) {
+    pub fn set_no_execute(&mut self, is_no_execute: bool) -> &mut Self {
         self.m_hw_entry.set_no_execute(is_no_execute);
+        self
     }
 
     #[inline]
-    pub fn set_user(&mut self, is_user: bool) {
+    pub fn set_user(&mut self, is_user: bool) -> &mut Self {
         self.m_hw_entry.set_user(is_user);
+        self
     }
 
     #[inline]
-    pub fn set_unused(&mut self) {
+    pub fn set_unused(&mut self) -> &mut Self {
         self.m_hw_entry.set_unused();
+        self
+    }
+}
+
+impl PageTableEntry /* Privates */ {
+    unsafe fn invalidate_in_tlb(&self, virt_addr: VirtAddr) {
+        self.m_hw_entry.invalidate_in_tlb(virt_addr);
     }
 }
 
 pub trait THwPageTableEntry: Debug + Copy + Clone {
     fn new() -> Self;
 
-    unsafe fn invalidate_in_tlb(&self);
+    unsafe fn invalidate_in_tlb(&self, virt_addr: VirtAddr);
 
     fn raw_phys_frame(&self) -> usize;
     fn is_present(&self) -> bool;

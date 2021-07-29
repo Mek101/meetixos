@@ -8,7 +8,10 @@ use core::{
 use bits::bit_fields::TBitFields;
 
 use crate::{
-    addr::phys_addr::PhysAddr,
+    addr::{
+        phys_addr::PhysAddr,
+        virt_addr::VirtAddr
+    },
     vm::page_table_entry::THwPageTableEntry
 };
 
@@ -28,8 +31,8 @@ impl THwPageTableEntry for HwPageTableEntry {
     }
 
     #[inline]
-    unsafe fn invalidate_in_tlb(&self) {
-        asm!("invlpg [{}]", in(reg) self.raw_phys_frame())
+    unsafe fn invalidate_in_tlb(&self, virt_addr: VirtAddr) {
+        asm!("invlpg [{}]", in(reg) *virt_addr)
     }
 
     #[inline]

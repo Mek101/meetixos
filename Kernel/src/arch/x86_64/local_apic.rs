@@ -18,26 +18,36 @@ use crate::{
     },
     arch::x86_64::ms_register::MsRegister,
     cpu::CpuId,
-    vm::mem_manager::MemManager
+    vm::{
+        mem_manager::MemManager,
+        Page4KiB
+    }
 };
 
+/* <None> until <LocalApic::init_apic()> is called */
 static mut SM_APIC_BASE_VIRT_ADDR: Option<VirtAddr> = None;
 
+/**
+ * Local Advanced Programmable Interrupt Controller
+ */
 pub struct LocalApic {
     m_virt_addr: VirtAddr,
     m_enabled: bool
 }
 
 impl LocalApic /* Constructors */ {
+    /**
+     * Initialize the base Advanced Programmable interrupt controller
+     */
     pub fn init_apic() -> bool {
         /* fail if the APIC is not supported by the CPU */
-        if !Self::is_supported() {
+        if !Self::is_apic_supported() {
             return false;
         }
 
         /* obtain from the APIC-MSR the APIC base value */
         let apic_msr = MsRegister::new(0x1b);
-        let apic_base = unsafe { apic_msr.read() as usize };
+        let apic_base = unsafe { apic_msr.read() };
 
         /* check for disabled APIC (bit 11 stores enable-bit) */
         if !apic_base.bit_at(11) {
@@ -45,28 +55,47 @@ impl LocalApic /* Constructors */ {
         }
 
         /* obtain the APIC physical address and convert it to virtual */
-        let apic_base_phys_addr: PhysAddr = (apic_base & 0xffff_f000).into();
-        let apic_base_virt_addr =
-            MemManager::instance().layout_manager()
-                                  .phys_addr_to_virt_addr(apic_base_phys_addr);
+        let apic_base_phys_addr: PhysAddr = ((apic_base & 0xffff_f000) as usize).into();
+        let apic_base_virt_addr = {
+            /* TODO MAP A REGION */
+            let apic_base_virt_addr: VirtAddr = (*apic_base_phys_addr).into();
+
+            MemManager::instance().kernel_page_dir()
+                                  .ensure_page_table_entry::<Page4KiB>(apic_base_virt_addr)
+                                  .expect("Failed to map APIC")
+                                  .set_phys_frame(apic_base_phys_addr)
+                                  .set_present(true)
+                                  .set_writeable(true)
+                                  .set_readable(true)
+                                  .set_user(false);
+
+            apic_base_virt_addr
+        };
         unsafe {
             /* store the APIC base VirtAddr for use of the other cores */
             SM_APIC_BASE_VIRT_ADDR = Some(apic_base_virt_addr);
 
             /* store into the APIC-MSR the enable flag */
-            apic_msr.write(apic_base as u64 | (1 << 11));
+            apic_msr.write(apic_base | (1 << 11));
         }
         true
     }
 
-    pub fn new() -> Self {
+    /**
+     * Constructs an uninitialized `LocalApic`
+     */
+    pub fn new_uninitialized() -> Self {
         Self { m_virt_addr: VirtAddr::null(),
                m_enabled: false }
     }
 }
 
 impl LocalApic /* Methods */ {
-    pub fn enable(&mut self) {
+    /**
+     * Initializes this instance with the global `SM_APIC_BASE_VIRT_ADDR`
+     * and enables the `LocalApic` for this core
+     */
+    pub fn init_and_enable(&mut self) {
         unsafe {
             assert!(SM_APIC_BASE_VIRT_ADDR.is_some(),
                     "Tried to initialize LocalApic before LocalApic::init_apic()");
@@ -75,7 +104,7 @@ impl LocalApic /* Methods */ {
             self.m_virt_addr = SM_APIC_BASE_VIRT_ADDR.unwrap();
 
             /* enable spurious interrupts */
-            if self.read(Register::SpuriousInterrupt) & SPURIOUS_INTERRUPT_DISABLE != 0 {
+            if self.read(Register::SpuriousInterrupt) & SPURIOUS_INTERRUPT_ENABLE == 0 {
                 self.write(Register::SpuriousInterrupt, SPURIOUS_INTERRUPT_ENABLE);
             }
 
@@ -90,30 +119,60 @@ impl LocalApic /* Methods */ {
 }
 
 impl LocalApic /* Static Functions */ {
-    pub fn is_supported() -> bool {
+    /**
+     * Returns whether the APIC is supported by the CPU
+     */
+    pub fn is_apic_supported() -> bool {
         (unsafe { __cpuid(0x01) }.edx & (1 << 9)) != 0
+    }
+
+    /**
+     * Returns the `CpuId` for this core
+     */
+    pub fn this_core_id() -> CpuId {
+        if let Some(apic_base_virt_addr) = unsafe { SM_APIC_BASE_VIRT_ADDR } {
+            Self { m_virt_addr: apic_base_virt_addr,
+                   m_enabled: false }.cpu_id()
+        } else {
+            0 /* APIC still disabled */
+        }
     }
 }
 
 impl LocalApic /* Getters */ {
+    /**
+     * Returns whether the `LocalApic` is enabled for this core
+     */
     pub fn is_enabled(&self) -> bool {
         self.m_enabled
     }
 
+    /**
+     * Returns the hardware `CpuId`
+     */
     pub fn cpu_id(&self) -> CpuId {
         unsafe { self.read(Register::CoreId) as CpuId }
     }
 
+    /**
+     * Notifies the end of an interrupt
+     */
     pub fn end_of_interrupt(&self) {
         unsafe { self.write(Register::EndOfInterrupt, 0) }
     }
 }
 
 impl LocalApic /* Privates */ {
+    /**
+     * Reads the value of the given `Register`
+     */
     unsafe fn read(&self, register: Register) -> u32 {
         read_volatile((*self.m_virt_addr + register as usize) as *const u32)
     }
 
+    /**
+     * Overwrites the value of the given `Register`
+     */
     unsafe fn write(&self, register: Register, value: u32) {
         write_volatile((*self.m_virt_addr + register as usize) as *mut u32, value);
     }
