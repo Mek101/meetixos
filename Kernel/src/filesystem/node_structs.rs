@@ -1,19 +1,19 @@
-use alloc::collections::BTreeMap;
 use alloc::string::String;
 use alloc::sync::{Arc, Weak};
 use alloc::vec::Vec;
-use core::cmp::Ordering;
-use core::cmp::Ordering::{Equal, Greater, Less};
+use alloc::collections::BTreeMap;
+use core::cmp::Ordering::{self, Equal, Greater, Less};
 use core::ops::{Add, Bound, Deref};
 
 use api_data::path::PathComponent;
 
 use crate::filesystem::r#virtual::INode;
+use alloc::boxed::Box;
 
-pub enum PartialNodeResult<'a> {
+pub enum PartialNodeResult {
     None,
-    Found(Arc<&'a dyn INode>),
-    Ancestor(Arc<&'a dyn INode>, usize),
+    Found(Arc<dyn INode>),
+    Ancestor(Arc<dyn INode>, usize),
 }
 
 /**
@@ -23,6 +23,14 @@ pub enum PartialNodeResult<'a> {
 struct PathWrapper {
     _string: String,    // The path as a string.
     _separators: usize  // The number of Path::SEPARATOR in the string.
+}
+
+/**
+ * A node cache entry that is also a node of a doubly-linked list of entries that don't own each
+ * other.
+ */
+struct CacheEntry {
+    _value: Arc<dyn INode>
 }
 
 pub trait NodeTreeMap {
@@ -58,7 +66,9 @@ pub struct NodeTable<'a> {
  * wacky results if fed any!
  */
 pub struct NodeCache<'a> {
-    _map: BTreeMap<PathWrapper, Weak<&'a dyn INode>>,
+    _map: BTreeMap<PathWrapper, Box<CacheEntry>>,
+    _list_head: &'a CacheEntry,
+    _list_back: &'a CacheEntry,
     _capacity: usize
 }
 
@@ -199,13 +209,6 @@ impl NodeCache {
 
     pub fn count(&self) -> usize {
         self._map.len()
-    }
-
-    /**
-     * Remove any references still in the cache of dropped nodes.
-     */
-    pub fn clear_invalid(&mut self) {
-        todo!()
     }
 
     pub fn clear(&mut self) {

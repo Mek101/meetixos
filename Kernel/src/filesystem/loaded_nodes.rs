@@ -1,4 +1,3 @@
-use alloc::collections::HashMap;
 use alloc::sync::Arc;
 use alloc::vec::Vec;
 use core::cmp;
@@ -16,9 +15,9 @@ use crate::filesystem::{Filesystem, FsError};
 use crate::filesystem::r#virtual::{INode, DirectoryNode};
 use crate::filesystem::node_structs::{NodeTable, NodeTreeMap, PartialNodeResult};
 
-type INodeLockMap<'a> = SpinRwLock<HashMap<&'a [PathComponent], &'a dyn INode>>;
+type INodeLockMap<'a> = SpinRwLock<HashMap<&'a [PathComponent], dyn INode>>;
 
-pub type INodeResult<'a> = Result<Arc<&'a dyn INode>, ()>;
+pub type INodeResult = Result<Arc<dyn INode>, ()>;
 
 enum PartialSearchResult<T> {
     None,
@@ -41,7 +40,7 @@ pub struct LoadedNodes<'a> {
 }
 
 struct FsRoots<'a> {
-    _filesystem_mountpoints: HashMap<&'a [PathComponent], &'a dyn Filesystem>,
+    _filesystem_mountpoints: HashMap<&'a [PathComponent], dyn Filesystem>,
 }
 
 /**
@@ -258,7 +257,7 @@ impl FsRoots {
         })
     }
 
-    pub fn get_filesystem_of(self, path: &[PathComponent]) -> Result<Arc<&dyn Filesystem>, ()> {
+    pub fn get_filesystem_of(self, path: &[PathComponent]) -> Result<Arc<dyn Filesystem>, ()> {
         match self._filesystem_mountpoints.get(path) {
             Some(fs) => Ok(fs),
             None => {
