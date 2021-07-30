@@ -1,18 +1,25 @@
 /*! x86_64 CPU management implementation */
 
+use core::arch::x86_64::{
+    CpuidResult,
+    __cpuid
+};
+
+use bits::bit_fields::TBitFields;
+
 use crate::{
     addr::{
         virt_addr::VirtAddr,
         TAddress
     },
     arch::x86_64::{
+        acpi::AcpiManager,
         gdt::{
             GlobalDescTable,
-            Segment,
-            SegmentSelector
+            Segment
         },
         idt::IntrDescTable,
-        pic::PicManager,
+        local_apic::LocalApic,
         tss::TaskStateSegment
     },
     cpu::{
@@ -28,66 +35,49 @@ const C_DOUBLE_FAULT_STACK_INDEX: usize = 0;
  * x86_64 `HwCpuBase` implementation
  */
 pub struct HwCpu {
-    m_id: CpuId,
     m_is_ap: bool,
     m_gdt: GlobalDescTable,
     m_tss: TaskStateSegment,
     m_idt: IntrDescTable,
+    m_local_apic: LocalApic,
     m_double_fault_stack: [u8; C_DOUBLE_FAULT_STACK]
 }
 
 impl HwCpu /* Privates */ {
-    /**
-     * Reloads the code-segment register with the given kernel-code selector
-     */
-    fn reload_code_segment_register(&self, kern_code_segment_selector: SegmentSelector) {
-        unsafe {
-            asm!("push      {seg_selector}",
-                 "lea       {tmp}, [1f + rip]",
-                 "push      {tmp}",
-                 "retfq",
-                 "1:",
-                 seg_selector = in(reg) kern_code_segment_selector.as_raw(),
-                 tmp = lateout(reg) _,
-                 options(preserves_flags));
-        }
-    }
-
-    /**
-     * Loads the `TaskStateSegment` from the given selector
-     */
-    fn load_tss_segment(&self, tss_segment_selector: SegmentSelector) {
-        unsafe {
-            asm!("ltr       {0:x}",
-                 in(reg) tss_segment_selector.as_raw(),
-                 options(nomem, nostack, preserves_flags));
-        }
+    fn cpu_frequency_info(&self) -> CpuidResult {
+        unsafe { __cpuid(0x16) }
     }
 }
 
 impl THwCpu for HwCpu {
     fn new_bsp() -> Self {
-        Self { m_id: 0,
-               m_is_ap: false,
+        Self { m_is_ap: false,
                m_gdt: GlobalDescTable::new(),
                m_tss: TaskStateSegment::new(),
                m_idt: IntrDescTable {},
+               m_local_apic: LocalApic::new(),
                m_double_fault_stack: [0; C_DOUBLE_FAULT_STACK] }
     }
 
     fn new_ap() -> Self {
-        Self { m_id: 0,
-               m_is_ap: true,
+        Self { m_is_ap: true,
                m_gdt: GlobalDescTable::new(),
                m_tss: TaskStateSegment::new(),
                m_idt: IntrDescTable {},
+               m_local_apic: LocalApic::new(),
                m_double_fault_stack: [0; C_DOUBLE_FAULT_STACK] }
     }
 
     fn init(&'static mut self) {
         /* set the double fault stack pointer into the TSS */
-        self.m_tss.m_full_intr_stack_table[C_DOUBLE_FAULT_STACK_INDEX]
-            = VirtAddr::from(self.m_double_fault_stack.as_mut_ptr()).offset(C_DOUBLE_FAULT_STACK);
+        self.m_tss.m_full_intr_stack_table[C_DOUBLE_FAULT_STACK_INDEX] = {
+            /* obtain the <VirtAddr> of the static buffer */
+            let double_fault_stack_virt_addr =
+                VirtAddr::from(self.m_double_fault_stack.as_mut_ptr());
+
+            /* return the bottom of the area */
+            double_fault_stack_virt_addr.offset(C_DOUBLE_FAULT_STACK)
+        };
 
         /* setup the GDT segments */
         let kern_code_segment_selector =
@@ -100,12 +90,38 @@ impl THwCpu for HwCpu {
 
         /* load the GDT, reload the code-segment register (CS) and load the TSS */
         self.m_gdt.load();
-        self.reload_code_segment_register(kern_code_segment_selector);
-        self.load_tss_segment(tss_segment_selector);
+
+        /* reload the code-segment register (CS) */
+        unsafe {
+            asm!("push      {css}",
+                 "lea       {tmp}, [1f + rip]",
+                 "push      {tmp}",
+                 "retfq",
+                 "1:",
+                 css = in(reg) kern_code_segment_selector.as_raw(),
+                 tmp = lateout(reg) _,
+                 options(preserves_flags));
+        }
+
+        /* load the TSS */
+        unsafe {
+            asm!("ltr {0:x}",
+                 in(reg) tss_segment_selector.as_raw(),
+                 options(nomem, nostack, preserves_flags));
+        }
     }
 
     fn init_interrupts(&'static mut self) {
-        PicManager::init_instance();
+        LocalApic::init_apic();
+        AcpiManager::init_instance();
+
+        // if !self.m_is_ap {
+        //     PicManager::init_instance();
+        //
+        //     /* initialize the APIC */
+        //     LocalApic::init_apic();
+        // }
+        // self.m_local_apic.enable();
     }
 
     fn do_halt(&self) {
@@ -131,10 +147,30 @@ impl THwCpu for HwCpu {
     }
 
     fn id(&self) -> CpuId {
-        self.m_id
+        if self.m_local_apic.is_enabled() {
+            self.m_local_apic.cpu_id()
+        } else {
+            0
+        }
+    }
+
+    fn base_frequency(&self) -> u64 {
+        self.cpu_frequency_info().eax.bits_at(0..15) as u64
+    }
+
+    fn max_frequency(&self) -> u64 {
+        self.cpu_frequency_info().ebx.bits_at(0..15) as u64
+    }
+
+    fn bus_frequency(&self) -> u64 {
+        self.cpu_frequency_info().ecx.bits_at(0..15) as u64
     }
 
     fn are_interrupts_enabled(&self) -> bool {
-        todo!()
+        let rflags: u64;
+        unsafe {
+            asm!("pushfq; pop {}", out(reg) rflags, options(nomem, preserves_flags));
+        }
+        rflags.bit_at(9)
     }
 }

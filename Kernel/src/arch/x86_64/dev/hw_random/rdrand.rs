@@ -1,4 +1,4 @@
-/*! x86_64 random support */
+/*! RDRAND random driver */
 
 use alloc::string::String;
 use core::{

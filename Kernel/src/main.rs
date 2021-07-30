@@ -12,6 +12,7 @@
            step_trait,
            alloc_error_handler,
            const_btree_new,
+           array_methods,
            once_cell)]
 #![allow(dead_code)]
 
@@ -104,6 +105,16 @@ pub extern "C" fn kernel_rust_start(raw_boot_info_ptr: *const u8) -> ! {
                          boot_mem_area.start,
                          boot_mem_area.end);
         }
+
+        dbg_println!(DbgLevel::Trace,
+                     "Cpu: Base Frequency: {}MHz, Max Frequency: {}MHz, Bus Frequency: \
+                      {}MHz",
+                     Cpu::current().base_frequency(),
+                     Cpu::current().max_frequency(),
+                     Cpu::current().bus_frequency());
+        dbg_println!(DbgLevel::Trace,
+                     "Interrupts are enabled: {}",
+                     Cpu::current().are_interrupts_enabled());
     }
     panic!("TODO implement the remaining code");
 }

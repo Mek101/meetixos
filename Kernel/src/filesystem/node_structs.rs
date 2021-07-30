@@ -4,11 +4,15 @@ use alloc::vec::Vec;
 use alloc::collections::BTreeMap;
 use core::cmp::Ordering::{self, Equal, Greater, Less};
 use core::ops::{Add, Bound, Deref};
+use core::ptr::NonNull;
 
 use api_data::path::PathComponent;
 
 use crate::filesystem::r#virtual::INode;
 use alloc::boxed::Box;
+use alloc::alloc::Global;
+
+type Link<T> = Option<NonNull<T>>;
 
 pub enum PartialNodeResult {
     None,
@@ -30,11 +34,13 @@ struct PathWrapper {
  * other.
  */
 struct CacheEntry {
-    _value: Arc<dyn INode>
+    next: Link<CacheEntry>,
+    prev: Link<CacheEntry>,
+    value: Arc<dyn INode>
 }
 
 pub trait NodeTreeMap {
-    fn set(&mut self, path: &[PathComponent], node: &Arc<&dyn INode>);
+    fn set(&mut self, path: &[PathComponent], node: &Arc<dyn INode>);
 
     fn get_exact(&self, path: &[PathComponent]) -> PartialNodeResult;
 
@@ -57,8 +63,8 @@ pub trait NodeTreeMap {
  * WARNING: doesn't support parent or self path links and does not check for them: it will produce
  * wacky results if fed any!
  */
-pub struct NodeTable<'a> {
-    _map: BTreeMap<PathWrapper, Arc<&'a dyn INode>>
+pub struct NodeTable {
+    _map: BTreeMap<PathWrapper, Arc<dyn INode>>
 }
 
 /**
@@ -67,8 +73,8 @@ pub struct NodeTable<'a> {
  */
 pub struct NodeCache<'a> {
     _map: BTreeMap<PathWrapper, Box<CacheEntry>>,
-    _list_head: &'a CacheEntry,
-    _list_back: &'a CacheEntry,
+    _list_head: Link<CacheEntry>,
+    _list_back: Link<CacheEntry>,
     _capacity: usize
 }
 
@@ -102,6 +108,16 @@ impl Eq for PathWrapper {}
 impl PartialEq for PathWrapper {
     fn eq(&self, other: &Self) -> bool {
         self._string.eq(&self._string)
+    }
+}
+
+impl CacheEntry {
+    pub fn new(value: &Arc<dyn INode>) -> Self {
+        Self {
+            next: None,
+            prev: None,
+            value: value.clone()
+        }
     }
 }
 
@@ -196,15 +212,49 @@ impl NodeTreeMap for NodeTable {
 }
 
 impl NodeCache {
+    unsafe fn unlink(mut entry: NonNull<CacheEntry>) {
+        if let Some(mut prev) = entry.as_mut().prev {
+            prev.as_mut().next = entry.as_ref().next;
+            entry.as_mut().prev = None;
+        }
+        if let Some(mut next) = entry.as_mut().next {
+            next.as_mut().prev = entry.as_ref().prev;
+            entry.as_mut().next = None;
+        }
+    }
+
+    /**
+     * Pushes an entry to the top of the list.
+     */
+    unsafe fn move_as_head(&mut self, mut entry: NonNull<CacheEntry>) {
+        Self::unlink(entry);
+        entry.as_mut().prev = None;
+        if let Some(mut old_head) = self._list_head {
+            old_head.as_mut().prev = Some(entry);
+            entry.as_mut().next = Some(old_head);
+            self._list_head = Some(entry);
+        } else {
+            entry.as_mut().next = None;
+            self._list_head = Some(entry);
+            self._list_back = Some(entry);
+        }
+    }
+
     pub fn new(capacity: usize) -> Self {
         Self {
             _map: BTreeMap::new(),
+            _list_head: None,
+            _list_back: None,
             _capacity: capacity
         }
     }
 
     pub fn capacity(&self) -> usize {
         self._capacity
+    }
+
+    pub fn set_capacity(&mut self) {
+        todo!()
     }
 
     pub fn count(&self) -> usize {
@@ -222,7 +272,17 @@ impl NodeCache {
 
 impl NodeTreeMap for NodeCache {
     fn set(&mut self, path: &[PathComponent], node: &Arc<&dyn INode>) {
-        todo!()
+        let path = PathWrapper::new(path);
+        let entry = Box::new(CacheEntry::new(node));
+        // Put the new entry at the top of the list.
+        self.push_list(entry.as_ref());
+
+        match self._map.insert(path, entry) {
+            None => { }
+            Some(old_entry) => {
+                // Unlink the old value from the rest of the list
+            }
+        }
     }
 
     fn get_exact(&self, path: &[PathComponent]) -> PartialNodeResult {

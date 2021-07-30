@@ -125,6 +125,27 @@ impl Cpu /* Getters */ {
     }
 
     /**
+     * Returns the base frequency in Hz of this `Cpu`
+     */
+    pub fn base_frequency(&self) -> u64 {
+        self.m_hw_cpu.base_frequency()
+    }
+
+    /**
+     * Returns the maximum frequency in Hz of this `Cpu`
+     */
+    pub fn max_frequency(&self) -> u64 {
+        self.m_hw_cpu.max_frequency()
+    }
+
+    /**
+     * Returns the bus frequency in Hz of this `Cpu`
+     */
+    pub fn bus_frequency(&self) -> u64 {
+        self.m_hw_cpu.bus_frequency()
+    }
+
+    /**
      * Returns whether this `Cpu` have hardware interrupts enabled
      */
     pub fn are_interrupts_enabled(&self) -> bool {
@@ -201,6 +222,21 @@ pub trait THwCpu {
      * Returns the hardware `CpuId` of this `HwCpu`
      */
     fn id(&self) -> CpuId;
+
+    /**
+     * Returns the base frequency in Hz of this `Cpu`
+     */
+    fn base_frequency(&self) -> u64;
+
+    /**
+     * Returns the maximum frequency in Hz of this `Cpu`
+     */
+    fn max_frequency(&self) -> u64;
+
+    /**
+     * Returns the bus frequency in Hz of this `Cpu`
+     */
+    fn bus_frequency(&self) -> u64;
 
     /**
      * Returns whether this `Cpu` have hardware interrupts enabled
