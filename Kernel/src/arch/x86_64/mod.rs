@@ -2,13 +2,13 @@
 
 pub mod acpi_manager;
 pub mod addr;
+pub mod apic_manager;
 pub mod desc_table;
 pub mod dev;
 pub mod gdt;
 pub mod hw_boot_info;
 pub mod hw_cpu;
 pub mod idt;
-pub mod local_apic;
 pub mod ms_register;
 pub mod tss;
 pub mod vm;

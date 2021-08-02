@@ -23,13 +23,13 @@ use symbols::code_symbols::CodeSymbols;
 
 use crate::{
     boot_info::BootInfo,
-    cpu::Cpu,
     dbg_print::{
         dbg_print_init,
         DbgLevel
     },
     dev::DevManager,
     heap::kernel_heap_init_eternal_pool,
+    processor::Processor,
     version::KERNEL_VERSION,
     vm::mem_manager::MemManager
 };
@@ -37,11 +37,11 @@ use crate::{
 mod addr;
 mod arch;
 mod boot_info;
-mod cpu;
 mod dbg_print;
 mod dev;
 mod heap;
 mod panic;
+mod processor;
 mod version;
 mod vm;
 
@@ -74,7 +74,7 @@ pub extern "C" fn kernel_rust_start(raw_boot_info_ptr: *const u8) -> ! {
 
     /* initialize the CPU management for the bootstrap CPU */
     dbg_println!(DbgLevel::Trace, "Initializing CPU Management...");
-    Cpu::early_init();
+    Processor::init_instance();
 
     /* initialize the memory manager */
     dbg_println!(DbgLevel::Trace, "Initializing Memory Management...");
@@ -82,7 +82,7 @@ pub extern "C" fn kernel_rust_start(raw_boot_info_ptr: *const u8) -> ! {
 
     /* initialize the interrupts for this CPU */
     dbg_println!(DbgLevel::Trace, "Initializing Interrupts Management...");
-    Cpu::init_interrupts_for_this();
+    Processor::instance_mut().init_interrupts_for_bsp();
 
     /* FIXME debug printing to remove */
     {
@@ -104,14 +104,13 @@ pub extern "C" fn kernel_rust_start(raw_boot_info_ptr: *const u8) -> ! {
         }
 
         dbg_println!(DbgLevel::Trace,
-                     "Cpu: Base Frequency: {}MHz, Max Frequency: {}MHz, Bus Frequency: \
-                      {}MHz",
-                     Cpu::current().base_frequency(),
-                     Cpu::current().max_frequency(),
-                     Cpu::current().bus_frequency());
+                     "Base Frequency: {}MHz, Max Frequency: {}MHz, Bus Frequency: {}MHz",
+                     Processor::instance().base_frequency(),
+                     Processor::instance().max_frequency(),
+                     Processor::instance().bus_frequency());
         dbg_println!(DbgLevel::Trace,
                      "Interrupts are enabled: {}",
-                     Cpu::current().are_interrupts_enabled());
+                     Processor::instance().this_core().are_interrupts_enabled());
     }
     panic!("TODO implement the remaining code");
 }

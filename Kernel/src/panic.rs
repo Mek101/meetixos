@@ -2,13 +2,14 @@
 
 use core::panic::PanicInfo;
 
+use symbols::code_symbols::CodeSymbols;
+
 use crate::{
-    cpu::Cpu,
     dbg_print::DbgLevel,
     dbg_println,
+    processor::Processor,
     vm::mem_manager::MemManager
 };
-use symbols::code_symbols::CodeSymbols;
 
 /**
  * Kernel panic catcher implementation
@@ -43,5 +44,5 @@ fn kernel_panic_handler(panic_info: &PanicInfo) -> ! {
     }
 
     /* halt this CPUs */
-    Cpu::current().halt();
+    Processor::instance().this_core().halt();
 }

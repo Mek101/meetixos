@@ -1,9 +1,6 @@
 /*! x86_64 CPU management implementation */
 
-use core::arch::x86_64::{
-    CpuidResult,
-    __cpuid
-};
+use core::arch::x86_64::__cpuid;
 
 use bits::bit_fields::TBitFields;
 
@@ -14,17 +11,17 @@ use crate::{
     },
     arch::x86_64::{
         acpi_manager::AcpiManager,
+        apic_manager::ApicManager,
         gdt::{
             GlobalDescTable,
             Segment
         },
         idt::IntrDescTable,
-        local_apic::LocalApic,
         tss::TaskStateSegment
     },
-    cpu::{
-        CpuId,
-        THwCpu
+    processor::{
+        CpuCoreId,
+        THwCpuCore
     }
 };
 
@@ -34,37 +31,20 @@ const C_DOUBLE_FAULT_STACK_INDEX: usize = 0;
 /**
  * x86_64 `HwCpuBase` implementation
  */
-pub struct HwCpu {
+pub struct HwCpuCore {
     m_is_ap: bool,
     m_gdt: GlobalDescTable,
     m_tss: TaskStateSegment,
     m_idt: IntrDescTable,
-    m_local_apic: LocalApic,
     m_double_fault_stack: [u8; C_DOUBLE_FAULT_STACK]
 }
 
-impl HwCpu /* Privates */ {
-    fn cpu_frequency_info(&self) -> CpuidResult {
-        unsafe { __cpuid(0x16) }
-    }
-}
-
-impl THwCpu for HwCpu {
-    fn new_bsp() -> Self {
-        Self { m_is_ap: false,
+impl THwCpuCore for HwCpuCore {
+    fn new(is_ap: bool) -> Self {
+        Self { m_is_ap: is_ap,
                m_gdt: GlobalDescTable::new(),
                m_tss: TaskStateSegment::new(),
                m_idt: IntrDescTable {},
-               m_local_apic: LocalApic::new_uninitialized(),
-               m_double_fault_stack: [0; C_DOUBLE_FAULT_STACK] }
-    }
-
-    fn new_ap() -> Self {
-        Self { m_is_ap: true,
-               m_gdt: GlobalDescTable::new(),
-               m_tss: TaskStateSegment::new(),
-               m_idt: IntrDescTable {},
-               m_local_apic: LocalApic::new_uninitialized(),
                m_double_fault_stack: [0; C_DOUBLE_FAULT_STACK] }
     }
 
@@ -114,12 +94,14 @@ impl THwCpu for HwCpu {
     fn init_interrupts(&'static mut self) {
         if !self.m_is_ap {
             /* initialize APIC and collect ACPI tables on BSP */
-            if !LocalApic::init_apic() {
-                panic!("This CPU doesn't support APIC");
-            }
+            ApicManager::init_instance();
             AcpiManager::init_instance();
         }
-        self.m_local_apic.init_and_enable();
+
+        /* enable the LAPIC for this CPU */
+        unsafe {
+            ApicManager::instance().local_apic().enable();
+        }
     }
 
     fn do_halt(&self) {
@@ -130,38 +112,34 @@ impl THwCpu for HwCpu {
 
     fn do_enable_interrupts(&self) {
         unsafe {
-            asm!("sti", options(nostack));
+            asm!("sti", options(nomem, nostack));
         }
     }
 
     fn do_disable_interrupts(&self) {
         unsafe {
-            asm!("cli", options(nostack));
+            asm!("cli", options(nomem, nostack));
         }
     }
 
-    fn current_id() -> CpuId {
-        LocalApic::this_core_id()
+    fn this_id() -> CpuCoreId {
+        ApicManager::instance().local_apic().cpu_id()
     }
 
-    fn id(&self) -> CpuId {
-        if self.m_local_apic.is_enabled() {
-            self.m_local_apic.cpu_id()
-        } else {
-            0
-        }
+    fn base_frequency() -> u64 {
+        unsafe { __cpuid(0x16) }.eax.bits_at(0..15) as u64
     }
 
-    fn base_frequency(&self) -> u64 {
-        self.cpu_frequency_info().eax.bits_at(0..15) as u64
+    fn max_frequency() -> u64 {
+        unsafe { __cpuid(0x16) }.ebx.bits_at(0..15) as u64
     }
 
-    fn max_frequency(&self) -> u64 {
-        self.cpu_frequency_info().ebx.bits_at(0..15) as u64
+    fn bus_frequency() -> u64 {
+        unsafe { __cpuid(0x16) }.ecx.bits_at(0..15) as u64
     }
 
-    fn bus_frequency(&self) -> u64 {
-        self.cpu_frequency_info().ecx.bits_at(0..15) as u64
+    fn id(&self) -> CpuCoreId {
+        ApicManager::instance().local_apic().cpu_id()
     }
 
     fn are_interrupts_enabled(&self) -> bool {
