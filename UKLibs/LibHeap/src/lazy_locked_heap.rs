@@ -57,7 +57,7 @@ impl<M> LazyLockedHeap<M> where M: TBackRawMutex + 'static /* Methods */ {
     /**
      * Forces the initialization of this lazy `Heap`
      */
-    pub fn force_init(&self) {
+    pub fn ensure_init(&self) {
         self.m_lazy_locked_heap.lock().memory_in_use();
     }
 }

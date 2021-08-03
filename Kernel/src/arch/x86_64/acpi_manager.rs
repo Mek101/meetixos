@@ -2,7 +2,9 @@
 
 use alloc::vec::Vec;
 use core::{
+    marker::PhantomData,
     mem,
+    mem::size_of,
     ops::Range,
     ptr
 };
@@ -68,6 +70,51 @@ impl AcpiManager /* Constructors */ {
     }
 }
 
+impl AcpiManager /* Methods */ {
+    /**
+     * Registers the secondary CPUs into the `Processor` module
+     */
+    pub fn register_ap_cpus(&self) {
+        for &sdt in self.m_sdt_tables.iter() {
+            /* find APIC entries */
+            if &sdt.m_signature == b"APIC" {
+                /* obtain the APIC table entry */
+                let apic_table_entry =
+                    unsafe { &*(sdt as *const _ as *const ApicTableEntry) };
+                dbg_println!(DbgLevel::Trace,
+                             "apic_table_entry -> {:018x}",
+                             apic_table_entry as *const _ as usize);
+
+                for apic_entry in ApicEntryIter::new(apic_table_entry) {
+                    match apic_entry {
+                        ApicEntry::LocalApic(_) => {
+                            dbg_println!(DbgLevel::Debug, "ApicEntry::LocalApic found!")
+                        },
+                        ApicEntry::IoApic(_) => {
+                            dbg_println!(DbgLevel::Debug, "ApicEntry::IoApic found!")
+                        },
+                        ApicEntry::Interrupt(_) => {
+                            dbg_println!(DbgLevel::Debug, "ApicEntry::Interrupt found!")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+impl AcpiManager /* Getters */ {
+    /**
+     * Returns the global `AcpiManager` instance
+     */
+    pub fn instance() -> &'static Self {
+        unsafe {
+            SM_ACPI_MANAGER.as_ref().expect("Called AcpiManager::instance() before \
+                                             AcpiManager::init_instance()")
+        }
+    }
+}
+
 impl AcpiManager /* Privates */ {
     /**
      * Collects into `m_sdt_tables` all the available tables
@@ -75,7 +122,7 @@ impl AcpiManager /* Privates */ {
     fn collect_tables(&mut self) -> bool {
         dbg_println!(DbgLevel::Debug,
                      "Collecting ACPI tables from root {}",
-                     VirtAddr::from(self.m_rsdp as *const _ as *const _));
+                     VirtAddr::from(self.m_rsdp as *const _));
 
         /* perform the table parsing according to the version */
         if self.m_rsdp.m_revision == 0 {
@@ -276,8 +323,7 @@ struct FixedAcpiDescTable {
 struct ApicTableEntry {
     m_header: SystemDescTable,
     m_apic_addr: u32,
-    m_flags: u32,
-    m_apics: *const ApicHeader
+    m_flags: u32
 }
 
 #[repr(C)]
@@ -321,4 +367,64 @@ struct ApicInterruptSourceOverrideEntry {
     m_source: u8,
     m_gsi: u32,
     m_flags: u16
+}
+
+enum ApicEntry<'a> {
+    LocalApic(&'a LocalApicEntry),
+    IoApic(&'a IoApicEntry),
+    Interrupt(&'a ApicInterruptSourceOverrideEntry)
+}
+
+struct ApicEntryIter<'a> {
+    m_entry_ptr: *const u8,
+    m_rem_len: u32, /* since ApicTableEntry.m_len is u32 */
+    _unused: PhantomData<ApicEntry<'a>>
+}
+
+impl<'a> ApicEntryIter<'a> /* Constructors */ {
+    fn new(apic_table_entry: &ApicTableEntry) -> Self {
+        let entry_ptr = unsafe {
+            (apic_table_entry as *const _ as *const u8).offset(size_of::<ApicTableEntry>()
+                                                               as isize)
+        };
+        let entries_len =
+            apic_table_entry.m_header.m_len - (size_of::<ApicTableEntry>() as u32);
+        dbg_println!(DbgLevel::Trace,
+                     "apic_table_entry.m_apics: {:#018x}",
+                     entry_ptr as usize);
+        Self { m_entry_ptr: entry_ptr,
+               m_rem_len: entries_len,
+               _unused: PhantomData }
+    }
+}
+
+impl<'a> Iterator for ApicEntryIter<'a> {
+    type Item = ApicEntry<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.m_rem_len > 0 {
+            /* obtain the DST-APIC header */
+            let apic_header = unsafe { &*(self.m_entry_ptr as *const ApicHeader) };
+            /* update the values */
+            self.m_entry_ptr =
+                unsafe { self.m_entry_ptr.offset(apic_header.m_len as isize) };
+            self.m_rem_len -= apic_header.m_len as u32;
+
+            match apic_header.m_type {
+                ApicType::LocalApic => Some(ApicEntry::LocalApic(unsafe {
+                                                &*(apic_header as *const _
+                                                   as *const LocalApicEntry)
+                                            })),
+                ApicType::IoApic => Some(ApicEntry::IoApic(unsafe {
+                                             &*(apic_header as *const _
+                                                as *const IoApicEntry)
+                                         })),
+                ApicType::Interrupt => Some(ApicEntry::Interrupt(unsafe {
+                                                &*(apic_header as *const _ as *const ApicInterruptSourceOverrideEntry)
+                                            }))
+            }
+        } else {
+            None
+        }
+    }
 }

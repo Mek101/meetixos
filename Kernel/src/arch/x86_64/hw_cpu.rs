@@ -96,6 +96,9 @@ impl THwCpuCore for HwCpuCore {
             /* initialize APIC and collect ACPI tables on BSP */
             ApicManager::init_instance();
             AcpiManager::init_instance();
+
+            /* register the AP CPUs */
+            AcpiManager::instance().register_ap_cpus();
         }
 
         /* enable the LAPIC for this CPU */

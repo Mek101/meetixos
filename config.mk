@@ -79,7 +79,7 @@ endif
 #
 
 QEMU             ?= qemu-system-$(ARCH)
-QEMU_SHARED_ARGS ?= -m 64M -cpu host
+QEMU_SHARED_ARGS ?= -m 64M -cpu host -smp 4
 QEMU_ARGS        ?= $(QEMU_SHARED_ARGS) -serial stdio
 QEMU_GDB_ARGS    ?= $(QEMU_SHARED_ARGS)
 

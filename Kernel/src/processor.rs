@@ -4,15 +4,19 @@ use alloc::collections::BTreeMap;
 
 use crate::arch::hw_cpu::HwCpuCore;
 
+/* <None> until <Processor::init_instance()> is called */
 static mut SM_PROCESSOR: Option<Processor> = None;
 
 /**
  * Unique `CpuCore` identifier
  */
-pub type CpuCoreId = u16;
+pub type CpuCoreId = usize;
 
+/**
+ * High level representation for package processor
+ */
 pub struct Processor {
-    m_cores: BTreeMap<CpuCoreId, CpuCore>,
+    m_cores_map: BTreeMap<CpuCoreId, CpuCore>,
     m_max_freq: u64,
     m_base_freq: u64,
     m_bus_freq: u64
@@ -23,15 +27,17 @@ impl Processor /* Constructors */ {
      * Initializes the global `SM_PROCESSOR` instance
      */
     pub fn init_instance() {
+        const C_CORES_MAP_INIT_VAL: Option<CpuCore> = None;
+
         /* initialize the global instance */
         unsafe {
-            SM_PROCESSOR = Some(Self { m_cores: BTreeMap::new(),
+            SM_PROCESSOR = Some(Self { m_cores_map: BTreeMap::new(),
                                        m_max_freq: HwCpuCore::max_frequency(),
                                        m_base_freq: HwCpuCore::base_frequency(),
                                        m_bus_freq: HwCpuCore::bus_frequency() });
         }
 
-        let processor_mut = Self::instance_mut();
+        let processor_mut = unsafe { Self::instance_mut() };
 
         /* register the BSP CPU core and initialize it */
         processor_mut.register_cpu_core(0, false);
@@ -47,9 +53,12 @@ impl Processor /* Methods */ {
      * Register the given core as `Processor` core
      */
     pub fn register_cpu_core(&mut self, cpu_core_id: CpuCoreId, is_ap: bool) {
-        self.m_cores.insert(cpu_core_id, CpuCore { m_hw_cpu: HwCpuCore::new(is_ap) });
+        self.m_cores_map.insert(cpu_core_id, CpuCore { m_hw_cpu: HwCpuCore::new(is_ap) });
     }
 
+    /**
+     * Initializes the interrupts management for the BSP CPU core
+     */
     pub fn init_interrupts_for_bsp(&'static mut self) {
         self.core_by_id_mut(0)
             .expect("Processor doesn't have BSP CPU registered")
@@ -57,6 +66,9 @@ impl Processor /* Methods */ {
             .init_interrupts();
     }
 
+    /**
+     * Initializes the interrupts management for the current AP CPU core
+     */
     pub fn init_interrupts_for_ap(&'static mut self) {
         self.this_core_mut().m_hw_cpu.init_interrupts();
     }
@@ -73,39 +85,68 @@ impl Processor /* Getters */ {
         }
     }
 
-    pub fn instance_mut() -> &'static mut Self {
-        unsafe {
-            SM_PROCESSOR.as_mut().expect("Called Processor::instance_mut() before \
-                                          Processor::init_instance()")
-        }
+    /**
+     * Returns the global `Processor` mutable instance
+     */
+    pub unsafe fn instance_mut() -> &'static mut Self {
+        SM_PROCESSOR.as_mut().expect("Called Processor::instance_mut() before \
+                                      Processor::init_instance()")
     }
 
+    /**
+     * Returns the current executing `CpuCore` instance
+     */
     pub fn this_core(&self) -> &CpuCore {
         self.core_by_id(HwCpuCore::this_id())
             .expect("Processor::this_core(): Requested an unregistered CpuCore")
     }
 
+    /**
+     * Returns the current executing `CpuCore` mutable instance
+     */
     pub fn this_core_mut(&mut self) -> &mut CpuCore {
         self.core_by_id_mut(HwCpuCore::this_id())
             .expect("Processor::this_core_mut(): Requested an unregistered CpuCore")
     }
 
+    /**
+     * Returns the `CpuCore` by his `CpuCoreId`
+     */
     pub fn core_by_id(&self, cpu_core_id: CpuCoreId) -> Option<&CpuCore> {
-        self.m_cores.get(&cpu_core_id)
+        self.m_cores_map.get(&cpu_core_id)
     }
 
+    /**
+     * Returns the mutable `CpuCore` by his `CpuCoreId`
+     */
     pub fn core_by_id_mut(&mut self, cpu_core_id: CpuCoreId) -> Option<&mut CpuCore> {
-        self.m_cores.get_mut(&cpu_core_id)
+        self.m_cores_map.get_mut(&cpu_core_id)
     }
 
+    /**
+     * Returns the amount of registered cores
+     */
+    pub fn cores_count(&self) -> usize {
+        self.m_cores_map.len()
+    }
+
+    /**
+     * Returns the maximum frequency in Mhz
+     */
     pub fn max_frequency(&self) -> u64 {
         self.m_max_freq
     }
 
+    /**
+     * Returns the base frequency in Mhz
+     */
     pub fn base_frequency(&self) -> u64 {
         self.m_base_freq
     }
 
+    /**
+     * Returns the bus frequency in Mhz
+     */
     pub fn bus_frequency(&self) -> u64 {
         self.m_bus_freq
     }

@@ -82,7 +82,9 @@ pub extern "C" fn kernel_rust_start(raw_boot_info_ptr: *const u8) -> ! {
 
     /* initialize the interrupts for this CPU */
     dbg_println!(DbgLevel::Trace, "Initializing Interrupts Management...");
-    Processor::instance_mut().init_interrupts_for_bsp();
+    unsafe {
+        Processor::instance_mut().init_interrupts_for_bsp();
+    }
 
     /* FIXME debug printing to remove */
     {
