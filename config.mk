@@ -79,14 +79,9 @@ endif
 #
 
 QEMU             ?= qemu-system-$(ARCH)
-QEMU_SHARED_ARGS ?= -m 64M -cpu host -smp 4
+QEMU_SHARED_ARGS ?= -m 64M -enable-kvm -cpu host -smp 4
 QEMU_ARGS        ?= $(QEMU_SHARED_ARGS) -serial stdio
 QEMU_GDB_ARGS    ?= $(QEMU_SHARED_ARGS)
-
-ifeq ($(ARCH), x86_64)
-    QEMU_ARGS     += -cpu IvyBridge
-    QEMU_GDB_ARGS += -cpu IvyBridge
-endif
 
 #
 # -- -- -- -- -- -- -- -- -- -- -- -- Make Arguments -- -- -- -- -- -- -- -- -- -- -- -- --

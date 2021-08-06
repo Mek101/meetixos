@@ -23,7 +23,12 @@ use crate::{
         virt_addr::VirtAddr,
         TAddress
     },
+    arch::x86_64::apic_manager::ApicManager,
     dbg_println,
+    processor::{
+        CpuCoreId,
+        Processor
+    },
     vm::mem_manager::MemManager,
     DbgLevel
 };
@@ -75,26 +80,79 @@ impl AcpiManager /* Methods */ {
      * Registers the secondary CPUs into the `Processor` module
      */
     pub fn register_ap_cpus(&self) {
+        let bsp_cpu_id = Processor::instance().this_core().id();
+        dbg_println!(DbgLevel::Trace, "bsp_cpu_id: {}", bsp_cpu_id);
+
         for &sdt in self.m_sdt_tables.iter() {
             /* find APIC entries */
             if &sdt.m_signature == b"APIC" {
                 /* obtain the APIC table entry */
                 let apic_table_entry =
                     unsafe { &*(sdt as *const _ as *const ApicTableEntry) };
-                dbg_println!(DbgLevel::Trace,
-                             "apic_table_entry -> {:018x}",
-                             apic_table_entry as *const _ as usize);
 
+                /* iterate now all the entries */
                 for apic_entry in ApicEntryIter::new(apic_table_entry) {
                     match apic_entry {
-                        ApicEntry::LocalApic(_) => {
-                            dbg_println!(DbgLevel::Debug, "ApicEntry::LocalApic found!")
+                        ApicEntry::LocalApic(local_apic_entry)
+                            if local_apic_entry.m_flags & 0x01 != 0 =>
+                        {
+                            let cpu_core_id = local_apic_entry.m_id as CpuCoreId;
+                            if bsp_cpu_id == cpu_core_id {
+                                /* skip the BSP CPU since is already registered by the
+                                 * <Processor::init_instance()> method
+                                 */
+                                continue;
+                            }
+
+                            dbg_println!(DbgLevel::Debug,
+                                         "Registering AP CPU Core: {}",
+                                         cpu_core_id);
+
+                            /* register the core for the SMP module */
+                            unsafe {
+                                Processor::instance_mut().register_cpu_core(cpu_core_id,
+                                                                            true);
+                            }
+                        }
+                        ApicEntry::LocalApic(disabled_lapic) => {
+                            dbg_println!(DbgLevel::Warn,
+                                         "Skipping Hardware Disabled CPU with ID: {}",
+                                         disabled_lapic.m_id)
                         },
-                        ApicEntry::IoApic(_) => {
-                            dbg_println!(DbgLevel::Debug, "ApicEntry::IoApic found!")
+                        ApicEntry::IoApic(io_apic_entry) => {
+                            dbg_println!(DbgLevel::Debug,
+                                         "Registering I/O APIC with ID: {}",
+                                         io_apic_entry.m_id);
+                            unsafe {
+                                ApicManager::instance_mut().add_io_apic(io_apic_entry.m_id,
+                                                                        io_apic_entry.m_address as usize,
+                                                                        io_apic_entry.m_base_gsi);
+                            }
                         },
-                        ApicEntry::Interrupt(_) => {
-                            dbg_println!(DbgLevel::Debug, "ApicEntry::Interrupt found!")
+                        ApicEntry::Interrupt(interrupt_entry) => {
+                            let polarity_high_active =
+                                if (interrupt_entry.m_flags & 0x3) == 1
+                                   || (interrupt_entry.m_flags & 0x3) == 0
+                                {
+                                    true
+                                } else {
+                                    false
+                                };
+
+                            dbg_println!(DbgLevel::Debug,
+                                         "Registering Interrupt SO {}, \
+                                          delivery_mode_fixed: true, \
+                                          polarity_high_active: {}, trigger_edge: true",
+                                         interrupt_entry.m_source,
+                                         polarity_high_active);
+
+                            unsafe {
+                                ApicManager::instance_mut().configure_irq(interrupt_entry.m_source,
+                                                                          interrupt_entry.m_gsi,
+                                                                          true,
+                                                                          polarity_high_active,
+                                                                          true);
+                            }
                         }
                     }
                 }
