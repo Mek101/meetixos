@@ -72,6 +72,13 @@ impl Processor /* Methods */ {
     pub fn init_interrupts_for_ap(&'static mut self) {
         self.this_core_mut().m_hw_cpu.init_interrupts();
     }
+
+    /**
+     * Starts the Symmetric Multi Processor
+     */
+    pub fn start_smp(&self) {
+        todo!()
+    }
 }
 
 impl Processor /* Getters */ {

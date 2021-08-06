@@ -69,21 +69,29 @@ pub extern "C" fn kernel_rust_start(raw_boot_info_ptr: *const u8) -> ! {
     dbg_println!(DbgLevel::Info, "An Open Source OS Project written in Rust");
 
     /* initialize the kernel symbols */
-    dbg_println!(DbgLevel::Trace, "Initializing Kernel Symbols...");
+    dbg_println!(DbgLevel::Info, "Initializing Kernel Symbols...");
     CodeSymbols::init_instance();
 
     /* initialize the CPU management for the bootstrap CPU */
-    dbg_println!(DbgLevel::Trace, "Initializing CPU Management...");
+    dbg_println!(DbgLevel::Info, "Initializing CPU Management...");
     Processor::init_instance();
 
     /* initialize the memory manager */
-    dbg_println!(DbgLevel::Trace, "Initializing Memory Management...");
+    dbg_println!(DbgLevel::Info, "Initializing Memory Management...");
     MemManager::init_instance();
 
     /* initialize the interrupts for this CPU */
-    dbg_println!(DbgLevel::Trace, "Initializing Interrupts Management...");
+    dbg_println!(DbgLevel::Info, "Initializing Interrupts Management...");
     unsafe {
         Processor::instance_mut().init_interrupts_for_bsp();
+    }
+
+    /* starting Symmetric Multi Processor */
+    if Processor::instance().cores_count() > 1 {
+        dbg_println!(DbgLevel::Info,
+                     "Starting Other {} SMP APs...",
+                     Processor::instance().cores_count() - 1);
+        Processor::instance().start_smp();
     }
 
     /* FIXME debug printing to remove */
