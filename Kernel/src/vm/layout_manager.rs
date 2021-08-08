@@ -171,6 +171,16 @@ impl LayoutManager /* Constructor */ {
     }
 }
 
+impl LayoutManager /* Methods */ {
+    /**
+     * Returns the `VirtAddr` of the given `PhysAddr` using the
+     * `phys_mem_mapping_range`
+     */
+    pub fn phys_addr_to_virt_addr(&self, phys_addr: PhysAddr) -> VirtAddr {
+        (*phys_addr + *self.phys_mem_mapping_range().start).into()
+    }
+}
+
 impl LayoutManager /* Getters */ {
     /**
      * Returns the virtual `Range` where is mapped all the memory

@@ -24,7 +24,15 @@ kernel_multiboot_header_start:
     .long       kernel_multiboot_header_end - kernel_multiboot_header_start
     /* .checksum */
     .long       -(MULTIBOOT_HEADER_MAGIC + MULTIBOOT_ARCH_X86 + (kernel_multiboot_header_end - kernel_multiboot_header_start))
-
+/* TODO
+.align      8
+.type       kernel_multiboot_acpi_tag, @object
+kernel_multiboot_acpi_tag:
+    .word       15
+    .word       (kernel_multiboot_acpi_tag_end - kernel_multiboot_acpi_tag)
+    .long       0
+kernel_multiboot_acpi_tag_end:
+*/
 .align      8
 .type       kernel_multiboot_end_tag, @object
 kernel_multiboot_end_tag:

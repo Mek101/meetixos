@@ -7,6 +7,7 @@ authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
 [dependencies]
 # ---------------------------- External Thirdy Party Crates ---------------------------- #
 num_enum  = { version = "*", default-features = false}
+intrusive-collections = "0.9.2"
 
 # ------------------------------ MeetiX Libraries Crates ------------------------------- #
 bits     = { path = "../UKLibs/LibBits" }
