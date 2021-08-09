@@ -1,5 +1,8 @@
 use alloc::{
+    alloc::Global,
+    boxed::Box,
     collections::BTreeMap,
+    raw_vec::RawVec,
     string::String,
     sync::{
         Arc,
@@ -15,6 +18,12 @@ use core::{
         Less
     },
     mem,
+    ops::{
+        Add,
+        Bound,
+        Deref,
+        DerefMut
+    },
     ptr
 };
 
@@ -31,20 +40,9 @@ use intrusive_collections::{
 
 use api_data::path::PathComponent;
 use heap::slab::Slab;
+use sync::SpinMutex;
 
 use crate::filesystem::r#virtual::INode;
-use alloc::{
-    alloc::Global,
-    boxed::Box,
-    raw_vec::RawVec
-};
-use core::ops::{
-    Add,
-    Bound,
-    Deref,
-    DerefMut
-};
-use sync::SpinMutex;
 
 const CACHE_CAPACITY: usize = 1024;
 
@@ -59,8 +57,9 @@ pub enum PartialNodeResult {
  * Inverts the string ordering, such that ancestors come after child paths.
  */
 struct PathWrapper {
-    _string: String,    // The path as a string.
-    _separators: usize  // The number of Path::SEPARATOR in the string.
+    _string: String,
+    // The path as a string.
+    _separators: usize // The number of Path::SEPARATOR in the string.
 }
 
 /**
@@ -117,7 +116,8 @@ pub struct NodeCache {
     _heap: Slab<mem::size_of<CacheEntry>>,
     _map: RBTree<CacheEntry>,
     _lru_list: SpinMutex<LinkedList<CacheEntry>>,
-    _count: usize
+    _count: usize,
+    _capacity: usize
 }
 
 /**
@@ -337,20 +337,25 @@ impl NodeCache {
         PartialNodeResult::None
     }
 
-    pub fn new(capacity: usize) -> Self {
-        let byte_size = mem::size_of::<CacheEntry>() * CACHE_CAPACITY;
+    pub fn new() -> Self {
+        Self::with_capacity(CACHE_CAPACITY)
+    }
+
+    pub fn with_capacity(capacity: usize) -> Self {
+        let byte_size = mem::size_of::<CacheEntry>() * capacity;
         let mut mem = Vec::with_capacity(byte_size).into_boxed_slice();
         unsafe {
             Self { _mem: mem,
                    _heap: Slab::new(mem.ptr(), byte_size),
                    _map: RBTree::new(TreeAdapter),
                    _lru_list: SpinMutex::new(LinkedList::new(ListAdapter)).unwrap(),
-                   _count: 0 }
+                   _count: 0,
+                   _capacity: capacity }
         }
     }
 
     pub fn capacity(&self) -> usize {
-        CACHE_CAPACITY
+        self._capacity
     }
 
     pub fn byte_size(&self) -> usize {
@@ -364,24 +369,25 @@ impl NodeCache {
     pub fn flush(&mut self) {
         unsafe {
             self._map.fast_clear();
-            {
-                let mut list = self._lru_list.lock();
-                list.clear();
-            }
 
-            self._heap.flush(); // Marco todo
+            let mut list = self._lru_list.lock();
+            let mut cursor = list.front_mut();
+            while let Some(ptr) = cursor.remove() {
+                self._heap.deallocate(ptr);
+            }
         }
     }
 
     pub fn touch(&self, path: &[PathComponent]) {
-        todo!()
+        let mut list = self._lru_list.lock();
+        Self::move_to_front(list.deref_mut(), entry);
     }
 }
 
 impl NodeTreeMap for NodeCache {
     fn set(&mut self, path: &[PathComponent], node: &Arc<dyn INode>) {
         let new_entry = CacheEntry::new(path, node);
-        while self._count >= CACHE_CAPACITY {
+        while self._count >= self._capacity {
             self.evict_lru();
         }
         let entry = self.allocate(new_entry)?;
@@ -438,7 +444,7 @@ impl NodeTreeMap for NodeCache {
     }
 
     fn remove(&mut self, path: &[PathComponent]) -> bool {
-        if self._count >= CACHE_CAPACITY {
+        if self._count >= self._capacity {
             if Some(entry_ptr) = self._map.find(&PathWrapper::new(path)).get() {
                 unsafe {
                     {
