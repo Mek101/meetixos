@@ -77,6 +77,9 @@ impl THwBootInfo for HwBootInfo {
 
 impl From<*const u8> for HwBootInfo {
     fn from(boot_info_ptr: *const u8) -> Self {
-        Self { m_multiboot_ptr: unsafe { load(boot_info_ptr as usize) } }
+        Self { m_multiboot_ptr: unsafe {
+                   load(boot_info_ptr as usize).expect("Failed to load Multiboot2 \
+                                                        BootInfos")
+               } }
     }
 }
