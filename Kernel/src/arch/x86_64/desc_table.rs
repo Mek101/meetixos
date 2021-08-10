@@ -5,7 +5,8 @@ use crate::addr::virt_addr::VirtAddr;
 /**
  * x86_64 segmentation descriptor pointer
  */
-#[repr(C, packed)]
+#[repr(C)]
+#[repr(packed)]
 #[derive(Copy, Clone)]
 pub struct DescTablePtr {
     m_size_limit: u16,

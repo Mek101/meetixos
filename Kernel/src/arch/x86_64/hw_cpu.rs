@@ -12,11 +12,11 @@ use crate::{
     arch::x86_64::{
         acpi_manager::AcpiManager,
         apic_manager::ApicManager,
-        gdt::{
+        global_desc_table::{
             GlobalDescTable,
             Segment
         },
-        idt::IntrDescTable,
+        intr_desc_table::IntrDescTable,
         tss::TaskStateSegment
     },
     processor::{
@@ -44,7 +44,7 @@ impl THwCpuCore for HwCpuCore {
         Self { m_is_ap: is_ap,
                m_gdt: GlobalDescTable::new(),
                m_tss: TaskStateSegment::new(),
-               m_idt: IntrDescTable {},
+               m_idt: IntrDescTable::new_uninitialized(),
                m_double_fault_stack: [0; C_DOUBLE_FAULT_STACK] }
     }
 
@@ -105,6 +105,9 @@ impl THwCpuCore for HwCpuCore {
         unsafe {
             ApicManager::instance().local_apic().enable();
         }
+
+        /* flush the interrupts descriptor table */
+        self.m_idt.init_and_flush();
     }
 
     fn do_halt(&self) {

@@ -246,12 +246,12 @@ kernel_halt:
 .code64
 .section .data
 /* the kernel stack is reserved into the higher-half .data section, since the lower half
- * is unmapped by the <MemManager>
+ * is unmapped by the <MemManager::init_instance()> initialization
  */
 .align      0x1000
 .type       kernel_init_stack_top, @object
 kernel_init_stack_top:
-.rept       256 * 1024 /* 256KiB of stack */
+.rept       1024 * 1024 /* 256KiB of stack */
     .byte   0
 .endr
 kernel_init_stack_bottom:
