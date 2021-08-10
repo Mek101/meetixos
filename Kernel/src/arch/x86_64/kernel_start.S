@@ -251,7 +251,7 @@ kernel_halt:
 .align      0x1000
 .type       kernel_init_stack_top, @object
 kernel_init_stack_top:
-.rept       1024 * 1024 /* 256KiB of stack */
+.rept       512 * 1024 /* 512KiB of stack */
     .byte   0
 .endr
 kernel_init_stack_bottom:
