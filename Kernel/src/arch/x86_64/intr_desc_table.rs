@@ -13,6 +13,11 @@ use crate::{
 };
 
 /**
+ * Convenient type renaming for ISR functions
+ */
+type IsrFn = unsafe extern "C" fn();
+
+/**
  * x86_64 per CPU interrupt descriptor table
  */
 #[repr(C)]
@@ -318,10 +323,10 @@ impl IntrDescTable /* Privates */ {
     /**
      * Constructs the `Entry` instance for the given `isr_fn`
      */
-    fn make_entry(isr_fn: unsafe extern "C" fn()) -> Entry {
+    fn make_entry(isr_fn: IsrFn) -> Entry {
         let isr_fn_virt_addr = {
             /* convert first to VirtAddr for security */
-            let isr_fn_virt_addr: VirtAddr = (isr_fn as *const fn() as usize).into();
+            let isr_fn_virt_addr: VirtAddr = (isr_fn as *const IsrFn as usize).into();
 
             *isr_fn_virt_addr
         };

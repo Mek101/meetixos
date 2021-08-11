@@ -141,9 +141,9 @@ impl BootInfo /* Getters */ {
     }
 
     /**
-     * Returns the `Vec` of physical memory regions
+     * Returns the `Vec` of physical memory ranges
      */
-    pub fn boot_mem_areas(&self) -> &Vec<Range<PhysAddr>> {
+    pub fn phys_mem_ranges(&self) -> &Vec<Range<PhysAddr>> {
         &self.m_boot_mem_areas
     }
 }

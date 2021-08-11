@@ -61,11 +61,20 @@ impl MemManager /* Constructors */ {
         let boot_info = BootInfo::instance();
 
         /* obtain the last PhysAddr to know the real size of the memory */
-        let last_phys_mem_addr =
-            boot_info.boot_mem_areas().iter().last().expect("Missing memory maps").end;
-        if last_phys_mem_addr > PhysAddr::MAX {
-            dbg_println!(DbgLevel::Warn, "Exceeded physical memory limit")
-        }
+        let last_phys_mem_addr = {
+            let phys_mem_end =
+                boot_info.phys_mem_ranges()
+                         .iter()
+                         .last()
+                         .expect("HwBootInfo doesn't provides physical memory ranges")
+                         .end;
+            if phys_mem_end > PhysAddr::MAX {
+                dbg_println!(DbgLevel::Warn, "Exceeded physical memory limit");
+                PhysAddr::MAX
+            } else {
+                phys_mem_end
+            }
+        };
 
         /* construct the LayoutManager */
         let layout_manager = if boot_info.cmd_line_arg_exists("-plain-vm-layout") {
@@ -84,7 +93,7 @@ impl MemManager /* Constructors */ {
         /* mark the available frames into the bitmap */
         let mem_manager_stats = MemManagerStats::new();
         for phys_addr in
-            boot_info.boot_mem_areas()
+            boot_info.phys_mem_ranges()
                      .iter()
                      .flat_map(|phys_mem_range| {
                          phys_mem_range.clone().step_by(Page4KiB::SIZE)

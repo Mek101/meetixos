@@ -48,7 +48,7 @@ impl THwBootInfo for HwBootInfo {
             .memory_map_tag()
             .map(MemoryMapTag::memory_areas)
             .map(|mem_areas| {
-                let mut boot_mem_areas = Vec::with_capacity(8);
+                let mut boot_mem_areas = Vec::with_capacity(2);
 
                 /* put all the multiboot areas into the collector */
                 for mem_area in mem_areas {
@@ -66,7 +66,7 @@ impl THwBootInfo for HwBootInfo {
                         continue;
                     } else {
                         /* unordered push, we rely on the right order by the bootloader */
-                        boot_mem_areas.push(start_phys_addr.to_range(phys_area_size));
+                        boot_mem_areas.push(start_phys_addr.as_range(phys_area_size));
                     }
                 }
                 boot_mem_areas

@@ -292,11 +292,11 @@ impl AcpiManager /* Privates */ {
         let ext_bios_data_area_range =
             MemManager::instance().layout_manager()
                                   .phys_addr_to_virt_addr(0x40e_usize.into())
-                                  .to_range(C_KIB);
+                                  .as_range(C_KIB);
         let bios_area_range =
             MemManager::instance().layout_manager()
                                   .phys_addr_to_virt_addr(0xe0000_usize.into())
-                                  .to_range(C_MIB);
+                                  .as_range(C_MIB);
 
         /* first try to find the root-table in the first KiB of the EBDA, then, if
          * fail, try into the bios data area

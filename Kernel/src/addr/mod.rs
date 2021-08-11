@@ -87,9 +87,8 @@ pub trait TAddress:
     /**
      * Constructs a `Range<Self>` which start from this for `range_size`
      */
-    fn to_range(&self, range_size: usize) -> Range<Self> {
-        Range { start: self.clone(),
-                end: self.offset(range_size) }
+    fn as_range(&self, range_size: usize) -> Range<Self> {
+        self.clone()..self.offset(range_size)
     }
 
     /**

@@ -111,9 +111,9 @@ pub extern "C" fn kernel_rust_start(raw_boot_info_ptr: *const u8) -> ! {
         dbg_println!(DbgLevel::Debug,
                      "cmd_line_args:    '{}'",
                      BootInfo::instance().cmd_line_args());
-        for boot_mem_area in BootInfo::instance().boot_mem_areas().iter() {
+        for boot_mem_area in BootInfo::instance().phys_mem_ranges().iter() {
             dbg_println!(DbgLevel::Debug,
-                         "BootMemArea({}..{})",
+                         "PhysMemRange {{ {}..{} }}",
                          boot_mem_area.start,
                          boot_mem_area.end);
         }
