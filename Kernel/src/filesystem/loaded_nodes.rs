@@ -199,7 +199,7 @@ fn find_child_from_ancestor(ancestor: &Arc<&dyn INode>,
 impl LoadedNodes {
     /**
      * Find an INode by path by checking the cache, opened nodes, roots and
-     * ultimately, walking the VFS tree.
+     * as last resort, walking the VFS tree.
      * Only handles absolute paths.
      * This is thread safe.
      */
@@ -253,15 +253,11 @@ impl LoadedNodes {
         match find_child_from_ancestor(&nearest_node, nearest_node_distance, path) {
             Ok(result) => {
                 if nearest_node_distance > 1 {
-                    if let Some(parent) = result.1 {
-                        // Add the parent of the inode we just excavated to the cache.
-                        // TODO: when supported, set a maximum timer to keep things speedy
-                        let cached_nodes = self._cached_nodes.write();
-                        cached_nodes.insert(path, parent);
-                    } else {
-                        // If this happens, there's a bug here!
-                        panic!();
-                    }
+                    // Add the parent of the inode we just excavated to the cache.
+                    let parent = result.1.unwrap();
+                    // TODO: when supported, set a maximum timer to keep things speedy
+                    let cached_nodes = self._cached_nodes.write();
+                    cached_nodes.insert(path, parent);
                 }
                 INodeResult::Ok(result.0)
             },
@@ -280,7 +276,8 @@ impl FsRoots {
     }
 
     pub fn as_path_inode_map(&self) -> impl Iterator<Item = Arc<dyn INode>> {
-        self._filesystem_mountpoints.iter().map(|(k, v)| (k, v.get_root_node()))
+        //self._filesystem_mountpoints.iter().map(|(k, v)| (k, v.get_root_node()))
+        unimplemented!()
     }
 
     pub fn get_filesystem_at(&self,

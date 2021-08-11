@@ -30,10 +30,10 @@ use api_data::path::PathComponent;
 use heap::slab::Slab;
 use sync::SpinMutex;
 
-pub enum PartialResult<T> {
+pub enum PartialResult<'a, T> {
     None,
-    Found(Arc<T>),
-    Ancestor(Arc<T>, usize)
+    Found(&'a T),
+    Ancestor(&'a T, usize)
 }
 
 /**
@@ -41,23 +41,22 @@ pub enum PartialResult<T> {
  * Inverts the string ordering, such that ancestors come after child paths.
  */
 struct PathWrapper {
-    _string: String,
-    // The path as a string.
-    _separators: usize // The number of Path::SEPARATOR in the string.
+    _string: String,    // The path as a string.
+    _separators: usize  // The number of Path::SEPARATOR in the string.
 }
 
 /**
  * A node cache entry that is also a node of a doubly-linked and of rb-tree.
  */
-struct CacheEntry<T: ?Sized> {
+struct CacheEntry<T> {
     list_link: LinkedListLink,
     tree_link: RBTreeLink,
     path: PathWrapper,
-    value: Arc<T>
+    value: T
 }
 
 pub trait PathMap<T> {
-    fn set(&mut self, path: &[PathComponent], item: &Arc<T>);
+    fn set(&mut self, path: &[PathComponent], item: T);
 
     fn get_exact(&self, path: &[PathComponent]) -> PartialResult<T>;
 
@@ -87,19 +86,19 @@ pub trait PathMap<T> {
  * WARNING: doesn't support parent or self path links and does not check for
  * them: it will produce wacky results if fed any!
  */
-pub struct PathTable<T: ?Sized> {
-    _map: BTreeMap<PathWrapper, Arc<T>>
+pub struct PathTable<T> {
+    _map: BTreeMap<PathWrapper, T>
 }
 
 /**
  * WARNING: doesn't support parent or self path links and does not check for
  * them: it will produce wacky results if fed any!
  */
-pub struct PathCache<T: ?Sized> {
+pub struct PathCache<T> {
     _mem: Box<[u8]>,
-    _heap: Slab<{ mem::size_of::<CacheEntry<T>>() }>,
-    _map: RBTree<CacheEntry<T>>,
-    _lru_list: SpinMutex<LinkedList<CacheEntry<T>>>,
+    _heap: Slab<mem::size_of::<CacheEntry<T>>()>,
+    _map: RBTree<EntryTreeAdapter<T>>,
+    _lru_list: SpinMutex<LinkedList<EntryListAdapter<T>>>,
     _count: usize,
     _capacity: usize
 }
@@ -148,8 +147,8 @@ impl PartialEq for PathWrapper {
     }
 }
 
-intrusive_adapter!(EntryListAdapter<T> = Box<CacheEntry<T>>: CacheEntry { list_link: LinkedListLink });
-intrusive_adapter!(EntryTreeAdapter<T> = Box<CacheEntry<T>>: CacheEntry { tree_link: RBTreeLink });
+intrusive_adapter!(EntryListAdapter<T> = Box<CacheEntry<T>>: CacheEntry<T> { list_link: LinkedListLink });
+intrusive_adapter!(EntryTreeAdapter<T> = Box<CacheEntry<T>>: CacheEntry<T> { tree_link: RBTreeLink });
 impl<'a, T> KeyAdapter<'a> for EntryTreeAdapter<T> {
     type Key = &'a PathWrapper;
 
@@ -204,7 +203,7 @@ impl<T> PathTable<T> {
 }
 
 impl<T> PathMap<T> for PathTable<T> {
-    fn set(&mut self, path: &[PathComponent], node: &Arc<T>) {
+    fn set(&mut self, path: &[PathComponent], node: T) {
         self._map.insert(PathWrapper::new(path), node.clone());
     }
 
@@ -260,7 +259,7 @@ impl<T> PathCache<T> {
     /**
      * Moves a cache entry already in the lru list to the top of the list.
      */
-    fn move_to_front(list: &mut LinkedList<CacheEntry<T>>, entry: &CacheEntry<T>) {
+    fn move_to_front(list: &mut LinkedList<EntryListAdapter<T>>, entry: &CacheEntry<T>) {
         unsafe {
             list.push_front(list.cursor_mut_from_ptr(entry).remove()?);
         }
@@ -307,7 +306,7 @@ impl<T> PathCache<T> {
         let max_separators = path._separators - max_distance;
         let cursor = self._map.lower_bound(child_bound);
 
-        while let Some(entry) = cursor.get(): Option<&CacheEntry<T>> {
+        while let Some(entry) = cursor.get() {
             if entry.path._separators < max_separators {
                 if predicate(entry) {
                     self.try_move_to_front(entry);
@@ -353,8 +352,9 @@ impl<T> PathCache<T> {
         self._map.fast_clear();
         let mut list = self._lru_list.lock();
         let mut cursor = list.front_mut();
-        unsafe {
-            while let Some(ptr) = cursor.remove() {
+
+        while let Some(ptr) = cursor.remove() {
+            unsafe {
                 ptr::drop_in_place(ptr);
                 self._heap.deallocate(ptr);
             }
@@ -433,7 +433,9 @@ impl<T> PathMap<T> for PathCache<T> {
 
     fn remove(&mut self, path: &[PathComponent]) -> bool {
         if self._count >= self._capacity {
-            if let Some(entry_ptr) = self._map.find(&PathWrapper::new(path)).get() {
+            if let Some(entry_ptr) =
+                self._map.find(&PathWrapper::new(path)).clone_pointer().unwrap()
+            {
                 unsafe {
                     {
                         let mut list = self._lru_list.lock();
@@ -442,7 +444,7 @@ impl<T> PathMap<T> for PathCache<T> {
                     self._map.cursor_mut_from_ptr(entry_ptr).remove();
                     self._heap.deallocate(entry_ptr)
                 }
-                true
+                return true;
             }
         }
         false
