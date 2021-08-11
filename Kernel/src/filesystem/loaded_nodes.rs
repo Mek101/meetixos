@@ -3,63 +3,47 @@ use alloc::{
     vec::Vec
 };
 use core::{
-    cmp,
     lazy::Lazy,
-    mem,
-    ops::Range
+    mem
 };
 
-use api_data::path::{
-    PathComponent,
-    PathExistsState
-};
+use api_data::path::PathComponent;
 use sync::SpinRwLock;
-
-use sync::rw_lock::{
-    data_guard::RwLockDataReadGuard,
-    spin_rw_lock::RawSpinRwLock
-};
 
 use crate::filesystem::{
     path_structs::{
-        NodeCache,
-        NodeTable,
-        NodeTreeMap,
-        PartialNodeResult
+        PartialResult,
+        PathCache,
+        PathMap,
+        PathTable
     },
     r#virtual::{
         DirectoryNode,
-        INode
+        INode,
+        NodeType
     },
-    Filesystem,
-    FsError
+    Filesystem
 };
 
 pub type INodeResult = Result<Arc<dyn INode>, ()>;
 
 const CACHE_CAPACITY: usize = 1024;
 
-enum PartialSearchResult<T> {
-    None,
-    Found(T),
-    NewBestScore(usize, T)
-}
-
 pub static LOADED_NODES: Lazy<LoadedNodes> = Lazy::new(|| {
-    LoadedNodes { _opened_nodes: SpinRwLock::new(NodeTable::new()).unwrap(),
+    LoadedNodes { _opened_nodes: SpinRwLock::new(PathTable::new()).unwrap(),
                   _cached_nodes:
-                      SpinRwLock::new(NodeCache::with_capacity(CACHE_CAPACITY)).unwrap(),
+                      SpinRwLock::new(PathCache::with_capacity(CACHE_CAPACITY)).unwrap(),
                   _filesystem_roots: SpinRwLock::new(FsRoots::new()).unwrap() }
 });
 
-pub struct LoadedNodes<'a> {
-    _opened_nodes: SpinRwLock<NodeTable>,
-    _cached_nodes: INodeLockMap<'a>,
-    _filesystem_roots: SpinRwLock<FsRoots<'a>>
+pub struct LoadedNodes {
+    _opened_nodes: SpinRwLock<PathTable<dyn INode>>,
+    _cached_nodes: SpinRwLock<PathCache<dyn INode>>,
+    _filesystem_roots: SpinRwLock<FsRoots>
 }
 
-struct FsRoots<'a> {
-    _filesystem_mountpoints: HashMap<&'a [PathComponent], dyn Filesystem>
+struct FsRoots {
+    _filesystem_mountpoints: PathTable<dyn Filesystem>
 }
 
 /**
@@ -71,67 +55,71 @@ struct FsRoots<'a> {
  * next. If more than the path length, defaults to                          
  * it.
  */
-fn get_minimum_common_ancestor(path: &[PathComponent],
-                               mut node: Arc<&dyn INode>,
-                               max_inverse_depth: usize)
-                               -> Result<(&Arc<&dyn INode>, usize), ()> {
-    let mut minimum_ancestor = None;
-    let mut minimum_inverse_depth = cmp::min(max_inverse_depth, path.len()); // Start from the max
-
-    /*
-     * Iterate the nodes backwards to the system root.
-     */
-    loop {
-        // Try to match the current node with the path component nearest to the target
-        // path.
-        for path_inverse_depth in (0..minimum_inverse_depth).rev() {
-            // They match, meaning the current node is part of out path's ancestry
-            if *node.get_name() == path[path_inverse_depth] {
-                // If we already have an ancestor, then it IS nearer to the path's target,
-                // since we iterate backwards.
-                if minimum_ancestor == None {
-                    minimum_ancestor = Some(&node);
-                    minimum_inverse_depth = path_inverse_depth;
-                }
-
-                // The node won't change inside this for loop, while keeping to iterate
-                // will reset our ancestor, so break and iterate to the
-                // next node.
-                break;
-            }
-            // Otherwise, reset the "false" ancestor, since it's own ancestors aren't in
-            // part of our path's ancestry.
-            // This should only be executed before we match a path with the current node,
-            // otherwise we might reset a "true" ancestor.
-            else {
-                /*
-                 * This will remove:
-                 * - If our path is a super-path that includes the node, the path
-                 *   components after the node.
-                 * - If the path and the node have nothing in common but a few middle
-                 *   path components, (eg /bar/FOO/file and /faz/fuz/FOO/something),
-                 *   this removes the false matches.
-                 */
-                minimum_ancestor = None;
-            }
-        }
-
-        match node.get_parent() {
-            Some(n) => node = n, // Iterate to the next ancestor.
-            None => {
-                // Node is the system root, return.
-                if let Some(result) = minimum_ancestor {
-                    Ok((result, minimum_inverse_depth))
-                }
-                // Something went wrong, since the path and the inode should _at least_
-                // share the system root.
-                else {
-                    Err(())
-                }
-            }
-        }
-    }
-}
+// fn get_minimum_common_ancestor(path: &[PathComponent],
+//                                mut node: Arc<&dyn INode>,
+//                                max_inverse_depth: usize)
+//                                -> Result<(Arc<dyn INode>, usize), ()> {
+//     let mut minimum_ancestor = None;
+//     let mut minimum_inverse_depth = cmp::min(max_inverse_depth, path.len());
+// // Start from the max
+//
+//     /*
+//      * Iterate the nodes backwards to the system root.
+//      */
+//     loop {
+//         // Try to match the current node with the path component nearest to
+// the target         // path.
+//         for path_inverse_depth in (0..minimum_inverse_depth).rev() {
+//             // They match, meaning the current node is part of out path's
+// ancestry             if *node.get_name() == path[path_inverse_depth] {
+//                 // If we already have an ancestor, then it IS nearer to the
+// path's target,                 // since we iterate backwards.
+//                 if minimum_ancestor == None {
+//                     minimum_ancestor = Some(&node);
+//                     minimum_inverse_depth = path_inverse_depth;
+//                 }
+//
+//                 // The node won't change inside this for loop, while keeping
+// to iterate                 // will reset our ancestor, so break and iterate
+// to the                 // next node.
+//                 break;
+//             }
+//             // Otherwise, reset the "false" ancestor, since it's own
+// ancestors aren't in             // part of our path's ancestry.
+//             // This should only be executed before we match a path with the
+// current node,             // otherwise we might reset a "true" ancestor.
+//             else {
+//                 /*
+//                  * This will remove:
+//                  * - If our path is a super-path that includes the node, the
+//                    path
+//                  * components after the node.
+//                  * - If the path and the node have nothing in common but a
+//                    few middle
+//                  * path components, (eg /bar/FOO/file and
+//                    /faz/fuz/FOO/something),
+//                  * this removes the false matches.
+//                  */
+//                 minimum_ancestor = None;
+//             }
+//         }
+//
+//         match node.get_parent() {
+//             Some(n) => node = n, // Iterate to the next ancestor.
+//             None => {
+//                 // Node is the system root, return.
+//                 if let Some(result) = minimum_ancestor {
+//                     Ok((result, minimum_inverse_depth))
+//                 }
+//                 // Something went wrong, since the path and the inode should
+// _at least_                 // share the system root.
+//                 else {
+//                     Err(())
+//                 }
+//             }
+//         }
+//     }
+// }
 
 fn find_child_from_ancestor(mut ancestor: &Arc<&dyn INode>,
                             path_to_child: &[PathComponent])
@@ -172,7 +160,7 @@ fn find_child_from_ancestor(mut ancestor: &Arc<&dyn INode>,
 // fn search_ancestor_node(nodes: &impl Iterator<Item = Arc<&dyn INode>>,
 //                         path: &[PathComponent],
 //                         mut best_score: usize)
-//                         -> PartialINodeSearchResult {
+//                         -> PartialResult {
 //     let mut nearest_node: Optional<&Arc<&dyn INode>> = None;
 //
 //     for node in nodes.iter() {
@@ -196,21 +184,14 @@ fn find_child_from_ancestor(mut ancestor: &Arc<&dyn INode>,
 //     }
 // }
 
-fn search_ancestor_node(nodes: &impl NodeTreeMap,
-                        path: &[PathComponent],
-                        best_score: usize)
-                        -> PartialINodeSearchResult {
+fn search_ancestor_node<T>(nodes: &impl PathMap<T>,
+                           path: &[PathComponent],
+                           best_score: usize)
+                           -> PartialResult<T> {
     nodes.get_best_match(path, best_score)
 }
 
 impl LoadedNodes {
-    fn search_node_in_map(map: &impl NodeTreeMap,
-                          path: &[PathComponent],
-                          best_score: usize)
-                          -> PartialNodeResult {
-        map.get_best_match(path, best_score)
-    }
-
     /**
      * Find an INode by path by checking the cache, opened nodes, roots and
      * ultimately, walking the VFS tree.
@@ -254,9 +235,9 @@ impl LoadedNodes {
         {
             let opened_nodes = self._opened_nodes.read();
             match Self::search_node_in_map(&opened_nodes, path, best_score) {
-                PartialINodeSearchResult::None => {},
-                PartialINodeSearchResult::Found(node) => Ok(node.clone()),
-                PartialINodeSearchResult::NewBestScore(new_best, new_nearest) => {
+                PartialResult::None => {},
+                PartialResult::Found(node) => Ok(node.clone()),
+                PartialResult::Ancestor(new_nearest, new_best) => {
                     best_score = new_best;
                     nearest_node = new_nearest.clone();
                 }
@@ -267,9 +248,9 @@ impl LoadedNodes {
         {
             let cached_nodes = self._cached_nodes.read();
             match Self::search_node_in_map(&cached_nodes, path, best_score) {
-                PartialINodeSearchResult::None => {},
-                PartialINodeSearchResult::Found(node) => Ok(node.clone()),
-                PartialINodeSearchResult::NewBestScore(new_best, new_nearest) => {
+                PartialResult::None => {},
+                PartialResult::Found(node) => Ok(node.clone()),
+                PartialResult::Ancestor(new_nearest, new_best) => {
                     best_score = new_best;
                     nearest_node = new_nearest.clone();
                 }
@@ -291,14 +272,14 @@ impl LoadedNodes {
 
 impl FsRoots {
     pub fn new() -> Self {
-        Self { _filesystem_mountpoints: HashMap::new() }
+        Self { _filesystem_mountpoints: PathTable::new() }
     }
 
-    pub fn get_vfs_tree_root(&self) -> Result<Arc<&dyn INode>, ()> {
+    pub fn get_vfs_tree_root(&self) -> Result<Arc<dyn INode>, ()> {
         Ok(self.get_filesystem_of(&[PathComponent::Root])?.get_root_node())
     }
 
-    pub fn as_path_inode_map(&self) -> impl Iterator<Item = Arc<&dyn INode>> {
+    pub fn as_path_inode_map(&self) -> impl Iterator<Item = Arc<dyn INode>> {
         self._filesystem_mountpoints.iter().map(|(k, v)| (k, v.get_root_node()))
     }
 
@@ -313,7 +294,7 @@ impl FsRoots {
                                 .values()
                                 .map(|fs| fs.get_root_node());
                 match search_ancestor_node(nodes, path, usize::MAX) {
-                    PartialSearchResult::Found(n) => Ok(n.get_filesystem()),
+                    PartialResult::Found(n) => Ok(n.get_filesystem()),
                     _ => Err(())
                 }
             }

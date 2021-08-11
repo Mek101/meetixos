@@ -1,16 +1,17 @@
 use core::any::Any;
 
 use api_data::path::PathComponent;
-use sync::SpinRwLock;
 
-use crate::filesystem::{FsResult, Filesystem};
+use crate::filesystem::{
+    Filesystem,
+    FsResult
+};
 use alloc::sync::Arc;
 
 pub enum NodeType {
     File,
-    Directory,
-//    HardLink,
-//    SoftLink
+    Directory /*    HardLink,
+               *    SoftLink */
 }
 
 /**
@@ -38,9 +39,10 @@ pub trait INode: Any + Send + Sync {
     fn get_name(&self) -> &PathComponent;
 
     /**
-     * Get the parent INode of this INode. Only the system root may return None
+     * Get the parent INode of this INode. Only the system root may return
+     * None
      */
-    fn get_parent(&self) -> Optional<Arc<&dyn INode>>;
+    fn get_parent(&self) -> Option<Arc<&dyn INode>>;
 
     /**
      * Get the node's underlying filesystem implementation.

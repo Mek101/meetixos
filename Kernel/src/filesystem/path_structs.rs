@@ -1,27 +1,16 @@
 use alloc::{
-    alloc::Global,
     boxed::Box,
     collections::BTreeMap,
-    raw_vec::RawVec,
     string::String,
-    sync::{
-        Arc,
-        Weak
-    },
+    sync::Arc,
     vec::Vec
 };
 use core::{
-    cmp::Ordering::{
-        self,
-        Equal,
-        Greater,
-        Less
-    },
+    cmp::Ordering,
     mem,
     ops::{
         Add,
         Bound,
-        Deref,
         DerefMut
     },
     ptr
@@ -33,7 +22,6 @@ use intrusive_collections::{
     KeyAdapter,
     LinkedList,
     LinkedListLink,
-    PointerOps,
     RBTree,
     RBTreeLink
 };
@@ -41,8 +29,6 @@ use intrusive_collections::{
 use api_data::path::PathComponent;
 use heap::slab::Slab;
 use sync::SpinMutex;
-
-use crate::filesystem::r#virtual::INode;
 
 pub enum PartialResult<T> {
     None,
@@ -63,14 +49,14 @@ struct PathWrapper {
 /**
  * A node cache entry that is also a node of a doubly-linked and of rb-tree.
  */
-struct CacheEntry<T> {
+struct CacheEntry<T: ?Sized> {
     list_link: LinkedListLink,
     tree_link: RBTreeLink,
     path: PathWrapper,
     value: Arc<T>
 }
 
-pub trait NodeTreeMap<T> {
+pub trait PathMap<T> {
     fn set(&mut self, path: &[PathComponent], item: &Arc<T>);
 
     fn get_exact(&self, path: &[PathComponent]) -> PartialResult<T>;
@@ -101,7 +87,7 @@ pub trait NodeTreeMap<T> {
  * WARNING: doesn't support parent or self path links and does not check for
  * them: it will produce wacky results if fed any!
  */
-pub struct NodeTable<T> {
+pub struct PathTable<T: ?Sized> {
     _map: BTreeMap<PathWrapper, Arc<T>>
 }
 
@@ -109,9 +95,9 @@ pub struct NodeTable<T> {
  * WARNING: doesn't support parent or self path links and does not check for
  * them: it will produce wacky results if fed any!
  */
-pub struct NodeCache<T> {
+pub struct PathCache<T: ?Sized> {
     _mem: Box<[u8]>,
-    _heap: Slab<mem::size_of<CacheEntry<T>>>,
+    _heap: Slab<{ mem::size_of::<CacheEntry<T>>() }>,
     _map: RBTree<CacheEntry<T>>,
     _lru_list: SpinMutex<LinkedList<CacheEntry<T>>>,
     _count: usize,
@@ -162,17 +148,19 @@ impl PartialEq for PathWrapper {
     }
 }
 
-intrusive_adapter!(ListAdapter<'a> = &'a CacheEntry: CacheEntry { list_link: LinkedListLink });
-intrusive_adapter!(TreeAdapter<'a> = &'a CacheEntry: CacheEntry { tree_link: RBTreeLink });
-impl<'a> KeyAdapter<'a> for TreeAdapter {
+intrusive_adapter!(EntryListAdapter<T> = Box<CacheEntry<T>>: CacheEntry { list_link: LinkedListLink });
+intrusive_adapter!(EntryTreeAdapter<T> = Box<CacheEntry<T>>: CacheEntry { tree_link: RBTreeLink });
+impl<'a, T> KeyAdapter<'a> for EntryTreeAdapter<T> {
     type Key = &'a PathWrapper;
 
-    fn get_key(&self, value: &'a <Self::PointerOps as PointerOps>::Value) -> Self::Key {
-        &self.path
+    fn get_key(&self, value: &'a CacheEntry<T>) -> Self::Key {
+        &value.path
     }
 }
 
 impl<T> CacheEntry<T> {
+    pub const SIZE: usize = mem::size_of::<Self>();
+
     pub fn new(path: &[PathComponent], value: Arc<T>) -> Self {
         Self { list_link: LinkedListLink::default(),
                tree_link: RBTreeLink::default(),
@@ -181,7 +169,7 @@ impl<T> CacheEntry<T> {
     }
 }
 
-impl<T> NodeTable<T> {
+impl<T> PathTable<T> {
     fn get_match_of<P>(&self,
                        path: &PathWrapper,
                        max_distance: usize,
@@ -198,13 +186,13 @@ impl<T> NodeTable<T> {
                   .filter(|(path, _)| path._separators < max_separators)
                   .find(predicate)
         {
-            None => PartialNodeResult::None,
+            None => PartialResult::None,
             Some((ancestor_path, ancestor)) => {
                 let distance = path._separators - ancestor_path._separators;
                 if distance == 0 {
-                    PartialNodeResult::Found(ancestor.clone())
+                    PartialResult::Found(ancestor.clone())
                 } else {
-                    PartialNodeResult::NewBestScore(ancestor.clone(), distance)
+                    PartialResult::Ancestor(ancestor.clone(), distance)
                 }
             }
         }
@@ -215,15 +203,15 @@ impl<T> NodeTable<T> {
     }
 }
 
-impl NodeTreeMap<T> for NodeTable<T> {
+impl<T> PathMap<T> for PathTable<T> {
     fn set(&mut self, path: &[PathComponent], node: &Arc<T>) {
-        self._map.insert(path_to_str(path), node.clone());
+        self._map.insert(PathWrapper::new(path), node.clone());
     }
 
-    fn get_exact(&self, path: &[PathComponent]) -> PartialNodeResult {
-        match self._map.get(&path_to_str(path)) {
-            None => PartialNodeResult::None,
-            Some(node) => PartialNodeResult::Found(node.clone())
+    fn get_exact(&self, path: &[PathComponent]) -> PartialResult<T> {
+        match self._map.get(&PathWrapper::new(path)) {
+            None => PartialResult::None,
+            Some(node) => PartialResult::Found(node.clone())
         }
     }
 
@@ -264,11 +252,11 @@ impl NodeTreeMap<T> for NodeTable<T> {
     }
 
     fn remove(&mut self, path: &[PathComponent]) -> bool {
-        self._map.remove(&path_to_str(path)) != None
+        self._map.remove(&PathWrapper::new(path)) != None
     }
 }
 
-impl<T> NodeCache<T> {
+impl<T> PathCache<T> {
     /**
      * Moves a cache entry already in the lru list to the top of the list.
      */
@@ -282,15 +270,15 @@ impl<T> NodeCache<T> {
      * Moves a cache entry already in the lru list to the top of the list.
      */
     fn try_move_to_front(&self, entry: &CacheEntry<T>) {
-        if Some(list) = self._lru_list.try_lock() {
+        if let Some(mut list) = self._lru_list.try_lock() {
             Self::move_to_front(list.deref_mut(), entry);
         }
     }
 
     fn allocate(&mut self, entry: CacheEntry<T>) -> Option<&CacheEntry<T>> {
-        self._heap.allocate().map(|| unsafe {
-                                 let mut mem_ptr = mem_ptr.cast::<CacheEntry<T>>();
-                                 ptr::write(mem_ptr.as_mut(), entry);
+        self._heap.allocate().map(|mem_ptr| unsafe {
+                                 let mut entry_ptr = mem_ptr.cast::<CacheEntry<T>>();
+                                 ptr::write(entry_ptr.as_mut(), entry);
                                  mem_ptr.as_ref()
                              })
     }
@@ -313,7 +301,7 @@ impl<T> NodeCache<T> {
                        max_distance: usize,
                        child_bound: intrusive_collections::Bound<&PathWrapper>,
                        predicate: P)
-                       -> PartialNodeResult {
+                       -> PartialResult<T> {
         // The maximum number of separators in a path to be within the given maximum
         // distance from the child.
         let max_separators = path._separators - max_distance;
@@ -325,14 +313,14 @@ impl<T> NodeCache<T> {
                     self.try_move_to_front(entry);
                     let distance = path._separators - entry.path._separators;
                     if distance == 0 {
-                        PartialNodeResult::Found(entry.value.clone())
+                        PartialResult::Found(entry.value.clone())
                     } else {
-                        PartialNodeResult::Ancestor(entry.value.clone(), distance)
+                        PartialResult::Ancestor(entry.value.clone(), distance)
                     }
                 }
             }
         }
-        PartialNodeResult::None
+        PartialResult::None
     }
 
     pub fn with_capacity(capacity: usize) -> Self {
@@ -341,8 +329,9 @@ impl<T> NodeCache<T> {
         unsafe {
             Self { _mem: mem,
                    _heap: Slab::new(mem.ptr(), byte_size),
-                   _map: RBTree::new(TreeAdapter),
-                   _lru_list: SpinMutex::new(LinkedList::new(ListAdapter)).unwrap(),
+                   _map: RBTree::new(EntryTreeAdapter::new()),
+                   _lru_list:
+                       SpinMutex::new(LinkedList::new(EntryListAdapter::<CacheEntry<T>>::new())).unwrap(),
                    _count: 0,
                    _capacity: capacity }
         }
@@ -374,7 +363,7 @@ impl<T> NodeCache<T> {
     }
 
     pub fn touch(&self, path: &[PathComponent]) -> bool {
-        if Some(entry_ptr) = self._map.find(&PathWrapper::new(path)).get() {
+        if let Some(entry_ptr) = self._map.find(&PathWrapper::new(path)).get() {
             let mut list = self._lru_list.lock();
             Self::move_to_front(list.deref_mut(), entry_ptr.as_ref());
             true
@@ -383,7 +372,7 @@ impl<T> NodeCache<T> {
     }
 }
 
-impl NodeTreeMap<T> for NodeCache<T> {
+impl<T> PathMap<T> for PathCache<T> {
     fn set(&mut self, path: &[PathComponent], node: Arc<T>) {
         let new_entry = CacheEntry::new(path, node.clone());
         while self._count >= self._capacity {
@@ -400,21 +389,21 @@ impl NodeTreeMap<T> for NodeCache<T> {
         self._count += 1;
     }
 
-    fn get_exact(&self, path: &[PathComponent]) -> PartialNodeResult {
-        if Some(entry_ptr) = self._map.find(&PathWrapper::new(path)).get() {
+    fn get_exact(&self, path: &[PathComponent]) -> PartialResult<T> {
+        if let Some(entry_ptr) = self._map.find(&PathWrapper::new(path)).get() {
             let entry: &CacheEntry<T> = entry_ptr.as_ref();
             // Try to update the lru list, only if it's convenient.
             self.try_move_to_front(entry);
 
-            PartialNodeResult::Found(entry.value.clone())
+            PartialResult::Found(entry.value.clone())
         }
-        PartialNodeResult::None
+        PartialResult::None
     }
 
     fn get_nearest_ancestor(&self,
                             path: &[PathComponent],
                             max_distance: usize)
-                            -> PartialNodeResult {
+                            -> PartialResult<T> {
         let path = PathWrapper::new(path);
         self.get_match_of(&path,
                           max_distance,
@@ -428,7 +417,7 @@ impl NodeTreeMap<T> for NodeCache<T> {
     fn get_best_match(&self,
                       path: &[PathComponent],
                       max_distance: usize)
-                      -> PartialNodeResult {
+                      -> PartialResult<T> {
         let path = PathWrapper::new(path);
         self.get_match_of(&path,
                           max_distance,
@@ -444,7 +433,7 @@ impl NodeTreeMap<T> for NodeCache<T> {
 
     fn remove(&mut self, path: &[PathComponent]) -> bool {
         if self._count >= self._capacity {
-            if Some(entry_ptr) = self._map.find(&PathWrapper::new(path)).get() {
+            if let Some(entry_ptr) = self._map.find(&PathWrapper::new(path)).get() {
                 unsafe {
                     {
                         let mut list = self._lru_list.lock();

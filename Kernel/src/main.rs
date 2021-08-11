@@ -41,13 +41,11 @@ mod boot_info;
 mod cpu;
 mod dbg_print;
 mod dev;
+mod filesystem;
 mod heap;
 mod panic;
 mod version;
 mod vm;
-mod filesystem;
-mod info;
-mod mem;
 
 /**
  * Rust entry-point.

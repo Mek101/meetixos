@@ -2,18 +2,9 @@
 //pub mod ramfs;
 //pub mod sfs;
 
-use core::any::{
-    Any,
-    TypeId
-};
+use core::any::Any;
 
 trait INode: Any {}
-
-impl<T: INode> Any for T where T: INode {
-    fn type_id(&self) -> TypeId {
-        TypeId::of::<T>()
-    }
-}
 
 trait FileNode: INode {
     fn get_name(&self) -> &str;
