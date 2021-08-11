@@ -50,7 +50,11 @@ mod vm;
  *
  * Here is where the kernel starts his execution when
  * `Kernel/arch/<arch_name>/kernel_start.S` transfers the control to the
- * Rust code
+ * Rust code.
+ *
+ * This function is responsible to initialize all the sub-systems of the
+ * kernel, discover and start the SMP if available and run the first process
+ * to jump into the user-space
  */
 #[no_mangle]
 pub extern "C" fn kernel_rust_start(raw_boot_info_ptr: *const u8) -> ! {

@@ -186,10 +186,10 @@ impl MemManager /* Privates */ {
         let index_zero = PageTableIndex::from(0usize);
 
         /* obtain the L4 & L3 page-table */
-        let kern_page_dir = self.kernel_page_dir();
-        let l4_page_table = kern_page_dir.root_page_table();
-        let l3_page_table =
-            unsafe { kern_page_dir.next_page_table(&mut l4_page_table[index_zero]) };
+        let l4_page_table = self.kernel_page_dir().root_page_table();
+        let l3_page_table = unsafe {
+            self.kernel_page_dir().next_page_table(&mut l4_page_table[index_zero])
+        };
 
         /* unmap the first entry for each table */
         l3_page_table[index_zero].set_unused();
@@ -238,6 +238,7 @@ impl MemManager /* Privates */ {
      * Protects the kernel image with proper protection
      */
     fn protect_kernel_image(&self) {
+        dbg_println!(DbgLevel::Warn, "TODO protected kernel image!");
         dbg_println!(DbgLevel::Debug, "PageDir:\n{:?}", self.kernel_page_dir());
     }
 }

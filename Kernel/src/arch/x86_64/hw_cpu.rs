@@ -19,6 +19,8 @@ use crate::{
         intr_desc_table::IntrDescTable,
         tss::TaskStateSegment
     },
+    dbg_print::DbgLevel,
+    dbg_println,
     processor::{
         CpuCoreId,
         THwCpuCore
@@ -49,6 +51,8 @@ impl THwCpuCore for HwCpuCore {
     }
 
     fn init(&'static mut self) {
+        dbg_println!(DbgLevel::Debug, "Initializing Double fault stack...");
+
         /* set the double fault stack pointer into the TSS */
         self.m_tss.m_full_intr_stack_table[C_DOUBLE_FAULT_STACK_INDEX] = {
             /* obtain the <VirtAddr> of the static buffer */
@@ -60,6 +64,7 @@ impl THwCpuCore for HwCpuCore {
         };
 
         /* setup the GDT segments */
+        dbg_println!(DbgLevel::Debug, "Initializing GDT...");
         let kern_code_segment_selector =
             self.m_gdt.add_entry(Segment::kernel_code_segment());
         self.m_gdt.add_entry(Segment::kernel_data_segment());
@@ -93,20 +98,27 @@ impl THwCpuCore for HwCpuCore {
 
     fn init_interrupts(&'static mut self) {
         if !self.m_is_ap {
-            /* initialize APIC and collect ACPI tables on BSP */
+            /* initialize the Advanced Programmable Interrupt Controller */
+            dbg_println!(DbgLevel::Debug, "Initializing APIC Manager...");
             ApicManager::init_instance();
+
+            /* initialize the Advanced Configuration and Power Interface */
+            dbg_println!(DbgLevel::Debug, "Initializing ACPI Manager...");
             AcpiManager::init_instance();
 
             /* register the AP CPUs */
+            dbg_println!(DbgLevel::Debug, "Discovering APs CPUs...");
             AcpiManager::instance().register_ap_cpus();
         }
 
         /* enable the LAPIC for this CPU */
+        dbg_println!(DbgLevel::Debug, "Enabling LAPIC for this CPU");
         unsafe {
             ApicManager::instance().local_apic().enable();
         }
 
         /* flush the interrupts descriptor table */
+        dbg_println!(DbgLevel::Debug, "Initializing IDT...");
         self.m_idt.init_and_flush();
     }
 
