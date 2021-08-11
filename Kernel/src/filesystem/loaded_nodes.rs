@@ -13,6 +13,10 @@ use sync::SpinRwLock;
 use crate::filesystem::{
     path_structs::{
         PartialResult,
+        PartialResult::{
+            Ancestor,
+            Found
+        },
         PathCache,
         PathMap,
         PathTable
@@ -37,13 +41,13 @@ pub static LOADED_NODES: Lazy<LoadedNodes> = Lazy::new(|| {
 });
 
 pub struct LoadedNodes {
-    _opened_nodes: SpinRwLock<PathTable<dyn INode>>,
-    _cached_nodes: SpinRwLock<PathCache<dyn INode>>,
+    _opened_nodes: SpinRwLock<PathTable<Arc<dyn INode>>>,
+    _cached_nodes: SpinRwLock<PathCache<Arc<dyn INode>>>,
     _filesystem_roots: SpinRwLock<FsRoots>
 }
 
 struct FsRoots {
-    _filesystem_mountpoints: PathTable<dyn Filesystem>
+    _filesystem_mountpoints: PathTable<Arc<dyn Filesystem>>
 }
 
 /**
@@ -121,22 +125,30 @@ struct FsRoots {
 //     }
 // }
 
-fn find_child_from_ancestor(mut ancestor: &Arc<&dyn INode>,
+fn find_child_from_ancestor(ancestor: &Arc<&dyn INode>,
+                            distance: usize,
                             path_to_child: &[PathComponent])
-                            -> INodeResult {
+                            -> Result<(Arc<dyn INode>, Option<Arc<dyn INode>>), ()> {
+    let mut current_ancestor = ancestor;
+    let mut previous_ancestor = None;
+
     // Walk to the node iteratively, to prevent stack overflows.
-    for depth_index in 0..path_to_child.len() - 1 {
-        match ancestor.get_type() {
+    for depth_index in path_to_child.len() - distance..path_to_child.len() - 1 {
+        match current_ancestor.get_type() {
             NodeType::File => Err(()),
             NodeType::Directory => {
                 // Search for the next node
-                let as_directory: &dyn DirectoryNode = ancestor.as_type().unwrap();
+                let as_directory: &dyn DirectoryNode =
+                    current_ancestor.as_type().unwrap();
                 match as_directory.get_nodes() {
                     Ok(nodes) => {
                         match nodes.iter()
-                                   .find(|n| *n.get_name() == ancestor[depth_index])
+                                   .find(|n| *n.get_name() == path_to_child[depth_index])
                         {
-                            Some(n) => ancestor = n, // Our new ancestor.
+                            Some(n) => {
+                                previous_ancestor = Some(current_ancestor);
+                                current_ancestor = n; // Our new ancestor.
+                            },
                             None => Err(())
                         }
                     },
@@ -146,8 +158,8 @@ fn find_child_from_ancestor(mut ancestor: &Arc<&dyn INode>,
         }
     }
     // We finally found it!
-    if *ancestor.get_name() == path_to_child.last()? {
-        Ok(ancestor)
+    if *current_ancestor.get_name() == path_to_child.last()? {
+        Ok((current_ancestor, previous_ancestor))
     }
     Err(())
 }
@@ -184,13 +196,6 @@ fn find_child_from_ancestor(mut ancestor: &Arc<&dyn INode>,
 //     }
 // }
 
-fn search_ancestor_node<T>(nodes: &impl PathMap<T>,
-                           path: &[PathComponent],
-                           best_score: usize)
-                           -> PartialResult<T> {
-    nodes.get_best_match(path, best_score)
-}
-
 impl LoadedNodes {
     /**
      * Find an INode by path by checking the cache, opened nodes, roots and
@@ -221,7 +226,7 @@ impl LoadedNodes {
         };
 
         // The number of backwards iterations the current best match had.
-        let mut best_score = usize::MAX;
+        let mut nearest_node_distance = usize::MAX;
         // The nearest node found to the target path. Starts at the node's filesystem
         // implementation root.
         let mut nearest_node = node_filesystem;
@@ -231,42 +236,37 @@ impl LoadedNodes {
             Ok(nearest_node)
         }
 
-        // Second, search the opened nodes
-        {
-            let opened_nodes = self._opened_nodes.read();
-            match Self::search_node_in_map(&opened_nodes, path, best_score) {
+        // Second and third, try with the opened and cached nodes.
+        for locked_nodes in [&self._opened_nodes, &self._cached_nodes] {
+            let nodes = locked_nodes.read();
+            match nodes.get_best_match(path, nearest_node_distance) {
                 PartialResult::None => {},
                 PartialResult::Found(node) => Ok(node.clone()),
                 PartialResult::Ancestor(new_nearest, new_best) => {
-                    best_score = new_best;
+                    nearest_node_distance = new_best;
                     nearest_node = new_nearest.clone();
                 }
             }
         }
 
-        // Third, search the cache
-        {
-            let cached_nodes = self._cached_nodes.read();
-            match Self::search_node_in_map(&cached_nodes, path, best_score) {
-                PartialResult::None => {},
-                PartialResult::Found(node) => Ok(node.clone()),
-                PartialResult::Ancestor(new_nearest, new_best) => {
-                    best_score = new_best;
-                    nearest_node = new_nearest.clone();
+        // Fourth, walk from the node's nearest ancestor found.
+        match find_child_from_ancestor(&nearest_node, nearest_node_distance, path) {
+            Ok(result) => {
+                if nearest_node_distance > 1 {
+                    if let Some(parent) = result.1 {
+                        // Add the parent of the inode we just excavated to the cache.
+                        // TODO: when supported, set a maximum timer to keep things speedy
+                        let cached_nodes = self._cached_nodes.write();
+                        cached_nodes.insert(path, parent);
+                    } else {
+                        // If this happens, there's a bug here!
+                        panic!();
+                    }
                 }
-            }
+                INodeResult::Ok(result.0)
+            },
+            Err(_) => INodeResult::Err(())
         }
-
-        // Fourth, walk from the node's filesystem root.
-        let result = find_child_from_ancestor(&nearest_node, path)?;
-
-        // Add the parent of the inode to the cache.
-        // TODO: when supported, set a maximum timer to keep things speedy
-        {
-            let cached_nodes = self._cached_nodes.write();
-            cached_nodes.insert(path, result.get_parent()?);
-        }
-        INodeResult::Ok(result)
     }
 }
 
@@ -276,28 +276,19 @@ impl FsRoots {
     }
 
     pub fn get_vfs_tree_root(&self) -> Result<Arc<dyn INode>, ()> {
-        Ok(self.get_filesystem_of(&[PathComponent::Root])?.get_root_node())
+        Ok(self.get_filesystem_at(&[PathComponent::Root])?.get_root_node())
     }
 
     pub fn as_path_inode_map(&self) -> impl Iterator<Item = Arc<dyn INode>> {
         self._filesystem_mountpoints.iter().map(|(k, v)| (k, v.get_root_node()))
     }
 
-    pub fn get_filesystem_of(self,
+    pub fn get_filesystem_at(&self,
                              path: &[PathComponent])
                              -> Result<Arc<dyn Filesystem>, ()> {
-        match self._filesystem_mountpoints.get(path) {
-            Some(fs) => Ok(fs),
-            None => {
-                let nodes = self._filesystem_mountpoints
-                                .iter()
-                                .values()
-                                .map(|fs| fs.get_root_node());
-                match search_ancestor_node(nodes, path, usize::MAX) {
-                    PartialResult::Found(n) => Ok(n.get_filesystem()),
-                    _ => Err(())
-                }
-            }
+        match self._filesystem_mountpoints.get_best_match(path, usize::MAX) {
+            None => Err(()),
+            Found(root) | Ancestor(root, _) => Ok(root.clone())
         }
     }
 }
