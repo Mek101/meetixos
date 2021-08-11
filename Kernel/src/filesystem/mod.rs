@@ -1,10 +1,12 @@
 pub mod implementation;
-pub mod r#virtual;
 mod loaded_nodes;
-mod node_structs;
+mod path_structs;
+pub mod r#virtual;
 
-use alloc::rc::Rc;
-use alloc::sync::Arc;
+use alloc::{
+    rc::Rc,
+    sync::Arc
+};
 
 use sync::SpinRwLock;
 
