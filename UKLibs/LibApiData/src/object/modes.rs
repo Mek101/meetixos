@@ -1,10 +1,8 @@
 /*! `Object` modes bits */
 
+use core::convert::TryFrom;
+
 use crate::sys::TAsSysCallPtr;
-use num_enum::{
-    IntoPrimitive,
-    TryFromPrimitive
-};
 
 /**
  * Lists the available modes for `Object::recv()`
@@ -14,7 +12,6 @@ use num_enum::{
 #[derive(Clone, Copy)]
 #[derive(PartialEq, Eq)]
 #[derive(PartialOrd, Ord)]
-#[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum ObjRecvMode {
     /**
      * Simply asks to the Kernel whether an `Object` of the requested
@@ -34,6 +31,24 @@ pub enum ObjRecvMode {
     Sync
 }
 
+impl Into<usize> for ObjRecvMode {
+    fn into(self) -> usize {
+        self as usize
+    }
+}
+
+impl TryFrom<usize> for ObjRecvMode {
+    type Error = ();
+
+    fn try_from(value: usize) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::Poll),
+            1 => Ok(Self::Sync),
+            _ => Err(())
+        }
+    }
+}
+
 /**
  * Lists the internally used modes that are given to the Kernel to manage
  * synchronization over the memory of a `MMap`
@@ -43,7 +58,6 @@ pub enum ObjRecvMode {
 #[derive(Clone, Copy)]
 #[derive(PartialEq, Eq)]
 #[derive(PartialOrd, Ord)]
-#[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum MMapPtrMode {
     /**
      * Internally used when called `MMap::ptr()`
@@ -54,6 +68,24 @@ pub enum MMapPtrMode {
      * Internally used when called `MMap::ptr_mut()`
      */
     ForWrite
+}
+
+impl Into<usize> for MMapPtrMode {
+    fn into(self) -> usize {
+        self as usize
+    }
+}
+
+impl TryFrom<usize> for MMapPtrMode {
+    type Error = ();
+
+    fn try_from(value: usize) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::ForRead),
+            1 => Ok(Self::ForWrite),
+            _ => Err(())
+        }
+    }
 }
 
 /**

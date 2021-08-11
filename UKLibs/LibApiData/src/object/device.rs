@@ -2,11 +2,6 @@
 
 use core::convert::TryFrom;
 
-use num_enum::{
-    IntoPrimitive,
-    TryFromPrimitive
-};
-
 use bits::bit_fields::TBitFields;
 
 /**
@@ -93,7 +88,6 @@ impl Into<usize> for DeviceId {
 #[derive(PartialEq, Eq)]
 #[derive(PartialOrd, Ord)]
 #[derive(Hash)]
-#[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum DeviceIdType {
     /**
      * Identifies a `Device` which reads & writes data in contiguous blocks
@@ -130,6 +124,24 @@ impl Default for DeviceIdType {
     }
 }
 
+impl Into<u8> for DeviceIdType {
+    fn into(self) -> u8 {
+        self as u8
+    }
+}
+
+impl TryFrom<u8> for DeviceIdType {
+    type Error = ();
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::Block),
+            1 => Ok(Self::Character),
+            _ => Err(())
+        }
+    }
+}
+
 /**
  * Lists the supported `Device` classes
  */
@@ -139,7 +151,6 @@ impl Default for DeviceIdType {
 #[derive(PartialEq, Eq)]
 #[derive(PartialOrd, Ord)]
 #[derive(Hash)]
-#[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum DeviceIdClass {
     /**
      * `Device` which is able to store data into physical storage devices,
@@ -246,5 +257,29 @@ impl DeviceIdClass /* Getters */ {
 impl Default for DeviceIdClass {
     fn default() -> Self {
         Self::Storage
+    }
+}
+
+impl Into<u8> for DeviceIdClass {
+    fn into(self) -> u8 {
+        self as u8
+    }
+}
+
+impl TryFrom<u8> for DeviceIdClass {
+    type Error = ();
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::Storage),
+            1 => Ok(Self::Memory),
+            2 => Ok(Self::Network),
+            3 => Ok(Self::Ipc),
+            4 => Ok(Self::Framebuffer),
+            5 => Ok(Self::Random),
+            6 => Ok(Self::Uart),
+            7 => Ok(Self::Terminal),
+            _ => Err(())
+        }
     }
 }

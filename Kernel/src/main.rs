@@ -89,8 +89,9 @@ pub extern "C" fn kernel_rust_start(raw_boot_info_ptr: *const u8) -> ! {
     /* starting Symmetric Multi Processor */
     if Processor::instance().cores_count() > 1 {
         dbg_println!(DbgLevel::Info,
-                     "Starting Other {} SMP APs...",
-                     Processor::instance().cores_count() - 1);
+                     "Starting Other {} SMP APs (total cores count: {})...",
+                     Processor::instance().cores_count() - 1,
+                     Processor::instance().cores_count());
         Processor::instance().start_smp();
     }
 

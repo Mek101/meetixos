@@ -1,10 +1,8 @@
 /*! `Task` configuration */
 
-use core::ptr;
-
-use num_enum::{
-    IntoPrimitive,
-    TryFromPrimitive
+use core::{
+    convert::TryFrom,
+    ptr
 };
 
 use bits::bit_flags::{
@@ -270,7 +268,6 @@ impl<'a> TAsSysCallPtr for RawTaskConfig<'a> {
 #[repr(usize)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum TaskConfigBits {
     /**
      * Enabled when called `Task::spawn()`
@@ -304,6 +301,27 @@ pub enum TaskConfigBits {
      * Forces the kernel to spawn the new task in a paused state
      */
     StartPaused
+}
+
+impl Into<usize> for TaskConfigBits {
+    fn into(self) -> usize {
+        self as usize
+    }
+}
+
+impl TryFrom<usize> for TaskConfigBits {
+    type Error = ();
+
+    fn try_from(value: usize) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::IsSpawn),
+            1 => Ok(Self::CoopSched),
+            2 => Ok(Self::HighPrioTask),
+            3 => Ok(Self::LowPrioTask),
+            4 => Ok(Self::StartPaused),
+            _ => Err(())
+        }
+    }
 }
 
 impl TBitFlagsValues for TaskConfigBits {

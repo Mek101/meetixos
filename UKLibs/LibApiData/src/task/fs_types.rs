@@ -1,10 +1,8 @@
 /*! Supported filesystems types */
 
-use core::fmt;
-
-use num_enum::{
-    IntoPrimitive,
-    TryFromPrimitive
+use core::{
+    convert::TryFrom,
+    fmt
 };
 
 /**
@@ -15,7 +13,6 @@ use num_enum::{
 #[derive(Clone, Copy)]
 #[derive(PartialEq, Eq)]
 #[derive(PartialOrd, Ord)]
-#[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum FsType {
     /**
      * Old `File Allocation Table` filesystem.
@@ -58,6 +55,27 @@ pub enum FsType {
 impl Default for FsType {
     fn default() -> Self {
         Self::MeetiX
+    }
+}
+
+impl Into<usize> for FsType {
+    fn into(self) -> usize {
+        self as usize
+    }
+}
+
+impl TryFrom<usize> for FsType {
+    type Error = ();
+
+    fn try_from(value: usize) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::FatX),
+            1 => Ok(Self::CdROM),
+            2 => Ok(Self::MeetiX),
+            3 => Ok(Self::KernData),
+            4 => Ok(Self::Devices),
+            _ => Err(())
+        }
     }
 }
 

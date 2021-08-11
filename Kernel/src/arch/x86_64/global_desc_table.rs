@@ -1,10 +1,8 @@
 /*! x86_64 Global Descriptor Table */
 
-use core::mem::size_of;
-
-use num_enum::{
-    IntoPrimitive,
-    TryFromPrimitive
+use core::{
+    convert::TryFrom,
+    mem::size_of
 };
 
 use bits::{
@@ -259,7 +257,6 @@ pub type SegmentFlags = BitFlags<usize, SegmentFlagsBits>;
 #[derive(Copy, Clone)]
 #[derive(Eq, PartialEq)]
 #[derive(Ord, PartialOrd)]
-#[derive(TryFromPrimitive, IntoPrimitive)]
 pub enum SegmentFlagsBits {
     /* ignored bits LIMIT 0..=15 */
     Limit0      = 0,
@@ -330,6 +327,52 @@ impl SegmentFlagsBits /* Static Functions */ {
         | Self::UserSegment
         | Self::Present
         | Self::Granularity
+    }
+}
+
+impl Into<usize> for SegmentFlagsBits {
+    fn into(self) -> usize {
+        self as usize
+    }
+}
+
+impl TryFrom<usize> for SegmentFlagsBits {
+    type Error = ();
+
+    fn try_from(value: usize) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::Limit0),
+            1 => Ok(Self::Limit1),
+            2 => Ok(Self::Limit2),
+            3 => Ok(Self::Limit3),
+            4 => Ok(Self::Limit4),
+            5 => Ok(Self::Limit5),
+            6 => Ok(Self::Limit6),
+            7 => Ok(Self::Limit7),
+            8 => Ok(Self::Limit8),
+            9 => Ok(Self::Limit9),
+            10 => Ok(Self::Limit10),
+            11 => Ok(Self::Limit11),
+            12 => Ok(Self::Limit12),
+            13 => Ok(Self::Limit13),
+            14 => Ok(Self::Limit14),
+            15 => Ok(Self::Limit15),
+            40 => Ok(Self::Accessed),
+            41 => Ok(Self::Writeable),
+            42 => Ok(Self::Conforming),
+            43 => Ok(Self::Executable),
+            44 => Ok(Self::UserSegment),
+            45 => Ok(Self::DplRing3),
+            47 => Ok(Self::Present),
+            48 => Ok(Self::Limit16),
+            49 => Ok(Self::Limit17),
+            50 => Ok(Self::Limit18),
+            51 => Ok(Self::Limit19),
+            53 => Ok(Self::LongMode),
+            54 => Ok(Self::DefaultSize),
+            55 => Ok(Self::Granularity),
+            _ => Err(())
+        }
     }
 }
 

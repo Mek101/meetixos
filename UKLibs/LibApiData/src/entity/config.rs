@@ -1,9 +1,6 @@
 /*! `OsEntity` configuration */
 
-use num_enum::{
-    IntoPrimitive,
-    TryFromPrimitive
-};
+use core::convert::TryFrom;
 
 use bits::bit_flags::{
     BitFlags,
@@ -123,7 +120,6 @@ impl<'a> TAsSysCallPtr for RawOsEntityConfig<'a> {
 #[repr(usize)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum OsEntityConfigBits {
     /**
      * Enabled when called `OsEntity::creat()`
@@ -134,6 +130,24 @@ pub enum OsEntityConfigBits {
      * Marks the `OsEntity` as administrative entity
      */
     Admin
+}
+
+impl Into<usize> for OsEntityConfigBits {
+    fn into(self) -> usize {
+        self as usize
+    }
+}
+
+impl TryFrom<usize> for OsEntityConfigBits {
+    type Error = ();
+
+    fn try_from(value: usize) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::Creat),
+            1 => Ok(Self::Admin),
+            _ => Err(())
+        }
+    }
 }
 
 impl TBitFlagsValues for OsEntityConfigBits {

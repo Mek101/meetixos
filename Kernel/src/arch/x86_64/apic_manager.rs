@@ -10,8 +10,6 @@ use core::{
     }
 };
 
-use num_enum::IntoPrimitive;
-
 use bits::bit_fields::TBitFields;
 
 use crate::{
@@ -404,7 +402,6 @@ struct IoApicConfig {
 #[derive(Debug)]
 #[derive(Copy, Clone)]
 #[derive(Eq, PartialEq)]
-#[derive(IntoPrimitive)]
 enum LapicRegister {
     CoreId                   = 0x020,
     TaskPrio                 = 0x080,
@@ -423,16 +420,27 @@ enum LapicRegister {
     TimerDivideConfig        = 0x3E0
 }
 
+impl Into<usize> for LapicRegister {
+    fn into(self) -> usize {
+        self as usize
+    }
+}
+
 #[repr(u32)]
 #[derive(Debug)]
 #[derive(Copy, Clone)]
 #[derive(Eq, PartialEq)]
-#[derive(IntoPrimitive)]
 enum IoApicRegister {
     Id       = 0x00,
     Version  = 0x01,
     Arb      = 0x02,
     RedTable = 0x10
+}
+
+impl Into<u32> for IoApicRegister {
+    fn into(self) -> u32 {
+        self as u32
+    }
 }
 
 const SPURIOUS_INTERRUPT_DISABLE: u32 = 0 << 8;

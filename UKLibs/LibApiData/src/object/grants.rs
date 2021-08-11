@@ -1,9 +1,6 @@
 /*! `Object`'s grants management */
 
-use num_enum::{
-    IntoPrimitive,
-    TryFromPrimitive
-};
+use core::convert::TryFrom;
 
 use bits::bit_flags::{
     BitFlags,
@@ -51,7 +48,6 @@ pub type RawObjGrants = BitFlags<usize, ObjGrantsBits>;
 #[derive(Clone, Copy)]
 #[derive(PartialEq, Eq)]
 #[derive(PartialOrd, Ord)]
-#[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum ObjGrantsBits {
     UserCanOpenIt,
     UserCanReadData,
@@ -76,6 +72,43 @@ pub enum ObjGrantsBits {
     OtherCanReadInfo,
     OtherCanWriteInfo,
     OtherCanSeeIt
+}
+
+impl Into<usize> for ObjGrantsBits {
+    fn into(self) -> usize {
+        self as usize
+    }
+}
+
+impl TryFrom<usize> for ObjGrantsBits {
+    type Error = ();
+
+    fn try_from(value: usize) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::UserCanOpenIt),
+            1 => Ok(Self::UserCanReadData),
+            2 => Ok(Self::UserCanWriteData),
+            3 => Ok(Self::UserCanExecTraversData),
+            4 => Ok(Self::UserCanReadInfo),
+            5 => Ok(Self::UserCanWriteInfo),
+            6 => Ok(Self::UserCanSeeIt),
+            7 => Ok(Self::GroupCanOpenIt),
+            8 => Ok(Self::GroupCanReadData),
+            9 => Ok(Self::GroupCanWriteData),
+            10 => Ok(Self::GroupCanExecTraversData),
+            11 => Ok(Self::GroupCanReadInfo),
+            12 => Ok(Self::GroupCanWriteInfo),
+            13 => Ok(Self::GroupCanSeeIt),
+            14 => Ok(Self::OtherCanOpenIt),
+            15 => Ok(Self::OtherCanReadData),
+            16 => Ok(Self::OtherCanWriteData),
+            17 => Ok(Self::OtherCanExecTraversData),
+            18 => Ok(Self::OtherCanReadInfo),
+            19 => Ok(Self::OtherCanWriteInfo),
+            20 => Ok(Self::OtherCanSeeIt),
+            _ => Err(())
+        }
+    }
 }
 
 impl TBitFlagsValues for ObjGrantsBits {

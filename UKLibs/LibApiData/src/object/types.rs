@@ -1,10 +1,8 @@
 /*! `Object` types */
 
-use core::fmt;
-
-use num_enum::{
-    IntoPrimitive,
-    TryFromPrimitive
+use core::{
+    convert::TryFrom,
+    fmt
 };
 
 /**
@@ -15,7 +13,6 @@ use num_enum::{
 #[derive(Clone, Copy)]
 #[derive(PartialEq, Eq)]
 #[derive(PartialOrd, Ord)]
-#[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum ObjType {
     /**
      * Default value
@@ -61,6 +58,30 @@ pub enum ObjType {
 impl Default for ObjType {
     fn default() -> Self {
         Self::Unknown
+    }
+}
+
+impl Into<usize> for ObjType {
+    fn into(self) -> usize {
+        self as usize
+    }
+}
+
+impl TryFrom<usize> for ObjType {
+    type Error = ();
+
+    fn try_from(value: usize) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::Unknown),
+            1 => Ok(Self::Device),
+            2 => Ok(Self::Dir),
+            3 => Ok(Self::File),
+            4 => Ok(Self::IpcChan),
+            5 => Ok(Self::Link),
+            6 => Ok(Self::MMap),
+            7 => Ok(Self::OsRawMutex),
+            _ => Err(())
+        }
     }
 }
 

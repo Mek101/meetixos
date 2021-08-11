@@ -2,13 +2,9 @@
 
 use alloc::string::String;
 use core::{
+    convert::TryFrom,
     fmt,
     hint::spin_loop
-};
-
-use num_enum::{
-    IntoPrimitive,
-    TryFromPrimitive
 };
 
 use api_data::object::device::{
@@ -208,12 +204,31 @@ impl X64Serial16550UartWriter /* Methods */ {
  */
 #[repr(usize)]
 #[derive(Copy, Clone)]
-#[derive(IntoPrimitive, TryFromPrimitive)]
 enum IntrEnabledBits {
     Received,
     Sent,
     Errored,
     StatusChange
+}
+
+impl Into<usize> for IntrEnabledBits {
+    fn into(self) -> usize {
+        self as usize
+    }
+}
+
+impl TryFrom<usize> for IntrEnabledBits {
+    type Error = ();
+
+    fn try_from(value: usize) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::Received),
+            1 => Ok(Self::Sent),
+            2 => Ok(Self::Errored),
+            3 => Ok(Self::StatusChange),
+            _ => Err(())
+        }
+    }
 }
 
 impl TBitFlagsValues for IntrEnabledBits {
@@ -224,10 +239,27 @@ impl TBitFlagsValues for IntrEnabledBits {
  */
 #[repr(usize)]
 #[derive(Copy, Clone)]
-#[derive(IntoPrimitive, TryFromPrimitive)]
 enum LineStatusBits {
     InputFull,
     OutputEmpty = 5
+}
+
+impl Into<usize> for LineStatusBits {
+    fn into(self) -> usize {
+        self as usize
+    }
+}
+
+impl TryFrom<usize> for LineStatusBits {
+    type Error = ();
+
+    fn try_from(value: usize) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::InputFull),
+            5 => Ok(Self::OutputEmpty),
+            _ => Err(())
+        }
+    }
 }
 
 impl TBitFlagsValues for LineStatusBits {

@@ -18,6 +18,3 @@ members = [
     # Binary Crates
     "Userland/Bins/Example",
 ]
-
-[profile.dev]
-opt-level = 2 # MUST >= 2 : Enable RVO to avoid stack overflow

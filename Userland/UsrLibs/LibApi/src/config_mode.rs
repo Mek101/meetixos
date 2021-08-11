@@ -1,9 +1,6 @@
 /*! Configuration Trait */
 
-use num_enum::{
-    IntoPrimitive,
-    TryFromPrimitive
-};
+use core::convert::TryFrom;
 
 /**
  * Lists the available implementations for the `ConfigMode`
@@ -13,7 +10,6 @@ use num_enum::{
 #[derive(Clone, Copy)]
 #[derive(PartialEq, Eq)]
 #[derive(PartialOrd, Ord)]
-#[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum ConfigModeType {
     /**
      * Identifies the `CreatMode`
@@ -24,6 +20,24 @@ pub enum ConfigModeType {
      * Identifies the `OpenMode`
      */
     Open
+}
+
+impl Into<u8> for ConfigModeType {
+    fn into(self) -> u8 {
+        self as u8
+    }
+}
+
+impl TryFrom<u8> for ConfigModeType {
+    type Error = ();
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::Create),
+            1 => Ok(Self::Open),
+            _ => Err(())
+        }
+    }
 }
 
 /**

@@ -5,9 +5,6 @@ edition = "2018"
 authors = ["Marco Cicognani <marco.cicognani@meetixos.org>"]
 
 [dependencies]
-# ---------------------------- External Thirdy Party Crates ---------------------------- #
-num_enum  = { version = "*", default-features = false }
-
 # ------------------------------ MeetiX Libraries Crates ------------------------------- #
 sync     = { path = "../../../UKLibs/LibSync" }
 bits     = { path = "../../../UKLibs/LibBits" }

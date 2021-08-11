@@ -1,9 +1,6 @@
 /*! `Object` configuration */
 
-use num_enum::{
-    IntoPrimitive,
-    TryFromPrimitive
-};
+use core::convert::TryFrom;
 
 use bits::bit_flags::{
     BitFlags,
@@ -141,7 +138,6 @@ impl<'a> TAsSysCallPtr for RawObjConfig<'a> {
 #[repr(usize)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
-#[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum ObjConfigBits {
     /**
      * Enabled when called `Object::creat()`
@@ -167,6 +163,27 @@ pub enum ObjConfigBits {
      * Ensures that the `Object` is opened by one thread a time
      */
     Exclusive
+}
+
+impl Into<usize> for ObjConfigBits {
+    fn into(self) -> usize {
+        self as usize
+    }
+}
+
+impl TryFrom<usize> for ObjConfigBits {
+    type Error = ();
+
+    fn try_from(value: usize) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::Creat),
+            1 => Ok(Self::Read),
+            2 => Ok(Self::Write),
+            3 => Ok(Self::Exec),
+            4 => Ok(Self::Exclusive),
+            _ => Err(())
+        }
+    }
 }
 
 impl TBitFlagsValues for ObjConfigBits {

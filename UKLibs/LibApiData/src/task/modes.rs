@@ -1,9 +1,6 @@
 /*! `Task` modes bits */
 
-use num_enum::{
-    IntoPrimitive,
-    TryFromPrimitive
-};
+use core::convert::TryFrom;
 
 /**
  * Lists the available options for `TaskConfig::with_exec_cpu()`.
@@ -73,7 +70,6 @@ impl TaskExecCpu /* Methods */ {
 #[derive(Clone, Copy)]
 #[derive(PartialEq, Eq)]
 #[derive(PartialOrd, Ord)]
-#[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum FsMountMode {
     /**
      * The filesystem is visible to all the processes in any of the active
@@ -97,4 +93,24 @@ pub enum FsMountMode {
      * The filesystem is only visible to the caller process
      */
     PrivateToProc
+}
+
+impl Into<usize> for FsMountMode {
+    fn into(self) -> usize {
+        self as usize
+    }
+}
+
+impl TryFrom<usize> for FsMountMode {
+    type Error = ();
+
+    fn try_from(value: usize) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::OsGlobal),
+            1 => Ok(Self::SessionGlobal),
+            2 => Ok(Self::ChildInheritable),
+            3 => Ok(Self::PrivateToProc),
+            _ => Err(())
+        }
+    }
 }

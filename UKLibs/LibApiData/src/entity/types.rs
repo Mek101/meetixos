@@ -1,10 +1,8 @@
 /*! `OsEntity` types */
 
-use core::fmt;
-
-use num_enum::{
-    IntoPrimitive,
-    TryFromPrimitive
+use core::{
+    convert::TryFrom,
+    fmt
 };
 
 /**
@@ -15,7 +13,6 @@ use num_enum::{
 #[derive(Clone, Copy)]
 #[derive(PartialEq, Eq)]
 #[derive(PartialOrd, Ord)]
-#[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum OsEntityType {
     /**
      * Default value
@@ -36,6 +33,25 @@ pub enum OsEntityType {
 impl Default for OsEntityType {
     fn default() -> Self {
         Self::Unknown
+    }
+}
+
+impl Into<usize> for OsEntityType {
+    fn into(self) -> usize {
+        self as usize
+    }
+}
+
+impl TryFrom<usize> for OsEntityType {
+    type Error = ();
+
+    fn try_from(value: usize) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::Unknown),
+            1 => Ok(Self::User),
+            2 => Ok(Self::Group),
+            _ => Err(())
+        }
     }
 }
 

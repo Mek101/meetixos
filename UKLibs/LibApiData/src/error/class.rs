@@ -1,10 +1,8 @@
 /*! `OsError` classes */
 
-use core::fmt;
-
-use num_enum::{
-    IntoPrimitive,
-    TryFromPrimitive
+use core::{
+    convert::TryFrom,
+    fmt
 };
 
 /**
@@ -15,7 +13,6 @@ use num_enum::{
 #[derive(Clone, Copy)]
 #[derive(PartialEq, Eq)]
 #[derive(PartialOrd, Ord)]
-#[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum OsErrorClass {
     /**
      * Default value, used for uninitialized `OsError`s
@@ -55,7 +52,7 @@ pub enum OsErrorClass {
 
     /**
      * The previous system call was failed because the given `Path`
-     * references an unexisting object name
+     * references a non-existing object name
      */
     ReferenceNotFound,
 
@@ -106,6 +103,36 @@ pub enum OsErrorClass {
 impl Default for OsErrorClass {
     fn default() -> Self {
         Self::Unknown
+    }
+}
+
+impl Into<u8> for OsErrorClass {
+    fn into(self) -> u8 {
+        self as u8
+    }
+}
+
+impl TryFrom<u8> for OsErrorClass {
+    type Error = ();
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::Unknown),
+            1 => Ok(Self::InvalidArgument),
+            2 => Ok(Self::InvalidHandleReference),
+            3 => Ok(Self::IdentifierNotAvailable),
+            4 => Ok(Self::NotEnoughGrants),
+            5 => Ok(Self::NotEnoughMemory),
+            6 => Ok(Self::ReferenceNotFound),
+            7 => Ok(Self::TypesNotMatch),
+            8 => Ok(Self::LimitReached),
+            9 => Ok(Self::LimitOverflow),
+            10 => Ok(Self::NoDataAvailable),
+            11 => Ok(Self::OperationNotEnabled),
+            12 => Ok(Self::EndOfDataReached),
+            13 => Ok(Self::InterruptedOperation),
+            _ => Err(())
+        }
     }
 }
 

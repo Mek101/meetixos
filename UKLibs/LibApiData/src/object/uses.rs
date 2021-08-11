@@ -1,11 +1,7 @@
 /*! `Object` usages */
 
-use num_enum::{
-    IntoPrimitive,
-    TryFromPrimitive
-};
-
 use bits::bit_flags::TBitFlagsValues;
+use core::convert::TryFrom;
 
 /**
  * Lists the available usages of an `Object` based struct.
@@ -22,7 +18,6 @@ use bits::bit_flags::TBitFlagsValues;
 #[derive(Clone, Copy)]
 #[derive(PartialEq, Eq)]
 #[derive(PartialOrd, Ord)]
-#[derive(IntoPrimitive, TryFromPrimitive)]
 pub enum ObjUseBits {
     /**
      * Default value, never used
@@ -99,6 +94,33 @@ pub enum ObjUseBits {
 impl Default for ObjUseBits {
     fn default() -> Self {
         Self::Unknown
+    }
+}
+
+impl Into<usize> for ObjUseBits {
+    fn into(self) -> usize {
+        self as usize
+    }
+}
+
+impl TryFrom<usize> for ObjUseBits {
+    type Error = ();
+
+    fn try_from(value: usize) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::Unknown),
+            1 => Ok(Self::Opening),
+            2 => Ok(Self::ReadingData),
+            3 => Ok(Self::WritingData),
+            4 => Ok(Self::ReadingInfo),
+            5 => Ok(Self::WritingInfo),
+            6 => Ok(Self::Sending),
+            7 => Ok(Self::Receiving),
+            8 => Ok(Self::Watching),
+            9 => Ok(Self::Dropping),
+            10 => Ok(Self::Deleting),
+            _ => Err(())
+        }
     }
 }
 
