@@ -17,7 +17,7 @@ use crate::{
             Segment
         },
         intr_desc_table::IntrDescTable,
-        tss::TaskStateSegment
+        task_state_segment::TaskStateSegment
     },
     dbg_print::DbgLevel,
     dbg_println,

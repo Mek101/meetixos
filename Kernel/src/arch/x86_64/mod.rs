@@ -12,7 +12,7 @@ pub mod intr_desc_table;
 pub mod intr_handler;
 pub mod intr_stack_frame;
 pub mod ms_register;
-pub mod tss;
+pub mod task_state_segment;
 pub mod vm;
 pub mod x64_port;
 
