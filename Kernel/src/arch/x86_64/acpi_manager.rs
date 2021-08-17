@@ -23,7 +23,7 @@ use crate::{
         virt_addr::VirtAddr,
         TAddress
     },
-    arch::x86_64::apic_manager::ApicManager,
+    arch::interrupts::apic_manager::ApicManager,
     dbg_println,
     processor::{
         CpuCoreId,

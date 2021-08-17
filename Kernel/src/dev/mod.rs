@@ -43,7 +43,7 @@ impl DevManager /* Constructors */ {
                        "Called DevManager::early_init() twice!");
 
             /* NOTE <DevManager::register_early_devices()> is implemented into
-             * Kernel/arch/<arch_name>/dev/mod.rs.
+             * Kernel/arch/<arch_name>/dev/scheduler.
              *
              * Each architecture must implement it and here must be registered at least
              * the random device and the serial device

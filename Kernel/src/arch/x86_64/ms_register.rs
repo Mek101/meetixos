@@ -1,13 +1,5 @@
 /*! Model Specific Register */
 
-pub struct EfeRegister;
-
-pub struct FsBaseRegister;
-
-pub struct GsBaseRegister;
-
-pub struct KernGsBaseRegister;
-
 /**
  * Generic x86_64 Model Specific Register
  */
@@ -16,6 +8,18 @@ pub struct MsRegister {
 }
 
 impl MsRegister /* Constructors */ {
+    pub const fn new_star() -> Self {
+        Self::new(0xc0000081)
+    }
+
+    pub const fn new_lstar() -> Self {
+        Self::new(0xc0000082)
+    }
+
+    pub const fn new_fmask() -> Self {
+        Self::new(0xc0000084)
+    }
+
     /**
      * Constructs a `MsRegister` with the given value
      */

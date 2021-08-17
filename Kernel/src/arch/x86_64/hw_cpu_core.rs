@@ -11,12 +11,17 @@ use crate::{
     },
     arch::x86_64::{
         acpi_manager::AcpiManager,
-        apic_manager::ApicManager,
         global_desc_table::{
             GlobalDescTable,
-            Segment
+            Segment,
+            SegmentSelector
         },
-        intr_desc_table::IntrDescTable,
+        interrupts::{
+            apic_manager::ApicManager,
+            intr_desc_table::IntrDescTable,
+            intr_handler::syscall_entry
+        },
+        ms_register::MsRegister,
         task_state_segment::TaskStateSegment
     },
     dbg_print::DbgLevel,
@@ -35,26 +40,26 @@ const C_DOUBLE_FAULT_STACK_INDEX: usize = 0;
  */
 pub struct HwCpuCore {
     m_is_ap: bool,
-    m_gdt: GlobalDescTable,
-    m_tss: TaskStateSegment,
-    m_idt: IntrDescTable,
+    m_global_desc_table: GlobalDescTable,
+    m_task_state_segment: TaskStateSegment,
+    m_intr_desc_table: IntrDescTable,
     m_double_fault_stack: [u8; C_DOUBLE_FAULT_STACK]
 }
 
 impl THwCpuCore for HwCpuCore {
     fn new(is_ap: bool) -> Self {
         Self { m_is_ap: is_ap,
-               m_gdt: GlobalDescTable::new(),
-               m_tss: TaskStateSegment::new(),
-               m_idt: IntrDescTable::new_uninitialized(),
+               m_global_desc_table: GlobalDescTable::new(),
+               m_task_state_segment: TaskStateSegment::new(),
+               m_intr_desc_table: IntrDescTable::new_uninitialized(),
                m_double_fault_stack: [0; C_DOUBLE_FAULT_STACK] }
     }
 
     fn init(&'static mut self) {
-        dbg_println!(DbgLevel::Debug, "Initializing Double fault stack...");
+        dbg_println!(DbgLevel::Trace, "Initializing Double fault stack...");
 
         /* set the double fault stack pointer into the TSS */
-        self.m_tss.m_full_intr_stack_table[C_DOUBLE_FAULT_STACK_INDEX] = {
+        self.m_task_state_segment.m_intr_stack_table[C_DOUBLE_FAULT_STACK_INDEX] = {
             /* obtain the <VirtAddr> of the static buffer */
             let double_fault_stack_virt_addr: VirtAddr =
                 self.m_double_fault_stack.as_mut_ptr().into();
@@ -64,34 +69,23 @@ impl THwCpuCore for HwCpuCore {
         };
 
         /* setup the GDT segments */
-        dbg_println!(DbgLevel::Debug, "Initializing GDT...");
-        let kern_code_segment_selector =
-            self.m_gdt.add_entry(Segment::kernel_code_segment());
-        self.m_gdt.add_entry(Segment::kernel_data_segment());
-        self.m_gdt.add_entry(Segment::user_code_segment());
-        self.m_gdt.add_entry(Segment::user_data_segment());
-        let tss_segment_selector =
-            self.m_gdt.add_entry(Segment::tss_segment(&self.m_tss));
+        dbg_println!(DbgLevel::Trace, "Initializing GDT...");
+        self.m_global_desc_table.add_entry(Segment::kernel_code_segment());
+        self.m_global_desc_table.add_entry(Segment::kernel_data_segment());
+        self.m_global_desc_table.add_entry(Segment::user_code_segment());
+        self.m_global_desc_table.add_entry(Segment::user_data_segment());
+        self.m_global_desc_table.add_entry(Segment::user_syscall_segment());
+        self.m_global_desc_table
+            .add_entry(Segment::tss_segment(&self.m_task_state_segment));
 
-        /* load the GDT, reload the code-segment register (CS) and load the TSS */
-        self.m_gdt.load();
-
-        /* reload the code-segment register (CS) */
-        unsafe {
-            asm!("push      {css}",
-                 "lea       {tmp}, [1f + rip]",
-                 "push      {tmp}",
-                 "retfq",
-                 "1:",
-                 css = in(reg) kern_code_segment_selector.as_raw(),
-                 tmp = lateout(reg) _,
-                 options(preserves_flags));
-        }
+        /* flush the GDT table constructed */
+        self.m_global_desc_table.load();
 
         /* load the TSS */
+        let tss_selector: SegmentSelector = SegmentSelector::C_INDEX_TSS.into();
         unsafe {
             asm!("ltr {0:x}",
-                 in(reg) tss_segment_selector.as_raw(),
+                 in(reg) tss_selector.as_raw(),
                  options(nomem, nostack, preserves_flags));
         }
     }
@@ -99,27 +93,44 @@ impl THwCpuCore for HwCpuCore {
     fn init_interrupts(&'static mut self) {
         if !self.m_is_ap {
             /* initialize the Advanced Programmable Interrupt Controller */
-            dbg_println!(DbgLevel::Debug, "Initializing APIC Manager...");
+            dbg_println!(DbgLevel::Trace, "Initializing APIC Manager...");
             ApicManager::init_instance();
 
             /* initialize the Advanced Configuration and Power Interface */
-            dbg_println!(DbgLevel::Debug, "Initializing ACPI Manager...");
+            dbg_println!(DbgLevel::Trace, "Initializing ACPI Manager...");
             AcpiManager::init_instance();
 
             /* register the AP CPUs */
-            dbg_println!(DbgLevel::Debug, "Discovering APs CPUs...");
+            dbg_println!(DbgLevel::Trace, "Discovering APs CPUs...");
             AcpiManager::instance().register_ap_cpus();
         }
 
         /* enable the LAPIC for this CPU */
-        dbg_println!(DbgLevel::Debug, "Enabling LAPIC for this CPU");
+        dbg_println!(DbgLevel::Trace, "Enabling LAPIC for this CPU");
         unsafe {
             ApicManager::instance().local_apic().enable();
         }
 
+        /* setup system-calls */
+        dbg_println!(DbgLevel::Debug, "Enabling FastSystemCall Feature...");
+        unsafe {
+            /* STAR MSR need the code segments to use for syscall */
+            let syscall_selector: SegmentSelector =
+                SegmentSelector::C_INDEX_USER_SYSC.into();
+            let kern_code_selector: SegmentSelector =
+                SegmentSelector::C_INDEX_KERN_CODE.into();
+
+            let msr_value = ((syscall_selector.as_raw() - 16) << 48)
+                            | (kern_code_selector.as_raw() << 32);
+
+            MsRegister::new_star().write(msr_value as u64);
+            MsRegister::new_lstar().write(syscall_entry as u64);
+            MsRegister::new_fmask().write(0x200);
+        }
+
         /* flush the interrupts descriptor table */
         dbg_println!(DbgLevel::Debug, "Initializing IDT...");
-        self.m_idt.init_and_flush();
+        self.m_intr_desc_table.init_and_flush();
     }
 
     fn do_halt(&self) {

@@ -1,6 +1,10 @@
 /*! x86_64 interrupt handler */
 
-use crate::arch::x86_64::intr_stack_frame::IntrStackFrame;
+use crate::arch::interrupts::intr_stack_frame::IntrStackFrame;
+
+extern "C" {
+    pub fn syscall_entry();
+}
 
 #[no_mangle]
 extern "C" fn interrupt_handler(_intr_stack_frame: &mut IntrStackFrame) {

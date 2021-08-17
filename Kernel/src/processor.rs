@@ -1,8 +1,14 @@
 /*! Kernel CPU management */
 
-use alloc::collections::BTreeMap;
+use alloc::{
+    collections::BTreeMap,
+    sync::Arc
+};
 
-use crate::arch::hw_cpu::HwCpuCore;
+use crate::{
+    arch::hw_cpu_core::HwCpuCore,
+    task::thread::Thread
+};
 
 /* <None> until <Processor::init_instance()> is called */
 static mut SM_PROCESSOR: Option<Processor> = None;
@@ -28,10 +34,12 @@ impl Processor /* Constructors */ {
      */
     pub fn init_instance() {
         const C_CORES_MAP_INIT_VAL: Option<CpuCore> = None;
+        const C_BSP_CPU_CORE_ID: CpuCoreId = 0;
 
         /* initialize the global instance */
         unsafe {
             SM_PROCESSOR = Some(Self { m_cores_map: BTreeMap::new(),
+
                                        m_max_freq: HwCpuCore::max_frequency(),
                                        m_base_freq: HwCpuCore::base_frequency(),
                                        m_bus_freq: HwCpuCore::bus_frequency() });
@@ -40,8 +48,8 @@ impl Processor /* Constructors */ {
         let processor_mut = unsafe { Self::instance_mut() };
 
         /* register the BSP CPU core and initialize it */
-        processor_mut.register_cpu_core(0, false);
-        processor_mut.core_by_id_mut(0)
+        processor_mut.register_cpu_core(C_BSP_CPU_CORE_ID, false);
+        processor_mut.core_by_id_mut(C_BSP_CPU_CORE_ID)
                      .expect("Failed to obtain BSP CPU core")
                      .m_hw_cpu
                      .init();
@@ -53,7 +61,17 @@ impl Processor /* Methods */ {
      * Register the given core as `Processor` core
      */
     pub fn register_cpu_core(&mut self, cpu_core_id: CpuCoreId, is_ap: bool) {
-        self.m_cores_map.insert(cpu_core_id, CpuCore { m_hw_cpu: HwCpuCore::new(is_ap) });
+        self.m_cores_map.insert(cpu_core_id,
+                                CpuCore { m_hw_cpu: HwCpuCore::new(is_ap),
+                                          m_current_thread: None,
+                                          m_idle_thread: None });
+    }
+
+    /**
+     * Initializes the `CpuCore` for the current AP CPU core
+     */
+    pub fn init_this_ap(&'static mut self) {
+        self.this_core_mut().m_hw_cpu.init();
     }
 
     /**
@@ -67,10 +85,10 @@ impl Processor /* Methods */ {
     }
 
     /**
-     * Initializes the interrupts management for the current AP CPU core
+     * Initializes the interrupts management for this AP CPU core
      */
-    pub fn init_interrupts_for_ap(&'static mut self) {
-        self.this_core_mut().m_hw_cpu.init_interrupts();
+    pub fn init_interrupts_for_this_ap(&'static mut self) {
+        self.this_core_mut().m_hw_cpu.init_interrupts()
     }
 
     /**
@@ -103,7 +121,7 @@ impl Processor /* Getters */ {
     /**
      * Returns the current executing `CpuCore` instance
      */
-    pub fn this_core(&self) -> &CpuCore {
+    pub fn this_core(&'static self) -> &'static CpuCore {
         self.core_by_id(HwCpuCore::this_id())
             .expect("Processor::this_core(): Requested an unregistered CpuCore")
     }
@@ -111,7 +129,7 @@ impl Processor /* Getters */ {
     /**
      * Returns the current executing `CpuCore` mutable instance
      */
-    pub fn this_core_mut(&mut self) -> &mut CpuCore {
+    pub fn this_core_mut(&'static mut self) -> &'static mut CpuCore {
         self.core_by_id_mut(HwCpuCore::this_id())
             .expect("Processor::this_core_mut(): Requested an unregistered CpuCore")
     }
@@ -119,14 +137,16 @@ impl Processor /* Getters */ {
     /**
      * Returns the `CpuCore` by his `CpuCoreId`
      */
-    pub fn core_by_id(&self, cpu_core_id: CpuCoreId) -> Option<&CpuCore> {
+    pub fn core_by_id(&'static self, cpu_core_id: CpuCoreId) -> Option<&'static CpuCore> {
         self.m_cores_map.get(&cpu_core_id)
     }
 
     /**
      * Returns the mutable `CpuCore` by his `CpuCoreId`
      */
-    pub fn core_by_id_mut(&mut self, cpu_core_id: CpuCoreId) -> Option<&mut CpuCore> {
+    pub fn core_by_id_mut(&'static mut self,
+                          cpu_core_id: CpuCoreId)
+                          -> Option<&'static mut CpuCore> {
         self.m_cores_map.get_mut(&cpu_core_id)
     }
 
@@ -160,10 +180,12 @@ impl Processor /* Getters */ {
 }
 
 /**
- * High-level CPU management
+ * Per-CPU Core structure
  */
 pub struct CpuCore {
-    m_hw_cpu: HwCpuCore
+    m_hw_cpu: HwCpuCore,
+    m_current_thread: Option<Arc<Thread>>,
+    m_idle_thread: Option<Arc<Thread>>
 }
 
 impl CpuCore /* Methods */ {
@@ -221,6 +243,42 @@ impl CpuCore /* Getters */ {
      */
     pub fn are_interrupts_enabled(&self) -> bool {
         self.m_hw_cpu.are_interrupts_enabled()
+    }
+
+    /**
+     * Returns the current `Thread` for this CPU Core
+     */
+    pub fn current_thread(&self) -> Arc<Thread> {
+        self.m_current_thread
+            .as_ref()
+            .expect("Requested current_thread to the CpuCore but is None")
+            .clone()
+    }
+
+    /**
+     * Returns the idle `Thread` for this CPU Core
+     */
+    pub fn idle_thread(&self) -> Arc<Thread> {
+        self.m_idle_thread
+            .as_ref()
+            .expect("Requested idle_thread to the CpuCore but is None")
+            .clone()
+    }
+}
+
+impl CpuCore /* Setters */ {
+    /**
+     * Sets the current `Thread` for this CPU Core
+     */
+    pub fn set_current_thread(&mut self, current_thread: Arc<Thread>) {
+        self.m_current_thread = Some(current_thread);
+    }
+
+    /**
+     * Sets the idle `Thread` for this CPU Core
+     */
+    pub fn set_idle_thread(&mut self, idle_thread: Arc<Thread>) {
+        self.m_idle_thread = Some(idle_thread);
     }
 }
 

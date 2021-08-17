@@ -13,7 +13,8 @@
            step_trait,
            alloc_error_handler,
            const_btree_new,
-           array_methods)]
+           array_methods,
+           new_uninit)]
 #![allow(dead_code)]
 
 #[macro_use]
@@ -30,6 +31,7 @@ use crate::{
     dev::DevManager,
     heap::kernel_heap_init_eternal_pool,
     processor::Processor,
+    task::scheduler::Scheduler,
     version::KERNEL_VERSION,
     vm::mem_manager::MemManager
 };
@@ -42,6 +44,7 @@ mod dev;
 mod heap;
 mod panic;
 mod processor;
+mod task;
 mod version;
 mod vm;
 
@@ -57,7 +60,7 @@ mod vm;
  * to jump into the user-space
  */
 #[no_mangle]
-pub extern "C" fn kernel_rust_start(raw_boot_info_ptr: *const u8) -> ! {
+pub extern "C" fn bsp_rust_start(raw_boot_info_ptr: *const u8) -> ! {
     /* initialize the kernel heap since the BootInfo & DevManager could use it */
     kernel_heap_init_eternal_pool();
 
@@ -99,12 +102,16 @@ pub extern "C" fn kernel_rust_start(raw_boot_info_ptr: *const u8) -> ! {
         Processor::instance().start_smp();
     }
 
+    /* initialize the task scheduler */
+    dbg_println!(DbgLevel::Info, "Initializing Task Scheduler...");
+    Scheduler::init_instance();
+
     /* FIXME debug printing to remove */
     {
         dbg_println!(DbgLevel::Debug,
-                     "raw_info_ptr: {:#018x}, kernel_rust_start: {:#018x}",
+                     "raw_info_ptr: {:#018x}, bsp_rust_start: {:#018x}",
                      raw_boot_info_ptr as usize,
-                     kernel_rust_start as usize);
+                     bsp_rust_start as usize);
         dbg_println!(DbgLevel::Debug,
                      "boot_loader_name: '{}'",
                      BootInfo::instance().boot_loader_name());
@@ -128,4 +135,24 @@ pub extern "C" fn kernel_rust_start(raw_boot_info_ptr: *const u8) -> ! {
                      Processor::instance().this_core().are_interrupts_enabled());
     }
     panic!("TODO implement the remaining code");
+}
+
+pub extern "C" fn ap_rust_start() {
+    let this_core_id = Processor::instance().this_core().id();
+
+    /* initialize the CPU management for this AP */
+    dbg_println!(DbgLevel::Info,
+                 "Initializing AP{} Processor Management...",
+                 this_core_id);
+    unsafe {
+        Processor::instance_mut().init_this_ap();
+    }
+
+    /* initialize the CPU management for this AP */
+    dbg_println!(DbgLevel::Info,
+                 "Initializing AP{} Interrupt Management...",
+                 this_core_id);
+    unsafe {
+        Processor::instance_mut().init_interrupts_for_this_ap();
+    }
 }

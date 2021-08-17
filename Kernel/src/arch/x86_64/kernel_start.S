@@ -1,6 +1,6 @@
 /*! x86_64 kernel bootstrap implementation */
 
-.extern kernel_rust_start
+.extern bsp_rust_start
 
 .set MULTIBOOT_HEADER_MAGIC,    0xe85250d6
 .set MULTIBOOT_ARCH_X86,        0
@@ -212,7 +212,7 @@ kernel_enable_paging:
     or          $(1 << 4 | 1 << 5 | 1 << 7), %eax
     mov         %eax, %cr4
 
-    /* enable LONG_MODE and NO_EXECUTE in EFER model specific register */
+    /* enable SYSCALL_EXT, LONG_MODE and NO_EXECUTE in EFER model specific register */
     mov         $0xC0000080, %ecx
     rdmsr
     or          $(1 | 1 << 8 | 1 << 11), %eax
@@ -237,7 +237,7 @@ kernel_identity_mapped_text:
 
     /* put Multiboot2 pointer into <rdi> (x86_64 first argument) and call rust */
     mov         %rbx, %rdi
-    call        kernel_rust_start
+    call        bsp_rust_start
 
 kernel_halt:
     /* we should never reach this point */

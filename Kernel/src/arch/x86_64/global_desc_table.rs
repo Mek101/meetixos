@@ -129,6 +129,15 @@ pub struct SegmentSelector {
     m_raw_value: u16
 }
 
+impl SegmentSelector /* Constants */ {
+    pub const C_INDEX_KERN_CODE: u16 = 1;
+    pub const C_INDEX_KERN_DATA: u16 = 2;
+    pub const C_INDEX_USER_CODE: u16 = 3;
+    pub const C_INDEX_USER_DATA: u16 = 4;
+    pub const C_INDEX_USER_SYSC: u16 = 5;
+    pub const C_INDEX_TSS: u16 = 6;
+}
+
 impl SegmentSelector /* Constructors */ {
     /**
      * Constructs a `SegmentSelector` from the given parameters
@@ -170,6 +179,20 @@ impl SegmentSelector /* Setters */ {
     }
 }
 
+impl From<u16> for SegmentSelector {
+    fn from(array_index: u16) -> Self {
+        match array_index {
+            Self::C_INDEX_KERN_CODE => Self::new(array_index, CpuRingMode::Ring0),
+            Self::C_INDEX_KERN_DATA => Self::new(array_index, CpuRingMode::Ring0),
+            Self::C_INDEX_USER_CODE => Self::new(array_index, CpuRingMode::Ring0),
+            Self::C_INDEX_USER_DATA => Self::new(array_index, CpuRingMode::Ring0),
+            Self::C_INDEX_USER_SYSC => Self::new(array_index, CpuRingMode::Ring0),
+            Self::C_INDEX_TSS => Self::new(array_index, CpuRingMode::Ring0),
+            _ => panic!("SegmentSelector::from() bad array_index")
+        }
+    }
+}
+
 /**
  * x86_64 segmentation descriptor
  */
@@ -188,7 +211,6 @@ impl Segment /* Static Functions */ {
         let kern_code_flags = SegmentFlagsBits::common()
                               | SegmentFlagsBits::Executable
                               | SegmentFlagsBits::LongMode;
-
         Self::Common(kern_code_flags.raw_bits())
     }
 
@@ -196,8 +218,9 @@ impl Segment /* Static Functions */ {
      * Returns a `Segment` configured for kernel-data
      */
     pub fn kernel_data_segment() -> Segment {
-        let kern_data_flags = SegmentFlagsBits::common() | SegmentFlagsBits::DefaultSize;
-
+        let kern_data_flags = SegmentFlagsBits::common()
+                              | SegmentFlagsBits::Writeable
+                              | SegmentFlagsBits::DefaultSize;
         Self::Common(kern_data_flags.raw_bits())
     }
 
@@ -209,8 +232,14 @@ impl Segment /* Static Functions */ {
                               | SegmentFlagsBits::Executable
                               | SegmentFlagsBits::LongMode
                               | SegmentFlagsBits::DplRing3;
-
         Self::Common(user_code_flags.raw_bits())
+    }
+
+    /**
+     * Returns a `Segment` configured for user-mode `syscall`
+     */
+    pub fn user_syscall_segment() -> Segment {
+        Self::user_code_segment()
     }
 
     /**
@@ -218,9 +247,9 @@ impl Segment /* Static Functions */ {
      */
     pub fn user_data_segment() -> Segment {
         let user_data_flags = SegmentFlagsBits::common()
+                              | SegmentFlagsBits::Writeable
                               | SegmentFlagsBits::DefaultSize
                               | SegmentFlagsBits::DplRing3;
-
         Self::Common(user_data_flags.raw_bits())
     }
 
@@ -323,7 +352,6 @@ impl SegmentFlagsBits /* Static Functions */ {
         | Self::Limit18
         | Self::Limit19
         | Self::Accessed
-        | Self::Writeable
         | Self::UserSegment
         | Self::Present
         | Self::Granularity
