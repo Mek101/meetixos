@@ -38,6 +38,6 @@ pub struct IntrStackFrame {
 
 impl IntrStackFrame /* Getters */ {
     pub fn is_from_user_space(&self) -> bool {
-        self.m_intr_num == 0 || (self.m_rflags.bit_at(9))
+        self.m_intr_num == 0 || self.m_rflags.bit_at(9)
     }
 }
