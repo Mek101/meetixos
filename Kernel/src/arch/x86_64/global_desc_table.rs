@@ -18,7 +18,7 @@ use crate::arch::x86_64::{
         CpuRingMode,
         DescTablePtr
     },
-    task_state_segment::TaskStateSegment
+    task::task_state_segment::TaskStateSegment
 };
 
 /**

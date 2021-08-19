@@ -26,7 +26,7 @@ use crate::{
         },
         ms_register::MsRegister,
         pit::PitManager,
-        task_state_segment::TaskStateSegment
+        task::task_state_segment::TaskStateSegment
     },
     dbg_print::DbgLevel,
     dbg_println,
