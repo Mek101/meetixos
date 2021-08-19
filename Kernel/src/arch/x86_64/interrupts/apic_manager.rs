@@ -40,6 +40,11 @@ pub struct ApicManager {
     m_io_apic_configs: Vec<IoApicConfig>
 }
 
+impl ApicManager /* Constants */ {
+    pub const TIMER_DIVIDER: u64 = 16;
+    pub const APIC_MSR: u32 = 0x1b;
+}
+
 impl ApicManager /* Constructor */ {
     /**
      * Initializes the global `SM_APIC_MANAGER` instance
@@ -51,7 +56,7 @@ impl ApicManager /* Constructor */ {
         }
 
         /* obtain from the APIC-MSR the APIC base value */
-        let apic_msr = MsRegister::new(0x1b);
+        let apic_msr = MsRegister::new(Self::APIC_MSR);
         let apic_base = unsafe { apic_msr.read() };
 
         /* check for disabled APIC (bit 11 stores enable-bit) */
@@ -68,7 +73,7 @@ impl ApicManager /* Constructor */ {
             /* map into virtual memory the APIC base address */
             MemManager::instance().kernel_page_dir()
                                   .ensure_page_table_entry::<Page4KiB>(apic_base_addr)
-                                  .expect("Failed to map APIC")
+                                  .expect("Failed to map APIC base address")
                                   .set_phys_frame(apic_base_phys_addr)
                                   .set_present(true)
                                   .set_writeable(true)
@@ -245,9 +250,11 @@ impl ApicManager /* Getters */ {
     /**
      * Returns the global mutable instance of the `AcpiManager`
      */
-    pub unsafe fn instance_mut() -> &'static mut Self {
-        SM_APIC_MANAGER.as_mut().expect("Called ApicManager::instance_mut() before \
-                                         ApicManager::init_instance()")
+    pub fn instance_mut() -> &'static mut Self {
+        unsafe {
+            SM_APIC_MANAGER.as_mut().expect("Called ApicManager::instance_mut() before \
+                                             ApicManager::init_instance()")
+        }
     }
 
     /**
@@ -283,15 +290,29 @@ impl LocalApic /* Methods */ {
     /**
      * Enables the `LocalApic` for this core
      */
-    pub unsafe fn enable(&mut self) {
-        /* enable spurious interrupts */
-        if self.read(LapicRegister::SpuriousInterrupt) & SPURIOUS_INTERRUPT_ENABLE == 0 {
-            self.write(LapicRegister::SpuriousInterrupt, SPURIOUS_INTERRUPT_ENABLE);
-        }
+    pub fn enable(&mut self) {
+        unsafe {
+            /* enable spurious interrupts */
+            if self.read(LapicRegister::SpuriousInterrupt) & SPURIOUS_INTERRUPT_ENABLE
+               == 0
+            {
+                self.write(LapicRegister::SpuriousInterrupt, SPURIOUS_INTERRUPT_ENABLE);
+            }
 
-        /* set task priority and 16 as timer counter divider */
-        self.write(LapicRegister::TaskPrio, 0x10);
-        self.write(LapicRegister::TimerDivideConfig, 0x3)
+            /* set task priority and 16 as timer counter divider */
+            self.write(LapicRegister::TaskPrio, 0x10);
+            self.write(LapicRegister::TimerDivideConfig, 0x3);
+        }
+    }
+
+    pub fn write_timer_counter(&self, counter: u32) {
+        unsafe {
+            self.write(LapicRegister::TimerInitCounter, counter);
+        }
+    }
+
+    pub fn read_timer_counter(&self) -> u32 {
+        unsafe { self.read(LapicRegister::TimerCurrentCounter) }
     }
 }
 

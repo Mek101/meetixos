@@ -19,7 +19,7 @@ use bits::bit_flags::{
 use sync::SpinMutex;
 
 use crate::{
-    arch::x86_64::x64_port::X64Port,
+    arch::x86_64::io_port::IoPort,
     dev::{
         uart::TUartDevice,
         TDevice
@@ -31,12 +31,12 @@ use crate::{
  */
 pub struct X64Serial16550Uart {
     m_device_id: DeviceId,
-    m_data: X64Port<u8>,
-    m_intr_enabled: X64Port<u8>,
-    m_fifo_ctrl: X64Port<u8>,
-    m_line_ctrl: X64Port<u8>,
-    m_modem_ctrl: X64Port<u8>,
-    m_line_status: X64Port<u8>,
+    m_data: IoPort<u8>,
+    m_intr_enabled: IoPort<u8>,
+    m_fifo_ctrl: IoPort<u8>,
+    m_line_ctrl: IoPort<u8>,
+    m_modem_ctrl: IoPort<u8>,
+    m_line_status: IoPort<u8>,
     m_writer: SpinMutex<X64Serial16550UartWriter>
 }
 
@@ -81,12 +81,12 @@ impl X64Serial16550Uart /* Constructors */ {
         Self { m_device_id: DeviceId::new(DeviceIdType::Character,
                                           DeviceIdClass::Uart,
                                           com_port_number),
-               m_data: X64Port::new(serial_base),
-               m_intr_enabled: X64Port::new(serial_base + 1),
-               m_fifo_ctrl: X64Port::new(serial_base + 2),
-               m_line_ctrl: X64Port::new(serial_base + 3),
-               m_modem_ctrl: X64Port::new(serial_base + 4),
-               m_line_status: X64Port::new(serial_base + 5),
+               m_data: IoPort::new(serial_base),
+               m_intr_enabled: IoPort::new(serial_base + 1),
+               m_fifo_ctrl: IoPort::new(serial_base + 2),
+               m_line_ctrl: IoPort::new(serial_base + 3),
+               m_modem_ctrl: IoPort::new(serial_base + 4),
+               m_line_status: IoPort::new(serial_base + 5),
                m_writer: SpinMutex::const_new(X64Serial16550UartWriter) }
     }
 }

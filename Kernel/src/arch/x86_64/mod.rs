@@ -8,9 +8,10 @@ pub mod global_desc_table;
 pub mod hw_boot_info;
 pub mod hw_cpu_core;
 pub mod interrupts;
+pub mod io_port;
 pub mod ms_register;
+pub mod pit;
 pub mod task_state_segment;
 pub mod vm;
-pub mod x64_port;
 
 global_asm!(include_str!("kernel_start.S"), options(att_syntax));

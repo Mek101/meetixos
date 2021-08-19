@@ -8,7 +8,7 @@
 
 ARCH       ?= x86_64
 BUILD_MODE ?= debug
-VIRT_ACCEL ?= #-enable-kvm
+VIRT_ACCEL ?= -enable-kvm
 SMP_CORES  ?= 2
 V          ?= @ # disable print of executed command, remove to print commands
 OFFLINE    ?= false
@@ -79,7 +79,7 @@ endif
 #
 
 QEMU             ?= qemu-system-$(ARCH)
-QEMU_SHARED_ARGS ?= -m 64M -enable-kvm -cpu host -smp $(SMP_CORES)
+QEMU_SHARED_ARGS ?= -m 64M $(VIRT_ACCEL) -cpu host -smp $(SMP_CORES)
 QEMU_ARGS        ?= $(QEMU_SHARED_ARGS) -serial stdio
 QEMU_GDB_ARGS    ?= $(QEMU_SHARED_ARGS)
 

@@ -6,13 +6,13 @@ use core::marker::PhantomData;
  * Wrapper for an x86 I/O port which allows reading and writing
  */
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub struct X64Port<T>
+pub struct IoPort<T>
     where T: THwX64Port {
     m_port: u16,
     _unused: PhantomData<T>
 }
 
-impl<T> X64Port<T> where T: THwX64Port {
+impl<T> IoPort<T> where T: THwX64Port {
     /**
      * Constructs an `IOPort` which read and writes on the given `port`
      */

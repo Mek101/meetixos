@@ -84,7 +84,7 @@ impl GlobalDescTable /* Methods */ {
     /**
      * Loads into the current CPU this GDT
      */
-    pub fn load(&'static self) {
+    pub fn load(&self) {
         unsafe {
             asm!("lgdt [{}]",
             in(reg) &self.table_ptr(),
@@ -256,7 +256,7 @@ impl Segment /* Static Functions */ {
     /**
      * Returns a `Segment` configured for the given `TaskStateSegment`
      */
-    pub fn tss_segment(task_state_segment: &'static TaskStateSegment) -> Segment {
+    pub fn tss_segment(task_state_segment: &TaskStateSegment) -> Segment {
         let task_state_segment_ptr = task_state_segment as *const _ as usize;
 
         let mut raw_low_bits = {

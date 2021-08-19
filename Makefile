@@ -19,8 +19,8 @@ DOC_TARGET ?= $(shell pwd)/Userland/$(TARGET_PREFIX)/userland.json
 #
 
 just_run:
-	$(V) echo "- Running QEMU $(VIRT_ACCEL)"
-	$(V) $(QEMU) $(VIRT_ACCEL) $(QEMU_ARGS) -cdrom $(BUILD_PREFIX)/$(BUILD_MODE)/meetixos.iso
+	$(V) echo "- Running QEMU"
+	$(V) $(QEMU) $(QEMU_ARGS) -cdrom $(BUILD_PREFIX)/$(BUILD_MODE)/meetixos.iso
 
 run_dbg: image
 	$(V) echo "- Debugging"
@@ -31,8 +31,8 @@ run_dbg: image
 	$(V) $(R_GDB) $(BUILD_PREFIX)/kernel/$(BUILD_MODE)/mx_kernel --command=$(BUILD_PREFIX)/$(BUILD_MODE)/gdb_commands.txt
 
 run: image
-	$(V) echo "- Running QEMU $(VIRT_ACCEL)"
-	$(V) $(QEMU) $(VIRT_ACCEL) $(QEMU_ARGS) -cdrom $(BUILD_PREFIX)/$(BUILD_MODE)/meetixos.iso
+	$(V) echo "- Running QEMU"
+	$(V) $(QEMU) $(QEMU_ARGS) -cdrom $(BUILD_PREFIX)/$(BUILD_MODE)/meetixos.iso
 
 image: install
 ifeq ($(ARCH),x86_64)

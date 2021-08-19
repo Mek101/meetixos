@@ -109,10 +109,8 @@ impl AcpiManager /* Methods */ {
                                          cpu_core_id);
 
                             /* register the core for the SMP module */
-                            unsafe {
-                                Processor::instance_mut().register_cpu_core(cpu_core_id,
-                                                                            true);
-                            }
+                            Processor::instance_mut().register_cpu_core(cpu_core_id,
+                                                                        true);
                         }
                         ApicEntry::LocalApic(disabled_lapic) => {
                             dbg_println!(DbgLevel::Warn,
@@ -123,11 +121,9 @@ impl AcpiManager /* Methods */ {
                             dbg_println!(DbgLevel::Debug,
                                          "Registering I/O APIC with ID: {}",
                                          io_apic_entry.m_id);
-                            unsafe {
-                                ApicManager::instance_mut().add_io_apic(io_apic_entry.m_id,
-                                                                        io_apic_entry.m_address as usize,
-                                                                        io_apic_entry.m_base_gsi);
-                            }
+                            ApicManager::instance_mut().add_io_apic(io_apic_entry.m_id,
+                                                                    io_apic_entry.m_address as usize,
+                                                                    io_apic_entry.m_base_gsi);
                         },
                         ApicEntry::Interrupt(interrupt_entry) => {
                             let polarity_high_active =
@@ -146,13 +142,11 @@ impl AcpiManager /* Methods */ {
                                          interrupt_entry.m_source,
                                          polarity_high_active);
 
-                            unsafe {
-                                ApicManager::instance_mut().configure_irq(interrupt_entry.m_source,
-                                                                          interrupt_entry.m_gsi,
-                                                                          true,
-                                                                          polarity_high_active,
-                                                                          true);
-                            }
+                            ApicManager::instance_mut().configure_irq(interrupt_entry.m_source,
+                                                                      interrupt_entry.m_gsi,
+                                                                      true,
+                                                                      polarity_high_active,
+                                                                      true);
                         }
                     }
                 }

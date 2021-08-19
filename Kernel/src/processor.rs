@@ -23,9 +23,8 @@ pub type CpuCoreId = usize;
  */
 pub struct Processor {
     m_cores_map: BTreeMap<CpuCoreId, CpuCore>,
-    m_max_freq: u64,
-    m_base_freq: u64,
-    m_bus_freq: u64
+    m_cores_max_frequency: u64,
+    m_cores_bus_frequency: u64
 }
 
 impl Processor /* Constructors */ {
@@ -39,20 +38,16 @@ impl Processor /* Constructors */ {
         /* initialize the global instance */
         unsafe {
             SM_PROCESSOR = Some(Self { m_cores_map: BTreeMap::new(),
-
-                                       m_max_freq: HwCpuCore::max_frequency(),
-                                       m_base_freq: HwCpuCore::base_frequency(),
-                                       m_bus_freq: HwCpuCore::bus_frequency() });
+                                       m_cores_max_frequency: 0,
+                                       m_cores_bus_frequency: 0 });
         }
 
-        let processor_mut = unsafe { Self::instance_mut() };
-
         /* register the BSP CPU core and initialize it */
-        processor_mut.register_cpu_core(C_BSP_CPU_CORE_ID, false);
-        processor_mut.core_by_id_mut(C_BSP_CPU_CORE_ID)
-                     .expect("Failed to obtain BSP CPU core")
-                     .m_hw_cpu
-                     .init();
+        Self::instance_mut().register_cpu_core(C_BSP_CPU_CORE_ID, false);
+        Self::instance_mut().core_by_id_mut(C_BSP_CPU_CORE_ID)
+                            .expect("Failed to obtain BSP CPU core")
+                            .m_hw_cpu
+                            .init();
     }
 }
 
@@ -70,25 +65,35 @@ impl Processor /* Methods */ {
     /**
      * Initializes the `CpuCore` for the current AP CPU core
      */
-    pub fn init_this_ap(&'static mut self) {
+    pub fn init_this_ap(&mut self) {
         self.this_core_mut().m_hw_cpu.init();
     }
 
     /**
      * Initializes the interrupts management for the BSP CPU core
      */
-    pub fn init_interrupts_for_bsp(&'static mut self) {
-        self.core_by_id_mut(0)
-            .expect("Processor doesn't have BSP CPU registered")
-            .m_hw_cpu
-            .init_interrupts();
+    pub fn init_interrupts_for_bsp(&mut self) {
+        let (cores_max_frequency, cores_bus_frequency) = {
+            let bsp_cpu_core = self.core_by_id_mut(0)
+                                   .expect("Processor doesn't have BSP CPU registered");
+
+            /* initialize the interrupts of the BSP then calculate the speed of the
+             * CPU, this is done here and after the interrupts initialization since
+             * it uses interrupts management to do this
+             */
+            bsp_cpu_core.m_hw_cpu.init_interrupts();
+            bsp_cpu_core.m_hw_cpu.calculate_speed()
+        };
+
+        self.m_cores_max_frequency = cores_max_frequency;
+        self.m_cores_bus_frequency = cores_bus_frequency;
     }
 
     /**
      * Initializes the interrupts management for this AP CPU core
      */
-    pub fn init_interrupts_for_this_ap(&'static mut self) {
-        self.this_core_mut().m_hw_cpu.init_interrupts()
+    pub fn init_interrupts_for_this_ap(&self) {
+        self.this_core().m_hw_cpu.init_interrupts()
     }
 
     /**
@@ -113,15 +118,17 @@ impl Processor /* Getters */ {
     /**
      * Returns the global `Processor` mutable instance
      */
-    pub unsafe fn instance_mut() -> &'static mut Self {
-        SM_PROCESSOR.as_mut().expect("Called Processor::instance_mut() before \
-                                      Processor::init_instance()")
+    pub fn instance_mut() -> &'static mut Self {
+        unsafe {
+            SM_PROCESSOR.as_mut().expect("Called Processor::instance_mut() before \
+                                          Processor::init_instance()")
+        }
     }
 
     /**
      * Returns the current executing `CpuCore` instance
      */
-    pub fn this_core(&'static self) -> &'static CpuCore {
+    pub fn this_core(&self) -> &CpuCore {
         self.core_by_id(HwCpuCore::this_id())
             .expect("Processor::this_core(): Requested an unregistered CpuCore")
     }
@@ -129,7 +136,7 @@ impl Processor /* Getters */ {
     /**
      * Returns the current executing `CpuCore` mutable instance
      */
-    pub fn this_core_mut(&'static mut self) -> &'static mut CpuCore {
+    pub fn this_core_mut(&mut self) -> &mut CpuCore {
         self.core_by_id_mut(HwCpuCore::this_id())
             .expect("Processor::this_core_mut(): Requested an unregistered CpuCore")
     }
@@ -137,16 +144,14 @@ impl Processor /* Getters */ {
     /**
      * Returns the `CpuCore` by his `CpuCoreId`
      */
-    pub fn core_by_id(&'static self, cpu_core_id: CpuCoreId) -> Option<&'static CpuCore> {
+    pub fn core_by_id(&self, cpu_core_id: CpuCoreId) -> Option<&CpuCore> {
         self.m_cores_map.get(&cpu_core_id)
     }
 
     /**
      * Returns the mutable `CpuCore` by his `CpuCoreId`
      */
-    pub fn core_by_id_mut(&'static mut self,
-                          cpu_core_id: CpuCoreId)
-                          -> Option<&'static mut CpuCore> {
+    pub fn core_by_id_mut(&mut self, cpu_core_id: CpuCoreId) -> Option<&mut CpuCore> {
         self.m_cores_map.get_mut(&cpu_core_id)
     }
 
@@ -158,24 +163,17 @@ impl Processor /* Getters */ {
     }
 
     /**
-     * Returns the maximum frequency in Mhz
+     * Returns the maximum frequency in Hz
      */
-    pub fn max_frequency(&self) -> u64 {
-        self.m_max_freq
+    pub fn cores_max_frequency(&self) -> u64 {
+        self.m_cores_max_frequency
     }
 
     /**
-     * Returns the base frequency in Mhz
+     * Returns the bus frequency in Hz
      */
-    pub fn base_frequency(&self) -> u64 {
-        self.m_base_freq
-    }
-
-    /**
-     * Returns the bus frequency in Mhz
-     */
-    pub fn bus_frequency(&self) -> u64 {
-        self.m_bus_freq
+    pub fn cores_bus_frequency(&self) -> u64 {
+        self.m_cores_bus_frequency
     }
 }
 
@@ -297,14 +295,14 @@ pub trait THwCpuCore {
      * method is called to initialize internal hardware stuffs which may
      * need `'static` lifetimes
      */
-    fn init(&'static mut self);
+    fn init(&mut self);
 
     /**
      * Here must be initialized hardware interrupts controller and any stuff
      * which is needed by the architecture to manage software and hardware
      * interruptions
      */
-    fn init_interrupts(&'static mut self);
+    fn init_interrupts(&self);
 
     /**
      * Halts this `HwCpu`
@@ -322,24 +320,14 @@ pub trait THwCpuCore {
     fn do_disable_interrupts(&self);
 
     /**
+     * Returns the best approximation of the cores and the bus speed in Hz
+     */
+    fn calculate_speed(&self) -> (u64, u64);
+
+    /**
      * Returns the `CpuId` of the executing `Cpu`
      */
     fn this_id() -> CpuCoreId;
-
-    /**
-     * Returns the base frequency in Hz of this `Cpu`
-     */
-    fn base_frequency() -> u64;
-
-    /**
-     * Returns the maximum frequency in Hz of this `Cpu`
-     */
-    fn max_frequency() -> u64;
-
-    /**
-     * Returns the bus frequency in Hz of this `Cpu`
-     */
-    fn bus_frequency() -> u64;
 
     /**
      * Returns the hardware `CpuId` of this `HwCpu`

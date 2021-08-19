@@ -89,9 +89,7 @@ pub extern "C" fn bsp_rust_start(raw_boot_info_ptr: *const u8) -> ! {
 
     /* initialize the interrupts for this CPU */
     dbg_println!(DbgLevel::Info, "Initializing Interrupts Management...");
-    unsafe {
-        Processor::instance_mut().init_interrupts_for_bsp();
-    }
+    Processor::instance_mut().init_interrupts_for_bsp();
 
     /* starting Symmetric Multi Processor */
     if Processor::instance().cores_count() > 1 {
@@ -99,7 +97,7 @@ pub extern "C" fn bsp_rust_start(raw_boot_info_ptr: *const u8) -> ! {
                      "Starting Other {} SMP APs (total cores count: {})...",
                      Processor::instance().cores_count() - 1,
                      Processor::instance().cores_count());
-        Processor::instance().start_smp();
+        //Processor::instance().start_smp();
     }
 
     /* initialize the task scheduler */
@@ -126,10 +124,9 @@ pub extern "C" fn bsp_rust_start(raw_boot_info_ptr: *const u8) -> ! {
         }
 
         dbg_println!(DbgLevel::Trace,
-                     "Base Frequency: {}MHz, Max Frequency: {}MHz, Bus Frequency: {}MHz",
-                     Processor::instance().base_frequency(),
-                     Processor::instance().max_frequency(),
-                     Processor::instance().bus_frequency());
+                     "Max Frequency: {}MHz, Bus Frequency: {}MHz",
+                     Processor::instance().cores_max_frequency() / 1000000,
+                     Processor::instance().cores_bus_frequency() / 1000000);
         dbg_println!(DbgLevel::Trace,
                      "Interrupts are enabled: {}",
                      Processor::instance().this_core().are_interrupts_enabled());
@@ -144,15 +141,11 @@ pub extern "C" fn ap_rust_start() {
     dbg_println!(DbgLevel::Info,
                  "Initializing AP{} Processor Management...",
                  this_core_id);
-    unsafe {
-        Processor::instance_mut().init_this_ap();
-    }
+    Processor::instance_mut().init_this_ap();
 
     /* initialize the CPU management for this AP */
     dbg_println!(DbgLevel::Info,
                  "Initializing AP{} Interrupt Management...",
                  this_core_id);
-    unsafe {
-        Processor::instance_mut().init_interrupts_for_this_ap();
-    }
+    Processor::instance_mut().init_interrupts_for_this_ap();
 }
