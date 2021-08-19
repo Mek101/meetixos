@@ -347,7 +347,6 @@ impl IntrDescTable /* Privates */ {
  */
 #[repr(C)]
 #[repr(packed)]
-#[derive(Copy, Clone)]
 struct Entry {
     m_ptr_low: u16,
     m_gdt_selector: u16,

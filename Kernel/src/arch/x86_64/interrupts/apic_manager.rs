@@ -19,7 +19,10 @@ use crate::{
         TAddress
     },
     arch::x86_64::ms_register::MsRegister,
-    processor::CpuCoreId,
+    processor::{
+        CpuCoreId,
+        Processor
+    },
     vm::{
         mem_manager::MemManager,
         Page4KiB
@@ -302,6 +305,20 @@ impl LocalApic /* Methods */ {
             /* set task priority and 16 as timer counter divider */
             self.write(LapicRegister::TaskPrio, 0x10);
             self.write(LapicRegister::TimerDivideConfig, 0x3);
+        }
+    }
+
+    pub fn enable_timer(&self) {
+        self.write_timer_counter((Processor::instance().cores_bus_frequency()
+                                  / ApicManager::TIMER_DIVIDER
+                                  / 200/* frequency divider */)
+                                 as u32);
+        unsafe {
+            self.write(LapicRegister::LocalVecTableTimer,
+                       (20 + 18)
+                       | DELIVERY_MODE_NORMAL
+                       | INTERRUPT_MASK_DISABLE
+                       | MODE_PERIODIC);
         }
     }
 

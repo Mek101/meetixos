@@ -131,6 +131,14 @@ pub extern "C" fn bsp_rust_start(raw_boot_info_ptr: *const u8) -> ! {
                      "Interrupts are enabled: {}",
                      Processor::instance().this_core().are_interrupts_enabled());
     }
+
+    Processor::instance().this_core().enable_interrupts();
+    unsafe {
+        asm!("int 0x3");
+    }
+    dbg_println!(DbgLevel::Trace,
+                 "Interrupts are enabled: {}",
+                 Processor::instance().this_core().are_interrupts_enabled());
     panic!("TODO implement the remaining code");
 }
 

@@ -24,6 +24,7 @@ use crate::{
             intr_desc_table::IntrDescTable,
             intr_handler::syscall_entry
         },
+        io_port::IoPort,
         ms_register::MsRegister,
         pit::PitManager,
         task::task_state_segment::TaskStateSegment
@@ -114,6 +115,31 @@ impl HwCpuCore /* Privates */ {
         }
     }
 
+    fn disable_pic(&self) {
+        let pic1_ctrl = IoPort::<u8>::new(0x20);
+        let pic1_data = IoPort::<u8>::new(0x21);
+
+        let pic2_ctrl = IoPort::<u8>::new(0xa0);
+        let pic2_data = IoPort::<u8>::new(0xa1);
+
+        unsafe {
+            pic1_ctrl.write(0x11);
+            pic2_ctrl.write(0x11);
+
+            pic1_data.write(0xf0);
+            pic2_data.write(0xf0);
+
+            pic1_data.write(0x04);
+            pic2_data.write(0x02);
+
+            pic1_data.write(0x01);
+            pic2_data.write(0x01);
+
+            pic1_data.write(0xff);
+            pic2_data.write(0xff);
+        }
+    }
+
     /**
      * Detects the cpu speed using APIC and PIT
      */
@@ -193,6 +219,10 @@ impl THwCpuCore for HwCpuCore {
             /* register the AP CPUs and discover I/O APICs */
             dbg_println!(DbgLevel::Trace, "Discovering AP CPUs...");
             AcpiManager::instance().register_ap_cpus();
+
+            /* redirect keyboard IRQ */
+            dbg_println!(DbgLevel::Trace, "Using I/O APIC For Interrupts...");
+            ApicManager::instance().enable_irq(1);
         }
 
         /* enable the LAPIC for this CPU */
@@ -206,6 +236,23 @@ impl THwCpuCore for HwCpuCore {
         /* flush the interrupts descriptor table */
         dbg_println!(DbgLevel::Trace, "Flushing IDT...");
         self.m_intr_desc_table.flush();
+
+        /* disable the programmable interrupt controller */
+        dbg_println!(DbgLevel::Trace, "Disabling PIC...");
+        self.disable_pic();
+
+        dbg_println!(DbgLevel::Trace,
+                     "CpuCore {} Uses LAPIC As Timer Device...",
+                     self.id());
+        if !self.m_is_ap {
+            let apic_manager = ApicManager::instance();
+            let pit_gsi = apic_manager.irq_to_gsi(0 /* PIT */);
+
+            apic_manager.io_apic_by_gsi(pit_gsi)
+                        .expect("No Existing I/O APIC for given GSI")
+                        .mask(pit_gsi);
+        }
+        ApicManager::instance().local_apic().enable_timer();
     }
 
     fn do_halt(&self) {

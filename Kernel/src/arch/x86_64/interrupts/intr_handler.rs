@@ -7,9 +7,11 @@ extern "C" {
 }
 
 #[no_mangle]
-extern "C" fn interrupt_handler(_intr_stack_frame: &mut IntrStackFrame) {
+extern "C" fn interrupt_handler(intr_stack_frame: &mut IntrStackFrame) {
+    panic!("{:#?}", intr_stack_frame);
 }
 
 #[no_mangle]
-extern "C" fn syscall_handler(_intr_stack_frame: &mut IntrStackFrame) {
+extern "C" fn syscall_handler(intr_stack_frame: &mut IntrStackFrame) {
+    panic!("{:#?}", intr_stack_frame);
 }
