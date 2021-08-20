@@ -126,14 +126,14 @@ impl HwCpuCore /* Privates */ {
             pic1_ctrl.write(0x11);
             pic2_ctrl.write(0x11);
 
-            pic1_data.write(0xf0);
-            pic2_data.write(0xf0);
+            pic1_data.write(0x20);
+            pic2_data.write(0x28);
 
             pic1_data.write(0x04);
             pic2_data.write(0x02);
 
-            pic1_data.write(0x01);
-            pic2_data.write(0x01);
+            pic1_data.write(0x00);
+            pic2_data.write(0x00);
 
             pic1_data.write(0xff);
             pic2_data.write(0xff);

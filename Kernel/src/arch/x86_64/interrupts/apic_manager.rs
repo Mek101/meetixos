@@ -315,7 +315,7 @@ impl LocalApic /* Methods */ {
                                  as u32);
         unsafe {
             self.write(LapicRegister::LocalVecTableTimer,
-                       (20 + 18)
+                       (0x20 + 18)
                        | DELIVERY_MODE_NORMAL
                        | INTERRUPT_MASK_DISABLE
                        | MODE_PERIODIC);

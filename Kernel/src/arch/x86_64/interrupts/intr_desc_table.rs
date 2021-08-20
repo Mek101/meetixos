@@ -4,15 +4,12 @@ use core::mem::size_of;
 
 use bits::bit_fields::TBitFields;
 
-use crate::{
-    addr::virt_addr::VirtAddr,
-    arch::x86_64::{
-        desc_table::{
-            CpuRingMode,
-            DescTablePtr
-        },
-        global_desc_table::SegmentSelector
-    }
+use crate::arch::x86_64::{
+    desc_table::{
+        CpuRingMode,
+        DescTablePtr
+    },
+    global_desc_table::SegmentSelector
 };
 
 /**
@@ -317,19 +314,14 @@ impl IntrDescTable /* Privates */ {
      * Constructs the `Entry` instance for the given `isr_fn`
      */
     fn make_entry(isr_fn: IsrFn) -> Entry {
-        let isr_fn_virt_addr = {
-            /* convert first to VirtAddr for security */
-            let isr_fn_virt_addr: VirtAddr = (isr_fn as *const IsrFn as usize).into();
-
-            *isr_fn_virt_addr
-        };
+        let isr_fn_virt_addr = isr_fn as *const IsrFn as usize;
 
         /* current GDT selector for code-segment */
         let kern_code_selector: SegmentSelector =
             SegmentSelector::C_INDEX_KERN_CODE.into();
 
         /* set the entry options */
-        let mut entry_options = 0;
+        let mut entry_options = 0b1110_0000_0000;
         entry_options.set_bits(13..15, CpuRingMode::Ring0 as u16);
         entry_options.set_bit(15, true); /* present bit */
 
