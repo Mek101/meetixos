@@ -48,37 +48,29 @@ impl IntrStackFrame /* Getters */ {
 
 impl Debug for IntrStackFrame {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f,
-               "IntrStackFrame {{ \n\tm_r15: {:#018x},\n\tm_r14: {:#018x}, \n\tm_r13: \
-                {:#018x}, \n\tm_r12: {:#018x}, \n\tm_r11: {:#018x}, \n\tm_r10: \
-                {:#018x}, \n\tm_r9: {:#018x}, \n\tm_r8: {:#018x}, \n\tm_rbp: {:#018x}, \
-                \n\tm_rsi: {:#018x}, \n\tm_rdi: {:#018x}, \n\tm_rdx: {:#018x}, \
-                \n\tm_rcx: {:#018x}, \n\tm_rbx: {:#018x}, \n\tm_rax: {:#018x}, \
-                \n\tm_intr_num: {:#018x}, \n\tm_error_code: {}, \n\tm_rip: {:#018x}, \
-                \n\tm_cs: {:#018x}, \n\tm_rflags: {:b}, \n\tm_usr_sp: {:#018x}, \
-                \n\tm_usr_ss: {:#018x}, \n\t_unused_alignment: {:#018x} }}",
-               self.m_r15,
-               self.m_r14,
-               self.m_r13,
-               self.m_r12,
-               self.m_r11,
-               self.m_r10,
-               self.m_r9,
-               self.m_r8,
-               self.m_rbp,
-               self.m_rsi,
-               self.m_rdi,
-               self.m_rdx,
-               self.m_rcx,
-               self.m_rbx,
-               self.m_rax,
-               self.m_intr_num,
-               self.m_error_code,
-               self.m_rip,
-               self.m_cs,
-               self.m_rflags,
-               self.m_usr_sp,
-               self.m_usr_ss,
-               self._unused_alignment)
+        writeln!(f, "IntrStackFrame {{")?;
+        writeln!(f, "\tm_r15:        {:#018x}", self.m_r15)?;
+        writeln!(f, "\tm_r14:        {:#018x}", self.m_r14)?;
+        writeln!(f, "\tm_r13:        {:#018x}", self.m_r13)?;
+        writeln!(f, "\tm_r12:        {:#018x}", self.m_r12)?;
+        writeln!(f, "\tm_r11:        {:#018x}", self.m_r11)?;
+        writeln!(f, "\tm_r10:        {:#018x}", self.m_r10)?;
+        writeln!(f, "\tm_r9:         {:#018x}", self.m_r9)?;
+        writeln!(f, "\tm_r8:         {:#018x}", self.m_r8)?;
+        writeln!(f, "\tm_rbp:        {:#018x}", self.m_rbp)?;
+        writeln!(f, "\tm_rsi:        {:#018x}", self.m_rsi)?;
+        writeln!(f, "\tm_rdi:        {:#018x}", self.m_rdi)?;
+        writeln!(f, "\tm_rdx:        {:#018x}", self.m_rdx)?;
+        writeln!(f, "\tm_rcx:        {:#018x}", self.m_rcx)?;
+        writeln!(f, "\tm_rbx:        {:#018x}", self.m_rbx)?;
+        writeln!(f, "\tm_rax:        {:#018x}", self.m_rax)?;
+        writeln!(f, "\tm_intr_num:   {}", self.m_intr_num)?;
+        writeln!(f, "\tm_error_code: {}", self.m_error_code)?;
+        writeln!(f, "\tm_rip:        {:#018x}", self.m_rip)?;
+        writeln!(f, "\tm_cs:         {:x}", self.m_cs)?;
+        writeln!(f, "\tm_rflags:     {:b}", self.m_rflags)?;
+        writeln!(f, "\tm_usr_sp:     {:#018x}", self.m_usr_sp)?;
+        writeln!(f, "\tm_usr_ss:     {:x}", self.m_usr_ss)?;
+        writeln!(f, "}}")
     }
 }
