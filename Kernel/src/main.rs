@@ -130,30 +130,22 @@ pub extern "C" fn bsp_rust_start(raw_boot_info_ptr: *const u8) -> ! {
         dbg_println!(DbgLevel::Trace,
                      "Interrupts are enabled: {}",
                      Processor::instance().this_core().are_interrupts_enabled());
+        Processor::instance().this_core().enable_interrupts();
+        dbg_println!(DbgLevel::Trace,
+                     "Interrupts are enabled: {}",
+                     Processor::instance().this_core().are_interrupts_enabled());
+        unsafe {
+            asm!("int 33");
+        }
     }
 
-    Processor::instance().this_core().enable_interrupts();
-    dbg_println!(DbgLevel::Trace,
-                 "Interrupts are enabled: {}",
-                 Processor::instance().this_core().are_interrupts_enabled());
-    unsafe {
-        asm!("int 35");
-    }
     panic!("TODO implement the remaining code");
 }
 
 pub extern "C" fn ap_rust_start() {
-    let this_core_id = Processor::instance().this_core().id();
-
     /* initialize the CPU management for this AP */
     dbg_println!(DbgLevel::Info,
-                 "Initializing AP{} Processor Management...",
-                 this_core_id);
+                 "Initializing AP{}...",
+                 Processor::instance().this_core().id());
     Processor::instance_mut().init_this_ap();
-
-    /* initialize the CPU management for this AP */
-    dbg_println!(DbgLevel::Info,
-                 "Initializing AP{} Interrupt Management...",
-                 this_core_id);
-    Processor::instance_mut().init_interrupts_for_this_ap();
 }

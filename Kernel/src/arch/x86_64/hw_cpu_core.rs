@@ -40,6 +40,9 @@ use crate::{
 const C_DOUBLE_FAULT_STACK: usize = 4096;
 const C_DOUBLE_FAULT_STACK_INDEX: usize = 0;
 
+pub const C_IRQ_MASTER_BASE: u32 = 0x20;
+pub const C_IRQ_SLAVE_BASE: u32 = 0x28;
+
 /**
  * x86_64 `HwCpuBase` implementation
  */
@@ -126,8 +129,8 @@ impl HwCpuCore /* Privates */ {
             pic1_ctrl.write(0x11);
             pic2_ctrl.write(0x11);
 
-            pic1_data.write(0x20);
-            pic2_data.write(0x28);
+            pic1_data.write(C_IRQ_MASTER_BASE as u8);
+            pic2_data.write(C_IRQ_SLAVE_BASE as u8);
 
             pic1_data.write(0x04);
             pic2_data.write(0x02);
@@ -237,14 +240,12 @@ impl THwCpuCore for HwCpuCore {
         dbg_println!(DbgLevel::Trace, "Flushing IDT...");
         self.m_intr_desc_table.flush();
 
-        /* disable the programmable interrupt controller */
-        dbg_println!(DbgLevel::Trace, "Disabling PIC...");
-        self.disable_pic();
-
-        dbg_println!(DbgLevel::Trace,
-                     "CpuCore {} Uses LAPIC As Timer Device...",
-                     self.id());
         if !self.m_is_ap {
+            /* disable the programmable interrupt controller */
+            dbg_println!(DbgLevel::Trace, "Disabling PIC...");
+            self.disable_pic();
+
+            /* mask PIT */
             let apic_manager = ApicManager::instance();
             let pit_gsi = apic_manager.irq_to_gsi(0 /* PIT */);
 
@@ -252,6 +253,10 @@ impl THwCpuCore for HwCpuCore {
                         .expect("No Existing I/O APIC for given GSI")
                         .mask(pit_gsi);
         }
+
+        dbg_println!(DbgLevel::Trace,
+                     "CpuCore {} Uses LAPIC As Timer Device...",
+                     self.id());
         ApicManager::instance().local_apic().enable_timer();
     }
 

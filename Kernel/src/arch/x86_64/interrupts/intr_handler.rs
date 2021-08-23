@@ -8,10 +8,10 @@ extern "C" {
 
 #[no_mangle]
 extern "C" fn interrupt_handler(intr_stack_frame: &mut IntrStackFrame) {
-    panic!("Interrupt occurred {:#?}", intr_stack_frame);
+    panic!("Interrupt occurred\n{:?}", intr_stack_frame);
 }
 
 #[no_mangle]
 extern "C" fn syscall_handler(intr_stack_frame: &mut IntrStackFrame) {
-    panic!("Interrupt occurred {:#?}", intr_stack_frame);
+    panic!("Interrupt occurred\n{:?}", intr_stack_frame);
 }

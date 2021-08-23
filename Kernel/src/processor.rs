@@ -67,6 +67,7 @@ impl Processor /* Methods */ {
      */
     pub fn init_this_ap(&mut self) {
         self.this_core_mut().m_hw_cpu.init();
+        self.this_core().m_hw_cpu.init_interrupts();
     }
 
     /**
@@ -87,13 +88,6 @@ impl Processor /* Methods */ {
 
         self.m_cores_max_frequency = cores_max_frequency;
         self.m_cores_bus_frequency = cores_bus_frequency;
-    }
-
-    /**
-     * Initializes the interrupts management for this AP CPU core
-     */
-    pub fn init_interrupts_for_this_ap(&self) {
-        self.this_core().m_hw_cpu.init_interrupts()
     }
 
     /**

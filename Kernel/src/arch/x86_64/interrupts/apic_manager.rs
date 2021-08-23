@@ -18,7 +18,10 @@ use crate::{
         virt_addr::VirtAddr,
         TAddress
     },
-    arch::x86_64::ms_register::MsRegister,
+    arch::x86_64::{
+        hw_cpu_core::C_IRQ_MASTER_BASE,
+        ms_register::MsRegister
+    },
     processor::{
         CpuCoreId,
         Processor
@@ -194,12 +197,11 @@ impl ApicManager /* Methods */ {
         };
 
         if let Some(_) = self.io_apic_by_gsi(gsi) {
-            let io_apic_config = &mut self.m_io_apic_configs[irq as usize];
-
-            io_apic_config.m_gsi = gsi;
-            io_apic_config.m_delivery_mode = delivery_mode;
-            io_apic_config.m_polarity = polarity;
-            io_apic_config.m_trigger_mode = trigger_mode;
+            self.m_io_apic_configs[irq as usize] =
+                IoApicConfig { m_gsi: gsi,
+                               m_delivery_mode: delivery_mode,
+                               m_polarity: polarity,
+                               m_trigger_mode: trigger_mode };
         }
     }
 
@@ -207,8 +209,6 @@ impl ApicManager /* Methods */ {
      * Enables the given interrupt
      */
     pub fn enable_irq(&self, irq: u8) {
-        /* TODO vector check & existence */
-
         let gsi = self.irq_to_gsi(irq);
         let cpu_core_id = self.local_apic().cpu_id();
         if let Some(io_apic) = self.io_apic_by_gsi(gsi) {
@@ -224,7 +224,7 @@ impl ApicManager /* Methods */ {
                               | io_apic_config.m_polarity
                               | io_apic_config.m_trigger_mode
                               | io_apic_config.m_delivery_mode
-                              | (irq + 0x20) as u32 /* TODO interrupt vector */);
+                              | (irq as u32 + C_IRQ_MASTER_BASE));
             }
         }
     }
@@ -296,9 +296,8 @@ impl LocalApic /* Methods */ {
     pub fn enable(&mut self) {
         unsafe {
             /* enable spurious interrupts */
-            if self.read(LapicRegister::SpuriousInterrupt) & SPURIOUS_INTERRUPT_ENABLE
-               == 0
-            {
+            let spurious_interrupts = self.read(LapicRegister::SpuriousInterrupt);
+            if spurious_interrupts & SPURIOUS_INTERRUPT_ENABLE == 0 {
                 self.write(LapicRegister::SpuriousInterrupt, SPURIOUS_INTERRUPT_ENABLE);
             }
 
@@ -309,17 +308,15 @@ impl LocalApic /* Methods */ {
     }
 
     pub fn enable_timer(&self) {
-        self.write_timer_counter((Processor::instance().cores_bus_frequency()
-                                  / ApicManager::TIMER_DIVIDER
-                                  / 200/* frequency divider */)
-                                 as u32);
-        unsafe {
-            self.write(LapicRegister::LocalVecTableTimer,
-                       (0x20 + 18)
-                       | DELIVERY_MODE_NORMAL
-                       | INTERRUPT_MASK_DISABLE
-                       | MODE_PERIODIC);
-        }
+        let timer_counter = Processor::instance().cores_bus_frequency()
+                            / ApicManager::TIMER_DIVIDER
+                            / 200;
+        self.write_timer_counter(timer_counter as u32);
+        self.write_local_vector(LapicRegister::LocalVecTableTimer,
+                                C_IRQ_MASTER_BASE + 18,
+                                DELIVERY_MODE_NORMAL,
+                                INTERRUPT_MASK_DISABLE,
+                                MODE_PERIODIC);
     }
 
     pub fn write_timer_counter(&self, counter: u32) {
@@ -350,6 +347,20 @@ impl LocalApic /* Getters */ {
 }
 
 impl LocalApic /* Privates */ {
+    /**
+     * Writes the local vector using the given setting
+     */
+    fn write_local_vector(&self,
+                          register: LapicRegister,
+                          vector: u32,
+                          delivery_mode: u32,
+                          mask: u32,
+                          mode: u32) {
+        unsafe {
+            self.write(register, vector | delivery_mode | mask | mode);
+        }
+    }
+
     /**
      * Reads the value of the given `Register`
      */

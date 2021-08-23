@@ -136,10 +136,11 @@ impl AcpiManager /* Methods */ {
                                 };
 
                             dbg_println!(DbgLevel::Debug,
-                                         "Registering Interrupt SO {}, \
+                                         "Registering Interrupt SO {}, GSI: {}, \
                                           delivery_mode_fixed: true, \
                                           polarity_high_active: {}, trigger_edge: true",
                                          interrupt_entry.m_source,
+                                         { interrupt_entry.m_gsi },
                                          polarity_high_active);
 
                             ApicManager::instance_mut().configure_irq(interrupt_entry.m_source,
