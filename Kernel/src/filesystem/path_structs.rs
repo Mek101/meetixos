@@ -6,6 +6,7 @@ use alloc::{
     vec::Vec
 };
 use core::{
+    alloc::Layout,
     cmp::Ordering,
     mem,
     ops::{
@@ -18,7 +19,6 @@ use core::{
 
 use intrusive_collections::{
     intrusive_adapter,
-    Adapter,
     KeyAdapter,
     LinkedList,
     LinkedListLink,
@@ -27,6 +27,7 @@ use intrusive_collections::{
 };
 
 use api_data::path::PathComponent;
+use core::ptr::NonNull;
 use heap::slab::Slab;
 use sync::SpinMutex;
 
@@ -48,14 +49,17 @@ struct PathWrapper {
 /**
  * A node cache entry that is also a node of a doubly-linked and of rb-tree.
  */
-struct CacheEntry<T> {
+#[derive(Clone)]
+struct CacheEntry<T>
+    where T: Clone {
     list_link: LinkedListLink,
     tree_link: RBTreeLink,
     path: PathWrapper,
     value: T
 }
 
-pub trait PathMap<T> {
+pub trait PathMap<T>
+    where T: Clone {
     fn set(&mut self, path: &[PathComponent], item: T);
 
     fn get_exact(&self, path: &[PathComponent]) -> PartialResult<T>;
@@ -94,9 +98,9 @@ pub struct PathTable<T> {
  * WARNING: doesn't support parent or self path links and does not check for
  * them: it will produce wacky results if fed any!
  */
-pub struct PathCache<T> {
+pub struct PathCache<T> where T : Clone {
     _mem: Box<[u8]>,
-    _heap: Slab<mem::size_of::<CacheEntry<T>>()>,
+    _heap: Slab<{ Layout::new::<CacheEntry<T>>().size() }>,
     _map: RBTree<EntryTreeAdapter<T>>,
     _lru_list: SpinMutex<LinkedList<EntryListAdapter<T>>>,
     _count: usize,
@@ -147,9 +151,9 @@ impl PartialEq for PathWrapper {
     }
 }
 
-intrusive_adapter!(EntryListAdapter<T> = Box<CacheEntry<T>>: CacheEntry<T> { list_link: LinkedListLink });
-intrusive_adapter!(EntryTreeAdapter<T> = Box<CacheEntry<T>>: CacheEntry<T> { tree_link: RBTreeLink });
-impl<'a, T> KeyAdapter<'a> for EntryTreeAdapter<T> {
+intrusive_adapter!(EntryListAdapter<T> = Box<CacheEntry<T>>: CacheEntry<T> where T : Clone { list_link: LinkedListLink });
+intrusive_adapter!(EntryTreeAdapter<T> = Box<CacheEntry<T>>: CacheEntry<T> where T : Clone { tree_link: RBTreeLink });
+impl<'a, T> KeyAdapter<'a> for EntryTreeAdapter<T> where T: Clone {
     type Key = &'a PathWrapper;
 
     fn get_key(&self, value: &'a CacheEntry<T>) -> Self::Key {
@@ -157,10 +161,10 @@ impl<'a, T> KeyAdapter<'a> for EntryTreeAdapter<T> {
     }
 }
 
-impl<T> CacheEntry<T> {
+impl<T> CacheEntry<T> where T: Clone {
     pub const SIZE: usize = mem::size_of::<Self>();
 
-    pub fn new(path: &[PathComponent], value: Arc<T>) -> Self {
+    pub fn new(path: &[PathComponent], value: T) -> Self {
         Self { list_link: LinkedListLink::default(),
                tree_link: RBTreeLink::default(),
                path: PathWrapper::new(path),
@@ -168,7 +172,7 @@ impl<T> CacheEntry<T> {
     }
 }
 
-impl<T> PathTable<T> {
+impl<T> PathTable<T> where T: Clone {
     fn get_match_of<P>(&self,
                        path: &PathWrapper,
                        max_distance: usize,
@@ -189,9 +193,9 @@ impl<T> PathTable<T> {
             Some((ancestor_path, ancestor)) => {
                 let distance = path._separators - ancestor_path._separators;
                 if distance == 0 {
-                    PartialResult::Found(ancestor.clone())
+                    PartialResult::Found(ancestor)
                 } else {
-                    PartialResult::Ancestor(ancestor.clone(), distance)
+                    PartialResult::Ancestor(ancestor, distance)
                 }
             }
         }
@@ -202,15 +206,15 @@ impl<T> PathTable<T> {
     }
 }
 
-impl<T> PathMap<T> for PathTable<T> {
+impl<T> PathMap<T> for PathTable<T> where T: Clone {
     fn set(&mut self, path: &[PathComponent], node: T) {
-        self._map.insert(PathWrapper::new(path), node.clone());
+        self._map.insert(PathWrapper::new(path), node);
     }
 
     fn get_exact(&self, path: &[PathComponent]) -> PartialResult<T> {
         match self._map.get(&PathWrapper::new(path)) {
             None => PartialResult::None,
-            Some(node) => PartialResult::Found(node.clone())
+            Some(node) => PartialResult::Found(node)
         }
     }
 
@@ -255,7 +259,7 @@ impl<T> PathMap<T> for PathTable<T> {
     }
 }
 
-impl<T> PathCache<T> {
+impl<T> PathCache<T> where T: Clone {
     /**
      * Moves a cache entry already in the lru list to the top of the list.
      */
@@ -274,11 +278,11 @@ impl<T> PathCache<T> {
         }
     }
 
-    fn allocate(&mut self, entry: CacheEntry<T>) -> Option<&CacheEntry<T>> {
+    fn allocate(&mut self, entry: CacheEntry<T>) -> Option<*mut CacheEntry<T>> {
         self._heap.allocate().map(|mem_ptr| unsafe {
                                  let mut entry_ptr = mem_ptr.cast::<CacheEntry<T>>();
                                  ptr::write(entry_ptr.as_mut(), entry);
-                                 mem_ptr.as_ref()
+                                 mem_ptr.as_ptr()
                              })
     }
 
@@ -355,8 +359,9 @@ impl<T> PathCache<T> {
 
         while let Some(ptr) = cursor.remove() {
             unsafe {
+                let ptr = ptr as *mut u8;
                 ptr::drop_in_place(ptr);
-                self._heap.deallocate(ptr);
+                self._heap.deallocate(NonNull::new_unchecked(ptr));
             }
         }
         self._count = 0;
@@ -372,30 +377,29 @@ impl<T> PathCache<T> {
     }
 }
 
-impl<T> PathMap<T> for PathCache<T> {
-    fn set(&mut self, path: &[PathComponent], node: Arc<T>) {
+impl<T> PathMap<T> for PathCache<T> where T: Clone {
+    fn set(&mut self, path: &[PathComponent], node: T) {
         let new_entry = CacheEntry::new(path, node.clone());
         while self._count >= self._capacity {
             self.evict_lru();
         }
-        let entry = self.allocate(new_entry)?;
+        let entry_box = Box::from_raw(self.allocate(new_entry).unwrap());
 
         // Inserting in the map first since it panics otherwise.
-        self._map.insert(entry);
+        self._map.insert(entry_box);
         // Locking the list.
         let mut lru_list = self._lru_list.lock();
-        lru_list.push_front(entry);
+        lru_list.push_front(entry_box);
 
         self._count += 1;
     }
 
     fn get_exact(&self, path: &[PathComponent]) -> PartialResult<T> {
-        if let Some(entry_ptr) = self._map.find(&PathWrapper::new(path)).get() {
-            let entry: &CacheEntry<T> = entry_ptr.as_ref();
+        if let Some(entry_ref) = self._map.find(&PathWrapper::new(path)).get() {
             // Try to update the lru list, only if it's convenient.
-            self.try_move_to_front(entry);
+            self.try_move_to_front(entry_ref);
 
-            PartialResult::Found(entry.value.clone())
+            return PartialResult::Found(&entry_ref.value.clone());
         }
         PartialResult::None
     }
@@ -408,7 +412,7 @@ impl<T> PathMap<T> for PathCache<T> {
         self.get_match_of(&path,
                           max_distance,
                           intrusive_collections::Bound::Excluded(&path),
-                          |entry| {
+                          |entry: &CacheEntry<T>| {
                               entry.path._separators < path._separators
                               && is_ancestor(&entry.path, &path)
                           })
@@ -422,27 +426,37 @@ impl<T> PathMap<T> for PathCache<T> {
         self.get_match_of(&path,
                           max_distance,
                           intrusive_collections::Bound::Included(&path),
-                          |entry| {
-                              if entry.path._separators == path._separators {
+                          |entry: &CacheEntry<T>| {
+                              return if entry.path._separators == path._separators {
                                   entry.path._string == path._string
                               } else if entry.path._separators < path._separators {
                                   is_ancestor(&entry.path, &path)
-                              }
+                              } else {
+                                  false
+                              };
                           })
     }
 
     fn remove(&mut self, path: &[PathComponent]) -> bool {
         if self._count >= self._capacity {
-            if let Some(entry_ptr) =
-                self._map.find(&PathWrapper::new(path)).clone_pointer().unwrap()
-            {
+            if let Some(entry_ref) = self._map.find(&PathWrapper::new(path)).get() {
                 unsafe {
                     {
                         let mut list = self._lru_list.lock();
-                        list.cursor_from_ptr(entry_ptr).remove()
+                        list.cursor_mut_from_ptr(entry_ref).remove();
                     }
-                    self._map.cursor_mut_from_ptr(entry_ptr).remove();
-                    self._heap.deallocate(entry_ptr)
+                    let mut cursor = self._map.cursor_mut_from_ptr(entry_ref);
+                    let entry_box = cursor.as_cursor().clone_pointer().unwrap();
+
+                    cursor.remove();
+
+                    unsafe {
+                        let (entry_ptr, _) = Box::into_raw_with_allocator(entry_box);
+                        // Run the destructor but keep the reference
+                        ptr::drop_in_place(entry_ptr);
+                        self._heap
+                            .deallocate(NonNull::new_unchecked(entry_ptr as *mut u8))
+                    }
                 }
                 return true;
             }

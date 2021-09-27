@@ -11,6 +11,7 @@
            const_fn_trait_bound,
            step_trait,
            alloc_error_handler,
+           generic_const_exprs,
            const_btree_new,
            array_methods,
            once_cell)]

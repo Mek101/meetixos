@@ -139,7 +139,7 @@ fn find_child_from_ancestor(ancestor: &Arc<&dyn INode>,
             NodeType::Directory => {
                 // Search for the next node
                 let as_directory: &dyn DirectoryNode =
-                    current_ancestor.as_type().unwrap();
+                    &current_ancestor.as_type().unwrap();
                 match as_directory.get_nodes() {
                     Ok(nodes) => {
                         match nodes.iter()
